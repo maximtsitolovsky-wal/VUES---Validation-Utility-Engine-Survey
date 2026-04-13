@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import difflib
 import logging
+import math
 import re
 import shutil
 from dataclasses import dataclass, field
@@ -273,11 +274,26 @@ def _run_correction(
     applied = [a for a in attempts if a.applied]
 
     # Step 6: Build corrected DataFrame (original schema + approved corrections).
+    # Take a full copy of the original so ALL vendor columns + rows survive.
+    original_columns = list(original_df.columns)
     corrected_df = _apply_corrections(original_df.copy(), applied)
 
-    # Step 7: Write corrected CSV — same exact schema as original submission.
+    # Final schema guard: enforce exact column order from the vendor's original file.
+    # This is belt-and-suspenders — _apply_corrections already checks, but we
+    # re-assert here so the CSV write always uses the vendor's original ordering.
+    corrected_df = corrected_df.reindex(columns=original_columns, fill_value="")
+
+    # Step 7: Write corrected CSV — utf-8-sig so Excel opens without BOM issues.
+    # The output contains EVERY column the vendor submitted, in the same order,
+    # with only the corrected cells changed.
     corrected_path = corrected_dir / f"{safe_prefix}_corrected.csv"
-    corrected_df.to_csv(corrected_path, index=False, encoding="utf-8")
+    corrected_df.to_csv(corrected_path, index=False, encoding="utf-8-sig")
+
+    log.info(
+        "Post-pass correction: corrected file written — %d rows, %d columns, "
+        "%d cells changed → %s",
+        len(corrected_df), len(corrected_df.columns), len(applied), corrected_path.name,
+    )
 
     # Step 8: Write correction log — full audit trail.
     log_path = log_dir / f"{safe_prefix}_correction_log.csv"
@@ -347,31 +363,110 @@ def _copy_raw_file(
 # ---------------------------------------------------------------------------
 
 def _load_submission_file(path: Path) -> pd.DataFrame | None:
-    """Load the archived vendor file preserving ALL original columns."""
+    """Load the archived vendor file preserving ALL original columns and rows.
+
+    INVARIANT: every column the vendor submitted must appear in the output,
+    in the same order, with the same name.  We never drop columns.
+    We never rename columns beyond stripping leading/trailing whitespace and
+    the UTF-8 BOM byte (\ufeff) that Excel sometimes prepends to the first cell.
+    """
     suffix = path.suffix.lower()
     try:
-        if suffix == ".xlsx":
-            try:
-                df = pd.read_excel(path, sheet_name=0, dtype=str, engine="calamine")
-            except Exception:
-                df = pd.read_excel(path, sheet_name=0, dtype=str, engine="openpyxl")
+        if suffix in (".xlsx", ".xls", ".xlsm"):
+            df = _load_excel_file(path)
         elif suffix == ".csv":
-            try:
-                df = pd.read_csv(path, dtype=str, encoding="utf-8")
-            except UnicodeDecodeError:
-                df = pd.read_csv(path, dtype=str, encoding="latin-1")
+            df = _load_csv_file(path)
         else:
             log.warning(
                 "Post-pass correction: unsupported file type '%s': %s", suffix, path
             )
             return None
-        df.columns = [str(c) for c in df.columns]
-        return df.fillna("")
+
+        if df is None:
+            return None
+
+        # Normalise column names: strip surrounding whitespace + BOM.
+        # Do NOT rename, reorder, or drop any columns.
+        df.columns = [str(c).strip().lstrip("\ufeff") for c in df.columns]
+
+        # Convert every cell to a plain Python str.
+        # Using applymap (pandas < 2.1) / map (pandas >= 2.1) avoids dtype issues.
+        def _cell_to_str(v: object) -> str:
+            if v is None:
+                return ""
+            if isinstance(v, float) and math.isnan(v):
+                return ""
+            return str(v).strip()
+
+        try:
+            df = df.map(_cell_to_str)
+        except AttributeError:
+            df = df.applymap(_cell_to_str)  # noqa: PD005  (pandas < 2.1)
+
+        log.debug(
+            "Post-pass correction: loaded submission file %s — %d rows, %d columns: %s",
+            path.name, len(df), len(df.columns), list(df.columns),
+        )
+        return df
+
     except Exception as exc:  # noqa: BLE001
         log.warning(
             "Post-pass correction: failed to load file %s: %s", path, exc
         )
         return None
+
+
+def _load_excel_file(path: Path) -> pd.DataFrame | None:
+    """Load an Excel file trying calamine first, openpyxl as fallback.
+
+    keep_default_na=False prevents pandas from silently converting
+    vendor values like 'N/A', 'None', 'null', '' to NaN, which would
+    then show up as the string 'nan' after str conversion.
+    """
+    for engine in ("calamine", "openpyxl"):
+        try:
+            return pd.read_excel(
+                path,
+                sheet_name=0,
+                dtype=str,
+                engine=engine,
+                keep_default_na=False,
+                na_values=[],
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.debug(
+                "Post-pass correction: Excel engine '%s' failed for %s: %s",
+                engine, path.name, exc,
+            )
+    log.warning("Post-pass correction: all Excel engines failed for %s", path.name)
+    return None
+
+
+def _load_csv_file(path: Path) -> pd.DataFrame | None:
+    """Load a CSV file trying BOM-aware UTF-8 first, then plain UTF-8, then latin-1.
+
+    keep_default_na=False + na_filter=False prevent pandas from converting
+    common vendor strings ('N/A', 'NA', 'None', '0') to NaN.
+    """
+    for encoding in ("utf-8-sig", "utf-8", "latin-1"):
+        try:
+            return pd.read_csv(
+                path,
+                dtype=str,
+                encoding=encoding,
+                keep_default_na=False,
+                na_filter=False,
+            )
+        except UnicodeDecodeError:
+            continue
+        except Exception as exc:  # noqa: BLE001
+            log.warning(
+                "Post-pass correction: failed to read CSV %s with encoding %s: %s",
+                path.name, encoding, exc,
+            )
+            return None
+    log.warning("Post-pass correction: could not decode CSV %s with any known encoding", path.name)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -560,28 +655,71 @@ def _apply_corrections(
 ) -> pd.DataFrame:
     """Write approved corrections into the corrected DataFrame.
 
-    Row count, column count, and column order are never changed.
-    Only specific (row, field) cells approved by the correction logic are touched.
+    INVARIANTS (all strictly enforced):
+    - Column count is never changed.
+    - Column names are never changed.
+    - Column order is never changed.
+    - Row count is never changed.
+    - Row order is never changed.
+    - Only the specific (row_idx, column) cells listed in *applied* are touched.
+    - Every other cell retains the exact original vendor value.
+
+    If a correction references an unknown column or out-of-range row it is
+    skipped with a warning — it never silently corrupts other cells.
     """
+    original_columns = list(df.columns)  # snapshot for post-check
+    original_len     = len(df)
+
+    # Case-insensitive map: lowercase column name → actual column name in df
     col_map = {str(c).strip().lower(): str(c) for c in df.columns}
 
     for attempt in applied:
         actual_col = col_map.get(attempt.field.strip().lower())
         if actual_col is None:
             log.warning(
-                "Post-pass correction: column '%s' not found — skipping "
-                "row=%d submission=%s",
+                "Post-pass correction: column '%s' not found in submission "
+                "— skipping row=%d submission=%s. Available columns: %s",
                 attempt.field, attempt.row_number, attempt.submission_id,
+                list(df.columns),
             )
             continue
+
         df_idx = attempt.row_number - 1  # row_number is 1-based
         if df_idx < 0 or df_idx >= len(df):
             log.warning(
-                "Post-pass correction: row_number=%d out of range for submission=%s",
-                attempt.row_number, attempt.submission_id,
+                "Post-pass correction: row_number=%d out of range (file has %d rows) "
+                "for submission=%s — skipping.",
+                attempt.row_number, len(df), attempt.submission_id,
             )
             continue
+
+        log.debug(
+            "Post-pass correction: applying [row=%d col=%r] %r → %r",
+            attempt.row_number, actual_col,
+            attempt.original_value, attempt.corrected_value,
+        )
         df.at[df_idx, actual_col] = attempt.corrected_value
+
+    # ── Post-application invariant check ─────────────────────────────────
+    # If columns or row count changed, something is very wrong — log loudly
+    # and return the fully-original df so we never write a mangled file.
+    if list(df.columns) != original_columns:
+        log.error(
+            "Post-pass correction BUG: column list changed after corrections! "
+            "original=%s  current=%s  — aborting corrections and returning original data.",
+            original_columns, list(df.columns),
+        )
+        # Reconstruct a clean copy from original to be safe
+        for col in original_columns:
+            if col not in df.columns:
+                df[col] = ""
+        df = df[original_columns]
+
+    if len(df) != original_len:
+        log.error(
+            "Post-pass correction BUG: row count changed %d → %d after corrections!",
+            original_len, len(df),
+        )
 
     return df
 

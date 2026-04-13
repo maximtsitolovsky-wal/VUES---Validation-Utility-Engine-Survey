@@ -94,6 +94,20 @@ def generate_executive_dashboard(
         cfg=cfg,
     )
 
+    # Slim correction-state entries for the dashboard pill.
+    # Shape: [{"site_number": str, "corrected_at": ISO str}, ...]
+    _raw_correction_state = _read_json(
+        output_dir / "corrections" / ".correction_state.json"
+    ) or {}
+    correction_entries: list[dict[str, Any]] = [
+        {
+            "site_number": str(v.get("site_number") or "").strip(),
+            "corrected_at": str(v.get("corrected_at") or "").strip(),
+        }
+        for v in _raw_correction_state.values()
+        if isinstance(v, dict)
+    ]
+
     injected = _exec_metrics_tabs_section_html(
         history_rows,
         vendor_rows,
@@ -102,6 +116,7 @@ def generate_executive_dashboard(
         queue_trend_points=queue_trend_points,
         team_dashboard_data=team_dashboard_data,
         weekly_highlights_payload=weekly_highlights_payload,
+        correction_entries=correction_entries,
     )
 
     template = template_path.read_text(encoding="utf-8")
@@ -149,6 +164,7 @@ def _exec_metrics_tabs_section_html(
     queue_trend_points: list[dict[str, Any]],
     team_dashboard_data: dict[str, Any],
     weekly_highlights_payload: dict[str, Any],
+    correction_entries: list[dict[str, Any]] | None = None,
 ) -> str:
     """Return a single Metrics section with window tabs + real rollups.
 
@@ -217,6 +233,7 @@ def _exec_metrics_tabs_section_html(
     queue_points_json = json.dumps(queue_trend_points)
     team_data_json = json.dumps(team_dashboard_data)
     weekly_highlights_json = json.dumps(weekly_highlights_payload)
+    correction_data_json = json.dumps(correction_entries or [])
 
     # NOTE: Avoid Python f-strings for large JS blobs (brace escaping hell).
     # We use placeholders + .replace() instead.
@@ -239,6 +256,14 @@ def _exec_metrics_tabs_section_html(
         <h3>Time window</h3>
         <span style=\"display:flex;align-items:center;gap:10px\">
           <span id=\"windowLabel\">Today</span>
+          <span
+            id=\"postPassPill\"
+            hidden
+            title=\"Unique sites where post-pass correction logic ran in this time window\"
+            style=\"display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:#ffc220;color:#1a0c00;font-size:0.75rem;font-weight:700;line-height:1;\"
+            role=\"status\"
+            aria-live=\"polite\"
+          >✱ <span id=\"postPassPillCount\">0</span> post-pass site(s)</span>
           <button class=\"btn btn--secondary\" id=\"refreshNowBtn\" type=\"button\">Refresh now</button>
         </span>
       </div>
@@ -379,6 +404,9 @@ def _exec_metrics_tabs_section_html(
     <div>
       <div class=\"eyebrow\">Independent field operations</div>
       <h2>Scout</h2>
+      <div style=\"margin-top:10px\">
+        <span class=\"section-chip\" id=\"scoutTopPerformerPill\">Top performer: —</span>
+      </div>
     </div>
     <p>
       Scout is rendered after leadership metrics so navigation order matches page order.
@@ -505,6 +533,26 @@ def _exec_metrics_tabs_section_html(
       const queueTrendPoints = __QUEUE_TREND_POINTS_JSON__;
       const teamDashboardData = __TEAM_DASHBOARD_DATA_JSON__;
       const weeklyHighlightsPayload = __WEEKLY_HIGHLIGHTS_JSON__;
+      const correctionData = __CORRECTION_DATA_JSON__;
+
+      function normalizeSurveyRecord(record) {
+        const status = String(record && record.processing_status || '').trim().toUpperCase();
+        return {
+          vendor_email: String(record && record.vendor_email || '').trim(),
+          vendor_name: String(record && record.vendor_name || '').trim(),
+          site_number: String(record && record.site_number || '').trim(),
+          processed_at: String(record && (record.submitted_at || record.created_time) || '').trim(),
+          status,
+          score: '',
+          turnaround_seconds: '',
+        };
+      }
+
+      const surveyPayload = teamDashboardData && teamDashboardData.survey ? teamDashboardData.survey : null;
+      const surveyLiveRows = surveyPayload && Array.isArray(surveyPayload.records)
+        ? surveyPayload.records.map(normalizeSurveyRecord).filter(r => ['PASS', 'FAIL', 'ERROR'].includes(r.status))
+        : [];
+      const surveyPerformanceRows = Array.isArray(raw) && raw.length ? raw : surveyLiveRows;
 
       function parseIso(s) {{
         // processed_at is ISO with timezone. Date.parse handles it.
@@ -567,7 +615,7 @@ def _exec_metrics_tabs_section_html(
         const q = siteQuery();
 
         const out = [];
-        for (const r of raw) {{
+        for (const r of surveyPerformanceRows) {{
           const status = String(r.status || '').toUpperCase();
           if (!['PASS', 'FAIL', 'ERROR'].includes(status)) continue;
           const t = parseIso(r.processed_at);
@@ -1227,6 +1275,45 @@ def _exec_metrics_tabs_section_html(
         return [...rollups.values()].sort((a, b) => b.weekStart - a.weekStart || b.submissions - a.submissions || a.company.localeCompare(b.company));
       }
 
+      function scoutTopPerformer(records) {
+        const rollups = new Map();
+        for (const record of records) {
+          const company = scoutParentCompany(record);
+          const ts = scoutTimestampMs(record);
+          const cur = rollups.get(company) || { company, submissions: 0, latestTs: 0 };
+          cur.submissions += 1;
+          if (ts !== null) cur.latestTs = Math.max(cur.latestTs, ts);
+          rollups.set(company, cur);
+        }
+
+        const ranked = [...rollups.values()].sort((a, b) =>
+          (b.submissions - a.submissions) ||
+          (b.latestTs - a.latestTs) ||
+          a.company.localeCompare(b.company)
+        );
+
+        return ranked.length ? ranked[0] : null;
+      }
+
+      function renderScoutTopPerformer(records, configured) {
+        const el = document.getElementById('scoutTopPerformerPill');
+        if (!el) return;
+
+        if (!configured) {
+          el.textContent = 'Top performer: Not configured';
+          return;
+        }
+
+        const top = scoutTopPerformer(records);
+        if (!top) {
+          el.textContent = 'Top performer: —';
+          return;
+        }
+
+        const submissionLabel = top.submissions === 1 ? 'submission' : 'submissions';
+        el.textContent = `Top performer: ${top.company} (${top.submissions} ${submissionLabel})`;
+      }
+
       function renderScoutWeeklyProduction(records, configured) {
         const body = document.getElementById('scoutWeeklyBody');
         const msg = document.getElementById('scoutWeeklyMessage');
@@ -1548,48 +1635,15 @@ def _exec_metrics_tabs_section_html(
         };
       }
 
-      function renderScoutSection() {
-        const payload = teamPayload('scout');
-        const head = document.getElementById('scoutTableHead');
-        const body = document.getElementById('scoutTableBody');
-        const msg = document.getElementById('scoutMessage');
-        if (!head || !body || !msg) return;
-
-        const configured = !!(payload && payload.configured);
-        const headers = payload && Array.isArray(payload.raw_headers) ? payload.raw_headers : [];
-        const records = payload && Array.isArray(payload.records) ? payload.records : [];
-        const queueCount = records.filter(r => ['QUEUED', 'PROCESSING'].includes(String(r.processing_status || '').toUpperCase())).length;
-        const uniqueSites = new Set(records.map(r => String(r.site_number || '').trim()).filter(Boolean)).size;
-        const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
-        const submittedToday = records.filter(r => {
-          const t = scoutTimestampMs(r);
-          return t !== null && t >= todayStart;
-        }).length;
-
-        setText('scoutTotalRecords', String(records.length));
-        setText('scoutQueueCount', String(queueCount));
-        setText('scoutSubmittedToday', String(submittedToday));
-        setText('scoutConfigured', configured ? 'Yes' : 'No');
-        setText('scoutUniqueSites', String(uniqueSites));
-        renderScoutWeeklyProduction(records, configured);
-
+      function renderTeamRawTable({ head, body, headers, records, configured, emptyLabel }) {
+        if (!head || !body) return;
         head.textContent = '';
         body.textContent = '';
-
-        if (payload && payload.error) {
-          msg.textContent = payload.error;
-        } else if (!configured) {
-          msg.textContent = 'Scout data source is not configured yet.';
-        } else if (!headers.length) {
-          msg.textContent = 'Scout is configured, but no table headers were returned yet.';
-        } else {
-          msg.textContent = 'Scout is a fully independent section with its own live metrics and its own raw Airtable table. Revolutionary, I know.';
-        }
 
         if (!headers.length) {
           const tr = document.createElement('tr');
           const td = document.createElement('td');
-          td.textContent = configured ? 'No Scout data available.' : 'Not configured.';
+          td.textContent = configured ? emptyLabel : 'Not configured.';
           td.style.padding = '14px 12px';
           td.style.color = 'var(--muted)';
           tr.appendChild(td);
@@ -1629,6 +1683,52 @@ def _exec_metrics_tabs_section_html(
           frag.appendChild(tr);
         }
         body.appendChild(frag);
+      }
+
+      function renderScoutSection() {
+        const payload = teamPayload('scout');
+        const head = document.getElementById('scoutTableHead');
+        const body = document.getElementById('scoutTableBody');
+        const msg = document.getElementById('scoutMessage');
+        if (!head || !body || !msg) return;
+
+        const configured = !!(payload && payload.configured);
+        const headers = payload && Array.isArray(payload.raw_headers) ? payload.raw_headers : [];
+        const records = payload && Array.isArray(payload.records) ? payload.records : [];
+        const queueCount = records.filter(r => ['QUEUED', 'PROCESSING'].includes(String(r.processing_status || '').toUpperCase())).length;
+        const uniqueSites = new Set(records.map(r => String(r.site_number || '').trim()).filter(Boolean)).size;
+        const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+        const submittedToday = records.filter(r => {
+          const t = scoutTimestampMs(r);
+          return t !== null && t >= todayStart;
+        }).length;
+
+        setText('scoutTotalRecords', String(records.length));
+        setText('scoutQueueCount', String(queueCount));
+        setText('scoutSubmittedToday', String(submittedToday));
+        setText('scoutConfigured', configured ? 'Yes' : 'No');
+        setText('scoutUniqueSites', String(uniqueSites));
+        renderScoutTopPerformer(records, configured);
+        renderScoutWeeklyProduction(records, configured);
+
+        if (payload && payload.error) {
+          msg.textContent = payload.error;
+        } else if (!configured) {
+          msg.textContent = 'Scout data source is not configured yet.';
+        } else if (!headers.length) {
+          msg.textContent = 'Scout is configured, but no table headers were returned yet.';
+        } else {
+          msg.textContent = 'Scout is a fully independent section with its own live metrics and its own raw Airtable table. Revolutionary, I know.';
+        }
+
+        renderTeamRawTable({
+          head,
+          body,
+          headers,
+          records,
+          configured,
+          emptyLabel: 'No Scout data available.',
+        });
       }
 
       function heatClass(passRate) {
@@ -1850,6 +1950,30 @@ def _exec_metrics_tabs_section_html(
         render();
       }}
 
+      function updatePostPassPill(key) {
+        const pill = document.getElementById('postPassPill');
+        const countEl = document.getElementById('postPassPillCount');
+        if (!pill || !countEl) return;
+        const start = windowStartMs(key);
+        const uniqueSites = new Set();
+        for (const entry of correctionData) {
+          if (!entry.corrected_at) continue;
+          const t = Date.parse(entry.corrected_at);
+          if (Number.isFinite(t) && t >= start) {
+            uniqueSites.add(String(entry.site_number || '').trim());
+          }
+        }
+        const count = uniqueSites.size;
+        countEl.textContent = String(count);
+        if (count > 0) {
+          pill.removeAttribute('hidden');
+          pill.style.display = 'inline-flex';
+        } else {
+          pill.setAttribute('hidden', '');
+          pill.style.display = 'none';
+        }
+      }
+
       function syncDimensionButtons() {
         document.querySelectorAll('[data-dimension]').forEach(btn => {
           const active = btn.getAttribute('data-dimension') === activeDimensionKey();
@@ -1866,6 +1990,7 @@ def _exec_metrics_tabs_section_html(
 
         const rows = cleanRows(key);
         setKpis(rows);
+        updatePostPassPill(key);
 
         const daily = sumDailyInWindow(key);
         setText('summaryError', String(daily.error));
@@ -1963,7 +2088,7 @@ def _exec_metrics_tabs_section_html(
         if (!vendorSelect) return;
         const previousValue = vendorSelect.value || '';
         const seen = new Map();
-        for (const r of raw) {
+        for (const r of surveyPerformanceRows) {
           const value = dimensionValue(r);
           if (!value) continue;
           const companion = activeDimensionKey() === 'vendor_email'
@@ -2046,4 +2171,5 @@ def _exec_metrics_tabs_section_html(
         .replace("__QUEUE_TREND_POINTS_JSON__", queue_points_json)
         .replace("__TEAM_DASHBOARD_DATA_JSON__", team_data_json)
         .replace("__WEEKLY_HIGHLIGHTS_JSON__", weekly_highlights_json)
+        .replace("__CORRECTION_DATA_JSON__", correction_data_json)
     )

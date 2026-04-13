@@ -49,6 +49,13 @@ class UserConfig:
     reference_workbook_sheet: str = ""
     reference_workbook_site_id_column: str = "SelectedSiteID"
 
+    # Scout Airtable source (optional — separate base/token from Survey)
+    # Leaving base_id + table_name blank disables the Scout dashboard tab.
+    scout_airtable_token: str = ""   # blank → reuse main airtable_token
+    scout_airtable_base_id: str = ""
+    scout_airtable_table_name: str = ""
+    scout_airtable_view_id: str = ""  # blank → default view
+
 
 def get_user_config_path() -> Path:
     """Return the user config file path: ~/.siteowlqa/config.json"""
@@ -102,6 +109,10 @@ def save_user_config(config: UserConfig) -> None:
         'reference_workbook_path': config.reference_workbook_path,
         'reference_workbook_sheet': config.reference_workbook_sheet,
         'reference_workbook_site_id_column': config.reference_workbook_site_id_column,
+        'scout_airtable_token': config.scout_airtable_token,
+        'scout_airtable_base_id': config.scout_airtable_base_id,
+        'scout_airtable_table_name': config.scout_airtable_table_name,
+        'scout_airtable_view_id': config.scout_airtable_view_id,
     }
     
     config_path.write_text(json.dumps(data, indent=2), encoding='utf-8')
@@ -189,7 +200,7 @@ def create_user_config_interactive() -> UserConfig:
     reference_workbook_path = input("  Excel file path (leave blank to use SQL Server): ").strip()
     reference_workbook_sheet = ""
     reference_workbook_site_id_column = "SelectedSiteID"
-    
+
     if reference_workbook_path:
         reference_workbook_sheet = input("  Sheet name [default: SQL DB MASTER]: ").strip()
         if not reference_workbook_sheet:
@@ -197,26 +208,42 @@ def create_user_config_interactive() -> UserConfig:
         reference_workbook_site_id_column = input("  Site ID column [default: SelectedSiteID]: ").strip()
         if not reference_workbook_site_id_column:
             reference_workbook_site_id_column = "SelectedSiteID"
-    
+
+    # Scout Airtable
+    print("\n[6/7] Scout Airtable Source (for Scout dashboard tab)")
+    print("  Leave base ID + table blank to disable the Scout tab.")
+    scout_airtable_base_id = input("  Scout Base ID (app...): ").strip()
+    scout_airtable_table_name = ""
+    scout_airtable_token = ""
+    scout_airtable_view_id = ""
+
+    if scout_airtable_base_id:
+        scout_airtable_table_name = input("  Scout Table Name (exact, case-sensitive): ").strip()
+        scout_airtable_token = input("  Scout API Token (leave blank to reuse Survey token): ").strip()
+        scout_airtable_view_id = input("  Scout View ID (viw..., leave blank for default): ").strip()
+
     # Confirm
     print("\n" + "-"*70)
-    print("[6/7] Review Configuration")
+    print("[7/7] Review Configuration")
     print("-"*70)
     print(f"  SQL Server:        {sql_server} / {sql_database}")
-    print(f"  Airtable Base:     {airtable_base_id}")
-    print(f"  Airtable Table:    {airtable_table_name}")
+    print(f"  Survey Airtable:   {airtable_base_id} / {airtable_table_name}")
+    if scout_airtable_base_id:
+        print(f"  Scout Airtable:    {scout_airtable_base_id} / {scout_airtable_table_name}")
+    else:
+        print(f"  Scout Airtable:    (disabled)")
     if smtp_server:
         print(f"  SMTP:              {smtp_server}:{smtp_port} ({smtp_user})")
     if element_llm_gateway_url:
         print(f"  LLM Gateway:       Configured")
     if reference_workbook_path:
         print(f"  Reference:         {reference_workbook_path}")
-    
-    confirm = input("\n[7/7] Save configuration? (y/n): ").strip().lower()
+
+    confirm = input("\nSave configuration? (y/n): ").strip().lower()
     if confirm != 'y':
         print("Cancelled.")
         sys.exit(0)
-    
+
     config = UserConfig(
         sql_server=sql_server,
         sql_database=sql_database,
@@ -236,6 +263,10 @@ def create_user_config_interactive() -> UserConfig:
         reference_workbook_path=reference_workbook_path,
         reference_workbook_sheet=reference_workbook_sheet,
         reference_workbook_site_id_column=reference_workbook_site_id_column,
+        scout_airtable_token=scout_airtable_token,
+        scout_airtable_base_id=scout_airtable_base_id,
+        scout_airtable_table_name=scout_airtable_table_name,
+        scout_airtable_view_id=scout_airtable_view_id,
     )
     
     save_user_config(config)

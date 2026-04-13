@@ -352,6 +352,9 @@ def _copy_raw_file(
     is never moved or modified — only copied.
     """
     dest = raw_dir / f"{safe_prefix}_raw{src.suffix}"
+    if src.resolve() == dest.resolve():
+        log.info("Post-pass correction: raw file already in RAW dir, no copy needed (%s)", dest.name)
+        return dest
     try:
         shutil.copy2(src, dest)
         log.info("Post-pass correction: raw copy written → %s", dest)

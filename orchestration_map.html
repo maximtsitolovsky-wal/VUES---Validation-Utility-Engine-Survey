@@ -42,19 +42,116 @@ canvas{display:block;position:fixed;top:48px;left:0;cursor:crosshair}
 .leg-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 #hint{position:fixed;bottom:18px;right:20px;font-size:10px;color:#1a2a40;z-index:20}
+
+/* ── HUD controls ─── */
+#back-btn{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;color:#4d8eff;
+  text-decoration:none;padding:4px 10px;
+  border:1px solid rgba(77,142,255,.25);border-radius:6px;
+  transition:background .15s,color .15s;
+  white-space:nowrap;letter-spacing:.02em;
+}
+#back-btn:hover{background:rgba(77,142,255,.12);color:#93b4f5}
+#guide-btn{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;color:#ffc220;
+  background:rgba(255,194,32,.06);border:1px solid rgba(255,194,32,.22);
+  border-radius:6px;padding:4px 12px;cursor:pointer;
+  transition:background .15s;letter-spacing:.04em;
+}
+#guide-btn:hover{background:rgba(255,194,32,.14)}
+#hud-right-controls{display:flex;align-items:center;gap:12px}
+
+/* ── Guide drawer (slides in from left) ─── */
+#guide{
+  position:fixed;top:48px;left:0;bottom:0;width:390px;
+  background:rgba(5,10,22,.97);backdrop-filter:blur(20px);
+  border-right:1px solid rgba(0,83,226,.2);
+  overflow-y:auto;padding:24px 22px 40px;
+  z-index:30;transition:transform .22s ease;
+  scrollbar-width:thin;scrollbar-color:#1a2a50 transparent;
+}
+#guide.closed{transform:translateX(-100%)}
+#guide-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:20px;
+}
+#guide-header h2{
+  font-size:15px;font-weight:800;color:#fff;
+  letter-spacing:.05em;text-transform:uppercase;
+  line-height:1.3;
+}
+#guide-close{
+  font-size:18px;color:#2a4a7a;cursor:pointer;
+  padding:2px 6px;border-radius:4px;
+  background:none;border:none;transition:color .15s;
+}
+#guide-close:hover{color:#93b4f5}
+.g-summary{
+  font-size:12px;color:#5a7a9a;line-height:1.75;
+  margin-bottom:24px;padding-bottom:20px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.g-section{margin-bottom:22px}
+.g-section-title{
+  font-size:9px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:#2a4a7a;margin-bottom:10px;
+}
+.g-phase{
+  background:rgba(255,255,255,.03);border-radius:10px;
+  border-left:3px solid #0053e2;padding:12px 14px;
+  margin-bottom:8px;
+}
+.g-phase[data-c='memory']{border-color:#d97706}
+.g-phase[data-c='pass']  {border-color:#2a8703}
+.g-phase[data-c='fail']  {border-color:#ea1100}
+.g-phase[data-c='review']{border-color:#7c3aed}
+.g-phase[data-c='async'] {border-color:#6b7280}
+.g-phase[data-c='loop']  {border-color:#ffc220}
+.g-phase h3{
+  font-size:12px;font-weight:700;color:#93b4f5;
+  margin-bottom:5px;display:flex;align-items:center;gap:7px;
+}
+.g-phase[data-c='memory'] h3{color:#fbbf24}
+.g-phase[data-c='pass']   h3{color:#86efac}
+.g-phase[data-c='fail']   h3{color:#fca5a5}
+.g-phase[data-c='review'] h3{color:#c4b5fd}
+.g-phase[data-c='async']  h3{color:#c4c6cb}
+.g-phase[data-c='loop']   h3{color:#ffc220}
+.g-badge{
+  font-size:8px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:2px 7px;
+  border-radius:9999px;opacity:.8;
+}
+.g-phase p{
+  font-size:11px;color:#4a6a8a;line-height:1.7;
+  margin:0;
+}
+.g-edge-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.g-edge-line{
+  width:26px;height:3px;border-radius:2px;flex-shrink:0;
+}
+.g-edge-label{font-size:11px;color:#4a6a8a;line-height:1.5}
 </style>
 </head>
 <body>
 
 <div id="hud">
-  <div id="hud-left">
-    <div id="hud-title">SiteOwlQA · Neural Orchestration Map</div>
-    <div id="hud-sub">Hover any node to explore · Watch data flow · See the learning loop</div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <a id="back-btn" href="ui/executive_dashboard.html">← Dashboard</a>
+    <div id="hud-left">
+      <div id="hud-title">SiteOwlQA · Architecture</div>
+      <div id="hud-sub">Hover nodes · Open the Guide for a full walkthrough</div>
+    </div>
   </div>
-  <div id="hud-stats">
-    <div class="stat-blk"><div class="stat-n">23</div><div class="stat-l">Nodes</div></div>
-    <div class="stat-blk"><div class="stat-n">25</div><div class="stat-l">Edges</div></div>
-    <div class="stat-blk"><div class="stat-n" id="clock">—</div><div class="stat-l">Live</div></div>
+  <div id="hud-right-controls">
+    <button id="guide-btn" onclick="toggleGuide()">≡ Guide</button>
+    <div id="hud-stats">
+      <div class="stat-blk"><div class="stat-n">23</div><div class="stat-l">Nodes</div></div>
+      <div class="stat-blk"><div class="stat-n">25</div><div class="stat-l">Edges</div></div>
+      <div class="stat-blk"><div class="stat-n" id="clock">—</div><div class="stat-l">Live</div></div>
+    </div>
   </div>
 </div>
 
@@ -75,7 +172,102 @@ canvas{display:block;position:fixed;top:48px;left:0;cursor:crosshair}
   <div class="leg"><div class="leg-d" style="background:#7c3aed"></div>Review</div>
   <div class="leg"><div class="leg-d" style="background:#74767c"></div>Async</div>
 </div>
-<div id="hint">Hover nodes to explore</div>
+<div id="hint">Hover nodes to explore · Open Guide for full breakdown</div>
+
+<div id="guide" class="closed">
+  <div id="guide-header">
+    <h2>Architecture<br>Guide</h2>
+    <button id="guide-close" onclick="toggleGuide()" aria-label="Close guide">×</button>
+  </div>
+
+  <p class="g-summary">Fully automated QA pipeline for retail site survey submissions. Records arrive in <strong style="color:#93b4f5">Airtable</strong> as QUEUED, flow through 7 stages, then <strong style="color:#86efac">PASS</strong> or <strong style="color:#fca5a5">FAIL</strong> — vendor emailed, Airtable updated, everything archived, lessons fed back into memory. No human needed in the happy path.</p>
+
+  <!-- Stage 1 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 1 — Entry Point</div>
+    <div class="g-phase">
+      <h3>▣ main.py <span class="g-badge" style="background:#0053e228;color:#4d8eff">core</span></h3>
+      <p>The system’s heartbeat. Polls Airtable for QUEUED records on a 60-second loop. Catches all exceptions at the record level so one bad submission can never crash the pipeline. Spawns the Async Worker thread on startup. Handles OS shutdown signals gracefully. If this stops, nothing else runs.</p>
+    </div>
+  </div>
+
+  <!-- Stage 2 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 2 — Validate &amp; Recall</div>
+    <div class="g-phase">
+      <h3>▣ Validate &amp; Recall <span class="g-badge" style="background:#1e40af28;color:#60a5fa">phase</span></h3>
+      <p>Before touching any files, the pipeline checks that every critical field exists: Site Number, Site Name, attachments, vendor info. A missing field immediately marks the record <strong style="color:#fca5a5">ERROR</strong> and halts — expensive processing is never wasted on incomplete submissions. </p> </div> <div class="g-phase" data-c="memory"> <h3>▣ memory.py <span class="g-badge" style="background:#d9770628;color:#fbbf24">memory</span></h3> <p> Simultaneously, <em>memory.py</em> queries the lesson archive by site, vendor, and tag. Any previously extracted failure rules (e.g. “Vendor X always drops column Y”) are surfaced here and attached to the grading context, making each run smarter than the last.</p>
+    </div>
+  </div>
+
+  <!-- Stage 3 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 3 — Process</div>
+    <div class="g-phase">
+      <h3>▣ Download Attachment</h3>
+      <p><em>airtable_client.py</em> downloads the XLSX or CSV attachment to a local <code style="color:#60a5fa">temp/</code> folder. RISK-003 — Airtable CDN URL expiry — is mitigated: a mirror script backs up attachments to OneDrive by Site ID. </p> </div> <div class="g-phase"> <h3>▣ Normalize <em style="font-weight:400">(file_processor.py)</em></h3> <p> Headers are lowercased and underscored regardless of how the vendor formatted them. Critically, <code style="color:#60a5fa">project_id</code> is always overwritten with the Airtable Site Number — the single source of truth. Vendor-supplied project IDs are never trusted. </p> </div> <div class="g-phase"> <h3>▣ SQL Reference Fetch <em style="font-weight:400">(sql.py)</em></h3> <p> Pulls the canonical reference row set from local SQLite, scoped strictly to the current site. This is the baseline the grader compares against. All reads are read-only. sql.py owns <em>all</em> database interactions — nothing else touches the DB.</p>
+    </div>
+  </div>
+
+  <!-- Stage 4 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 4 — Grade &amp; Decide</div>
+    <div class="g-phase">
+      <h3>▣ python_grader.py</h3>
+      <p>Compares the normalized submission against the SQL reference row-by-row. Uses column fingerprinting and weighted scoring to produce a numeric score 0–100. Memory recall context (from Stage 2) can inform the summary narrative. </p> </div> <div class="g-phase" data-c="pass"> <h3>▣ PASS branch <span class="g-badge" style="background:#2a870328;color:#86efac">≥ threshold</span></h3> <p> <em>status_from_score()</em> is the single decision function — never duplicated. A PASS routes through Output (email + Airtable update) then Archive. If score ≥ 95, <em>post_pass_correction</em> also runs to generate corrected reference files. </p> </div> <div class="g-phase" data-c="fail"> <h3>▣ FAIL branch <span class="g-badge" style="background:#ea110028;color:#fca5a5">&lt; threshold</span></h3> <p> Routes through the same Output stage (vendor receives a FAIL email with specific feedback), then through Archive where a lesson is extracted. That lesson flows into the learning loop and is available for the <em>next</em> run against this site or vendor.</p>
+    </div>
+  </div>
+
+  <!-- Stage 5 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 5 — Output</div>
+    <div class="g-phase">
+      <h3>▣ emailer.py</h3>
+      <p>Sends a templated email (PASS / FAIL / ERROR) to the vendor. SMTP is optional — if <code style="color:#60a5fa">SMTP_ENABLED=false</code>, the step is silently skipped. Email content includes score, summary, and corrective guidance for failures. </p> </div> <div class="g-phase"> <h3>▣ Airtable Update <em style="font-weight:400">(airtable_client.py)</em></h3> <p> PATCHes the Airtable record with status, True Score, Score%, Fail Summary, and Notes. <strong>All fields are always written</strong> — no field is ever left blank from a previous run. This is a hard rule preventing ghost data contamination across resubmissions.</p>
+    </div>
+  </div>
+
+  <!-- Stage 6 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 6 — Archive &amp; Learn</div>
+    <div class="g-phase" data-c="memory">
+      <h3>▣ archive.py <span class="g-badge" style="background:#d9770628;color:#fbbf24">immutable</span></h3>
+      <p>Appends an execution record to a JSON archive and stores the raw submission file. <em>Nothing is ever deleted or overwritten.</em> This provides a full audit trail for every run, including errors. </p> </div> <div class="g-phase" data-c="pass"> <h3>▣ post_pass_correction <span class="g-badge" style="background:#2a870328;color:#86efac">score ≥95 only</span></h3> <p> For very high-scoring passes, generates corrected RAW, CSV, and LOG output files. Never re-grades. Never calls Airtable. A completely separate, safe sub-pipeline. </p> </div> <div class="g-phase" data-c="review"> <h3>▣ reviewer.py <span class="g-badge" style="background:#7c3aed28;color:#c4b5fd">audit</span></h3> <p> Internal static audit of the run’s behaviour. Issues are classified <em style="color:#fca5a5">CRITICAL</em> / <em style="color:#fbbf24">HIGH</em> / <em style="color:#86efac">LOW</em>. Results are logged and archived. <strong>reviewer.py never mutates pipeline state</strong> — it is a pure observer.</p>
+    </div>
+  </div>
+
+  <!-- Learning Loop -->
+  <div class="g-section">
+    <div class="g-section-title">● The Learning Loop</div>
+    <div class="g-phase" data-c="loop">
+      <h3>▣ lesson → memory <span class="g-badge" style="background:#ffc22028;color:#ffc220">feedback</span></h3>
+      <p>After a failure (or even a partial pass), the pipeline extracts a <em>generalized rule</em> with a confidence score (default 0.75). This rule is tagged by site, vendor, column pattern, and issue type, then written to the archive. On the <em>next run</em>, <em>memory.py</em> recalls it during Stage 2 — before grading even starts — so the grader has institutional context. Over time, this builds a compounding knowledge base of failure patterns.</p>
+    </div>
+  </div>
+
+  <!-- Stage 7 -->
+  <div class="g-section">
+    <div class="g-section-title">● Stage 7 — Async Workers</div>
+    <div class="g-phase" data-c="async">
+      <h3>▣ MetricsRefreshWorker</h3>
+      <p>Runs on a background thread. <em>mark_dirty()</em> is called whenever a record completes. The worker detects the dirty flag and asynchronously recomputes 3 metric CSVs and refreshes 2 HTML dashboards — <strong>never blocking the main poll loop</strong>. If metrics fail, the pipeline keeps running.</p>
+    </div>
+  </div>
+
+  <!-- Edge guide -->
+  <div class="g-section">
+    <div class="g-section-title">● Edge Types (what the lines mean)</div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#60a5fa"></div><div class="g-edge-label"><strong style="color:#93b4f5">flow</strong> — primary pipeline progression between phases</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#3b82f6"></div><div class="g-edge-label"><strong style="color:#93b4f5">primary</strong> — main.py spawning each phase</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#1e3a8a"></div><div class="g-edge-label"><strong style="color:#93b4f5">normal</strong> — phase calling a module</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#fbbf24"></div><div class="g-edge-label"><strong style="color:#fbbf24">memory</strong> — data flowing to/from the knowledge store</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#ffc220;height:3px;border-top:2px dashed #ffc220;background:transparent"></div><div class="g-edge-label"><strong style="color:#ffc220">loop</strong> — lesson feeding back into memory (gold arc)</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#4ade80"></div><div class="g-edge-label"><strong style="color:#86efac">pass</strong> — PASS outcome or high-score sub-pipeline</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#f87171"></div><div class="g-edge-label"><strong style="color:#fca5a5">fail</strong> — FAIL outcome routing</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#a78bfa"></div><div class="g-edge-label"><strong style="color:#c4b5fd">review</strong> — pipeline to internal auditor</div></div>
+    <div class="g-edge-row"><div class="g-edge-line" style="background:#6b7280"></div><div class="g-edge-label"><strong style="color:#c4c6cb">async</strong> — non-blocking background worker paths (dashed)</div></div>
+  </div>
+</div>
 
 <script>
 // ── Color tokens ──────────────────────────────────────────────────────────────
@@ -362,8 +554,20 @@ cv.addEventListener('mousemove',e=>{
 });
 cv.addEventListener('mouseleave',()=>{hovered=null;showPanel(null);});
 
-// ── Clock ─────────────────────────────────────────────────────────────────────
-function tick(){
+// ── Guide toggle ──────────────────────────────────────────────────────────────────
+let guideOpen = false;
+function toggleGuide() {
+  guideOpen = !guideOpen;
+  document.getElementById('guide').classList.toggle('closed', !guideOpen);
+  document.getElementById('guide-btn').textContent = guideOpen ? '× Guide' : '≡ Guide';
+  // nudge canvas so it doesn't sit under the drawer
+  cv.style.left = guideOpen ? '390px' : '0';
+  cv.style.width = guideOpen ? `${window.innerWidth - 390}px` : '';
+  // re-center
+  CX = (guideOpen ? (W - 390) / 2 + 390 : W / 2);
+}
+
+// ── Clock ───────────────────────────────────────────────────────────────────────────────
   document.getElementById('clock').textContent=
     new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }

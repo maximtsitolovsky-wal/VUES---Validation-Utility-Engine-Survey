@@ -58,8 +58,8 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-13** — Architecture tab rebuilt with luxury neural-map UI from `preview (1).html` template. Drill-down realm system, brain-shaped nodes, SVG multi-strand edges, glass morphism.
-2. **2026-04-13** — Governance layer hardened. QUICK REF block + mandatory MEMORY CHECK proof-of-read added to CLAUDE.md.
+1. **2026-04-13** — Architecture rebuilt: 59 real nodes across 8 drill-down realms (root/pipeline/grader/async_workers/datastore/airtable/correction/output), mapped directly from source code. `served_dashboard/` synced from `output/` via `tools/publish_served_dashboard.py`. Scout + vendorHeatmap confirmed present in both.
+2. **2026-04-13** — Architecture tab rebuilt with luxury neural-map UI. Drill-down realm system, brain-shaped nodes, SVG multi-strand edges, glass morphism.
 3. **2026-04-13** — Airtable credentials live in `~/.siteowlqa/config.json`. Not `.env`.
 
 ---
@@ -229,8 +229,11 @@
 - **Rule added:** When patching large generated HTML files, always use `replace_in_file` tool — never `Path.write_text()` from an inline script.
 - **Closed:** Yes.
 
-### 2026-04-13 — Architecture Tab Rebuilt with Luxury Neural-Map UI
-- **Decision:** `orchestration_map.html` rebuilt from scratch using the luxury neural-map template (`preview (1).html`). Canvas-based approach replaced with: brain-shaped DOM nodes, SVG multi-strand animated edges (ghost strands + moving dots via `animateMotion`), filament/star background canvas, drill-down realm navigation (root → 7 pipeline stages → module detail), glass morphism UI, live clock, live stats bar.
-- **Data mapping:** root realm = 7 pipeline stages (main, validate, process, grade, output, archive, async). Each stage drills into its Python modules with accurate `summary`, `manages`, and edge connections. PASS/FAIL branches, learning loop, RISK-003 reference all preserved.
-- **Impact:** `orchestration_map.html` only. 459 lines, 43/43 checks pass. Back-to-dashboard link: `ui/executive_dashboard.html`. Architecture link from dashboard: `../orchestration_map.html`.
+### 2026-04-13 — Deep Architecture Map + Dashboard Sync Fix
+- **Problem:** Architecture tab was too shallow (7 nodes, no real module detail). Dashboard `served_dashboard/` was 60KB stale — Scout + vendorHeatmap present in `output/` but not synced.
+- **Dashboard fix:** Ran `tools/publish_served_dashboard.py`. Nav link (Architecture) preserved because `output/executive_dashboard.html` already had it. `served_dashboard/` now 308KB, matches `output/`.
+- **Architecture decision:** Read `main.py`, `poll_airtable.py`, `python_grader.py`, `metrics_worker.py`, `archive.py` directly before designing. 59 real nodes across 8 realms: root (8), pipeline (8), grader (7), async_workers (8), datastore (7), airtable (8), correction (7), output (6).
+- **Key nodes:** `status_from_score()` single decision function, `CorrectionStateDB` SQLite dedup, `COMPARABLE_COLUMNS` canonical header set, `GradingInconsistencyError`, `Decimal(str(...))` float stability, RISK-003 CDN+OneDrive, ghost-data-prevention rule, 14-step process_record() orchestrator, mark_dirty() dirty-flag pattern, append-only archive with 6 subdirs.
+- **File:** `orchestration_map.html` — 512 lines, 22/22 checks. Opens from `ui/executive_dashboard.html` via Architecture nav link.
+- **Rule reconfirmed:** NEVER skim modules before building architecture. Read the actual source code first.
 - **Closed:** Yes.

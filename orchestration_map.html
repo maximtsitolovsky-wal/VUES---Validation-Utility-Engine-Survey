@@ -1,582 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>SiteOwlQA · Neural Map</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#060c18;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
-canvas{display:block;position:fixed;top:48px;left:0;cursor:crosshair}
-
-#hud{position:fixed;top:0;left:0;right:0;height:48px;
-  background:rgba(6,12,24,.9);backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(0,83,226,.3);
-  display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:20}
-#hud-left{display:flex;flex-direction:column;gap:1px}
-#hud-title{font-size:12px;font-weight:700;color:#93b4f5;letter-spacing:.1em;text-transform:uppercase}
-#hud-sub{font-size:10px;color:#2a4a7a}
-#hud-stats{display:flex;gap:24px}
-.stat-blk{text-align:right}
-.stat-n{font-size:18px;font-weight:800;color:#0053e2;line-height:1}
-.stat-l{font-size:9px;color:#2a4a7a;text-transform:uppercase;letter-spacing:.1em}
-
-#panel{position:fixed;top:64px;right:20px;width:265px;
-  background:rgba(6,12,24,.92);backdrop-filter:blur(18px);
-  border:1px solid rgba(0,83,226,.2);border-radius:12px;padding:18px;
-  z-index:20;transition:opacity .18s,transform .18s}
-#panel.off{opacity:0;pointer-events:none;transform:translateX(8px)}
-#pname{font-size:15px;font-weight:700;color:#fff;margin-bottom:5px}
-#ptype{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;padding:2px 9px;border-radius:9999px;margin-bottom:11px}
-#pdesc{font-size:12px;color:#7a9abf;line-height:1.65;margin-bottom:11px}
-#pconns{font-size:11px;color:#2a4a7a;display:flex;flex-direction:column;gap:3px}
-#pconns span{color:#4d8eff}
-
-#legend{position:fixed;bottom:16px;left:20px;
-  background:rgba(6,12,24,.88);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.06);border-radius:10px;
-  padding:11px 15px;z-index:20;
-  display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
-.leg{display:flex;align-items:center;gap:7px;font-size:10px;color:#7a9abf}
-.leg-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-#hint{position:fixed;bottom:18px;right:20px;font-size:10px;color:#1a2a40;z-index:20}
-
-/* ── HUD controls ─── */
-#back-btn{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:600;color:#4d8eff;
-  text-decoration:none;padding:4px 10px;
-  border:1px solid rgba(77,142,255,.25);border-radius:6px;
-  transition:background .15s,color .15s;
-  white-space:nowrap;letter-spacing:.02em;
-}
-#back-btn:hover{background:rgba(77,142,255,.12);color:#93b4f5}
-#guide-btn{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:700;color:#ffc220;
-  background:rgba(255,194,32,.06);border:1px solid rgba(255,194,32,.22);
-  border-radius:6px;padding:4px 12px;cursor:pointer;
-  transition:background .15s;letter-spacing:.04em;
-}
-#guide-btn:hover{background:rgba(255,194,32,.14)}
-#hud-right-controls{display:flex;align-items:center;gap:12px}
-
-/* ── Guide drawer (slides in from left) ─── */
-#guide{
-  position:fixed;top:48px;left:0;bottom:0;width:390px;
-  background:rgba(5,10,22,.97);backdrop-filter:blur(20px);
-  border-right:1px solid rgba(0,83,226,.2);
-  overflow-y:auto;padding:24px 22px 40px;
-  z-index:30;transition:transform .22s ease;
-  scrollbar-width:thin;scrollbar-color:#1a2a50 transparent;
-}
-#guide.closed{transform:translateX(-100%)}
-#guide-header{
-  display:flex;justify-content:space-between;align-items:flex-start;
-  margin-bottom:20px;
-}
-#guide-header h2{
-  font-size:15px;font-weight:800;color:#fff;
-  letter-spacing:.05em;text-transform:uppercase;
-  line-height:1.3;
-}
-#guide-close{
-  font-size:18px;color:#2a4a7a;cursor:pointer;
-  padding:2px 6px;border-radius:4px;
-  background:none;border:none;transition:color .15s;
-}
-#guide-close:hover{color:#93b4f5}
-.g-summary{
-  font-size:12px;color:#5a7a9a;line-height:1.75;
-  margin-bottom:24px;padding-bottom:20px;
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
-.g-section{margin-bottom:22px}
-.g-section-title{
-  font-size:9px;font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:#2a4a7a;margin-bottom:10px;
-}
-.g-phase{
-  background:rgba(255,255,255,.03);border-radius:10px;
-  border-left:3px solid #0053e2;padding:12px 14px;
-  margin-bottom:8px;
-}
-.g-phase[data-c='memory']{border-color:#d97706}
-.g-phase[data-c='pass']  {border-color:#2a8703}
-.g-phase[data-c='fail']  {border-color:#ea1100}
-.g-phase[data-c='review']{border-color:#7c3aed}
-.g-phase[data-c='async'] {border-color:#6b7280}
-.g-phase[data-c='loop']  {border-color:#ffc220}
-.g-phase h3{
-  font-size:12px;font-weight:700;color:#93b4f5;
-  margin-bottom:5px;display:flex;align-items:center;gap:7px;
-}
-.g-phase[data-c='memory'] h3{color:#fbbf24}
-.g-phase[data-c='pass']   h3{color:#86efac}
-.g-phase[data-c='fail']   h3{color:#fca5a5}
-.g-phase[data-c='review'] h3{color:#c4b5fd}
-.g-phase[data-c='async']  h3{color:#c4c6cb}
-.g-phase[data-c='loop']   h3{color:#ffc220}
-.g-badge{
-  font-size:8px;font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;padding:2px 7px;
-  border-radius:9999px;opacity:.8;
-}
-.g-phase p{
-  font-size:11px;color:#4a6a8a;line-height:1.7;
-  margin:0;
-}
-.g-edge-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.g-edge-line{
-  width:26px;height:3px;border-radius:2px;flex-shrink:0;
-}
-.g-edge-label{font-size:11px;color:#4a6a8a;line-height:1.5}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SiteOwlQA · Architecture</title>
+  <style>
+    :root{--bg:#04070d;--bg2:#090f18;--text:#e8f1ff;--muted:rgba(232,241,255,0.5);--border:rgba(255,255,255,0.09);--glass:rgba(10,12,18,0.62);--glass-2:rgba(10,12,18,0.78)}
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at center,#0b1220 0%,#060a12 34%,#03050a 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    body::before{content:"";position:fixed;inset:0;opacity:.055;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px 180px;z-index:0}
+    #bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+    #app{position:relative;width:100vw;height:100vh;overflow:hidden;z-index:1}
+    .brain-shell{position:absolute;left:50%;top:50%;width:min(80vw,1280px);height:min(70vh,840px);transform:translate(-50%,-50%);border-radius:52% 48% 50% 50%/46% 52% 48% 54%;border:1px solid rgba(255,255,255,0.035);box-shadow:inset 0 0 100px rgba(0,0,0,0.35),0 0 140px rgba(100,120,255,0.04);pointer-events:none}
+    .brain-shell::before,.brain-shell::after{content:"";position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(255,255,255,0.04);filter:blur(.2px)}
+    .brain-shell::after{inset:18%;border-color:rgba(138,160,255,0.06)}
+    /* ── topbar ── */
+    .topbar{position:absolute;left:24px;top:24px;z-index:40;display:flex;align-items:center;gap:10px}
+    .lux-btn,.lux-pill{border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);backdrop-filter:blur(18px) saturate(140%);color:rgba(255,255,255,0.84);box-shadow:0 10px 30px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.08)}
+    .lux-btn{height:42px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px 0 10px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;text-decoration:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;white-space:nowrap}
+    .lux-btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.14);box-shadow:0 12px 36px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.1)}
+    .lux-btn .icon-wrap{width:24px;height:24px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04)}
+    .lux-btn svg{width:14px;height:14px;stroke:rgba(255,255,255,0.88);stroke-width:2;fill:none}
+    .lux-pill{border-radius:999px;padding:11px 18px;font-size:10px;text-transform:uppercase;letter-spacing:.24em;white-space:nowrap}
+    /* ── stats bar (top right) ── */
+    .statsbar{position:absolute;top:24px;right:24px;z-index:40;display:flex;align-items:center;gap:20px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);backdrop-filter:blur(18px) saturate(140%);border-radius:999px;padding:10px 22px;box-shadow:0 10px 30px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.08)}
+    .stat-blk{text-align:center}
+    .stat-n{font-size:18px;font-weight:800;color:#0053e2;line-height:1}
+    .stat-l{font-size:9px;color:rgba(232,241,255,0.4);text-transform:uppercase;letter-spacing:.14em}
+    /* ── SVG network ── */
+    #network{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:2}
+    #nodes{position:absolute;inset:0;z-index:3}
+    /* ── node styles ── */
+    .node{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;transition:transform .22s,filter .22s}
+    .node.active{z-index:20}
+    .node:hover{filter:brightness(1.08)}
+    .node-shape{position:relative;border:1px solid rgba(255,255,255,0.1);background:radial-gradient(circle at 42% 36%,rgba(255,255,255,0.18),transparent 16%),radial-gradient(circle at 58% 44%,rgba(120,140,255,0.18),transparent 20%),radial-gradient(circle at 50% 50%,rgba(10,14,24,0.94),rgba(5,7,14,0.98) 72%,rgba(2,3,7,1) 100%);backdrop-filter:blur(10px);overflow:visible;transition:transform .22s,box-shadow .22s}
+    .node-shape::before{content:"";position:absolute;inset:-10%;border-radius:inherit;border:1px solid rgba(255,255,255,0.05);opacity:.4}
+    .node-shape::after{content:"";position:absolute;inset:-18%;border-radius:inherit;background:radial-gradient(circle,rgba(255,255,255,0.06),transparent 68%);filter:blur(18px);opacity:.24;z-index:-1}
+    .node.active .node-shape{transform:scale(1.06);box-shadow:inset 0 0 36px rgba(180,200,255,0.1),0 0 42px rgba(140,160,255,0.16),0 0 80px rgba(100,120,255,0.1)}
+    .node-label{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);width:210px;text-align:center;font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,0.88);text-shadow:0 0 10px rgba(99,207,255,0.12);pointer-events:none}
+    /* ── bottom card ── */
+    .bottom-card{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(820px,90vw);padding:18px 22px;border-radius:20px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.025)),var(--glass);backdrop-filter:blur(20px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,0.28);z-index:30;text-align:center;pointer-events:none}
+    .bottom-card .bc-hint{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.24em;color:rgba(255,255,255,.5);margin-bottom:6px}
+    .bottom-card .bc-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.92);margin-bottom:6px}
+    .bottom-card .bc-text{font-size:13px;color:var(--muted);line-height:1.55}
+    .bc-drill{font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px;letter-spacing:.18em;text-transform:uppercase}
+    /* ── hover card ── */
+    .hover-card{position:absolute;z-index:50;width:min(360px,36vw);min-width:280px;padding:16px 16px 14px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.025)),var(--glass-2);backdrop-filter:blur(20px) saturate(145%);box-shadow:0 18px 46px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.07);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .16s,transform .16s}
+    .hover-card.show{opacity:1;transform:translateY(0)}
+    .hover-kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,0.44);margin-bottom:8px}
+    .hover-title{font-size:14px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,0.92);margin-bottom:12px}
+    .hover-section{margin-top:10px}
+    .hover-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,0.42);margin-bottom:6px}
+    .hover-copy{font-size:13px;line-height:1.5;color:rgba(255,255,255,0.72)}
+    .hover-tags{display:flex;flex-wrap:wrap;gap:6px}
+    .hover-tag{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.72);white-space:nowrap}
+    .realm-fade-out{animation:realmOut .22s ease forwards}
+    .realm-fade-in{animation:realmIn .28s ease forwards}
+    @keyframes realmOut{to{opacity:0;transform:scale(1.03);filter:blur(10px)}}
+    @keyframes realmIn{from{opacity:0;transform:scale(.975);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+  </style>
 </head>
 <body>
+  <canvas id="bg"></canvas>
+  <div id="app">
+    <div class="brain-shell"></div>
 
-<div id="hud">
-  <div style="display:flex;align-items:center;gap:14px">
-    <a id="back-btn" href="ui/executive_dashboard.html">← Dashboard</a>
-    <div id="hud-left">
-      <div id="hud-title">SiteOwlQA · Architecture</div>
-      <div id="hud-sub">Hover nodes · Open the Guide for a full walkthrough</div>
+    <!-- top-left: nav controls -->
+    <div class="topbar">
+      <a id="dashLink" href="ui/executive_dashboard.html" class="lux-btn">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg>
+        </div>
+        <span>Dashboard</span>
+      </a>
+      <button id="backBtn" class="lux-btn" style="display:none">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg>
+        </div>
+        <span>Back</span>
+      </button>
+      <div id="breadcrumb" class="lux-pill">SiteOwlQA Pipeline</div>
     </div>
-  </div>
-  <div id="hud-right-controls">
-    <button id="guide-btn" onclick="toggleGuide()">≡ Guide</button>
-    <div id="hud-stats">
-      <div class="stat-blk"><div class="stat-n">23</div><div class="stat-l">Nodes</div></div>
-      <div class="stat-blk"><div class="stat-n">27</div><div class="stat-l">Edges</div></div>
+
+    <!-- top-right: live stats -->
+    <div class="statsbar">
+      <div class="stat-blk"><div class="stat-n" id="statNodes">7</div><div class="stat-l">Nodes</div></div>
+      <div class="stat-blk"><div class="stat-n" id="statEdges">11</div><div class="stat-l">Edges</div></div>
       <div class="stat-blk"><div class="stat-n" id="clock">—</div><div class="stat-l">Live</div></div>
     </div>
-  </div>
-</div>
 
-<div id="panel" class="off">
-  <div id="pname">—</div>
-  <div id="ptype">—</div>
-  <div id="pdesc">—</div>
-  <div id="pconns"></div>
-</div>
+    <svg id="network"></svg>
+    <div id="nodes"></div>
 
-<canvas id="cv" aria-label="SiteOwlQA neural orchestration diagram — hover nodes for details"></canvas>
+    <!-- hover tooltip -->
+    <div id="hoverCard" class="hover-card">
+      <div class="hover-kicker">Module · SiteOwlQA</div>
+      <div id="hoverTitle" class="hover-title"></div>
+      <div class="hover-section"><div class="hover-label">What it does</div><div id="hoverDoes" class="hover-copy"></div></div>
+      <div class="hover-section"><div class="hover-label">What it manages</div><div id="hoverManages" class="hover-copy"></div></div>
+      <div class="hover-section"><div class="hover-label">Connected to</div><div id="hoverConnected" class="hover-tags"></div></div>
+    </div>
 
-<div id="legend">
-  <div class="leg"><div class="leg-d" style="background:#0053e2"></div>Core / Phase</div>
-  <div class="leg"><div class="leg-d" style="background:#ffc220"></div>Memory / Learn</div>
-  <div class="leg"><div class="leg-d" style="background:#2a8703"></div>PASS</div>
-  <div class="leg"><div class="leg-d" style="background:#ea1100"></div>FAIL</div>
-  <div class="leg"><div class="leg-d" style="background:#7c3aed"></div>Review</div>
-  <div class="leg"><div class="leg-d" style="background:#74767c"></div>Async</div>
-</div>
-<div id="hint">Hover nodes to explore · Open Guide for full breakdown</div>
-
-<div id="guide" class="closed">
-  <div id="guide-header">
-    <h2>Architecture<br>Guide</h2>
-    <button id="guide-close" onclick="toggleGuide()" aria-label="Close guide">×</button>
-  </div>
-
-  <p class="g-summary">Fully automated QA pipeline for retail site survey submissions. Records arrive in <strong style="color:#93b4f5">Airtable</strong> as QUEUED, flow through 7 stages, then <strong style="color:#86efac">PASS</strong> or <strong style="color:#fca5a5">FAIL</strong> — vendor emailed, Airtable updated, everything archived, lessons fed back into memory. No human needed in the happy path.</p>
-
-  <!-- Stage 1 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 1 — Entry Point</div>
-    <div class="g-phase">
-      <h3>▣ main.py <span class="g-badge" style="background:#0053e228;color:#4d8eff">core</span></h3>
-      <p>The system’s heartbeat. Polls Airtable for QUEUED records on a 60-second loop. Catches all exceptions at the record level so one bad submission can never crash the pipeline. Spawns the Async Worker thread on startup. Handles OS shutdown signals gracefully. If this stops, nothing else runs.</p>
+    <!-- bottom info card -->
+    <div id="bottomCard" class="bottom-card" style="display:none">
+      <div id="bcHint" class="bc-hint">Selected</div>
+      <div id="bcTitle" class="bc-title"></div>
+      <div id="bcText" class="bc-text"></div>
+      <div id="bcDrill" class="bc-drill"></div>
     </div>
   </div>
 
-  <!-- Stage 2 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 2 — Validate &amp; Recall</div>
-    <div class="g-phase">
-      <h3>▣ Validate &amp; Recall <span class="g-badge" style="background:#1e40af28;color:#60a5fa">phase</span></h3>
-      <p>Before touching any files, the pipeline checks that every critical field exists: Site Number, Site Name, attachments, vendor info. A missing field immediately marks the record <strong style="color:#fca5a5">ERROR</strong> and halts — expensive processing is never wasted on incomplete submissions. </p> </div> <div class="g-phase" data-c="memory"> <h3>▣ memory.py <span class="g-badge" style="background:#d9770628;color:#fbbf24">memory</span></h3> <p> Simultaneously, <em>memory.py</em> queries the lesson archive by site, vendor, and tag. Any previously extracted failure rules (e.g. “Vendor X always drops column Y”) are surfaced here and attached to the grading context, making each run smarter than the last.</p>
-    </div>
-  </div>
-
-  <!-- Stage 3 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 3 — Process</div>
-    <div class="g-phase">
-      <h3>▣ Download Attachment</h3>
-      <p><em>airtable_client.py</em> downloads the XLSX or CSV attachment to a local <code style="color:#60a5fa">temp/</code> folder. RISK-003 — Airtable CDN URL expiry — is mitigated: a mirror script backs up attachments to OneDrive by Site ID. </p> </div> <div class="g-phase"> <h3>▣ Normalize <em style="font-weight:400">(file_processor.py)</em></h3> <p> Headers are lowercased and underscored regardless of how the vendor formatted them. Critically, <code style="color:#60a5fa">project_id</code> is always overwritten with the Airtable Site Number — the single source of truth. Vendor-supplied project IDs are never trusted. </p> </div> <div class="g-phase"> <h3>▣ SQL Reference Fetch <em style="font-weight:400">(sql.py)</em></h3> <p> Pulls the canonical reference row set from local SQLite, scoped strictly to the current site. This is the baseline the grader compares against. All reads are read-only. sql.py owns <em>all</em> database interactions — nothing else touches the DB.</p>
-    </div>
-  </div>
-
-  <!-- Stage 4 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 4 — Grade &amp; Decide</div>
-    <div class="g-phase">
-      <h3>▣ python_grader.py</h3>
-      <p>Compares the normalized submission against the SQL reference row-by-row. Uses column fingerprinting and weighted scoring to produce a numeric score 0–100. Memory recall context (from Stage 2) can inform the summary narrative. </p> </div> <div class="g-phase" data-c="pass"> <h3>▣ PASS branch <span class="g-badge" style="background:#2a870328;color:#86efac">≥ threshold</span></h3> <p> <em>status_from_score()</em> is the single decision function — never duplicated. A PASS routes through Output (email + Airtable update) then Archive. If score ≥ 95, <em>post_pass_correction</em> also runs to generate corrected reference files. </p> </div> <div class="g-phase" data-c="fail"> <h3>▣ FAIL branch <span class="g-badge" style="background:#ea110028;color:#fca5a5">&lt; threshold</span></h3> <p> Routes through the same Output stage (vendor receives a FAIL email with specific feedback), then through Archive where a lesson is extracted. That lesson flows into the learning loop and is available for the <em>next</em> run against this site or vendor.</p>
-    </div>
-  </div>
-
-  <!-- Stage 5 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 5 — Output</div>
-    <div class="g-phase">
-      <h3>▣ emailer.py</h3>
-      <p>Sends a templated email (PASS / FAIL / ERROR) to the vendor. SMTP is optional — if <code style="color:#60a5fa">SMTP_ENABLED=false</code>, the step is silently skipped. Email content includes score, summary, and corrective guidance for failures. </p> </div> <div class="g-phase"> <h3>▣ Airtable Update <em style="font-weight:400">(airtable_client.py)</em></h3> <p> PATCHes the Airtable record with status, True Score, Score%, Fail Summary, and Notes. <strong>All fields are always written</strong> — no field is ever left blank from a previous run. This is a hard rule preventing ghost data contamination across resubmissions.</p>
-    </div>
-  </div>
-
-  <!-- Stage 6 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 6 — Archive &amp; Learn</div>
-    <div class="g-phase" data-c="memory">
-      <h3>▣ archive.py <span class="g-badge" style="background:#d9770628;color:#fbbf24">immutable</span></h3>
-      <p>Appends an execution record to a JSON archive and stores the raw submission file. <em>Nothing is ever deleted or overwritten.</em> This provides a full audit trail for every run, including errors. </p> </div> <div class="g-phase" data-c="pass"> <h3>▣ post_pass_correction <span class="g-badge" style="background:#2a870328;color:#86efac">score ≥95 only</span></h3> <p> For very high-scoring passes, generates corrected RAW, CSV, and LOG output files. Never re-grades. Never calls Airtable. A completely separate, safe sub-pipeline. </p> </div> <div class="g-phase" data-c="review"> <h3>▣ reviewer.py <span class="g-badge" style="background:#7c3aed28;color:#c4b5fd">audit</span></h3> <p> Internal static audit of the run’s behaviour. Issues are classified <em style="color:#fca5a5">CRITICAL</em> / <em style="color:#fbbf24">HIGH</em> / <em style="color:#86efac">LOW</em>. Results are logged and archived. <strong>reviewer.py never mutates pipeline state</strong> — it is a pure observer.</p>
-    </div>
-  </div>
-
-  <!-- Learning Loop -->
-  <div class="g-section">
-    <div class="g-section-title">● The Learning Loop</div>
-    <div class="g-phase" data-c="loop">
-      <h3>▣ lesson → memory <span class="g-badge" style="background:#ffc22028;color:#ffc220">feedback</span></h3>
-      <p>After a failure (or even a partial pass), the pipeline extracts a <em>generalized rule</em> with a confidence score (default 0.75). This rule is tagged by site, vendor, column pattern, and issue type, then written to the archive. On the <em>next run</em>, <em>memory.py</em> recalls it during Stage 2 — before grading even starts — so the grader has institutional context. Over time, this builds a compounding knowledge base of failure patterns.</p>
-    </div>
-  </div>
-
-  <!-- Stage 7 -->
-  <div class="g-section">
-    <div class="g-section-title">● Stage 7 — Async Workers</div>
-    <div class="g-phase" data-c="async">
-      <h3>▣ MetricsRefreshWorker</h3>
-      <p>Runs on a background thread. <em>mark_dirty()</em> is called whenever a record completes. The worker detects the dirty flag and asynchronously recomputes 3 metric CSVs and refreshes 2 HTML dashboards — <strong>never blocking the main poll loop</strong>. If metrics fail, the pipeline keeps running.</p>
-    </div>
-  </div>
-
-  <!-- Edge guide -->
-  <div class="g-section">
-    <div class="g-section-title">● Edge Types (what the lines mean)</div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#60a5fa"></div><div class="g-edge-label"><strong style="color:#93b4f5">flow</strong> — primary pipeline progression between phases</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#3b82f6"></div><div class="g-edge-label"><strong style="color:#93b4f5">primary</strong> — main.py spawning each phase</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#1e3a8a"></div><div class="g-edge-label"><strong style="color:#93b4f5">normal</strong> — phase calling a module</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#fbbf24"></div><div class="g-edge-label"><strong style="color:#fbbf24">memory</strong> — data flowing to/from the knowledge store</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#ffc220;height:3px;border-top:2px dashed #ffc220;background:transparent"></div><div class="g-edge-label"><strong style="color:#ffc220">loop</strong> — lesson feeding back into memory (gold arc)</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#4ade80"></div><div class="g-edge-label"><strong style="color:#86efac">pass</strong> — PASS outcome or high-score sub-pipeline</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#f87171"></div><div class="g-edge-label"><strong style="color:#fca5a5">fail</strong> — FAIL outcome routing</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#a78bfa"></div><div class="g-edge-label"><strong style="color:#c4b5fd">review</strong> — pipeline to internal auditor</div></div>
-    <div class="g-edge-row"><div class="g-edge-line" style="background:#6b7280"></div><div class="g-edge-label"><strong style="color:#c4c6cb">async</strong> — non-blocking background worker paths (dashed)</div></div>
-  </div>
-</div>
-
-<script>
-// ── Color tokens ──────────────────────────────────────────────────────────────
-const NC = {
-  core:   {fill:'#0a1e5e',stroke:'#0053e2',glow:'#4d8eff',text:'#fff'},
-  phase:  {fill:'#0f1f4a',stroke:'#2563eb',glow:'#60a5fa',text:'#93b4f5'},
-  module: {fill:'#0d1a40',stroke:'#1e40af',glow:'#3b6fd4',text:'#93b4f5'},
-  memory: {fill:'#2a1500',stroke:'#d97706',glow:'#ffc220',text:'#fbbf24'},
-  review: {fill:'#1e0a40',stroke:'#7c3aed',glow:'#a78bfa',text:'#c4b5fd'},
-  pass:   {fill:'#052a0d',stroke:'#2a8703',glow:'#4ade80',text:'#86efac'},
-  fail:   {fill:'#2a0505',stroke:'#ea1100',glow:'#f87171',text:'#fca5a5'},
-  async:  {fill:'#121218',stroke:'#6b7280',glow:'#9ca3af',text:'#c4c6cb'},
-  correct:{fill:'#062a12',stroke:'#2a8703',glow:'#4ade80',text:'#86efac'},
-};
-const EC = {
-  primary:{s:'#2563eb',g:'#60a5fa',w:2.5,a:.75},
-  normal: {s:'#1e3a8a',g:'#3b82f6',w:1.5,a:.5},
-  flow:   {s:'#0053e2',g:'#60a5fa',w:2.2,a:.85},
-  memory: {s:'#d97706',g:'#fbbf24',w:2,  a:.75},
-  pass:   {s:'#166534',g:'#4ade80',w:1.5,a:.65},
-  fail:   {s:'#991b1b',g:'#f87171',w:1.5,a:.65},
-  review: {s:'#6d28d9',g:'#a78bfa',w:1.5,a:.65},
-  async:  {s:'#374151',g:'#9ca3af',w:1.5,a:.4},
-  loop:   {s:'#d97706',g:'#ffc220',w:2.5,a:1},
-};
-
-// ── Node definitions (bx/by = base offset from canvas centre) ────────────────
-const NODES = [
-  {id:'main',    label:'main.py',              sub:'Entry point · Poll Loop 60s · never crashes · signal handling',         type:'core',   r:32, bx:0,    by:0   },
-  // Inner phase ring
-  {id:'pval',    label:'Validate & Recall',    sub:'Critical field validation + Memory Recall before any processing starts',type:'phase',  r:23, bx:-85,  by:-148},
-  {id:'pproc',   label:'Process',             sub:'Download attachment → Normalize headers → Fetch SQL reference rows',    type:'phase',  r:23, bx:85,   by:-148},
-  {id:'pgrade',  label:'Grade & Decide',       sub:'Python grader · canonical header compare · status_from_score() is the single source of truth',type:'phase',r:23,bx:170,by:0},
-  {id:'pout',    label:'Output',              sub:'Send result email (if SMTP) · PATCH Airtable — all fields always written',type:'phase',  r:23, bx:85,   by:148 },
-  {id:'parc',    label:'Archive & Learn',      sub:'Store raw file · Internal review · Archive execution · Extract lesson', type:'phase',  r:23, bx:-85,  by:148 },
-  {id:'pasync',  label:'Async Worker',         sub:'MetricsRefreshWorker · mark_dirty() flag · never blocks main pipeline', type:'async',  r:23, bx:-170, by:0   },
-  // Outer module ring — validate cluster
-  {id:'memory',  label:'memory.py',            sub:'Tag+keyword lesson retrieval · surfaces known risk patterns · feeds every run',type:'memory',r:17,bx:-210,by:-210},
-  {id:'pollorch',label:'poll_airtable.py',     sub:'15-step per-record orchestrator · catches all exceptions at record level',type:'module',r:17,bx:-78,  by:-292},
-  // Process cluster
-  {id:'dlattach',label:'airtable_client.py',   sub:'Downloads XLSX/CSV attachment to temp/ · RISK-003 RESOLVED via mirror script',type:'module',r:17,bx:78,by:-292},
-  {id:'fileproc',label:'file_processor.py',    sub:'Case-insensitive header normalization · ProjectID always ← Airtable Site Number',type:'module',r:17,bx:195,by:-230},
-  {id:'sqlmod',  label:'sql.py',               sub:'ALL SQL — site-scoped reference rows only · read-only · hard boundary',type:'module',r:17,bx:248,by:-172},
-  // Grade cluster
-  {id:'grader',  label:'python_grader.py',     sub:'Canonical header comparison · fingerprint matching · numeric score 0–100',type:'module',r:17,bx:292,by:-78},
-  {id:'passout', label:'PASS',                 sub:'score ≥ threshold · triggers post-pass correction pipeline at ≥95',     type:'pass',   r:22, bx:340,  by:0   },
-  {id:'failout', label:'FAIL',                 sub:'score < threshold · lesson extracted · generalized rule → archive',     type:'fail',   r:22, bx:283,  by:104 },
-  // Output cluster
-  {id:'emailer', label:'emailer.py',           sub:'PASS/FAIL/ERROR email templates · bypassed when SMTP_ENABLED=false',    type:'module', r:17, bx:212,  by:212 },
-  {id:'airtable',label:'airtable_client.py',   sub:'PATCH status · True Score · Score% · Fail Summary · Notes — always all fields, never blank',type:'module',r:17,bx:104,by:283},
-  // Archive cluster
-  {id:'archpy',  label:'archive.py',           sub:'Append-only JSON · raw file storage · lesson extraction — nothing ever deleted',type:'memory',r:17,bx:-78,by:292},
-  {id:'correct', label:'post_pass_correction', sub:'PASS + score≥95 only · outputs RAW/CORRECTED/LOG · never re-grades · never touches Airtable',type:'correct',r:17,bx:-136,by:287},
-  {id:'reviewer',label:'reviewer.py',          sub:'Internal audit · issues classified CRITICAL/HIGH/LOW · never mutates pipeline state',type:'review',r:17,bx:-195,by:230},
-  {id:'lesson',  label:'Extract Lesson',       sub:'Generalized rule · confidence 0.75 · tags lesson in archive → feeds next memory.recall()',type:'memory',r:17,bx:-248,by:172},
-  // Async cluster
-  {id:'metrics', label:'metrics.py',           sub:'Compute + export 3 CSVs · MetricsRefreshWorker · async, non-blocking',  type:'async',  r:17, bx:-296, by:52  },
-  {id:'dashbd',  label:'dashboard.py',         sub:'2 HTML dashboards from CSVs · refresh only when dirty flag is set',      type:'async',  r:17, bx:-296, by:-52 },
-];
-
-// ── Edge definitions ──────────────────────────────────────────────────────────
-const EDGES = [
-  // Core to phases
-  {f:'main',   t:'pval',    et:'primary'},{f:'main',    t:'pproc',   et:'primary'},
-  {f:'main',   t:'pgrade',  et:'primary'},{f:'main',    t:'pout',    et:'primary'},
-  {f:'main',   t:'parc',    et:'primary'},{f:'main',    t:'pasync',  et:'async', dash:1},
-  // Phase flow spine
-  {f:'pval',   t:'pproc',   et:'flow'},  {f:'pproc',   t:'pgrade',  et:'flow'},
-  {f:'pgrade', t:'pout',    et:'flow'},  {f:'pout',    t:'parc',    et:'flow'},
-  // Validate cluster
-  {f:'pval',   t:'memory',  et:'memory'},{f:'pval',    t:'pollorch',et:'normal'},
-  // Process cluster
-  {f:'pproc',  t:'dlattach',et:'normal'},{f:'pproc',   t:'fileproc',et:'normal'},
-  {f:'pproc',  t:'sqlmod',  et:'normal'},
-  // Grade cluster
-  {f:'pgrade', t:'grader',  et:'normal'},{f:'pgrade',  t:'passout', et:'pass'},
-  {f:'pgrade', t:'failout', et:'fail'},
-  // Output cluster
-  {f:'pout',   t:'emailer', et:'normal'},{f:'pout',    t:'airtable',et:'normal'},
-  // Archive cluster
-  {f:'parc',   t:'archpy',  et:'memory'},{f:'parc',    t:'correct', et:'pass',dash:1},
-  {f:'parc',   t:'reviewer',et:'review'},{f:'parc',    t:'lesson',  et:'memory'},
-  // Async cluster
-  {f:'pasync', t:'metrics', et:'async', dash:1},{f:'pasync',t:'dashbd', et:'async',dash:1},
-  // THE LEARNING LOOP — lesson feeds back into memory
-  {f:'lesson', t:'memory',  et:'loop'},
-];
-
-// ── Canvas setup ──────────────────────────────────────────────────────────────
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-let W, H, CX, CY, hovered = null, t = 0, last = 0;
-const particles = [];
-
-// Assign float params to each node for organic movement
-NODES.forEach(n => {
-  n.fp = Math.random() * Math.PI * 2;
-  n.fa = 4 + Math.random() * 6;
-  n.fs = 5e-4 + Math.random() * 8e-4;
-});
-
-function resize() {
-  W = cv.width = window.innerWidth;
-  H = cv.height = window.innerHeight - 48;
-  CX = W / 2; CY = H / 2;
-}
-
-// ── Position helpers ──────────────────────────────────────────────────────────
-function nodePos(n) {
-  return {
-    x: CX + n.bx + Math.sin(t * n.fs + n.fp) * n.fa,
-    y: CY + n.by + Math.cos(t * n.fs * .7 + n.fp + 1) * n.fa * .7,
-  };
-}
-function hitPos(n) { return { x: CX + n.bx, y: CY + n.by }; }
-
-// ── Bezier helpers ────────────────────────────────────────────────────────────
-function cp(fx, fy, tx, ty, b = .22) {
-  const mx=(fx+tx)/2, my=(fy+ty)/2, dx=tx-fx, dy=ty-fy;
-  const l=Math.sqrt(dx*dx+dy*dy)||1;
-  return {x: mx-(dy/l)*l*b, y: my+(dx/l)*l*b};
-}
-function bezAt(fx,fy,cpx,cpy,tx,ty,p) {
-  const q=1-p;
-  return {x:q*q*fx+2*q*p*cpx+p*p*tx, y:q*q*fy+2*q*p*cpy+p*p*ty};
-}
-
-// ── Particles init ────────────────────────────────────────────────────────────
-function initParticles() {
-  EDGES.forEach((e, ei) => {
-    const cnt = e.et==='loop'?6 : e.et==='flow'?5 : 3;
-    for(let i=0;i<cnt;i++)
-      particles.push({ei, p:i/cnt, spd:.0014+Math.random()*.001});
-  });
-}
-
-// ── Draw background ───────────────────────────────────────────────────────────
-function drawBg() {
-  const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, Math.max(W,H)*.72);
-  g.addColorStop(0,'#0c1a3a'); g.addColorStop(1,'#060c18');
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle = 'rgba(255,255,255,.016)';
-  for(let gx=0;gx<W;gx+=40)
-    for(let gy=0;gy<H;gy+=40){
-      ctx.beginPath(); ctx.arc(gx,gy,1,0,Math.PI*2); ctx.fill();
+  <script>
+  // ── SiteOwlQA realm data ─────────────────────────────────────────────────
+  const realms = {
+    root: {
+      id:"root", name:"SiteOwlQA Pipeline",
+      nodes:[
+        {id:"main",   title:"main.py",          x:50,y:48,size:158,hue:"core",
+          summary:"Heartbeat. 60s poll loop, never crashes — exceptions caught at record level. Spawns async worker on startup.",
+          manages:"Poll loop · record dispatch · async worker · OS signal handling", realmTarget:null},
+        {id:"pval",   title:"Validate & Recall", x:18,y:20,size:108,hue:"blue",
+          summary:"Checks all required fields before touching files. Simultaneously recalls past lessons from memory.",
+          manages:"Field validation · memory recall · ERROR halting", realmTarget:"pval"},
+        {id:"pproc",  title:"Process",           x:76,y:18,size:108,hue:"cyan",
+          summary:"Downloads attachment, normalises headers, fetches site-scoped SQL reference rows.",
+          manages:"File download · header normalisation · reference fetch", realmTarget:"pproc"},
+        {id:"pgrade", title:"Grade & Decide",    x:84,y:50,size:108,hue:"violet",
+          summary:"Scores 0–100. status_from_score() is the single PASS/FAIL decision — never duplicated.",
+          manages:"Grading · threshold · PASS/FAIL branch", realmTarget:"pgrade"},
+        {id:"pout",   title:"Output",            x:70,y:78,size:106,hue:"emerald",
+          summary:"Emails vendor. PATCHes Airtable. ALL fields always written — no ghost data from prior runs.",
+          manages:"Email · Airtable PATCH · status writeback", realmTarget:"pout"},
+        {id:"parc",   title:"Archive & Learn",   x:28,y:78,size:108,hue:"amber",
+          summary:"Immutable archive of every run. Internal review. Lesson extraction feeds the next cycle.",
+          manages:"JSON archive · reviewer audit · lesson extraction · post-pass correction", realmTarget:"parc"},
+        {id:"pasync", title:"Async Workers",     x:12,y:50,size:96,hue:"pink",
+          summary:"Background thread. Never blocks poll loop. Triggered by mark_dirty() flag.",
+          manages:"MetricsRefreshWorker · CSVs · HTML dashboards", realmTarget:"pasync"}
+      ],
+      edges:[
+        {id:"e1",from:"main",to:"pval",   strength:0.88},{id:"e2",from:"main",to:"pproc",  strength:0.88},
+        {id:"e3",from:"main",to:"pgrade", strength:0.88},{id:"e4",from:"main",to:"pout",   strength:0.88},
+        {id:"e5",from:"main",to:"parc",   strength:0.88},{id:"e6",from:"main",to:"pasync", strength:0.62},
+        {id:"e7",from:"pval",to:"pproc",  strength:0.78},{id:"e8",from:"pproc",to:"pgrade",strength:0.78},
+        {id:"e9",from:"pgrade",to:"pout", strength:0.78},{id:"e10",from:"pout",to:"parc",  strength:0.78},
+        {id:"e11",from:"parc",to:"pval",  strength:0.52}
+      ]
+    },
+    pval:{
+      id:"pval", name:"Validate & Recall",
+      nodes:[
+        {id:"pollorch",title:"poll_airtable.py", x:50,y:44,size:132,hue:"core",
+          summary:"15-step per-record orchestrator. Every exception caught at record level — one bad submission never crashes the pipeline.",
+          manages:"15-step flow · exception boundaries · per-record state"},
+        {id:"memorymod",title:"memory.py",       x:22,y:28,size:106,hue:"amber",
+          summary:"Tag+keyword lesson retrieval. Surfaces vendor/site risk patterns before grading. Makes each run smarter than the last.",
+          manages:"Lesson recall · tag ranking · context injection"},
+        {id:"fieldchk",title:"Field Validation", x:78,y:28,size:104,hue:"blue",
+          summary:"Checks Site Number, Site Name, attachments, vendor info. A single missing field → ERROR, processing halted immediately.",
+          manages:"Required fields · early exit · ERROR status"},
+        {id:"airtfetch",title:"Airtable Fetch",  x:50,y:76,size:102,hue:"cyan",
+          summary:"Polls for QUEUED records every 60s via airtable_client.py. RISK-003: CDN URL expiry is tracked and mitigated.",
+          manages:"Record polling · attachment URL retrieval"}
+      ],
+      edges:[
+        {id:"v1",from:"pollorch",to:"memorymod",strength:0.76},
+        {id:"v2",from:"pollorch",to:"fieldchk", strength:0.82},
+        {id:"v3",from:"pollorch",to:"airtfetch",strength:0.72},
+        {id:"v4",from:"memorymod",to:"fieldchk",strength:0.44}
+      ]
+    },
+    pproc:{
+      id:"pproc", name:"Process",
+      nodes:[
+        {id:"dlmod", title:"airtable_client.py", x:22,y:36,size:106,hue:"blue",
+          summary:"Downloads XLSX/CSV to temp/. RISK-003 mitigated: OneDrive mirror backs up attachments by Site ID.",
+          manages:"HTTP download · file storage · RISK-003 mitigation"},
+        {id:"fpmod", title:"file_processor.py",  x:78,y:36,size:106,hue:"cyan",
+          summary:"Normalises all headers to lowercase_underscored. ProjectID always overwritten from Airtable Site Number — vendor-supplied IDs never trusted.",
+          manages:"Header normalisation · ProjectID authority · pandas transform"},
+        {id:"sqlmod2",title:"sql.py",            x:50,y:74,size:106,hue:"violet",
+          summary:"Pulls site-scoped reference rows from SQL Server. Read-only. Owns ALL database interactions — nothing else touches the DB.",
+          manages:"SQL connection · site-scoped queries · reference data"}
+      ],
+      edges:[
+        {id:"p1",from:"dlmod",to:"fpmod",  strength:0.82},
+        {id:"p2",from:"fpmod",to:"sqlmod2",strength:0.74},
+        {id:"p3",from:"dlmod",to:"sqlmod2",strength:0.42}
+      ]
+    },
+    pgrade:{
+      id:"pgrade", name:"Grade & Decide",
+      nodes:[
+        {id:"grader",  title:"python_grader.py",x:50,y:42,size:132,hue:"core",
+          summary:"Canonical header comparison + column fingerprinting. Weighted score 0–100. Memory recall context shapes the summary narrative.",
+          manages:"Score calc · header matching · pass/fail threshold · status_from_score()"},
+        {id:"passnode",title:"PASS Branch",     x:24,y:76,size:104,hue:"emerald",
+          summary:"score ≥ threshold. Routes → Output → Archive. At score ≥ 95 also triggers post_pass_correction sub-pipeline.",
+          manages:"PASS routing · high-score trigger · correction handoff"},
+        {id:"failnode",title:"FAIL Branch",     x:76,y:76,size:104,hue:"pink",
+          summary:"score < threshold. Routes → Output (FAIL email with specific feedback) → Archive where lesson is extracted.",
+          manages:"FAIL routing · vendor feedback · lesson trigger"}
+      ],
+      edges:[
+        {id:"g1",from:"grader",to:"passnode",strength:0.78},
+        {id:"g2",from:"grader",to:"failnode",strength:0.78}
+      ]
+    },
+    pout:{
+      id:"pout", name:"Output",
+      nodes:[
+        {id:"emailermod",title:"emailer.py",    x:32,y:46,size:112,hue:"emerald",
+          summary:"PASS/FAIL/ERROR email templates with score, summary, and corrective guidance. Bypassed when SMTP_ENABLED=false — Airtable automation handles vendor email instead.",
+          manages:"Email composition · SMTP delivery · template selection"},
+        {id:"airtpatch",title:"Airtable PATCH", x:68,y:46,size:112,hue:"blue",
+          summary:"PATCHes status, True Score, Score%, Fail Summary, Notes. ALL fields always written — never blank. Hard rule to prevent ghost data across resubmissions.",
+          manages:"Field writeback · ghost-data prevention · status update"}
+      ],
+      edges:[{id:"o1",from:"emailermod",to:"airtpatch",strength:0.54}]
+    },
+    parc:{
+      id:"parc", name:"Archive & Learn",
+      nodes:[
+        {id:"archmod",  title:"archive.py",            x:50,y:42,size:128,hue:"core",
+          summary:"Append-only JSON archive + raw file store. Nothing is ever deleted or overwritten. Full audit trail for every run including errors.",
+          manages:"Execution records · raw files · append-only guarantee"},
+        {id:"correctmod",title:"post_pass_correction", x:18,y:76,size:94,hue:"emerald",
+          summary:"Runs only at score ≥ 95. Outputs corrected RAW/CSV/LOG. Never re-grades, never touches Airtable — completely isolated safe sub-pipeline.",
+          manages:"Corrected file generation · isolation guarantee"},
+        {id:"reviewmod",title:"reviewer.py",           x:50,y:78,size:94,hue:"violet",
+          summary:"Internal static audit. Issues classified CRITICAL/HIGH/LOW. Pure observer — never mutates pipeline state.",
+          manages:"Audit trail · issue classification · behaviour review"},
+        {id:"lessonmod",title:"Extract Lesson",        x:80,y:76,size:94,hue:"amber",
+          summary:"Generalised rule extracted with confidence 0.75, tagged by site/vendor/column. Written to archive, recalled on the next run via memory.py.",
+          manages:"Lesson generation · tag assignment · learning loop"}
+      ],
+      edges:[
+        {id:"a1",from:"archmod",to:"correctmod",strength:0.62},
+        {id:"a2",from:"archmod",to:"reviewmod", strength:0.72},
+        {id:"a3",from:"archmod",to:"lessonmod", strength:0.76},
+        {id:"a4",from:"lessonmod",to:"correctmod",strength:0.36}
+      ]
+    },
+    pasync:{
+      id:"pasync", name:"Async Workers",
+      nodes:[
+        {id:"metricsmod",title:"metrics.py",   x:32,y:46,size:110,hue:"blue",
+          summary:"Computes and exports 3 CSV metric files. Triggered by mark_dirty() flag. Never blocks the main poll loop.",
+          manages:"Metric computation · CSV export · dirty-flag pattern"},
+        {id:"dashmod",  title:"dashboard.py",  x:68,y:46,size:110,hue:"cyan",
+          summary:"Generates HTML dashboards from CSV data. Template: ui/executive_dashboard.html → output/ → served_dashboard/. Only runs when dirty.",
+          manages:"HTML generation · template injection · metrics → UI"}
+      ],
+      edges:[{id:"as1",from:"metricsmod",to:"dashmod",strength:0.68}]
     }
-}
+  };
 
-// ── Draw edges ────────────────────────────────────────────────────────────────
-function drawEdges() {
-  EDGES.forEach(e => {
-    const fn=NODES.find(n=>n.id===e.f), tn=NODES.find(n=>n.id===e.t);
-    if(!fn||!tn) return;
-    const fp=nodePos(fn), tp=nodePos(tn);
-    const bend = e.et==='loop'?.48 : e.et==='flow'?.12 : .22;
-    const {x:cpx,y:cpy} = cp(fp.x,fp.y,tp.x,tp.y,bend);
-    const ec = EC[e.et]||EC.normal;
-    const hot = hovered&&(hovered.id===e.f||hovered.id===e.t);
-    const dim = hovered&&!hot;
+  // ── Colour palette ───────────────────────────────────────────────────────
+  const colors={
+    core:   {line:"rgba(140,160,255,0.58)",dot:"rgba(230,236,255,0.96)",glow:"rgba(140,160,255,0.22)"},
+    blue:   {line:"rgba(0,133,255,0.50)",  dot:"rgba(200,230,255,0.96)",glow:"rgba(0,133,255,0.20)"},
+    violet: {line:"rgba(196,181,253,0.46)",dot:"rgba(245,236,255,0.96)",glow:"rgba(167,139,250,0.18)"},
+    cyan:   {line:"rgba(34,211,238,0.46)", dot:"rgba(220,254,255,0.96)",glow:"rgba(34,211,238,0.18)"},
+    emerald:{line:"rgba(52,211,153,0.46)", dot:"rgba(200,255,230,0.96)",glow:"rgba(42,135,3,0.22)"},
+    pink:   {line:"rgba(249,100,100,0.46)",dot:"rgba(255,220,220,0.96)",glow:"rgba(234,17,0,0.18)"},
+    amber:  {line:"rgba(255,194,32,0.46)", dot:"rgba(255,251,210,0.96)",glow:"rgba(255,194,32,0.20)"}
+  };
 
-    ctx.save();
-    ctx.shadowColor=ec.g; ctx.shadowBlur = hot?18:5;
-    ctx.globalAlpha = dim ? ec.a*.18 : hot ? Math.min(ec.a*1.6,1) : ec.a;
-    ctx.strokeStyle = hot?ec.g:ec.s;
-    ctx.lineWidth = hot?ec.w*1.8:ec.w;
-    if(e.dash) ctx.setLineDash([5,9]);
-    ctx.beginPath(); ctx.moveTo(fp.x,fp.y);
-    ctx.quadraticCurveTo(cpx,cpy,tp.x,tp.y);
-    ctx.stroke(); ctx.restore();
-  });
-}
+  // ── DOM refs ─────────────────────────────────────────────────────────────
+  const bgCv=document.getElementById("bg"),bgCtx=bgCv.getContext("2d");
+  const app=document.getElementById("app"),network=document.getElementById("network");
+  const nodesLayer=document.getElementById("nodes");
+  const breadcrumb=document.getElementById("breadcrumb"),backBtn=document.getElementById("backBtn");
+  const bottomCard=document.getElementById("bottomCard"),bcTitle=document.getElementById("bcTitle");
+  const bcText=document.getElementById("bcText"),bcHint=document.getElementById("bcHint"),bcDrill=document.getElementById("bcDrill");
+  const hoverCard=document.getElementById("hoverCard"),hoverTitle=document.getElementById("hoverTitle");
+  const hoverDoes=document.getElementById("hoverDoes"),hoverManages=document.getElementById("hoverManages");
+  const hoverConnected=document.getElementById("hoverConnected");
 
-// ── Draw particles ────────────────────────────────────────────────────────────
-function drawParticles() {
-  particles.forEach(pt => {
-    const e=EDGES[pt.ei];
-    const fn=NODES.find(n=>n.id===e.f), tn=NODES.find(n=>n.id===e.t);
-    if(!fn||!tn) return;
-    const fp=nodePos(fn), tp=nodePos(tn);
-    const bend = e.et==='loop'?.48:e.et==='flow'?.12:.22;
-    const {x:cpx,y:cpy}=cp(fp.x,fp.y,tp.x,tp.y,bend);
-    const pos=bezAt(fp.x,fp.y,cpx,cpy,tp.x,tp.y,pt.p);
-    const ec=EC[e.et]||EC.normal;
-    const hot=hovered&&(hovered.id===e.f||hovered.id===e.t);
-    const dim=hovered&&!hot;
+  let realmStack=["root"],selectedId="main",transitioning=false,animTick=0;
 
-    ctx.save();
-    ctx.globalAlpha=dim?.1:hot?1:.8;
-    ctx.shadowColor=ec.g; ctx.shadowBlur=hot?14:7;
-    ctx.fillStyle=ec.g;
-    ctx.beginPath(); ctx.arc(pos.x,pos.y,hot?3.2:2,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  });
-}
+  // ── Background ───────────────────────────────────────────────────────────
+  const stars=Array.from({length:240},()=>({x:Math.random(),y:Math.random(),r:.4+Math.random()*1.3,a:.12+Math.random()*.65,phase:Math.random()*Math.PI*2,drift:.004+Math.random()*.018}));
+  const filaments=Array.from({length:20},()=>({x1:Math.random(),y1:Math.random(),cx:Math.random(),cy:Math.random(),x2:Math.random(),y2:Math.random(),alpha:.015+Math.random()*.04}));
 
-// ── Draw nodes ────────────────────────────────────────────────────────────────
-function drawNodes() {
-  NODES.forEach(n => {
-    const p=nodePos(n);
-    const c=NC[n.type]||NC.module;
-    const hot=hovered&&hovered.id===n.id;
-    const dim=hovered&&!hot;
-    const r=hot?n.r*1.25:n.r;
+  function currentRealm(){return realms[realmStack[realmStack.length-1]]}
+  function currentSelectedNode(){const r=currentRealm();return r.nodes.find(n=>n.id===selectedId)||r.nodes[0]}
 
-    ctx.save();
-    ctx.globalAlpha=dim?.35:1;
-    // glow ring
-    ctx.shadowColor=c.glow; ctx.shadowBlur=hot?34:16;
-    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
-    ctx.fillStyle=c.fill; ctx.fill();
-    ctx.strokeStyle=c.stroke; ctx.lineWidth=hot?2.5:1.8; ctx.stroke();
-    // pulse ring
-    ctx.globalAlpha=(dim?.08:.18)+.12*Math.sin(t*.0018+n.fp);
-    ctx.shadowBlur=8;
-    ctx.lineWidth=1; ctx.strokeStyle=c.glow;
-    ctx.beginPath(); ctx.arc(p.x,p.y,r+7,0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-  });
-}
+  function resize(){
+    bgCv.width=window.innerWidth*devicePixelRatio; bgCv.height=window.innerHeight*devicePixelRatio;
+    bgCv.style.width=`${window.innerWidth}px`; bgCv.style.height=`${window.innerHeight}px`;
+    bgCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    network.setAttribute("viewBox","0 0 100 100");
+    network.setAttribute("preserveAspectRatio","none");
+    network.setAttribute("width",window.innerWidth);
+    network.setAttribute("height",window.innerHeight);
+  }
 
-// ── Draw labels ───────────────────────────────────────────────────────────────
-function drawLabels() {
-  NODES.forEach(n => {
-    const p=nodePos(n);
-    const c=NC[n.type]||NC.module;
-    const hot=hovered&&hovered.id===n.id;
-    const dim=hovered&&!hot;
-    const lbl=n.label.length>13?n.label.slice(0,12)+'…':n.label;
+  function drawBackground(){
+    animTick++;
+    const w=window.innerWidth,h=window.innerHeight;
+    bgCtx.clearRect(0,0,w,h);
+    const g=bgCtx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.75);
+    g.addColorStop(0,"rgba(10,12,20,0.98)"); g.addColorStop(.3,"rgba(5,7,13,0.99)"); g.addColorStop(1,"rgba(1,2,5,1)");
+    bgCtx.fillStyle=g; bgCtx.fillRect(0,0,w,h);
+    filaments.forEach((f,i)=>{
+      bgCtx.beginPath(); bgCtx.moveTo(f.x1*w,f.y1*h);
+      bgCtx.quadraticCurveTo(f.cx*w+Math.sin(animTick*.01+i)*26,f.cy*h+Math.cos(animTick*.012+i)*26,f.x2*w,f.y2*h);
+      bgCtx.strokeStyle=`rgba(110,140,255,${f.alpha})`; bgCtx.lineWidth=1; bgCtx.shadowBlur=20; bgCtx.shadowColor="rgba(110,140,255,0.08)"; bgCtx.stroke();
+    });
+    stars.forEach(s=>{
+      bgCtx.beginPath(); bgCtx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
+      bgCtx.fillStyle=`rgba(190,220,255,${s.a*(0.8+Math.sin(animTick*s.drift+s.phase)*.18)})`; bgCtx.fill();
+    });
+    [[w*.32,h*.46,280,"56,189,248"],[w*.68,h*.54,320,"139,92,246"]].forEach(([x,y,r,c])=>{
+      const gl=bgCtx.createRadialGradient(x,y,0,x,y,r);
+      gl.addColorStop(0,`rgba(${c},0.08)`); gl.addColorStop(1,`rgba(${c},0)`);
+      bgCtx.fillStyle=gl; bgCtx.fillRect(0,0,w,h);
+    });
+    requestAnimationFrame(drawBackground);
+  }
 
-    ctx.save();
-    ctx.globalAlpha=dim?.2:hot?1:.82;
-    ctx.fillStyle=hot?'#fff':c.text;
-    ctx.font=`${hot?700:600} ${hot?12:10}px 'Segoe UI',system-ui,sans-serif`;
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.shadowColor='#000'; ctx.shadowBlur=5;
-    ctx.fillText(lbl,p.x,p.y);
-    ctx.restore();
-  });
-}
+  function connectedTitles(nodeId){
+    const r=currentRealm(),ids=new Set();
+    r.edges.forEach(e=>{if(e.from===nodeId)ids.add(e.to);if(e.to===nodeId)ids.add(e.from)});
+    return Array.from(ids).map(id=>r.nodes.find(n=>n.id===id)).filter(Boolean).map(n=>n.title);
+  }
 
-// ── Animation loop ────────────────────────────────────────────────────────────
-function loop(ts) {
-  const dt=ts-last; last=ts; t=ts;
-  particles.forEach(pt=>{
-    pt.p+=pt.spd*(dt/16);
-    if(pt.p>=1) pt.p-=1;
-  });
-  drawBg(); drawEdges(); drawParticles(); drawNodes(); drawLabels();
-  requestAnimationFrame(loop);
-}
+  function showHoverCard(node,evt){
+    hoverTitle.textContent=node.title;
+    hoverDoes.textContent=node.summary||"—";
+    hoverManages.textContent=node.manages||"—";
+    const conn=connectedTitles(node.id);
+    hoverConnected.innerHTML="";
+    (conn.length?conn:["No linked nodes"]).forEach(t=>{const d=document.createElement("div");d.className="hover-tag";d.textContent=t;hoverConnected.appendChild(d)});
+    const pad=18,cw=Math.min(360,window.innerWidth*.36);
+    hoverCard.style.left=`${Math.min(window.innerWidth-cw-pad,evt.clientX+18)}px`;
+    hoverCard.style.top=`${Math.min(window.innerHeight-220,evt.clientY-10)}px`;
+    hoverCard.classList.add("show");
+  }
+  function moveHoverCard(evt){
+    if(!hoverCard.classList.contains("show"))return;
+    const pad=18,cw=Math.min(360,window.innerWidth*.36);
+    hoverCard.style.left=`${Math.min(window.innerWidth-cw-pad,evt.clientX+18)}px`;
+    hoverCard.style.top=`${Math.min(window.innerHeight-220,evt.clientY-10)}px`;
+  }
+  function hideHoverCard(){hoverCard.classList.remove("show")}
 
-// ── Panel ─────────────────────────────────────────────────────────────────────
-const panel=document.getElementById('panel');
-function showPanel(n) {
-  if(!n){panel.classList.add('off');return;}
-  panel.classList.remove('off');
-  const c=NC[n.type]||NC.module;
-  document.getElementById('pname').textContent=n.label;
-  const pt=document.getElementById('ptype');
-  pt.textContent=n.type.toUpperCase();
-  pt.style.background=c.stroke+'28'; pt.style.color=c.glow;
-  document.getElementById('pdesc').textContent=n.sub;
-  const conns=EDGES.filter(e=>e.f===n.id||e.t===n.id);
-  document.getElementById('pconns').innerHTML=conns.map(e=>{
-    const other=e.f===n.id?NODES.find(x=>x.id===e.t):NODES.find(x=>x.id===e.f);
-    const dir=e.f===n.id?'→':'←';
-    return `<div><span>${dir} ${other?.label||'?'}</span> <em style="color:#1a3a6a;font-style:normal">[${e.et}]</em></div>`;
-  }).join('')||'<div style="color:#1a3a6a">No edges</div>';
-}
+  function makeCurve(from,to,bend=0,spread=0){
+    const dx=to.x-from.x,dy=to.y-from.y,len=Math.max(.001,Math.sqrt(dx*dx+dy*dy)),nx=-dy/len,ny=dx/len;
+    return `M ${from.x} ${from.y} C ${from.x+dx*.28+nx*spread} ${from.y+dy*.22+ny*spread-bend}, ${from.x+dx*.72-nx*spread} ${from.y+dy*.78-ny*spread-bend}, ${to.x} ${to.y}`;
+  }
 
-// ── Interaction ───────────────────────────────────────────────────────────────
-cv.addEventListener('mousemove',e=>{
-  const r=cv.getBoundingClientRect();
-  const mx=e.clientX-r.left, my=e.clientY-r.top;
-  let found=null, minD=Infinity;
-  NODES.forEach(n=>{
-    const hp=hitPos(n);
-    const d=Math.hypot(mx-hp.x,my-hp.y);
-    if(d<n.r+14&&d<minD){minD=d;found=n;}
-  });
-  hovered=found;
-  cv.style.cursor=found?'pointer':'crosshair';
-  showPanel(found);
-});
-cv.addEventListener('mouseleave',()=>{hovered=null;showPanel(null);});
+  function renderNetwork(){
+    const realm=currentRealm();
+    const defs=`<defs><filter id="synGlow" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="0.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="synGlowSoft" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+    const offsets=[-2.6,-1.4,0,1.4,2.6];
+    const svg=realm.edges.map(edge=>{
+      const from=realm.nodes.find(n=>n.id===edge.from),to=realm.nodes.find(n=>n.id===edge.to);
+      if(!from||!to)return"";
+      const col=colors[to.hue]||colors.blue,active=selectedId===edge.from||selectedId===edge.to;
+      const dx=to.x-from.x,dy=to.y-from.y,dist=Math.sqrt(dx*dx+dy*dy),bend=Math.max(2.5,Math.min(9,dist*.12));
+      const trunk=makeCurve(from,to,bend,3.4);
+      const ghost=offsets.map(o=>makeCurve(from,to,bend+o*.9,4+Math.abs(o)*1.8)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${active?.26:.16}" opacity="${active?.34:.18}" stroke-linecap="round"/>`).join("");
+      const mid=[-1.8,1.8].map(o=>makeCurve(from,to,bend+o,2.2)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${active?.42:.28}" opacity="${active?.52:.3}" stroke-linecap="round" filter="url(#synGlow)"/>`).join("");
+      return `<g>${trunk.replace("M","")? `<path d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${active?1.4:.9}" opacity="${active?.14:.08}" stroke-linecap="round" filter="url(#synGlowSoft)"/>` : ""}${ghost}${mid}<path id="${edge.id}-path" d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${active?.62:.42+edge.strength*.14}" opacity="${active?.98:.62+edge.strength*.15}" stroke-linecap="round" filter="url(#synGlow)"/><circle r="${active?.52:.36}" fill="${col.dot}" opacity="${active?.98:.84}" filter="url(#synGlow)"><animateMotion dur="${active?"1.4s":"2.6s"}" repeatCount="indefinite" rotate="auto"><mpath href="#${edge.id}-path"/></animateMotion></circle><circle r="${active?.34:.26}" fill="${col.dot}" opacity="${active?.46:.26}" filter="url(#synGlow)"><animateMotion dur="${active?"1.4s":"2.6s"}" begin="-0.45s" repeatCount="indefinite" rotate="auto"><mpath href="#${edge.id}-path"/></animateMotion></circle></g>`;
+    }).join("");
+    network.innerHTML=defs+svg;
+  }
 
-// ── Guide toggle ──────────────────────────────────────────────────────────────────
-let guideOpen = false;
-function toggleGuide() {
-  guideOpen = !guideOpen;
-  document.getElementById('guide').classList.toggle('closed', !guideOpen);
-  document.getElementById('guide-btn').textContent = guideOpen ? '× Guide' : '≡ Guide';
-  // nudge canvas so it doesn't sit under the drawer
-  cv.style.left = guideOpen ? '390px' : '0';
-  cv.style.width = guideOpen ? `${window.innerWidth - 390}px` : '';
-  // re-center
-  CX = (guideOpen ? (W - 390) / 2 + 390 : W / 2);
-}
+  function brainShape(size,hue,x){
+    return{width:`${size}px`,height:`${Math.round(size*.82)}px`,borderRadius:"54% 46% 50% 50% / 42% 48% 52% 58%",transform:`rotate(${hue==="core"?0:x<50?-8:8}deg)`,boxShadow:`inset 0 0 30px rgba(130,150,255,0.08),0 0 32px ${colors[hue]?.glow||"rgba(140,160,255,0.12)"}`};
+  }
 
-// ── Clock ────────────────────────────────────────────────────────────────────────────────────
-function tick(){
-  document.getElementById('clock').textContent=
-    new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(tick,1000); tick();
+  function renderNodes(){
+    const realm=currentRealm();
+    nodesLayer.innerHTML="";
+    realm.nodes.forEach(node=>{
+      const el=document.createElement("div");
+      el.className="node"+(node.id===selectedId?" active":"");
+      el.style.left=`${node.x}%`; el.style.top=`${node.y}%`;
+      const o1=document.createElement("div");
+      Object.assign(o1.style,{position:"absolute",inset:"-8%",opacity:".40",borderRadius:"56% 44% 52% 48% / 42% 58% 44% 56%",border:"1px solid rgba(255,255,255,0.06)"});
+      const o2=document.createElement("div");
+      Object.assign(o2.style,{position:"absolute",inset:"-16%",opacity:".30",filter:"blur(18px)",borderRadius:"58% 42% 50% 50% / 40% 60% 42% 58%",background:"rgba(255,255,255,0.05)"});
+      const shape=document.createElement("div");
+      shape.className="node-shape";
+      Object.assign(shape.style,brainShape(node.size,node.hue,node.x));
+      shape.innerHTML=`<div style="position:absolute;inset:10%;border-radius:52% 48% 47% 53%/46% 50% 50% 54%;border:1px solid rgba(255,255,255,0.08)"></div><div style="position:absolute;inset:18%;border-radius:50%/44% 55% 45% 56%;border:1px solid rgba(255,255,255,0.06)"></div><div style="position:absolute;left:18%;top:18%;width:12%;height:12%;border-radius:50%;background:rgba(255,255,255,0.16);filter:blur(2px)"></div><div style="position:absolute;left:34%;top:34%;width:10%;height:10%;border-radius:50%;background:rgba(255,255,255,0.10);filter:blur(2px)"></div><div style="position:absolute;left:54%;top:22%;width:8%;height:8%;border-radius:50%;background:rgba(255,255,255,0.12);filter:blur(2px)"></div>`;
+      const label=document.createElement("div");
+      label.className="node-label"; label.textContent=node.title;
+      el.addEventListener("click",()=>{selectedId=node.id;renderAll()});
+      el.addEventListener("dblclick",()=>enterRealm(node));
+      el.addEventListener("mouseenter",evt=>showHoverCard(node,evt));
+      el.addEventListener("mousemove",moveHoverCard);
+      el.addEventListener("mouseleave",hideHoverCard);
+      el.appendChild(o1); el.appendChild(o2); el.appendChild(shape); el.appendChild(label);
+      nodesLayer.appendChild(el);
+    });
+  }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-window.addEventListener('resize',resize);
-resize(); initParticles(); requestAnimationFrame(loop);
-</script>
+  function renderBottomCard(){
+    const node=currentSelectedNode();
+    if(!node){bottomCard.style.display="none";return}
+    bottomCard.style.display="block";
+    bcHint.textContent=currentRealm().name+" · Selected";
+    bcTitle.textContent=node.title;
+    bcText.textContent=node.summary||"";
+    bcDrill.textContent=node.realmTarget?"Double-click to drill into this stage":"";
+  }
+
+  function renderBreadcrumb(){
+    breadcrumb.textContent=realmStack.map(id=>realms[id].name).join(" / ");
+    backBtn.style.display=realmStack.length>1?"flex":"none";
+    const r=currentRealm();
+    document.getElementById("statNodes").textContent=r.nodes.length;
+    document.getElementById("statEdges").textContent=r.edges.length;
+  }
+
+  function renderAll(){renderBreadcrumb();renderNetwork();renderNodes();renderBottomCard()}
+
+  function enterRealm(node){
+    if(!node.realmTarget||!realms[node.realmTarget]||transitioning)return;
+    transitioning=true; app.classList.add("realm-fade-out"); hideHoverCard();
+    setTimeout(()=>{
+      app.classList.remove("realm-fade-out");
+      realmStack.push(node.realmTarget);
+      selectedId=realms[node.realmTarget].nodes[0]?.id||null;
+      renderAll(); app.classList.add("realm-fade-in");
+      setTimeout(()=>{app.classList.remove("realm-fade-in");transitioning=false},280);
+    },180);
+  }
+
+  function goBack(){
+    if(realmStack.length<=1||transitioning)return;
+    transitioning=true; app.classList.add("realm-fade-out"); hideHoverCard();
+    setTimeout(()=>{
+      app.classList.remove("realm-fade-out");
+      realmStack.pop(); selectedId=currentRealm().nodes[0]?.id||null;
+      renderAll(); app.classList.add("realm-fade-in");
+      setTimeout(()=>{app.classList.remove("realm-fade-in");transitioning=false},280);
+    },180);
+  }
+
+  function clockTick(){
+    document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  }
+
+  backBtn.addEventListener("click",goBack);
+  window.addEventListener("resize",()=>{resize();renderAll()});
+
+  resize(); renderAll(); drawBackground();
+  setInterval(clockTick,1000); clockTick();
+  </script>
 </body>
 </html>

@@ -176,8 +176,9 @@ class AppConfig:
     # Default: 300 s (5 minutes). Set lower for faster backfill.
     correction_poll_interval_seconds: int = 300
 
-    # Optional: Scout Airtable source (from .env SCOUT_* vars)
-    scout_airtable_token: str = ""
+    # Optional: Scout Airtable source (credentials from user config;
+    #            field-name overrides from .env SCOUT_*_FIELD vars)
+    scout_airtable_token: str = ""   # blank → reuses main airtable_token at runtime
     scout_airtable_base_id: str = ""
     scout_airtable_table_name: str = ""
     scout_airtable_view_id: str = ""
@@ -304,11 +305,12 @@ def load_config() -> AppConfig:
         correction_poll_interval_seconds=int(
             os.getenv("CORRECTION_POLL_INTERVAL_SECONDS", "300")
         ),
-        # Scout Airtable source (from .env SCOUT_* vars)
-        scout_airtable_token=os.getenv("SCOUT_AIRTABLE_TOKEN", "").strip(),
-        scout_airtable_base_id=os.getenv("SCOUT_AIRTABLE_BASE_ID", "").strip(),
-        scout_airtable_table_name=os.getenv("SCOUT_AIRTABLE_TABLE_NAME", "").strip(),
-        scout_airtable_view_id=os.getenv("SCOUT_AIRTABLE_VIEW_ID", "").strip(),
+        # Scout Airtable source — credentials from user config (sensitive),
+        # field-name overrides from .env (non-sensitive operational config).
+        scout_airtable_token=user_cfg.scout_airtable_token,
+        scout_airtable_base_id=user_cfg.scout_airtable_base_id,
+        scout_airtable_table_name=user_cfg.scout_airtable_table_name,
+        scout_airtable_view_id=user_cfg.scout_airtable_view_id,
         scout_vendor_email_field=os.getenv("SCOUT_VENDOR_EMAIL_FIELD", "Surveyor Email").strip(),
         scout_vendor_name_field=os.getenv("SCOUT_VENDOR_NAME_FIELD", "Vendor Name").strip(),
         scout_site_number_field=os.getenv("SCOUT_SITE_NUMBER_FIELD", "Site Number").strip(),

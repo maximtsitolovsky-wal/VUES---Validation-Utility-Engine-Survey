@@ -20,6 +20,7 @@
 
 | Skill File | Triggers (when to use it) | Tags |
 |---|---|---|
+| [SKILL_SKILL_EXTRACTION.md](SKILL_SKILL_EXTRACTION.md) | Runs automatically at end of every task (CLAUDE.md Step 5). "extract a skill", "save this as a pattern", "we'll do this again" | meta, skills, autonomy |
 | [SKILL_GOVERNANCE_SETUP.md](SKILL_GOVERNANCE_SETUP.md) | "set up Code Puppy", "new project", "add memory", "add governance" | governance, bootstrap, memory |
 | [SKILL_FLAT_HTML_REPORT.md](SKILL_FLAT_HTML_REPORT.md) | "build a report", "flat HTML", "dashboard", "chart", "visualise data" | reporting, html, chart.js, tailwind |
 | [SKILL_GIT_FOCUSED_COMMIT.md](SKILL_GIT_FOCUSED_COMMIT.md) | "commit this", "git commit", "push changes", "save changes" | git, hygiene, version-control |

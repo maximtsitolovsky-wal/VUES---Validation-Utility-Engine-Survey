@@ -30,6 +30,7 @@ User asks for: "set up Code Puppy", "add memory", "new project governance",
 4. **Create `skills/INDEX.md`** with the skill registry table.
 
 5. **Seed at least 2–3 starter skill files** based on tasks already done.
+   Include `SKILL_SKILL_EXTRACTION.md` — the meta-skill. Without it the loop has no quality floor.
 
 6. **Update `CLAUDE.md`** with SKILL PROTOCOL section.
 

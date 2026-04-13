@@ -130,6 +130,11 @@
 > - **Impact:** ...
 > - **Closed:** Yes / No
 
+### 2026-04-13 — Meta-Skill Added (Self-Creating Loop Closed)
+- **Decision:** Added `SKILL_SKILL_EXTRACTION.md` — the meta-skill that teaches Code Puppy how to extract skills from any completed task. Defines the Skill vs Decision vs One-off distinction, naming convention, minimum viable skill, and when NOT to extract. This closes the self-creation loop: every session now has an explicit playbook for generating its own playbooks.
+- **Impact:** `skills/INDEX.md` updated. `SKILL_GOVERNANCE_SETUP.md` should reference this skill on future projects.
+- **Closed:** Yes.
+
 ### 2026-04-13 — Skill Framework Established
 - **Decision:** Created `skills/` directory with `INDEX.md` + 4 seed skills: GOVERNANCE_SETUP, FLAT_HTML_REPORT, GIT_FOCUSED_COMMIT, ORCHESTRATION_MAP. Code Puppy is now mandated to check `skills/INDEX.md` before every task and extract a skill after any repeatable task. This is the mechanism for moving from repetition to autonomy.
 - **Impact:** `CLAUDE.md` updated with SKILL PROTOCOL (Step 1b + Step 4). All future sessions gain accumulated playbooks.

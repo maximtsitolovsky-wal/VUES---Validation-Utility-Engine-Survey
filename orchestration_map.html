@@ -1,458 +1,511 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SiteOwlQA · Architecture</title>
   <style>
-    :root{--bg:#04070d;--bg2:#090f18;--text:#e8f1ff;--muted:rgba(232,241,255,0.5);--border:rgba(255,255,255,0.09);--glass:rgba(10,12,18,0.62);--glass-2:rgba(10,12,18,0.78)}
+    :root{--bg:#04070d;--text:#e8f1ff;--muted:rgba(232,241,255,0.5);--border:rgba(255,255,255,0.09);--glass:rgba(10,12,18,0.62);--glass2:rgba(10,12,18,0.78)}
     *{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at center,#0b1220 0%,#060a12 34%,#03050a 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    body::before{content:"";position:fixed;inset:0;opacity:.055;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px 180px;z-index:0}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at center,#0b1220 0%,#060a12 34%,#03050a 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,sans-serif}
     #bg{position:fixed;inset:0;z-index:0;pointer-events:none}
     #app{position:relative;width:100vw;height:100vh;overflow:hidden;z-index:1}
     .brain-shell{position:absolute;left:50%;top:50%;width:min(80vw,1280px);height:min(70vh,840px);transform:translate(-50%,-50%);border-radius:52% 48% 50% 50%/46% 52% 48% 54%;border:1px solid rgba(255,255,255,0.035);box-shadow:inset 0 0 100px rgba(0,0,0,0.35),0 0 140px rgba(100,120,255,0.04);pointer-events:none}
-    .brain-shell::before,.brain-shell::after{content:"";position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(255,255,255,0.04);filter:blur(.2px)}
-    .brain-shell::after{inset:18%;border-color:rgba(138,160,255,0.06)}
-    /* ── topbar ── */
     .topbar{position:absolute;left:24px;top:24px;z-index:40;display:flex;align-items:center;gap:10px}
     .lux-btn,.lux-pill{border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);backdrop-filter:blur(18px) saturate(140%);color:rgba(255,255,255,0.84);box-shadow:0 10px 30px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.08)}
-    .lux-btn{height:42px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px 0 10px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;text-decoration:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;white-space:nowrap}
-    .lux-btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.14);box-shadow:0 12px 36px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.1)}
-    .lux-btn .icon-wrap{width:24px;height:24px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04)}
+    .lux-btn{height:42px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px 0 10px;cursor:pointer;transition:transform .18s,border-color .18s;text-decoration:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;white-space:nowrap}
+    .lux-btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.14)}
+    .icon-wrap{width:24px;height:24px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04)}
     .lux-btn svg{width:14px;height:14px;stroke:rgba(255,255,255,0.88);stroke-width:2;fill:none}
     .lux-pill{border-radius:999px;padding:11px 18px;font-size:10px;text-transform:uppercase;letter-spacing:.24em;white-space:nowrap}
-    /* ── stats bar (top right) ── */
     .statsbar{position:absolute;top:24px;right:24px;z-index:40;display:flex;align-items:center;gap:20px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);backdrop-filter:blur(18px) saturate(140%);border-radius:999px;padding:10px 22px;box-shadow:0 10px 30px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.08)}
     .stat-blk{text-align:center}
     .stat-n{font-size:18px;font-weight:800;color:#0053e2;line-height:1}
     .stat-l{font-size:9px;color:rgba(232,241,255,0.4);text-transform:uppercase;letter-spacing:.14em}
-    /* ── SVG network ── */
     #network{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:2}
     #nodes{position:absolute;inset:0;z-index:3}
-    /* ── node styles ── */
     .node{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;transition:transform .22s,filter .22s}
     .node.active{z-index:20}
     .node:hover{filter:brightness(1.08)}
     .node-shape{position:relative;border:1px solid rgba(255,255,255,0.1);background:radial-gradient(circle at 42% 36%,rgba(255,255,255,0.18),transparent 16%),radial-gradient(circle at 58% 44%,rgba(120,140,255,0.18),transparent 20%),radial-gradient(circle at 50% 50%,rgba(10,14,24,0.94),rgba(5,7,14,0.98) 72%,rgba(2,3,7,1) 100%);backdrop-filter:blur(10px);overflow:visible;transition:transform .22s,box-shadow .22s}
-    .node-shape::before{content:"";position:absolute;inset:-10%;border-radius:inherit;border:1px solid rgba(255,255,255,0.05);opacity:.4}
-    .node-shape::after{content:"";position:absolute;inset:-18%;border-radius:inherit;background:radial-gradient(circle,rgba(255,255,255,0.06),transparent 68%);filter:blur(18px);opacity:.24;z-index:-1}
-    .node.active .node-shape{transform:scale(1.06);box-shadow:inset 0 0 36px rgba(180,200,255,0.1),0 0 42px rgba(140,160,255,0.16),0 0 80px rgba(100,120,255,0.1)}
-    .node-label{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);width:210px;text-align:center;font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,0.88);text-shadow:0 0 10px rgba(99,207,255,0.12);pointer-events:none}
-    /* ── bottom card ── */
-    .bottom-card{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(820px,90vw);padding:18px 22px;border-radius:20px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.025)),var(--glass);backdrop-filter:blur(20px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,0.28);z-index:30;text-align:center;pointer-events:none}
-    .bottom-card .bc-hint{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.24em;color:rgba(255,255,255,.5);margin-bottom:6px}
-    .bottom-card .bc-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.92);margin-bottom:6px}
-    .bottom-card .bc-text{font-size:13px;color:var(--muted);line-height:1.55}
-    .bc-drill{font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px;letter-spacing:.18em;text-transform:uppercase}
-    /* ── hover card ── */
-    .hover-card{position:absolute;z-index:50;width:min(360px,36vw);min-width:280px;padding:16px 16px 14px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.025)),var(--glass-2);backdrop-filter:blur(20px) saturate(145%);box-shadow:0 18px 46px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.07);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .16s,transform .16s}
+    .node.active .node-shape{transform:scale(1.06);box-shadow:inset 0 0 36px rgba(180,200,255,0.1),0 0 42px rgba(140,160,255,0.16)}
+    .node-label{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);width:200px;text-align:center;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,0.88);pointer-events:none}
+    .bottom-card{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(860px,90vw);padding:16px 22px;border-radius:20px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.025)),var(--glass);backdrop-filter:blur(20px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,0.28);z-index:30;text-align:center;pointer-events:none}
+    .bc-hint{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.24em;color:rgba(255,255,255,.5);margin-bottom:4px}
+    .bc-title{font-size:14px;font-weight:700;color:rgba(255,255,255,.92);margin-bottom:5px}
+    .bc-text{font-size:12px;color:var(--muted);line-height:1.55}
+    .bc-drill{font-size:10px;color:rgba(255,255,255,0.28);margin-top:6px;letter-spacing:.18em;text-transform:uppercase}
+    .hover-card{position:absolute;z-index:50;width:min(380px,38vw);min-width:280px;padding:16px 16px 14px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.025)),var(--glass2);backdrop-filter:blur(20px) saturate(145%);box-shadow:0 18px 46px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.07);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .16s,transform .16s}
     .hover-card.show{opacity:1;transform:translateY(0)}
-    .hover-kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,0.44);margin-bottom:8px}
-    .hover-title{font-size:14px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,0.92);margin-bottom:12px}
-    .hover-section{margin-top:10px}
-    .hover-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,0.42);margin-bottom:6px}
-    .hover-copy{font-size:13px;line-height:1.5;color:rgba(255,255,255,0.72)}
-    .hover-tags{display:flex;flex-wrap:wrap;gap:6px}
-    .hover-tag{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.72);white-space:nowrap}
-    .realm-fade-out{animation:realmOut .22s ease forwards}
-    .realm-fade-in{animation:realmIn .28s ease forwards}
-    @keyframes realmOut{to{opacity:0;transform:scale(1.03);filter:blur(10px)}}
-    @keyframes realmIn{from{opacity:0;transform:scale(.975);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+    .hover-kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,0.44);margin-bottom:6px}
+    .hover-title{font-size:13px;font-weight:700;color:rgba(255,255,255,0.92);margin-bottom:10px}
+    .hover-section{margin-top:8px}
+    .hover-lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,0.42);margin-bottom:4px}
+    .hover-copy{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.72)}
+    .hover-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+    .hover-tag{padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:10px;color:rgba(255,255,255,0.72)}
+    .realm-fade-out{animation:rOut .22s ease forwards}
+    .realm-fade-in{animation:rIn .28s ease forwards}
+    @keyframes rOut{to{opacity:0;transform:scale(1.03);filter:blur(10px)}}
+    @keyframes rIn{from{opacity:0;transform:scale(.975);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
   </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
-  <div id="app">
-    <div class="brain-shell"></div>
-
-    <!-- top-left: nav controls -->
-    <div class="topbar">
-      <a id="dashLink" href="ui/executive_dashboard.html" class="lux-btn">
-        <div class="icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg>
-        </div>
-        <span>Dashboard</span>
-      </a>
-      <button id="backBtn" class="lux-btn" style="display:none">
-        <div class="icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg>
-        </div>
-        <span>Back</span>
-      </button>
-      <div id="breadcrumb" class="lux-pill">SiteOwlQA Pipeline</div>
-    </div>
-
-    <!-- top-right: live stats -->
-    <div class="statsbar">
-      <div class="stat-blk"><div class="stat-n" id="statNodes">7</div><div class="stat-l">Nodes</div></div>
-      <div class="stat-blk"><div class="stat-n" id="statEdges">11</div><div class="stat-l">Edges</div></div>
-      <div class="stat-blk"><div class="stat-n" id="clock">—</div><div class="stat-l">Live</div></div>
-    </div>
-
-    <svg id="network"></svg>
-    <div id="nodes"></div>
-
-    <!-- hover tooltip -->
-    <div id="hoverCard" class="hover-card">
-      <div class="hover-kicker">Module · SiteOwlQA</div>
-      <div id="hoverTitle" class="hover-title"></div>
-      <div class="hover-section"><div class="hover-label">What it does</div><div id="hoverDoes" class="hover-copy"></div></div>
-      <div class="hover-section"><div class="hover-label">What it manages</div><div id="hoverManages" class="hover-copy"></div></div>
-      <div class="hover-section"><div class="hover-label">Connected to</div><div id="hoverConnected" class="hover-tags"></div></div>
-    </div>
-
-    <!-- bottom info card -->
-    <div id="bottomCard" class="bottom-card" style="display:none">
-      <div id="bcHint" class="bc-hint">Selected</div>
-      <div id="bcTitle" class="bc-title"></div>
-      <div id="bcText" class="bc-text"></div>
-      <div id="bcDrill" class="bc-drill"></div>
-    </div>
+<canvas id="bg"></canvas>
+<div id="app">
+  <div class="brain-shell"></div>
+  <div class="topbar">
+    <a href="ui/executive_dashboard.html" class="lux-btn">
+      <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></div>
+      <span>Dashboard</span>
+    </a>
+    <button id="backBtn" class="lux-btn" style="display:none">
+      <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></div>
+      <span>Back</span>
+    </button>
+    <div id="breadcrumb" class="lux-pill">SiteOwlQA Architecture</div>
   </div>
+  <div class="statsbar">
+    <div class="stat-blk"><div class="stat-n" id="sN">8</div><div class="stat-l">Nodes</div></div>
+    <div class="stat-blk"><div class="stat-n" id="sE">12</div><div class="stat-l">Edges</div></div>
+    <div class="stat-blk"><div class="stat-n" id="sClock">—</div><div class="stat-l">Live</div></div>
+  </div>
+  <svg id="network"></svg>
+  <div id="nodes"></div>
+  <div id="hoverCard" class="hover-card">
+    <div class="hover-kicker">SiteOwlQA · Module</div>
+    <div id="hT" class="hover-title"></div>
+    <div class="hover-section"><div class="hover-lbl">What it does</div><div id="hD" class="hover-copy"></div></div>
+    <div class="hover-section"><div class="hover-lbl">Manages</div><div id="hM" class="hover-copy"></div></div>
+    <div class="hover-section"><div class="hover-lbl">Connected to</div><div id="hC" class="hover-tags"></div></div>
+  </div>
+  <div id="bCard" class="bottom-card" style="display:none">
+    <div id="bHint" class="bc-hint"></div>
+    <div id="bTitle" class="bc-title"></div>
+    <div id="bText" class="bc-text"></div>
+    <div id="bDrill" class="bc-drill"></div>
+  </div>
+</div>
+<script>
+// ── Architecture data ────────────────────────────────────────────────────────
+const R={
+root:{id:"root",name:"SiteOwlQA Pipeline",nodes:[
+  {id:"main",   title:"main.py",              x:50,y:48,size:148,hue:"core",
+   summary:"Entry point. poll_once() every N secs. Spawns all daemon threads on startup. Crash-recovers stuck QUEUED/PROCESSING records. Auto-opens browser when fresh dashboard detected.",
+   manages:"Poll loop · SubmissionQueue · worker lifecycle · crash recovery · dashboard auto-open · graceful Ctrl+C shutdown",realmTarget:null},
+  {id:"queue",  title:"SubmissionQueue",       x:20,y:22,size:100,hue:"blue",
+   summary:"Thread-safe deduplication queue. Workers pull records off it. A dedup-set prevents the same record_id entering twice even if Airtable write hasn't propagated yet.",
+   manages:"Thread-safe enqueue/dequeue · record_id dedup set · shutdown signal propagation"},
+  {id:"worker", title:"SubmissionWorker × N",  x:50,y:14,size:100,hue:"violet",
+   summary:"N daemon threads (cfg.worker_threads). Each pulls from the queue and calls process_record(). One bad record never crashes a worker — exception boundary wraps every record.",
+   manages:"queue_worker.py · per-record exception fence · parallel grading throughput"},
+  {id:"pipeline",title:"Record Pipeline",      x:79,y:24,size:106,hue:"cyan",
+   summary:"14-step per-record QA processor (poll_airtable.py). Validate → Recall → Download → Normalize → SQL Ref → Grade → Email → PATCH → Archive → Review → Lesson → Correction.",
+   manages:"poll_airtable.process_record() · 14 ordered steps · per-record exception boundary",realmTarget:"pipeline"},
+  {id:"mworker",title:"MetricsRefreshWorker",  x:82,y:54,size:102,hue:"emerald",
+   summary:"Single-owner background thread. Workers call mark_dirty() when a submission finishes; this thread batches rapid completions and runs the full refresh chain. 60s backstop prevents stale dashboards.",
+   manages:"Dirty-flag pattern · metrics.py · realtime_metrics · team data · dashboard HTML",realmTarget:"async_workers"},
+  {id:"corrwkr",title:"CorrectionWorker",      x:68,y:80,size:100,hue:"amber",
+   summary:"Independent daemon. Polls Airtable every N secs for PASS records with True Score ≥ 95. Acts as a safety net for Step 15. Uses CorrectionStateDB to prevent double-processing.",
+   manages:"correction_worker.py · CorrectionStateDB · post_pass_correction.py · score≥95 polling",realmTarget:"correction"},
+  {id:"airtlyr",title:"Airtable Layer",        x:32,y:80,size:100,hue:"pink",
+   summary:"ALL Airtable API calls live in airtable_client.py (33.9 KB). No other module touches the API. Rate limiter with exponential backoff. RISK-003 CDN URL mitigated via OneDrive mirror.",
+   manages:"airtable_client.py · polling · status updates · attachment download · result PATCH",realmTarget:"airtable"},
+  {id:"datalyr",title:"Archive & Memory",      x:18,y:54,size:100,hue:"blue",
+   summary:"Append-only archive (archive.py) stores executions, submissions, reviews, lessons, prompts, code snapshots. Memory (memory.py) retrieves lessons by tag+keyword for context injection.",
+   manages:"archive.py · memory.py · reviewer.py · 6 archive subdirs · lesson recall",realmTarget:"datastore"}
+],edges:[
+  {id:"e1",from:"main",to:"queue",     strength:0.86},{id:"e2",from:"main",to:"worker",    strength:0.86},
+  {id:"e3",from:"main",to:"mworker",   strength:0.80},{id:"e4",from:"main",to:"corrwkr",   strength:0.72},
+  {id:"e5",from:"main",to:"airtlyr",   strength:0.68},{id:"e6",from:"main",to:"datalyr",   strength:0.68},
+  {id:"e7",from:"queue",to:"worker",   strength:0.78},{id:"e8",from:"worker",to:"pipeline", strength:0.88},
+  {id:"e9",from:"pipeline",to:"airtlyr",strength:0.76},{id:"e10",from:"pipeline",to:"datalyr",strength:0.78},
+  {id:"e11",from:"mworker",to:"airtlyr",strength:0.54},{id:"e12",from:"corrwkr",to:"datalyr",strength:0.58}
+]},
 
-  <script>
-  // ── SiteOwlQA realm data ─────────────────────────────────────────────────
-  const realms = {
-    root: {
-      id:"root", name:"SiteOwlQA Pipeline",
-      nodes:[
-        {id:"main",   title:"main.py",          x:50,y:48,size:158,hue:"core",
-          summary:"Heartbeat. 60s poll loop, never crashes — exceptions caught at record level. Spawns async worker on startup.",
-          manages:"Poll loop · record dispatch · async worker · OS signal handling", realmTarget:null},
-        {id:"pval",   title:"Validate & Recall", x:18,y:20,size:108,hue:"blue",
-          summary:"Checks all required fields before touching files. Simultaneously recalls past lessons from memory.",
-          manages:"Field validation · memory recall · ERROR halting", realmTarget:"pval"},
-        {id:"pproc",  title:"Process",           x:76,y:18,size:108,hue:"cyan",
-          summary:"Downloads attachment, normalises headers, fetches site-scoped SQL reference rows.",
-          manages:"File download · header normalisation · reference fetch", realmTarget:"pproc"},
-        {id:"pgrade", title:"Grade & Decide",    x:84,y:50,size:108,hue:"violet",
-          summary:"Scores 0–100. status_from_score() is the single PASS/FAIL decision — never duplicated.",
-          manages:"Grading · threshold · PASS/FAIL branch", realmTarget:"pgrade"},
-        {id:"pout",   title:"Output",            x:70,y:78,size:106,hue:"emerald",
-          summary:"Emails vendor. PATCHes Airtable. ALL fields always written — no ghost data from prior runs.",
-          manages:"Email · Airtable PATCH · status writeback", realmTarget:"pout"},
-        {id:"parc",   title:"Archive & Learn",   x:28,y:78,size:108,hue:"amber",
-          summary:"Immutable archive of every run. Internal review. Lesson extraction feeds the next cycle.",
-          manages:"JSON archive · reviewer audit · lesson extraction · post-pass correction", realmTarget:"parc"},
-        {id:"pasync", title:"Async Workers",     x:12,y:50,size:96,hue:"pink",
-          summary:"Background thread. Never blocks poll loop. Triggered by mark_dirty() flag.",
-          manages:"MetricsRefreshWorker · CSVs · HTML dashboards", realmTarget:"pasync"}
-      ],
-      edges:[
-        {id:"e1",from:"main",to:"pval",   strength:0.88},{id:"e2",from:"main",to:"pproc",  strength:0.88},
-        {id:"e3",from:"main",to:"pgrade", strength:0.88},{id:"e4",from:"main",to:"pout",   strength:0.88},
-        {id:"e5",from:"main",to:"parc",   strength:0.88},{id:"e6",from:"main",to:"pasync", strength:0.62},
-        {id:"e7",from:"pval",to:"pproc",  strength:0.78},{id:"e8",from:"pproc",to:"pgrade",strength:0.78},
-        {id:"e9",from:"pgrade",to:"pout", strength:0.78},{id:"e10",from:"pout",to:"parc",  strength:0.78},
-        {id:"e11",from:"parc",to:"pval",  strength:0.52}
-      ]
-    },
-    pval:{
-      id:"pval", name:"Validate & Recall",
-      nodes:[
-        {id:"pollorch",title:"poll_airtable.py", x:50,y:44,size:132,hue:"core",
-          summary:"15-step per-record orchestrator. Every exception caught at record level — one bad submission never crashes the pipeline.",
-          manages:"15-step flow · exception boundaries · per-record state"},
-        {id:"memorymod",title:"memory.py",       x:22,y:28,size:106,hue:"amber",
-          summary:"Tag+keyword lesson retrieval. Surfaces vendor/site risk patterns before grading. Makes each run smarter than the last.",
-          manages:"Lesson recall · tag ranking · context injection"},
-        {id:"fieldchk",title:"Field Validation", x:78,y:28,size:104,hue:"blue",
-          summary:"Checks Site Number, Site Name, attachments, vendor info. A single missing field → ERROR, processing halted immediately.",
-          manages:"Required fields · early exit · ERROR status"},
-        {id:"airtfetch",title:"Airtable Fetch",  x:50,y:76,size:102,hue:"cyan",
-          summary:"Polls for QUEUED records every 60s via airtable_client.py. RISK-003: CDN URL expiry is tracked and mitigated.",
-          manages:"Record polling · attachment URL retrieval"}
-      ],
-      edges:[
-        {id:"v1",from:"pollorch",to:"memorymod",strength:0.76},
-        {id:"v2",from:"pollorch",to:"fieldchk", strength:0.82},
-        {id:"v3",from:"pollorch",to:"airtfetch",strength:0.72},
-        {id:"v4",from:"memorymod",to:"fieldchk",strength:0.44}
-      ]
-    },
-    pproc:{
-      id:"pproc", name:"Process",
-      nodes:[
-        {id:"dlmod", title:"airtable_client.py", x:22,y:36,size:106,hue:"blue",
-          summary:"Downloads XLSX/CSV to temp/. RISK-003 mitigated: OneDrive mirror backs up attachments by Site ID.",
-          manages:"HTTP download · file storage · RISK-003 mitigation"},
-        {id:"fpmod", title:"file_processor.py",  x:78,y:36,size:106,hue:"cyan",
-          summary:"Normalises all headers to lowercase_underscored. ProjectID always overwritten from Airtable Site Number — vendor-supplied IDs never trusted.",
-          manages:"Header normalisation · ProjectID authority · pandas transform"},
-        {id:"sqlmod2",title:"sql.py",            x:50,y:74,size:106,hue:"violet",
-          summary:"Pulls site-scoped reference rows from SQL Server. Read-only. Owns ALL database interactions — nothing else touches the DB.",
-          manages:"SQL connection · site-scoped queries · reference data"}
-      ],
-      edges:[
-        {id:"p1",from:"dlmod",to:"fpmod",  strength:0.82},
-        {id:"p2",from:"fpmod",to:"sqlmod2",strength:0.74},
-        {id:"p3",from:"dlmod",to:"sqlmod2",strength:0.42}
-      ]
-    },
-    pgrade:{
-      id:"pgrade", name:"Grade & Decide",
-      nodes:[
-        {id:"grader",  title:"python_grader.py",x:50,y:42,size:132,hue:"core",
-          summary:"Canonical header comparison + column fingerprinting. Weighted score 0–100. Memory recall context shapes the summary narrative.",
-          manages:"Score calc · header matching · pass/fail threshold · status_from_score()"},
-        {id:"passnode",title:"PASS Branch",     x:24,y:76,size:104,hue:"emerald",
-          summary:"score ≥ threshold. Routes → Output → Archive. At score ≥ 95 also triggers post_pass_correction sub-pipeline.",
-          manages:"PASS routing · high-score trigger · correction handoff"},
-        {id:"failnode",title:"FAIL Branch",     x:76,y:76,size:104,hue:"pink",
-          summary:"score < threshold. Routes → Output (FAIL email with specific feedback) → Archive where lesson is extracted.",
-          manages:"FAIL routing · vendor feedback · lesson trigger"}
-      ],
-      edges:[
-        {id:"g1",from:"grader",to:"passnode",strength:0.78},
-        {id:"g2",from:"grader",to:"failnode",strength:0.78}
-      ]
-    },
-    pout:{
-      id:"pout", name:"Output",
-      nodes:[
-        {id:"emailermod",title:"emailer.py",    x:32,y:46,size:112,hue:"emerald",
-          summary:"PASS/FAIL/ERROR email templates with score, summary, and corrective guidance. Bypassed when SMTP_ENABLED=false — Airtable automation handles vendor email instead.",
-          manages:"Email composition · SMTP delivery · template selection"},
-        {id:"airtpatch",title:"Airtable PATCH", x:68,y:46,size:112,hue:"blue",
-          summary:"PATCHes status, True Score, Score%, Fail Summary, Notes. ALL fields always written — never blank. Hard rule to prevent ghost data across resubmissions.",
-          manages:"Field writeback · ghost-data prevention · status update"}
-      ],
-      edges:[{id:"o1",from:"emailermod",to:"airtpatch",strength:0.54}]
-    },
-    parc:{
-      id:"parc", name:"Archive & Learn",
-      nodes:[
-        {id:"archmod",  title:"archive.py",            x:50,y:42,size:128,hue:"core",
-          summary:"Append-only JSON archive + raw file store. Nothing is ever deleted or overwritten. Full audit trail for every run including errors.",
-          manages:"Execution records · raw files · append-only guarantee"},
-        {id:"correctmod",title:"post_pass_correction", x:18,y:76,size:94,hue:"emerald",
-          summary:"Runs only at score ≥ 95. Outputs corrected RAW/CSV/LOG. Never re-grades, never touches Airtable — completely isolated safe sub-pipeline.",
-          manages:"Corrected file generation · isolation guarantee"},
-        {id:"reviewmod",title:"reviewer.py",           x:50,y:78,size:94,hue:"violet",
-          summary:"Internal static audit. Issues classified CRITICAL/HIGH/LOW. Pure observer — never mutates pipeline state.",
-          manages:"Audit trail · issue classification · behaviour review"},
-        {id:"lessonmod",title:"Extract Lesson",        x:80,y:76,size:94,hue:"amber",
-          summary:"Generalised rule extracted with confidence 0.75, tagged by site/vendor/column. Written to archive, recalled on the next run via memory.py.",
-          manages:"Lesson generation · tag assignment · learning loop"}
-      ],
-      edges:[
-        {id:"a1",from:"archmod",to:"correctmod",strength:0.62},
-        {id:"a2",from:"archmod",to:"reviewmod", strength:0.72},
-        {id:"a3",from:"archmod",to:"lessonmod", strength:0.76},
-        {id:"a4",from:"lessonmod",to:"correctmod",strength:0.36}
-      ]
-    },
-    pasync:{
-      id:"pasync", name:"Async Workers",
-      nodes:[
-        {id:"metricsmod",title:"metrics.py",   x:32,y:46,size:110,hue:"blue",
-          summary:"Computes and exports 3 CSV metric files. Triggered by mark_dirty() flag. Never blocks the main poll loop.",
-          manages:"Metric computation · CSV export · dirty-flag pattern"},
-        {id:"dashmod",  title:"dashboard.py",  x:68,y:46,size:110,hue:"cyan",
-          summary:"Generates HTML dashboards from CSV data. Template: ui/executive_dashboard.html → output/ → served_dashboard/. Only runs when dirty.",
-          manages:"HTML generation · template injection · metrics → UI"}
-      ],
-      edges:[{id:"as1",from:"metricsmod",to:"dashmod",strength:0.68}]
-    }
-  };
+pipeline:{id:"pipeline",name:"Record Pipeline (14 Steps)",nodes:[
+  {id:"proc",   title:"process_record()",      x:50,y:48,size:132,hue:"core",
+   summary:"poll_airtable.py. Orchestrates all 14 steps. Exception boundary wraps the full run — one bad record never crashes the loop. Metrics refresh is intentionally NOT here (async via MetricsRefreshWorker).",
+   manages:"14-step sequencer · execution_id · timing · error containment"},
+  {id:"sv",     title:"Step 1 · site_validation",x:20,y:22,size:98,hue:"blue",
+   summary:"site_validation.py validates site number, required Airtable fields, and submission format. Missing fields → ERROR status, processing halted immediately. Zero ambiguity on required data.",
+   manages:"site_validation.py · required field check · ERROR halt · site number authority"},
+  {id:"mem",    title:"Step 2 · memory.recall()",x:50,y:14,size:98,hue:"amber",
+   summary:"memory.py retrieves known risk lessons by tag+keyword before any file is touched. Lesson context is injected into the grading narrative so every run is smarter than the last.",
+   manages:"memory.py · tag+keyword recall · lesson context · risk awareness injection"},
+  {id:"fp",     title:"Steps 3-4 · file_processor",x:80,y:22,size:98,hue:"cyan",
+   summary:"airtable_client downloads attachment to temp/. file_processor.py normalizes all headers to lowercase_underscored. ProjectID is ALWAYS overwritten from Airtable Site Number — vendor-supplied IDs are never trusted.",
+   manages:"file_processor.py · header normalisation · ProjectID authority override · pandas transform"},
+  {id:"rd",     title:"Step 5 · reference_data+sql",x:84,y:50,size:98,hue:"violet",
+   summary:"reference_data.py fetches site-scoped reference rows from SQL Server via sql.py. Read-only. sql.py is the single database interaction point — nothing else touches the DB. Reference cache pre-warmed on startup.",
+   manages:"reference_data.py · sql.py · site-scoped fetch · read-only · prewarm cache"},
+  {id:"gr",     title:"Steps 6-7 · python_grader",x:78,y:76,size:102,hue:"pink",
+   summary:"grade_submission_in_python() runs Python-first site-scoped grading. status_from_score() is the SINGLE PASS/FAIL decision — never duplicated. validate_grading_consistency() guards against score/status mismatch.",
+   manages:"python_grader.py · 0-100 scoring · status_from_score() · GradingInconsistencyError",realmTarget:"grader"},
+  {id:"out",    title:"Steps 8-9 · Output",    x:50,y:84,size:100,hue:"emerald",
+   summary:"emailer.py sends PASS/FAIL/ERROR templated email to vendor. airtable_client patches ALL result fields: status, true_score, score_pct, fail_summary, notes. Every field always written — ghost data prevention is a hard rule.",
+   manages:"emailer.py · SMTP · Airtable PATCH · all-fields-always rule · ghost data prevention",realmTarget:"output"},
+  {id:"arch",   title:"Steps 10-15 · Archive+Learn",x:22,y:76,size:100,hue:"blue",
+   summary:"Raw submission file archived (Step 10). reviewer.py runs internal audit (Step 11). Execution JSON archived (Step 12). Lesson extracted from failures (Step 13). Step 15: post-pass correction if score ≥ 95.",
+   manages:"archive.py · reviewer.py · extract_lesson_from_failure · post_pass_correction",realmTarget:"datastore"}
+],edges:[
+  {id:"p1",from:"proc",to:"sv",  strength:0.88},{id:"p2",from:"sv",to:"mem",   strength:0.80},
+  {id:"p3",from:"mem",to:"fp",   strength:0.80},{id:"p4",from:"fp",to:"rd",    strength:0.84},
+  {id:"p5",from:"rd",to:"gr",    strength:0.86},{id:"p6",from:"gr",to:"out",   strength:0.86},
+  {id:"p7",from:"out",to:"arch", strength:0.82},{id:"p8",from:"arch",to:"mem", strength:0.52}
+]},
 
-  // ── Colour palette ───────────────────────────────────────────────────────
-  const colors={
-    core:   {line:"rgba(140,160,255,0.58)",dot:"rgba(230,236,255,0.96)",glow:"rgba(140,160,255,0.22)"},
-    blue:   {line:"rgba(0,133,255,0.50)",  dot:"rgba(200,230,255,0.96)",glow:"rgba(0,133,255,0.20)"},
-    violet: {line:"rgba(196,181,253,0.46)",dot:"rgba(245,236,255,0.96)",glow:"rgba(167,139,250,0.18)"},
-    cyan:   {line:"rgba(34,211,238,0.46)", dot:"rgba(220,254,255,0.96)",glow:"rgba(34,211,238,0.18)"},
-    emerald:{line:"rgba(52,211,153,0.46)", dot:"rgba(200,255,230,0.96)",glow:"rgba(42,135,3,0.22)"},
-    pink:   {line:"rgba(249,100,100,0.46)",dot:"rgba(255,220,220,0.96)",glow:"rgba(234,17,0,0.18)"},
-    amber:  {line:"rgba(255,194,32,0.46)", dot:"rgba(255,251,210,0.96)",glow:"rgba(255,194,32,0.20)"}
-  };
+grader:{id:"grader",name:"python_grader.py · Scoring Engine",nodes:[
+  {id:"gcore", title:"grade_submission_in_python()",x:50,y:48,size:132,hue:"core",
+   summary:"Entry point for all grading. Site Number scopes the reference dataset. Only COMPARABLE_COLUMNS (from config.VENDOR_GRADE_COLUMNS) are used. Submission and reference rows normalized + sorted deterministically before comparison.",
+   manages:"python_grader.py · site-scoped dataset · deterministic comparison · memory context injection"},
+  {id:"cfp",   title:"Column Fingerprinter",     x:20,y:22,size:96,hue:"blue",
+   summary:"Intersects vendor headers with COMPARABLE_COLUMNS to find matchable columns. Uses lowercase_underscored normalization. Columns not in the canonical set are ignored — no phantom scoring.",
+   manages:"COMPARABLE_COLUMNS · header intersection · canonical normalisation · missing column detection"},
+  {id:"idc",   title:"IDENTITY_COLUMNS",          x:54,y:16,size:96,hue:"cyan",
+   summary:"MAC Address + IP Address are the row identity keys for pairing submission rows to reference rows within the site-scoped dataset. Stable unique key enables row-parallel comparison.",
+   manages:"MAC Address · IP Address · row pairing logic · subset grading identity"},
+  {id:"wsc",   title:"Weighted Scorer",           x:82,y:32,size:98,hue:"violet",
+   summary:"Row-parallel comparison within the site-scoped dataset. Per-column weights sum to produce true_score (raw numeric, 0–100). score_percent derived from true_score / total_columns × 100.",
+   manages:"per-column weights · row-parallel diff · true_score · score_pct · fail_summary generation"},
+  {id:"sfs",   title:"status_from_score()",       x:82,y:66,size:102,hue:"emerald",
+   summary:"SINGLE SOURCE OF TRUTH for PASS/FAIL. Uses Decimal(str(...)) internally for float stability — 95.0000000001 and 95.00 both reliably PASS. Never call anything else to determine status.",
+   manages:"PASS_THRESHOLD · Decimal comparison · ProcessingStatus enum · canonical decision"},
+  {id:"vgc",   title:"validate_grading_consistency()",x:54,y:82,size:96,hue:"amber",
+   summary:"Assert that status is consistent with true_score. Raises GradingInconsistencyError if score=95.6 but status=FAIL (data integrity violation, not a display bug). Every instance is a pipeline bug to be fixed immediately.",
+   manages:"GradingInconsistencyError · integrity guard · score/status assertion"},
+  {id:"sres",  title:"SubmissionResult",          x:20,y:70,size:96,hue:"pink",
+   summary:"Dataclass bundling all grading outputs: true_score, score_pct, status (ProcessingStatus), fail_summary, notes_internal, matched_columns. Passed downstream to emailer and Airtable PATCH.",
+   manages:"models.py · SubmissionResult · fail_summary · matched_columns · output contract"}
+],edges:[
+  {id:"g1",from:"gcore",to:"cfp",  strength:0.82},{id:"g2",from:"cfp",to:"idc",   strength:0.64},
+  {id:"g3",from:"cfp",to:"wsc",    strength:0.86},{id:"g4",from:"wsc",to:"sfs",   strength:0.90},
+  {id:"g5",from:"sfs",to:"vgc",    strength:0.84},{id:"g6",from:"vgc",to:"sres",  strength:0.80},
+  {id:"g7",from:"gcore",to:"wsc",  strength:0.72}
+]},
 
-  // ── DOM refs ─────────────────────────────────────────────────────────────
-  const bgCv=document.getElementById("bg"),bgCtx=bgCv.getContext("2d");
-  const app=document.getElementById("app"),network=document.getElementById("network");
-  const nodesLayer=document.getElementById("nodes");
-  const breadcrumb=document.getElementById("breadcrumb"),backBtn=document.getElementById("backBtn");
-  const bottomCard=document.getElementById("bottomCard"),bcTitle=document.getElementById("bcTitle");
-  const bcText=document.getElementById("bcText"),bcHint=document.getElementById("bcHint"),bcDrill=document.getElementById("bcDrill");
-  const hoverCard=document.getElementById("hoverCard"),hoverTitle=document.getElementById("hoverTitle");
-  const hoverDoes=document.getElementById("hoverDoes"),hoverManages=document.getElementById("hoverManages");
-  const hoverConnected=document.getElementById("hoverConnected");
+async_workers:{id:"async_workers",name:"MetricsRefreshWorker · Async Layer",nodes:[
+  {id:"mwcore",title:"MetricsRefreshWorker",     x:50,y:48,size:128,hue:"core",
+   summary:"metrics_worker.py. Single-owner daemon thread. ALL output file writes happen here — no other thread touches CSVs or HTML. Dirty-flag pattern: workers call mark_dirty(), this thread batches them. 60s backstop prevents stale dashboards.",
+   manages:"metrics_worker.py · single-writer guarantee · threading.Event dirty flag · 60s backstop"},
+  {id:"mdf",   title:"mark_dirty()",              x:20,y:22,size:96,hue:"blue",
+   summary:"Thread-safe signal from SubmissionWorker. Returns immediately — never blocks grading. The next refresh iteration picks up any completions that arrived DURING a refresh (flag cleared at refresh START, not END).",
+   manages:"threading.Event · non-blocking signal · batching semantics"},
+  {id:"mpy",   title:"metrics.py",                x:54,y:14,size:98,hue:"cyan",
+   summary:"refresh_all_metrics() computes and writes 3 CSVs: submission_history.csv, vendor_metrics.csv, processing_summary.csv. Reads from Archive — no live DB calls. Pure computation from archived data.",
+   manages:"metrics.py · submission_history.csv · vendor_metrics.csv · processing_summary.csv"},
+  {id:"rtm",   title:"realtime_metrics.py",       x:82,y:28,size:96,hue:"violet",
+   summary:"refresh_realtime_metrics() pulls live counts from Airtable API (current queue depth, today's submissions, processing status). Writes realtime_snapshot.json for the dashboard live counter strip.",
+   manages:"realtime_metrics.py · Airtable live query · realtime_snapshot.json · queue depth"},
+  {id:"tdd",   title:"team_dashboard_data.py",    x:84,y:56,size:96,hue:"amber",
+   summary:"refresh_team_dashboard_data() aggregates team-scoped metrics from Airtable. Produces team_dashboard_data.json used by the Scout and Performance sections of the executive dashboard.",
+   manages:"team_dashboard_data.py · team aggregation · team_dashboard_data.json · Scout data"},
+  {id:"whl",   title:"weekly_highlights.py",      x:68,y:82,size:98,hue:"pink",
+   summary:"27.4 KB executive summary generator. Detects pass/fail trends, top vendors, site performance patterns, and formats the Weekly Summary section of the dashboard. Triggered by MetricsRefreshWorker.",
+   manages:"weekly_highlights.py · trend detection · executive narrative · weekly section HTML"},
+  {id:"dshpy", title:"dashboard.py → dashboard_exec.py",x:32,y:80,size:102,hue:"emerald",
+   summary:"dashboard.py (1.5 KB) calls refresh_dashboards() which invokes dashboard_exec.py (101.2 KB). The exec module injects all metric data into the ui/ template and writes to output/executive_dashboard.html.",
+   manages:"dashboard.py · dashboard_exec.py · template injection · output/executive_dashboard.html"},
+  {id:"ldsrv", title:"local_dashboard_server.py", x:16,y:52,size:96,hue:"blue",
+   summary:"Tiny localhost HTTP server. Port 8765 (preferred) with OS fallback. Serves output/ with no-cache headers so browser always sees fresh HTML. Port written to output/dashboard.port.",
+   manages:"local_dashboard_server.py · port 8765 · no-cache headers · output/dashboard.port"}
+],edges:[
+  {id:"a1",from:"mwcore",to:"mdf",   strength:0.70},{id:"a2",from:"mdf",to:"mpy",     strength:0.86},
+  {id:"a3",from:"mpy",to:"rtm",      strength:0.74},{id:"a4",from:"rtm",to:"tdd",     strength:0.72},
+  {id:"a5",from:"tdd",to:"whl",      strength:0.66},{id:"a6",from:"whl",to:"dshpy",   strength:0.78},
+  {id:"a7",from:"dshpy",to:"ldsrv",  strength:0.72},{id:"a8",from:"mwcore",to:"dshpy",strength:0.62}
+]},
 
-  let realmStack=["root"],selectedId="main",transitioning=false,animTick=0;
+datastore:{id:"datastore",name:"Archive · Memory · Review",nodes:[
+  {id:"arc",   title:"archive.py",               x:50,y:48,size:128,hue:"core",
+   summary:"Append-only structured archive (12.3 KB). 6 subdirectories. NOTHING is deleted or overwritten. Every pipeline run has a full audit trail including ERROR runs. Supplies all raw data for metrics computation.",
+   manages:"6 archive subdirs · append-only guarantee · ExecutionRecord · SubmissionArchiveRecord · Lesson"},
+  {id:"aexe",  title:"archive/executions/",       x:22,y:22,size:96,hue:"blue",
+   summary:"One ExecutionRecord JSON per pipeline run. Records: execution_id, site_number, vendor_email, true_score, status, timing, rows_loaded, error_message, output_report_path. Loaded by metrics.py.",
+   manages:"ExecutionRecord · execution_id · timing · score history · full run audit"},
+  {id:"asub",  title:"archive/submissions/YYYY/MM/DD/",x:54,y:14,size:96,hue:"cyan",
+   summary:"Raw vendor files + metadata JSON partitioned by date. find_archived_file_by_record_id() scans newest-first for fast correction lookups. Preserves vendor submissions independently of temp/ cleanup.",
+   manages:"SubmissionArchiveRecord · raw files · date-partitioned · correction lookup · metadata JSON"},
+  {id:"arev",  title:"archive/reviews/",          x:82,y:30,size:96,hue:"violet",
+   summary:"One ReviewResult JSON per pipeline run from reviewer.py. Issues classified CRITICAL/HIGH/LOW. Pure observer — never mutates pipeline state. Used for internal audit and quality trending.",
+   manages:"ReviewResult · CRITICAL/HIGH/LOW · reviewer.py output · audit trail"},
+  {id:"ales",  title:"archive/lessons/",          x:82,y:66,size:98,hue:"amber",
+   summary:"Extracted lessons from failures. Each Lesson has: lesson_id, task_category, failed_pattern, root_cause, fix_pattern, generalized_rule, tags[], confidence (0-1). Written by extract_lesson_from_failure().",
+   manages:"Lesson model · confidence 0-1 · tags · generalized_rule · failure knowledge base"},
+  {id:"mempy", title:"memory.py",                 x:52,y:82,size:100,hue:"pink",
+   summary:"Searches archive/lessons/ by tag+keyword for each submission. Injects ranked lessons as context into the grading narrative. Makes each run smarter. Also tracks execution_count() and failure_rate() for startup diagnostics.",
+   manages:"memory.py · tag+keyword search · lesson ranking · context injection · failure_rate()"},
+  {id:"revpy", title:"reviewer.py",               x:20,y:68,size:96,hue:"emerald",
+   summary:"Internal static audit (16 KB). Runs after grading on every pipeline run. Classifies issues as CRITICAL/HIGH/LOW based on score, status, error patterns, and consistency checks. NEVER mutates state.",
+   manages:"reviewer.py · review_pipeline_run() · issue classification · CRITICAL/HIGH/LOW · pure observer"}
+],edges:[
+  {id:"d1",from:"arc",to:"aexe",   strength:0.84},{id:"d2",from:"arc",to:"asub",   strength:0.80},
+  {id:"d3",from:"arc",to:"arev",   strength:0.76},{id:"d4",from:"arc",to:"ales",   strength:0.80},
+  {id:"d5",from:"ales",to:"mempy", strength:0.88},{id:"d6",from:"arev",to:"revpy", strength:0.64},
+  {id:"d7",from:"mempy",to:"arc",  strength:0.50}
+]},
 
-  // ── Background ───────────────────────────────────────────────────────────
-  const stars=Array.from({length:240},()=>({x:Math.random(),y:Math.random(),r:.4+Math.random()*1.3,a:.12+Math.random()*.65,phase:Math.random()*Math.PI*2,drift:.004+Math.random()*.018}));
-  const filaments=Array.from({length:20},()=>({x1:Math.random(),y1:Math.random(),cx:Math.random(),cy:Math.random(),x2:Math.random(),y2:Math.random(),alpha:.015+Math.random()*.04}));
+airtable:{id:"airtable",name:"airtable_client.py · API Layer",nodes:[
+  {id:"atcore",title:"AirtableClient",            x:50,y:48,size:128,hue:"core",
+   summary:"airtable_client.py (33.9 KB). The ONLY module that talks to Airtable. All other modules receive typed objects (AirtableRecord) or call methods on this client. No other module makes raw API calls.",
+   manages:"airtable_client.py · single Airtable interface · typed AirtableRecord · all REST calls"},
+  {id:"gpr",   title:"get_pending_records()",     x:20,y:22,size:96,hue:"blue",
+   summary:"Polls Airtable for records with UNPROCESSED statuses. Returns list[AirtableRecord]. QUEUED/PROCESSING excluded from query so in-flight records are never re-fetched. Dedup-set in SubmissionQueue is a secondary guard.",
+   manages:"GET /records · UNPROCESSED filter · AirtableRecord typing · poll cycle input"},
+  {id:"grs",   title:"get_records_by_statuses()", x:56,y:14,size:96,hue:"cyan",
+   summary:"Used exclusively by crash recovery on startup to find QUEUED or PROCESSING records left by a previous hard crash. Resets them to empty so the next poll cycle can re-pick them up cleanly.",
+   manages:"crash recovery query · STUCK_STATUSES · reset-to-empty · startup cleanup"},
+  {id:"us",    title:"update_status()",           x:82,y:26,size:96,hue:"violet",
+   summary:"Transitions a record through the status workflow: (empty) → QUEUED → PROCESSING → PASS/FAIL/ERROR. Called immediately when a record is enqueued (QUEUED) and after grading (final status). Thread-safe per-record.",
+   manages:"PATCH status field · workflow transitions · QUEUED mark · final status write"},
+  {id:"da",    title:"download_attachment()",     x:84,y:56,size:98,hue:"amber",
+   summary:"Downloads vendor file from Airtable CDN URL to temp/. RISK-003: Airtable CDN URLs expire — mitigated by OneDrive mirror keyed by Site Number. Falls back to mirror on CDN failure.",
+   manages:"HTTP download · temp/ storage · RISK-003 CDN expiry · OneDrive mirror fallback"},
+  {id:"pr",    title:"patch_results()",           x:66,y:80,size:100,hue:"emerald",
+   summary:"PATCHes ALL result fields in one call: Processing Status, True Score, Score%, Fail Summary, Notes. ALWAYS writes every field — never leave any field blank. Hard rule prevents ghost data from prior runs appearing on resubmissions.",
+   manages:"PATCH all fields · true_score · score_pct · fail_summary · notes · ghost data prevention"},
+  {id:"rl",    title:"Rate Limiter + Backoff",    x:32,y:80,size:96,hue:"pink",
+   summary:"Every outbound API call goes through the rate limiter. Exponential backoff on 429/503 responses. Never hammers the Airtable API. Prevents the pipeline from causing rate-limit cascades during batch processing.",
+   manages:"exponential backoff · 429 handling · retry logic · API call throttling"},
+  {id:"arm",   title:"AirtableRecord model",      x:16,y:52,size:96,hue:"blue",
+   summary:"models.py typed dataclass. Fields: record_id, site_number (ProjectID authority), site_name, submission_id, vendor_email, attachment_url, attachment_filename, raw_fields. Site Number overrides any vendor-supplied ProjectID.",
+   manages:"models.py · AirtableRecord · site_number authority · typed field access · attachment_url"}
+],edges:[
+  {id:"at1",from:"atcore",to:"gpr",   strength:0.82},{id:"at2",from:"atcore",to:"grs",   strength:0.68},
+  {id:"at3",from:"atcore",to:"us",    strength:0.86},{id:"at4",from:"atcore",to:"da",    strength:0.80},
+  {id:"at5",from:"atcore",to:"pr",    strength:0.88},{id:"at6",from:"atcore",to:"rl",    strength:0.76},
+  {id:"at7",from:"rl",to:"gpr",       strength:0.54},{id:"at8",from:"arm",to:"atcore",   strength:0.60}
+]},
 
-  function currentRealm(){return realms[realmStack[realmStack.length-1]]}
-  function currentSelectedNode(){const r=currentRealm();return r.nodes.find(n=>n.id===selectedId)||r.nodes[0]}
+correction:{id:"correction",name:"CorrectionWorker · Post-Pass Correction",nodes:[
+  {id:"cwcore",title:"CorrectionWorker",          x:50,y:48,size:128,hue:"core",
+   summary:"correction_worker.py. Independent daemon thread — completely separate from the grading pipeline. Polls Airtable every N secs for PASS records with True Score ≥ 95. Provides autonomous correction for historical records and acts as a safety net for inline Step 15.",
+   manages:"correction_worker.py · autonomous poll · score≥95 filter · CorrectionStateDB guard"},
+  {id:"csdb",  title:"CorrectionStateDB",         x:20,y:22,size:98,hue:"blue",
+   summary:"correction_state.py. SQLite-backed deduplication database. Shared between CorrectionWorker (background) and inline Step 15 (pipeline). Ensures no record is ever corrected twice regardless of which path triggers first.",
+   manages:"correction_state.py · SQLite dedup · corrected_count() · is_corrected() · shared state"},
+  {id:"s15",   title:"Inline Step 15 (pipeline)", x:54,y:14,size:96,hue:"cyan",
+   summary:"Safety net for records that complete during the main 14-step pipeline run. If score ≥ 95, calls run_post_pass_correction() before the pipeline returns. CorrectionStateDB prevents double-processing if CorrectionWorker also picks it up.",
+   manages:"poll_airtable.py Step 15 · inline trigger · score≥95 gate · state_db check"},
+  {id:"ppc",   title:"post_pass_correction.py",   x:82,y:30,size:102,hue:"violet",
+   summary:"30.3 KB isolated correction sub-pipeline. Generates corrected RAW, CSV, and LOG files. NEVER re-grades (score is final). NEVER touches Airtable (output only). Completely isolated — a bug here cannot affect the main pipeline status.",
+   manages:"post_pass_correction.py · corrected RAW/CSV/LOG · isolation guarantee · no re-grading"},
+  {id:"couts", title:"Correction Outputs",         x:82,y:68,size:96,hue:"amber",
+   summary:"Corrected RAW file, normalised CSV, correction LOG. Stored in output/corrections/. These are advisory artifacts for vendors and internal review — they do not change Airtable status or trigger re-grading.",
+   manages:"corrected RAW · correction CSV · correction LOG · output/corrections/ · advisory artifacts"},
+  {id:"afl",   title:"archive.find_archived_file()",x:50,y:82,size:96,hue:"emerald",
+   summary:"Before re-downloading from Airtable (RISK-003 CDN expiry), CorrectionWorker uses archive.find_archived_file_by_record_id() to locate the previously archived vendor file. Scans newest date folder first. Falls back to network download if not found.",
+   manages:"archive lookup · local-first file resolution · RISK-003 mitigation · newest-first scan"},
+  {id:"csp",   title:"correction_state.py",        x:18,y:66,size:96,hue:"pink",
+   summary:"Persistence layer for CorrectionStateDB. Stores corrected record IDs in a SQLite file in corrections/. state_file_path() and corrected_count() exposed for startup logging. Survives process restarts.",
+   manages:"correction_state.py · SQLite persistence · corrected_count() · state_file_path() · restart survival"}
+],edges:[
+  {id:"c1",from:"cwcore",to:"csdb",  strength:0.84},{id:"c2",from:"cwcore",to:"ppc",   strength:0.80},
+  {id:"c3",from:"csdb",to:"csp",     strength:0.76},{id:"c4",from:"csdb",to:"s15",     strength:0.66},
+  {id:"c5",from:"s15",to:"ppc",      strength:0.78},{id:"c6",from:"ppc",to:"couts",    strength:0.82},
+  {id:"c7",from:"ppc",to:"afl",      strength:0.70}
+]},
 
-  function resize(){
-    bgCv.width=window.innerWidth*devicePixelRatio; bgCv.height=window.innerHeight*devicePixelRatio;
-    bgCv.style.width=`${window.innerWidth}px`; bgCv.style.height=`${window.innerHeight}px`;
-    bgCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-    network.setAttribute("viewBox","0 0 100 100");
-    network.setAttribute("preserveAspectRatio","none");
-    network.setAttribute("width",window.innerWidth);
-    network.setAttribute("height",window.innerHeight);
-  }
+output:{id:"output",name:"Output Layer · Email + Airtable Writeback",nodes:[
+  {id:"eml",   title:"emailer.py",                x:50,y:44,size:124,hue:"core",
+   summary:"emailer.py (6.5 KB). Sends PASS/FAIL/ERROR templated emails to vendors. When SMTP_ENABLED=false, email is bypassed and Airtable automation handles vendor notification — the pipeline still writes all result fields.",
+   manages:"emailer.py · SMTP delivery · SMTP_ENABLED flag · template selection · error alerting"},
+  {id:"pe",    title:"send_pass_email()",          x:20,y:22,size:96,hue:"emerald",
+   summary:"PASS template. Includes: True Score, Score%, confirmation message, archive reference. Sent only when status=PASS AND SMTP_ENABLED. Subject line and body configurable via AppConfig.",
+   manages:"PASS template · score in email · vendor confirmation · SMTP send"},
+  {id:"fe",    title:"send_fail_email()",          x:54,y:14,size:96,hue:"pink",
+   summary:"FAIL template. Includes: True Score, Score%, Fail Summary with column-level breakdown, corrective guidance, resubmission instructions. The fail_summary field drives the content — grader output goes directly to vendor.",
+   manages:"FAIL template · fail_summary injection · column-level feedback · corrective guidance"},
+  {id:"ee",    title:"send_error_email()",         x:80,y:26,size:96,hue:"amber",
+   summary:"ERROR template. Sent to configured admin addresses (not vendor). Includes execution_id, record_id, error_message for debugging. Allows errors to surface without exposing internals to vendors.",
+   manages:"ERROR template · admin alert · execution_id · internal error visibility"},
+  {id:"apatch",title:"Airtable PATCH (all fields)",x:80,y:66,size:104,hue:"blue",
+   summary:"patch_results() via AirtableClient. Writes Processing Status, True Score, Score%, Fail Summary, Notes in a single PATCH. HARD RULE: all fields always written, never blank. Prevents stale values from prior submissions appearing on current record.",
+   manages:"airtable_client.patch_results() · all 5 result fields · single PATCH call · atomic write"},
+  {id:"gdp",   title:"Ghost Data Prevention",      x:26,y:72,size:96,hue:"violet",
+   summary:"Business rule enforced at patch_results() call site. If any field is empty/None it is replaced with a safe default (e.g. 0.0 for scores, empty string for text) before the PATCH. A record from a previous submission MUST NOT influence the current one.",
+   manages:"null-safe defaults · all-fields-always · resubmission safety · field isolation rule"}
+],edges:[
+  {id:"o1",from:"eml",to:"pe",     strength:0.80},{id:"o2",from:"eml",to:"fe",     strength:0.80},
+  {id:"o3",from:"eml",to:"ee",     strength:0.74},{id:"o4",from:"eml",to:"apatch", strength:0.84},
+  {id:"o5",from:"apatch",to:"gdp", strength:0.88},{id:"o6",from:"fe",to:"apatch",  strength:0.58}
+]}
+};
 
-  function drawBackground(){
-    animTick++;
-    const w=window.innerWidth,h=window.innerHeight;
-    bgCtx.clearRect(0,0,w,h);
-    const g=bgCtx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.75);
-    g.addColorStop(0,"rgba(10,12,20,0.98)"); g.addColorStop(.3,"rgba(5,7,13,0.99)"); g.addColorStop(1,"rgba(1,2,5,1)");
-    bgCtx.fillStyle=g; bgCtx.fillRect(0,0,w,h);
-    filaments.forEach((f,i)=>{
-      bgCtx.beginPath(); bgCtx.moveTo(f.x1*w,f.y1*h);
-      bgCtx.quadraticCurveTo(f.cx*w+Math.sin(animTick*.01+i)*26,f.cy*h+Math.cos(animTick*.012+i)*26,f.x2*w,f.y2*h);
-      bgCtx.strokeStyle=`rgba(110,140,255,${f.alpha})`; bgCtx.lineWidth=1; bgCtx.shadowBlur=20; bgCtx.shadowColor="rgba(110,140,255,0.08)"; bgCtx.stroke();
-    });
-    stars.forEach(s=>{
-      bgCtx.beginPath(); bgCtx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
-      bgCtx.fillStyle=`rgba(190,220,255,${s.a*(0.8+Math.sin(animTick*s.drift+s.phase)*.18)})`; bgCtx.fill();
-    });
-    [[w*.32,h*.46,280,"56,189,248"],[w*.68,h*.54,320,"139,92,246"]].forEach(([x,y,r,c])=>{
-      const gl=bgCtx.createRadialGradient(x,y,0,x,y,r);
-      gl.addColorStop(0,`rgba(${c},0.08)`); gl.addColorStop(1,`rgba(${c},0)`);
-      bgCtx.fillStyle=gl; bgCtx.fillRect(0,0,w,h);
-    });
-    requestAnimationFrame(drawBackground);
-  }
+// ── Colour palette ────────────────────────────────────────────────────────────
+const C={
+  core:   {line:"rgba(140,160,255,0.58)",dot:"rgba(230,236,255,0.96)",glow:"rgba(140,160,255,0.22)"},
+  blue:   {line:"rgba(0,133,255,0.50)",  dot:"rgba(200,230,255,0.96)",glow:"rgba(0,133,255,0.20)"},
+  violet: {line:"rgba(196,181,253,0.46)",dot:"rgba(245,236,255,0.96)",glow:"rgba(167,139,250,0.18)"},
+  cyan:   {line:"rgba(34,211,238,0.46)", dot:"rgba(220,254,255,0.96)",glow:"rgba(34,211,238,0.18)"},
+  emerald:{line:"rgba(52,211,153,0.46)", dot:"rgba(200,255,230,0.96)",glow:"rgba(42,135,3,0.22)"},
+  pink:   {line:"rgba(249,100,100,0.46)",dot:"rgba(255,220,220,0.96)",glow:"rgba(234,17,0,0.18)"},
+  amber:  {line:"rgba(255,194,32,0.46)", dot:"rgba(255,251,210,0.96)",glow:"rgba(255,194,32,0.20)"}
+};
 
-  function connectedTitles(nodeId){
-    const r=currentRealm(),ids=new Set();
-    r.edges.forEach(e=>{if(e.from===nodeId)ids.add(e.to);if(e.to===nodeId)ids.add(e.from)});
-    return Array.from(ids).map(id=>r.nodes.find(n=>n.id===id)).filter(Boolean).map(n=>n.title);
-  }
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const bgCv=document.getElementById("bg"),bgCtx=bgCv.getContext("2d");
+const app=document.getElementById("app"),netSvg=document.getElementById("network"),nodesEl=document.getElementById("nodes");
+const crumb=document.getElementById("breadcrumb"),backBtn=document.getElementById("backBtn");
+const bCard=document.getElementById("bCard"),bHint=document.getElementById("bHint"),bTitle=document.getElementById("bTitle"),bText=document.getElementById("bText"),bDrill=document.getElementById("bDrill");
+const hCard=document.getElementById("hoverCard"),hT=document.getElementById("hT"),hD=document.getElementById("hD"),hM=document.getElementById("hM"),hC=document.getElementById("hC");
 
-  function showHoverCard(node,evt){
-    hoverTitle.textContent=node.title;
-    hoverDoes.textContent=node.summary||"—";
-    hoverManages.textContent=node.manages||"—";
-    const conn=connectedTitles(node.id);
-    hoverConnected.innerHTML="";
-    (conn.length?conn:["No linked nodes"]).forEach(t=>{const d=document.createElement("div");d.className="hover-tag";d.textContent=t;hoverConnected.appendChild(d)});
-    const pad=18,cw=Math.min(360,window.innerWidth*.36);
-    hoverCard.style.left=`${Math.min(window.innerWidth-cw-pad,evt.clientX+18)}px`;
-    hoverCard.style.top=`${Math.min(window.innerHeight-220,evt.clientY-10)}px`;
-    hoverCard.classList.add("show");
-  }
-  function moveHoverCard(evt){
-    if(!hoverCard.classList.contains("show"))return;
-    const pad=18,cw=Math.min(360,window.innerWidth*.36);
-    hoverCard.style.left=`${Math.min(window.innerWidth-cw-pad,evt.clientX+18)}px`;
-    hoverCard.style.top=`${Math.min(window.innerHeight-220,evt.clientY-10)}px`;
-  }
-  function hideHoverCard(){hoverCard.classList.remove("show")}
+let stack=["root"],selId="main",busy=false,tick=0;
 
-  function makeCurve(from,to,bend=0,spread=0){
-    const dx=to.x-from.x,dy=to.y-from.y,len=Math.max(.001,Math.sqrt(dx*dx+dy*dy)),nx=-dy/len,ny=dx/len;
-    return `M ${from.x} ${from.y} C ${from.x+dx*.28+nx*spread} ${from.y+dy*.22+ny*spread-bend}, ${from.x+dx*.72-nx*spread} ${from.y+dy*.78-ny*spread-bend}, ${to.x} ${to.y}`;
-  }
+// ── Background ────────────────────────────────────────────────────────────────
+const stars=Array.from({length:220},()=>({x:Math.random(),y:Math.random(),r:.4+Math.random()*1.3,a:.12+Math.random()*.65,ph:Math.random()*Math.PI*2,dr:.004+Math.random()*.018}));
+const fils=Array.from({length:18},()=>({x1:Math.random(),y1:Math.random(),cx:Math.random(),cy:Math.random(),x2:Math.random(),y2:Math.random(),al:.015+Math.random()*.04}));
 
-  function renderNetwork(){
-    const realm=currentRealm();
-    const defs=`<defs><filter id="synGlow" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="0.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="synGlowSoft" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
-    const offsets=[-2.6,-1.4,0,1.4,2.6];
-    const svg=realm.edges.map(edge=>{
-      const from=realm.nodes.find(n=>n.id===edge.from),to=realm.nodes.find(n=>n.id===edge.to);
-      if(!from||!to)return"";
-      const col=colors[to.hue]||colors.blue,active=selectedId===edge.from||selectedId===edge.to;
-      const dx=to.x-from.x,dy=to.y-from.y,dist=Math.sqrt(dx*dx+dy*dy),bend=Math.max(2.5,Math.min(9,dist*.12));
-      const trunk=makeCurve(from,to,bend,3.4);
-      const ghost=offsets.map(o=>makeCurve(from,to,bend+o*.9,4+Math.abs(o)*1.8)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${active?.26:.16}" opacity="${active?.34:.18}" stroke-linecap="round"/>`).join("");
-      const mid=[-1.8,1.8].map(o=>makeCurve(from,to,bend+o,2.2)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${active?.42:.28}" opacity="${active?.52:.3}" stroke-linecap="round" filter="url(#synGlow)"/>`).join("");
-      return `<g>${trunk.replace("M","")? `<path d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${active?1.4:.9}" opacity="${active?.14:.08}" stroke-linecap="round" filter="url(#synGlowSoft)"/>` : ""}${ghost}${mid}<path id="${edge.id}-path" d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${active?.62:.42+edge.strength*.14}" opacity="${active?.98:.62+edge.strength*.15}" stroke-linecap="round" filter="url(#synGlow)"/><circle r="${active?.52:.36}" fill="${col.dot}" opacity="${active?.98:.84}" filter="url(#synGlow)"><animateMotion dur="${active?"1.4s":"2.6s"}" repeatCount="indefinite" rotate="auto"><mpath href="#${edge.id}-path"/></animateMotion></circle><circle r="${active?.34:.26}" fill="${col.dot}" opacity="${active?.46:.26}" filter="url(#synGlow)"><animateMotion dur="${active?"1.4s":"2.6s"}" begin="-0.45s" repeatCount="indefinite" rotate="auto"><mpath href="#${edge.id}-path"/></animateMotion></circle></g>`;
-    }).join("");
-    network.innerHTML=defs+svg;
-  }
+const cur=()=>R[stack[stack.length-1]];
+const curNode=()=>{const r=cur();return r.nodes.find(n=>n.id===selId)||r.nodes[0]};
 
-  function brainShape(size,hue,x){
-    return{width:`${size}px`,height:`${Math.round(size*.82)}px`,borderRadius:"54% 46% 50% 50% / 42% 48% 52% 58%",transform:`rotate(${hue==="core"?0:x<50?-8:8}deg)`,boxShadow:`inset 0 0 30px rgba(130,150,255,0.08),0 0 32px ${colors[hue]?.glow||"rgba(140,160,255,0.12)"}`};
-  }
+function resize(){
+  bgCv.width=innerWidth*devicePixelRatio;bgCv.height=innerHeight*devicePixelRatio;
+  bgCv.style.width=`${innerWidth}px`;bgCv.style.height=`${innerHeight}px`;
+  bgCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  netSvg.setAttribute("viewBox","0 0 100 100");
+  netSvg.setAttribute("preserveAspectRatio","none");
+  netSvg.setAttribute("width",innerWidth);
+  netSvg.setAttribute("height",innerHeight);
+}
 
-  function renderNodes(){
-    const realm=currentRealm();
-    nodesLayer.innerHTML="";
-    realm.nodes.forEach(node=>{
-      const el=document.createElement("div");
-      el.className="node"+(node.id===selectedId?" active":"");
-      el.style.left=`${node.x}%`; el.style.top=`${node.y}%`;
-      const o1=document.createElement("div");
-      Object.assign(o1.style,{position:"absolute",inset:"-8%",opacity:".40",borderRadius:"56% 44% 52% 48% / 42% 58% 44% 56%",border:"1px solid rgba(255,255,255,0.06)"});
-      const o2=document.createElement("div");
-      Object.assign(o2.style,{position:"absolute",inset:"-16%",opacity:".30",filter:"blur(18px)",borderRadius:"58% 42% 50% 50% / 40% 60% 42% 58%",background:"rgba(255,255,255,0.05)"});
-      const shape=document.createElement("div");
-      shape.className="node-shape";
-      Object.assign(shape.style,brainShape(node.size,node.hue,node.x));
-      shape.innerHTML=`<div style="position:absolute;inset:10%;border-radius:52% 48% 47% 53%/46% 50% 50% 54%;border:1px solid rgba(255,255,255,0.08)"></div><div style="position:absolute;inset:18%;border-radius:50%/44% 55% 45% 56%;border:1px solid rgba(255,255,255,0.06)"></div><div style="position:absolute;left:18%;top:18%;width:12%;height:12%;border-radius:50%;background:rgba(255,255,255,0.16);filter:blur(2px)"></div><div style="position:absolute;left:34%;top:34%;width:10%;height:10%;border-radius:50%;background:rgba(255,255,255,0.10);filter:blur(2px)"></div><div style="position:absolute;left:54%;top:22%;width:8%;height:8%;border-radius:50%;background:rgba(255,255,255,0.12);filter:blur(2px)"></div>`;
-      const label=document.createElement("div");
-      label.className="node-label"; label.textContent=node.title;
-      el.addEventListener("click",()=>{selectedId=node.id;renderAll()});
-      el.addEventListener("dblclick",()=>enterRealm(node));
-      el.addEventListener("mouseenter",evt=>showHoverCard(node,evt));
-      el.addEventListener("mousemove",moveHoverCard);
-      el.addEventListener("mouseleave",hideHoverCard);
-      el.appendChild(o1); el.appendChild(o2); el.appendChild(shape); el.appendChild(label);
-      nodesLayer.appendChild(el);
-    });
-  }
+function drawBg(){
+  tick++;const w=innerWidth,h=innerHeight;
+  bgCtx.clearRect(0,0,w,h);
+  const g=bgCtx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.75);
+  g.addColorStop(0,"rgba(10,12,20,0.98)");g.addColorStop(.3,"rgba(5,7,13,0.99)");g.addColorStop(1,"rgba(1,2,5,1)");
+  bgCtx.fillStyle=g;bgCtx.fillRect(0,0,w,h);
+  fils.forEach((f,i)=>{
+    bgCtx.beginPath();bgCtx.moveTo(f.x1*w,f.y1*h);
+    bgCtx.quadraticCurveTo(f.cx*w+Math.sin(tick*.01+i)*26,f.cy*h+Math.cos(tick*.012+i)*26,f.x2*w,f.y2*h);
+    bgCtx.strokeStyle=`rgba(110,140,255,${f.al})`;bgCtx.lineWidth=1;bgCtx.shadowBlur=20;bgCtx.shadowColor="rgba(110,140,255,0.08)";bgCtx.stroke();
+  });
+  stars.forEach(s=>{
+    bgCtx.beginPath();bgCtx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
+    bgCtx.fillStyle=`rgba(190,220,255,${s.a*(0.8+Math.sin(tick*s.dr+s.ph)*.18)})`;bgCtx.fill();
+  });
+  [[w*.32,h*.46,280,"56,189,248"],[w*.68,h*.54,320,"139,92,246"]].forEach(([x,y,r,c])=>{
+    const gl=bgCtx.createRadialGradient(x,y,0,x,y,r);
+    gl.addColorStop(0,`rgba(${c},0.08)`);gl.addColorStop(1,`rgba(${c},0)`);
+    bgCtx.fillStyle=gl;bgCtx.fillRect(0,0,w,h);
+  });
+  requestAnimationFrame(drawBg);
+}
 
-  function renderBottomCard(){
-    const node=currentSelectedNode();
-    if(!node){bottomCard.style.display="none";return}
-    bottomCard.style.display="block";
-    bcHint.textContent=currentRealm().name+" · Selected";
-    bcTitle.textContent=node.title;
-    bcText.textContent=node.summary||"";
-    bcDrill.textContent=node.realmTarget?"Double-click to drill into this stage":"";
-  }
+function connTitles(nid){
+  const r=cur(),ids=new Set();
+  r.edges.forEach(e=>{if(e.from===nid)ids.add(e.to);if(e.to===nid)ids.add(e.from)});
+  return Array.from(ids).map(id=>r.nodes.find(n=>n.id===id)).filter(Boolean).map(n=>n.title);
+}
 
-  function renderBreadcrumb(){
-    breadcrumb.textContent=realmStack.map(id=>realms[id].name).join(" / ");
-    backBtn.style.display=realmStack.length>1?"flex":"none";
-    const r=currentRealm();
-    document.getElementById("statNodes").textContent=r.nodes.length;
-    document.getElementById("statEdges").textContent=r.edges.length;
-  }
+function showHover(node,evt){
+  hT.textContent=node.title;hD.textContent=node.summary||"—";hM.textContent=node.manages||"—";
+  const cc=connTitles(node.id);hC.innerHTML="";
+  (cc.length?cc:["No connections"]).forEach(t=>{const d=document.createElement("div");d.className="hover-tag";d.textContent=t;hC.appendChild(d)});
+  const pad=18,cw=Math.min(380,innerWidth*.38);
+  hCard.style.left=`${Math.min(innerWidth-cw-pad,evt.clientX+18)}px`;
+  hCard.style.top=`${Math.min(innerHeight-240,evt.clientY-10)}px`;
+  hCard.classList.add("show");
+}
+const moveHover=evt=>{if(!hCard.classList.contains("show"))return;const pad=18,cw=Math.min(380,innerWidth*.38);hCard.style.left=`${Math.min(innerWidth-cw-pad,evt.clientX+18)}px`;hCard.style.top=`${Math.min(innerHeight-240,evt.clientY-10)}px`};
+const hideHover=()=>hCard.classList.remove("show");
 
-  function renderAll(){renderBreadcrumb();renderNetwork();renderNodes();renderBottomCard()}
+function curve(a,b,bend=0,spr=0){
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(.001,Math.sqrt(dx*dx+dy*dy)),nx=-dy/len,ny=dx/len;
+  return`M ${a.x} ${a.y} C ${a.x+dx*.28+nx*spr} ${a.y+dy*.22+ny*spr-bend},${a.x+dx*.72-nx*spr} ${a.y+dy*.78-ny*spr-bend},${b.x} ${b.y}`;
+}
 
-  function enterRealm(node){
-    if(!node.realmTarget||!realms[node.realmTarget]||transitioning)return;
-    transitioning=true; app.classList.add("realm-fade-out"); hideHoverCard();
-    setTimeout(()=>{
-      app.classList.remove("realm-fade-out");
-      realmStack.push(node.realmTarget);
-      selectedId=realms[node.realmTarget].nodes[0]?.id||null;
-      renderAll(); app.classList.add("realm-fade-in");
-      setTimeout(()=>{app.classList.remove("realm-fade-in");transitioning=false},280);
-    },180);
-  }
+function renderNet(){
+  const realm=cur(),offs=[-2.6,-1.4,0,1.4,2.6];
+  const defs=`<defs><filter id="sg" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="0.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sgs" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  const svg=realm.edges.map(e=>{
+    const a=realm.nodes.find(n=>n.id===e.from),b=realm.nodes.find(n=>n.id===e.to);
+    if(!a||!b)return"";
+    const col=C[b.hue]||C.blue,act=selId===e.from||selId===e.to;
+    const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),bend=Math.max(2.5,Math.min(9,dist*.12));
+    const trunk=curve(a,b,bend,3.4);
+    const ghost=offs.map(o=>curve(a,b,bend+o*.9,4+Math.abs(o)*1.8)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${act?.26:.16}" opacity="${act?.34:.18}" stroke-linecap="round"/>`).join("");
+    const mid=[-1.8,1.8].map(o=>curve(a,b,bend+o,2.2)).map(d=>`<path d="${d}" fill="none" stroke="${col.line}" stroke-width="${act?.42:.28}" opacity="${act?.52:.3}" stroke-linecap="round" filter="url(#sg)"/>`).join("");
+    return`<g><path d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${act?1.4:.9}" opacity="${act?.14:.08}" stroke-linecap="round" filter="url(#sgs)"/>${ghost}${mid}<path id="${e.id}-p" d="${trunk}" fill="none" stroke="${col.line}" stroke-width="${act?.62:.42+e.strength*.14}" opacity="${act?.98:.62+e.strength*.15}" stroke-linecap="round" filter="url(#sg)"/><circle r="${act?.52:.36}" fill="${col.dot}" opacity="${act?.98:.84}" filter="url(#sg)"><animateMotion dur="${act?"1.4s":"2.6s"}" repeatCount="indefinite" rotate="auto"><mpath href="#${e.id}-p"/></animateMotion></circle><circle r="${act?.34:.26}" fill="${col.dot}" opacity="${act?.46:.26}" filter="url(#sg)"><animateMotion dur="${act?"1.4s":"2.6s"}" begin="-0.45s" repeatCount="indefinite" rotate="auto"><mpath href="#${e.id}-p"/></animateMotion></circle></g>`;
+  }).join("");
+  netSvg.innerHTML=defs+svg;
+}
 
-  function goBack(){
-    if(realmStack.length<=1||transitioning)return;
-    transitioning=true; app.classList.add("realm-fade-out"); hideHoverCard();
-    setTimeout(()=>{
-      app.classList.remove("realm-fade-out");
-      realmStack.pop(); selectedId=currentRealm().nodes[0]?.id||null;
-      renderAll(); app.classList.add("realm-fade-in");
-      setTimeout(()=>{app.classList.remove("realm-fade-in");transitioning=false},280);
-    },180);
-  }
+function bshape(size,hue,x){
+  return{width:`${size}px`,height:`${Math.round(size*.82)}px`,borderRadius:"54% 46% 50% 50% / 42% 48% 52% 58%",transform:`rotate(${hue==="core"?0:x<50?-8:8}deg)`,boxShadow:`inset 0 0 30px rgba(130,150,255,0.08),0 0 32px ${C[hue]?.glow||"rgba(140,160,255,0.12)"}`};
+}
 
-  function clockTick(){
-    document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  }
+function renderNodes(){
+  const realm=cur();nodesEl.innerHTML="";
+  realm.nodes.forEach(node=>{
+    const el=document.createElement("div");
+    el.className="node"+(node.id===selId?" active":"");
+    el.style.left=`${node.x}%`;el.style.top=`${node.y}%`;
+    const o1=document.createElement("div");
+    Object.assign(o1.style,{position:"absolute",inset:"-8%",opacity:".4",borderRadius:"56% 44% 52% 48%/42% 58% 44% 56%",border:"1px solid rgba(255,255,255,0.06)"});
+    const shape=document.createElement("div");
+    shape.className="node-shape";Object.assign(shape.style,bshape(node.size,node.hue,node.x));
+    shape.innerHTML=`<div style="position:absolute;inset:10%;border-radius:52% 48%/46% 54%;border:1px solid rgba(255,255,255,0.08)"></div><div style="position:absolute;left:18%;top:18%;width:12%;height:12%;border-radius:50%;background:rgba(255,255,255,0.16);filter:blur(2px)"></div><div style="position:absolute;left:54%;top:22%;width:8%;height:8%;border-radius:50%;background:rgba(255,255,255,0.12);filter:blur(2px)"></div>`;
+    const label=document.createElement("div");
+    label.className="node-label";label.textContent=node.title;
+    el.addEventListener("click",()=>{selId=node.id;render()});
+    el.addEventListener("dblclick",()=>enterRealm(node));
+    el.addEventListener("mouseenter",evt=>showHover(node,evt));
+    el.addEventListener("mousemove",moveHover);
+    el.addEventListener("mouseleave",hideHover);
+    el.appendChild(o1);el.appendChild(shape);el.appendChild(label);
+    nodesEl.appendChild(el);
+  });
+}
 
-  backBtn.addEventListener("click",goBack);
-  window.addEventListener("resize",()=>{resize();renderAll()});
+function renderBottom(){
+  const node=curNode();
+  if(!node){bCard.style.display="none";return}
+  bCard.style.display="block";
+  bHint.textContent=cur().name+" · Selected";
+  bTitle.textContent=node.title;
+  bText.textContent=node.summary||"";
+  bDrill.textContent=node.realmTarget?"Double-click to drill into this module":"";
+}
 
-  resize(); renderAll(); drawBackground();
-  setInterval(clockTick,1000); clockTick();
-  </script>
+function renderCrumb(){
+  crumb.textContent=stack.map(id=>R[id].name).join(" › ");
+  backBtn.style.display=stack.length>1?"flex":"none";
+  const r=cur();
+  document.getElementById("sN").textContent=r.nodes.length;
+  document.getElementById("sE").textContent=r.edges.length;
+}
+
+function render(){renderCrumb();renderNet();renderNodes();renderBottom()}
+
+function enterRealm(node){
+  if(!node.realmTarget||!R[node.realmTarget]||busy)return;
+  busy=true;app.classList.add("realm-fade-out");hideHover();
+  setTimeout(()=>{
+    app.classList.remove("realm-fade-out");
+    stack.push(node.realmTarget);
+    selId=R[node.realmTarget].nodes[0]?.id||null;
+    render();app.classList.add("realm-fade-in");
+    setTimeout(()=>{app.classList.remove("realm-fade-in");busy=false},280);
+  },180);
+}
+
+function goBack(){
+  if(stack.length<=1||busy)return;
+  busy=true;app.classList.add("realm-fade-out");hideHover();
+  setTimeout(()=>{
+    app.classList.remove("realm-fade-out");
+    stack.pop();selId=cur().nodes[0]?.id||null;
+    render();app.classList.add("realm-fade-in");
+    setTimeout(()=>{app.classList.remove("realm-fade-in");busy=false},280);
+  },180);
+}
+
+backBtn.addEventListener("click",goBack);
+window.addEventListener("resize",()=>{resize();render()});
+setInterval(()=>document.getElementById("sClock").textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),1000);
+
+resize();render();drawBg();
+document.getElementById("sClock").textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+</script>
 </body>
 </html>

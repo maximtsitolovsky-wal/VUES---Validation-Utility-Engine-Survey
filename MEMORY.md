@@ -58,9 +58,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-13** — Governance layer hardened. QUICK REF block + mandatory MEMORY CHECK proof-of-read added to CLAUDE.md.
-2. **2026-04-13** — Airtable credentials live in `~/.siteowlqa/config.json`. Not `.env`.
-3. **2026-04-13** — Skill framework established. Check `skills/INDEX.md` before every task.
+1. **2026-04-13** — Architecture tab rebuilt with luxury neural-map UI from `preview (1).html` template. Drill-down realm system, brain-shaped nodes, SVG multi-strand edges, glass morphism.
+2. **2026-04-13** — Governance layer hardened. QUICK REF block + mandatory MEMORY CHECK proof-of-read added to CLAUDE.md.
+3. **2026-04-13** — Airtable credentials live in `~/.siteowlqa/config.json`. Not `.env`.
 
 ---
 
@@ -227,4 +227,10 @@
 - **Decision:** `function tick(){}` declaration was eaten during guide-panel injection — restored via `replace_in_file`. HUD edge count hardcoded as 25, actual array is 27 — corrected. `served_dashboard/` files missing Architecture + Admin nav links (stale copy of generated HTML) — synced directly. Root cause of silent patch failures: large-file `write_text()` in inline scripts silently drops on Windows; use `replace_in_file` tool instead.
 - **Impact:** `orchestration_map.html`, `served_dashboard/executive_dashboard.html`, `served_dashboard/executive_dashboard_puppy_inline.html`, `_audit_final.py`.
 - **Rule added:** When patching large generated HTML files, always use `replace_in_file` tool — never `Path.write_text()` from an inline script.
+- **Closed:** Yes.
+
+### 2026-04-13 — Architecture Tab Rebuilt with Luxury Neural-Map UI
+- **Decision:** `orchestration_map.html` rebuilt from scratch using the luxury neural-map template (`preview (1).html`). Canvas-based approach replaced with: brain-shaped DOM nodes, SVG multi-strand animated edges (ghost strands + moving dots via `animateMotion`), filament/star background canvas, drill-down realm navigation (root → 7 pipeline stages → module detail), glass morphism UI, live clock, live stats bar.
+- **Data mapping:** root realm = 7 pipeline stages (main, validate, process, grade, output, archive, async). Each stage drills into its Python modules with accurate `summary`, `manages`, and edge connections. PASS/FAIL branches, learning loop, RISK-003 reference all preserved.
+- **Impact:** `orchestration_map.html` only. 459 lines, 43/43 checks pass. Back-to-dashboard link: `ui/executive_dashboard.html`. Architecture link from dashboard: `../orchestration_map.html`.
 - **Closed:** Yes.

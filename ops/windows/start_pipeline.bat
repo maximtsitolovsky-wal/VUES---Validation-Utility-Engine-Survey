@@ -6,13 +6,21 @@ REM This is the user-friendly launcher for daily use
 setlocal enabledelayedexpansion
 
 REM Configuration
-set WORKDIR=C:\SiteOwlQA_App
-REM Prefer project venv; fall back to system Python 3.14 if venv not present
+REM Resolve repo root relative to this script so clones work anywhere
+for %%I in ("%~dp0..\..") do set WORKDIR=%%~fI
+
+REM Prefer project venv; otherwise resolve python from PATH
 if exist "%WORKDIR%\.venv\Scripts\python.exe" (
   set PYTHON=%WORKDIR%\.venv\Scripts\python.exe
 ) else (
-  set PYTHON=C:\Python314\python.exe
+  for /f "delims=" %%P in ('where python 2^>nul') do (
+    set PYTHON=%%P
+    goto :python_found
+  )
+  set PYTHON=
 )
+:python_found
+
 set LOGDIR=%WORKDIR%\logs
 set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
 set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
@@ -37,11 +45,12 @@ if !errorlevel! neq 0 (
   exit /b 1
 )
 
-REM Check if already running (look for python process with main.py)
-for /f "tokens=2" %%A in ('tasklist /fi "imagename eq python.exe" /fo table ^| findstr python') do (
-  echo [INFO] Pipeline appears to be running already (PID: %%A)
+REM Check if SiteOwlQA pipeline is already running (targeted by command line)
+wmic process where "name='python.exe' and commandline like '%%main.py%%' and commandline like '%%%WORKDIR:\=\\%%%'" get ProcessId /value 2>nul | find "=" >nul
+if !errorlevel! equ 0 (
+  echo [INFO] SiteOwlQA pipeline appears to be running already.
   echo [INFO] Opening dashboard in browser...
-  timeout /t 2 /nobreak
+  timeout /t 2 /nobreak >nul
   if exist "%DASHBOARD_FILE%" (
     start "" "%DASHBOARD_FILE%"
   ) else (
@@ -75,7 +84,7 @@ for /L %%N in (1,1,30) do (
 )
 
 echo [WARN] Dashboard not generated within 30 seconds.
-  echo [INFO] Pipeline is starting. Dashboard will be generated after the first submission.
-  echo [INFO] Check logs at: %STDOUT_LOG%
+echo [INFO] Pipeline is starting. Dashboard will be generated after the first submission.
+echo [INFO] Check logs at: %STDOUT_LOG%
 
 exit /b 0

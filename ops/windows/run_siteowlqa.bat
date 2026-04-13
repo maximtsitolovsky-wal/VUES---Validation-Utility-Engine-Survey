@@ -6,13 +6,20 @@ REM Can be scheduled via Windows Task Scheduler or run manually
 setlocal enabledelayedexpansion
 
 REM Configuration
-set WORKDIR=C:\SiteOwlQA_App
-REM Prefer the project venv; fall back to system Python 3.14 if it doesn't exist
+REM Resolve repo root relative to this script so clones work anywhere
+for %%I in ("%~dp0..\..") do set WORKDIR=%%~fI
+
+REM Prefer project venv; otherwise resolve python from PATH
 if exist "%WORKDIR%\.venv\Scripts\python.exe" (
   set PYTHON=%WORKDIR%\.venv\Scripts\python.exe
 ) else (
-  set PYTHON=C:\Python314\python.exe
+  for /f "delims=" %%P in ('where python 2^>nul') do (
+    set PYTHON=%%P
+    goto :python_found
+  )
+  set PYTHON=
 )
+:python_found
 set LOGDIR=%WORKDIR%\logs
 set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
 set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log

@@ -6,17 +6,21 @@ setlocal enabledelayedexpansion
 
 echo [INFO] Stopping SiteOwlQA pipeline...
 
-REM Find and kill python.exe processes running main.py
-REM This is a simple approach - you can refine by checking command line
-for /f "tokens=2" %%A in ('tasklist /fi "imagename eq python.exe" /fo table ^| findstr python') do (
-  echo [INFO] Terminating process %%A
-  taskkill /pid %%A /t /f
+REM Resolve repo root relative to this script so clones work anywhere
+for %%I in ("%~dp0..\..") do set WORKDIR=%%~fI
+
+REM Find only python.exe processes running THIS repo's main.py
+set KILLED=0
+for /f "tokens=2 delims==" %%A in ('wmic process where "name='python.exe' and commandline like '%%main.py%%' and commandline like '%%%WORKDIR:\=\\%%%'" get ProcessId /value 2^>nul ^| find "="') do (
+  echo [INFO] Terminating SiteOwlQA process %%A
+  taskkill /pid %%A /t /f >nul 2>&1
+  if !errorlevel! equ 0 set KILLED=1
 )
 
-if !errorlevel! equ 0 (
+if "!KILLED!"=="1" (
   echo [INFO] Pipeline stopped successfully.
 ) else (
-  echo [WARN] Could not find running pipeline process.
+  echo [WARN] Could not find a running SiteOwlQA pipeline process for %WORKDIR%.
 )
 
 exit /b 0

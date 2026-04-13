@@ -120,6 +120,9 @@ SiteOwlQA_App/
 
 ## Quick Start Setup
 
+> New teammate onboarding? Use **[`docs/clone-and-run.md`](./docs/clone-and-run.md)** for the complete clone/bootstrap/run guide (including orchestrators, workers, and all pipeline phases).
+
+
 ### 1. Install Dependencies
 
 ```bash

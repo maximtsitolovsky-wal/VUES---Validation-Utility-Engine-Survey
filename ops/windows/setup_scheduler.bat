@@ -14,8 +14,17 @@ if !errorlevel! neq 0 (
   exit /b 1
 )
 
-set WORKDIR=C:\SiteOwlQA_App
-set PYTHON=C:\Python314\python.exe
+for %%I in ("%~dp0..\..") do set WORKDIR=%%~fI
+if exist "%WORKDIR%\.venv\Scripts\python.exe" (
+  set PYTHON=%WORKDIR%\.venv\Scripts\python.exe
+) else (
+  for /f "delims=" %%P in ('where python 2^>nul') do (
+    set PYTHON=%%P
+    goto :python_found
+  )
+  set PYTHON=
+)
+:python_found
 set TASK_NAME=SiteOwlQA Pipeline
 
 echo [INFO] Setting up Windows Task Scheduler...
@@ -50,7 +59,7 @@ REM Create the scheduled task
 echo [INFO] Creating new scheduled task...
 schtasks /create ^^
   /tn "%TASK_NAME%" ^^
-  /tr "\"%PYTHON%\" -u -c \"import os; os.chdir('%WORKDIR%'); exec(open('main.py').read())\"" ^^
+  /tr "\"%PYTHON%\" -u \"%WORKDIR%\main.py\"" ^^
   /sc onstart ^^
   /ru SYSTEM ^^
   /f ^^

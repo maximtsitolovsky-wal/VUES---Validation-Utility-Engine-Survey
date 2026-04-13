@@ -61,14 +61,16 @@ CONF_LOG_ONLY     = 0.80   # do not apply, log for review only
 TRIGGER_TRUE_SCORE: float = 95.0
 
 # ---------------------------------------------------------------------------
-# Fields eligible for correction — all graded fields EXCEPT identity columns
-# (IP Address, MAC Address) which are used for row matching.
+# Fields eligible for correction — all graded fields EXCEPT:
+#   - Identity columns (IP Address, MAC Address) — used for row matching only.
+#   - Name — also used as the fuzzy-match key; correcting it is circular and
+#             corrupts rows when the reference is stale or the match resolves
+#             to a different physical device entirely.
 # REF_BACKED_FIELDS must exist in the site reference DataFrame.
 # VENDOR_EXTRA_FIELDS are supported only when present in both submission + ref.
 # ---------------------------------------------------------------------------
 
 REF_BACKED_FIELDS: tuple[str, ...] = (
-    "Name",
     "Abbreviated Name",
     "Manufacturer",
     "Part Number",

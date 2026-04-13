@@ -149,3 +149,11 @@
 - **Decision:** Created `CLAUDE.md` (Code Puppy governance constitution) and `MEMORY.md` (this file). Code Puppy is mandated to read MEMORY.md before every task and update it after every decision. Goal: less thinking, more execution.
 - **Impact:** All future Code Puppy sessions are governed by this protocol. No new decisions should re-derive what is already in this file.
 - **Closed:** Yes.
+
+### 2026-04-13 — Airtable Credentials (Both Sources Confirmed Live)
+- **Decision:** Scout credentials moved from `.env` SCOUT_* vars (wiped on every reset) into `~/.siteowlqa/config.json` permanently. This is the authoritative credential store — never `.env`.
+- **Survey:** base=`apptK6zNN0Hf3OuoJ` | table=`Submissions` | token=`pattXz7pnoAIRQ89q...` (full in config.json)
+- **Scout:**  base=`appAwgaX89x0JxG3Z` | table=`Submissions` | token=`patPR0WWxXCE0loRO...` (full in config.json)
+- **Smoke test:** ALL CHECKS PASSED — both Airtable sources 200 OK.
+- **Impact:** `user_config.py`, `config.py`, `setup_config.py`, `.env.example` updated.
+- **Closed:** Yes.

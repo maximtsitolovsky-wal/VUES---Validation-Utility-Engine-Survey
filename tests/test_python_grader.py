@@ -36,7 +36,7 @@ def make_df(rows: list[dict[str, str]]) -> pd.DataFrame:
 
 
 class PythonGraderTests(unittest.TestCase):
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_pass_when_matching_rows_parallel_after_sort(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "9", "Name": "B", "Part Number": "2", "Manufacturer": "ACME", "IP Address": "2", "MAC Address": "BB", "IP / Analog": "IP"},
@@ -58,7 +58,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(outcome.result.score, 100.0)
         self.assertIsNone(outcome.error_df)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_fail_when_parallel_row_values_differ(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "10", "Name": "CAM 1", "Part Number": "PN1", "Manufacturer": "ACME", "IP Address": "1.1.1.1", "MAC Address": "AA", "IP / Analog": "IP"},
@@ -82,7 +82,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(len(outcome.error_df), 1)
         self.assertEqual(outcome.error_df.iloc[0]["IssueType"], "ROW_MISMATCH")
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_row_count_mismatch_is_fail_not_error(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "11", "Name": "A", "Part Number": "1", "Manufacturer": "ACME", "IP Address": "1", "MAC Address": "AA", "IP / Analog": "IP"},
@@ -107,7 +107,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(outcome.result.score, 50.0)
         self.assertIsNotNone(outcome.error_df)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_duplicate_rows_match_even_when_order_changes(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "13", "Name": "CAM", "Abbreviated Name": "ONE", "Part Number": "PN1", "Manufacturer": "ACME", "IP Address": "1", "MAC Address": "AA", "IP / Analog": "IP", "Description": "LEFT"},
@@ -129,7 +129,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(outcome.result.score, 100.0)
         self.assertIsNone(outcome.error_df)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_identity_match_reports_field_mismatch_not_fake_missing_extra(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "14", "Name": "CAM", "Abbreviated Name": "OLD", "Part Number": "PN1", "Manufacturer": "ACME", "IP Address": "1", "MAC Address": "AA", "IP / Analog": "IP", "Description": "DESC"},
@@ -151,7 +151,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertNotIn("MISSING_ROW", set(outcome.error_df["IssueType"].tolist()))
         self.assertNotIn("EXTRA_ROW", set(outcome.error_df["IssueType"].tolist()))
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_missing_reference_is_fail_with_zero_score(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([])
         submission_df = make_df([
@@ -169,7 +169,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(outcome.result.score, 0.0)
         self.assertIn("SITE_REFERENCE_NOT_FOUND", outcome.result.message)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_threshold_is_pass_at_exactly_95(self, mock_fetch) -> None:
         mock_fetch.return_value = make_df([
             {"Project ID": "15", "Name": f"CAM {i}", "Part Number": f"PN{i}", "Manufacturer": "ACME", "IP Address": f"10.0.0.{i}", "MAC Address": f"MAC{i}", "IP / Analog": "IP"}
@@ -190,7 +190,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertEqual(outcome.result.score, 95.0)
         self.assertEqual(outcome.result.status, ProcessingStatus.PASS)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_threshold_below_95_is_fail(self, mock_fetch) -> None:
         # 1899 / 2000 = 94.95% → FAIL (< 95.0)
         # 1900 / 2000 = 95.00% → PASS, so we must use 1899 rows.
@@ -213,7 +213,7 @@ class PythonGraderTests(unittest.TestCase):
         self.assertLess(outcome.result.score, 95.0)
         self.assertEqual(outcome.result.status, ProcessingStatus.FAIL)
 
-    @patch("python_grader.fetch_reference_rows")
+    @patch("siteowlqa.python_grader.fetch_reference_rows")
     def test_threshold_above_95_is_pass(self, mock_fetch) -> None:
         # 43 / 45 = 95.555...% → PASS (>= 95.0)
         # 44 / 45 = 97.777...% → also PASS (we want a score strictly above 95)

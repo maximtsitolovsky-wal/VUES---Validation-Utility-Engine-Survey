@@ -130,6 +130,11 @@
 > - **Impact:** ...
 > - **Closed:** Yes / No
 
+### 2026-04-13 — Git Truth Guard Added
+- **Decision:** Added a dedicated git-verification layer: `tools/git_truth_guard.py`, `skills/SKILL_GIT_TRUTH_GUARD.md`, `prompts/git_truth_guard_prompt.md`, and `docs/git-truth-orchestration.md`. Completion claims now require proof that local HEAD equals the authoritative remote branch HEAD, not just a claimed push.
+- **Impact:** `development.md` now defines receipt-based completion. `skills/INDEX.md` includes the Git Truth Guard skill. Future multi-agent orchestration must separate implementation from git publication verification.
+- **Closed:** Yes.
+
 ### 2026-04-13 — Meta-Skill Added (Self-Creating Loop Closed)
 - **Decision:** Added `SKILL_SKILL_EXTRACTION.md` — the meta-skill that teaches Code Puppy how to extract skills from any completed task. Defines the Skill vs Decision vs One-off distinction, naming convention, minimum viable skill, and when NOT to extract. This closes the self-creation loop: every session now has an explicit playbook for generating its own playbooks.
 - **Impact:** `skills/INDEX.md` updated. `SKILL_GOVERNANCE_SETUP.md` should reference this skill on future projects.

@@ -21,6 +21,7 @@ For every change we make in this project:
 3. Stage only the intended files.
 4. Create a focused git commit with a clear message.
 5. Push the commit to the configured Walmart Git remote.
+6. Verify the remote actually has the commit using a receipt, not just the push command output.
 
 ### Commit Standard
 
@@ -38,6 +39,9 @@ For every change we make in this project:
 - Stage only files related to the change.
 - Do not accidentally commit generated outputs, logs, temp files, archives, or secrets.
 - Before committing, check `git status` and verify the diff is clean and intentional.
+- After pushing, verify that local `HEAD` matches the authoritative remote branch `HEAD`.
+- In this repo, prefer `walmart-origin` as the authoritative remote unless a task explicitly says otherwise.
+- A task is not complete until the final report includes the commit SHA, remote name, and push verification result.
 
 ## Roadmap
 
@@ -48,6 +52,7 @@ For every change we make in this project:
 - [x] Review current modified Python files and group them into safe, focused commits.
 - [x] Identify generated vs source artifacts that should remain out of git.
 - [ ] Add or improve tests around active grading and Airtable processing behavior.
+- [x] Add push-verification governance so task completion requires git receipts.
 
 ### Backlog
 
@@ -57,6 +62,14 @@ For every change we make in this project:
 - [ ] Review dashboards and generated HTML ownership boundaries.
 
 ## Decisions Log
+
+### 2026-04-13 (Git Truth Guard / Anti-Lie Workflow)
+
+- Added `tools/git_truth_guard.py` to verify local HEAD against the authoritative remote branch
+- Added `skills/SKILL_GIT_TRUTH_GUARD.md` for receipt-based git verification workflow
+- Added `prompts/git_truth_guard_prompt.md` to define a dedicated verification role in orchestration
+- Added `docs/git-truth-orchestration.md` to document the end-to-end anti-fib process and bottlenecks
+- Defined completion as: intended files committed, pushed to the right remote, and verified by SHA
 
 ### 2026-03-28 (Repository Discipline Enforcement)
 

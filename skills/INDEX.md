@@ -24,6 +24,7 @@
 | [SKILL_GOVERNANCE_SETUP.md](SKILL_GOVERNANCE_SETUP.md) | "set up Code Puppy", "new project", "add memory", "add governance" | governance, bootstrap, memory |
 | [SKILL_FLAT_HTML_REPORT.md](SKILL_FLAT_HTML_REPORT.md) | "build a report", "flat HTML", "dashboard", "chart", "visualise data" | reporting, html, chart.js, tailwind |
 | [SKILL_GIT_FOCUSED_COMMIT.md](SKILL_GIT_FOCUSED_COMMIT.md) | "commit this", "git commit", "push changes", "save changes" | git, hygiene, version-control |
+| [SKILL_GIT_TRUTH_GUARD.md](SKILL_GIT_TRUTH_GUARD.md) | "make sure it got pushed", "verify git", "show me receipts", "don't let the agent lie" | git, verification, orchestration, governance |
 | [SKILL_ORCHESTRATION_MAP.md](SKILL_ORCHESTRATION_MAP.md) | "show me the flow", "visualise pipeline", "orchestration diagram", "how does it work" | visualisation, html, pipeline |
 
 ---

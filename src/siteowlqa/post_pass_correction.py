@@ -61,16 +61,19 @@ CONF_LOG_ONLY     = 0.80   # do not apply, log for review only
 TRIGGER_TRUE_SCORE: float = 95.0
 
 # ---------------------------------------------------------------------------
-# Fields eligible for correction — all graded fields EXCEPT:
-#   - Identity columns (IP Address, MAC Address) — used for row matching only.
-#   - Name — also used as the fuzzy-match key; correcting it is circular and
-#             corrupts rows when the reference is stale or the match resolves
-#             to a different physical device entirely.
+# Fields eligible for correction — all graded fields EXCEPT identity columns
+# (IP Address, MAC Address) which are used for row matching only and whose
+# values must never be changed.
+# Name IS correctable but has an extra similarity guard below:
+#   when matched via MAC/IP identity, Name is only auto-applied when the
+#   vendor value and reference value are ≥85% similar (formatting fixes).
+#   If they differ substantially the correction is logged for review only.
 # REF_BACKED_FIELDS must exist in the site reference DataFrame.
 # VENDOR_EXTRA_FIELDS are supported only when present in both submission + ref.
 # ---------------------------------------------------------------------------
 
 REF_BACKED_FIELDS: tuple[str, ...] = (
+    "Name",
     "Abbreviated Name",
     "Manufacturer",
     "Part Number",
@@ -605,6 +608,37 @@ def _build_correction_attempts(
         # Fuzzy matches must not fill blanks — too risky without device identity.
         if not sub_val and match_confidence < 0.99:
             continue
+
+        # Name guard: when matched via MAC/IP identity (confidence >= 0.99)
+        # and the reference Name differs substantially from the vendor Name,
+        # the reference is likely stale or the match resolved to a different
+        # physical device.  Do NOT auto-apply — log for review only.
+        if (
+            col.strip().lower() == "name"
+            and match_confidence >= CONF_APPLY_REVIEW  # i.e. identity match
+            and "fuzzy" not in match_source.lower()
+        ):
+            name_sim = difflib.SequenceMatcher(
+                None, _canon(sub_val), _canon(ref_val)
+            ).ratio()
+            if name_sim < 0.85:
+                attempts.append(CorrectionAttempt(
+                    submission_id=submission_id,
+                    row_number=row_number,
+                    field=col,
+                    original_value=sub_val,
+                    corrected_value=sub_val,   # keep original
+                    reason=(
+                        f"Name similarity {name_sim:.2f} < 0.85 vs identity-matched "
+                        f"reference — possible stale reference; logged for review only"
+                    ),
+                    source=match_source,
+                    confidence=match_confidence,
+                    applied=False,
+                    requires_review=True,
+                    timestamp=timestamp,
+                ))
+                continue
 
         # Disposition based on confidence threshold.
         if match_confidence >= CONF_APPLY:

@@ -9,6 +9,61 @@
 
 ---
 
+## ⚡ QUICK REF — Read This First, Read It Fast
+
+> You must be able to answer these from memory before touching a file.
+> If you can't, you skipped this section. Go back.
+
+### Stack (Never Re-Derive)
+| Key | Value |
+|-----|-------|
+| Language | Python 3.x, single-process, no Docker |
+| Platform | Windows, Task Scheduler, no cloud deps |
+| DB | SQL Server via `sql.py` — reference rows only |
+| External | Airtable API (polled every 60s), SMTP optional |
+| UI | `ui/executive_dashboard.html` → `output/` → `served_dashboard/` |
+| Credentials | `~/.siteowlqa/config.json` — NOT `.env` |
+
+### Module Ownership (One-Liner Each)
+| Module | Owns — nothing else |
+|---|---|
+| `config.py` | **ALL** `os.getenv` calls. Zero exceptions. |
+| `sql.py` | SQL connection + site-scoped reference rows |
+| `models.py` | All shared data types |
+| `poll_airtable.py` | Per-record 15-step orchestration |
+| `airtable_client.py` | All Airtable API calls |
+| `file_processor.py` | XLSX/CSV load + header normalisation |
+| `emailer.py` | All email. Bypassed when `SMTP_ENABLED=false`. |
+| `archive.py` | Append-only JSON store. **Never delete.** |
+| `memory.py` | Lesson retrieval (tag + keyword) |
+| `metrics.py` | Compute metrics, export CSVs |
+| `dashboard.py` | Generate HTML from template + CSVs |
+| `dashboard_exec.py` | Inject data into `ui/executive_dashboard.html` template |
+| `reviewer.py` | Internal static code/run review |
+| `main.py` | Entry point, poll loop, signal handling only |
+
+### Non-Negotiable Rules
+- `config.py` is the **only** caller of `os.getenv`. Anywhere else = bug.
+- Archive is **append-only**. No deletes, ever.
+- Poll loop **never crashes** — catch at record level, not loop level.
+- Files ≤ 600 lines. Split on cohesion, not line count.
+- Commit after every completed change. Small + scoped.
+- Never force-push.
+- `ui/executive_dashboard.html` is the source template. Edit it, not `output/` or `served_dashboard/` directly (except for emergency sync patches).
+
+### Open Risks (Check Before Touching These Areas)
+| Risk | Area | Status |
+|---|---|---|
+| RISK-002 | Project ID overwrite post-normalisation | 🔴 OPEN |
+| RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
+
+### Last 3 Decisions (Newest First)
+1. **2026-04-13** — Governance layer hardened. QUICK REF block + mandatory MEMORY CHECK proof-of-read added to CLAUDE.md.
+2. **2026-04-13** — Airtable credentials live in `~/.siteowlqa/config.json`. Not `.env`.
+3. **2026-04-13** — Skill framework established. Check `skills/INDEX.md` before every task.
+
+---
+
 ## 🏗️ Settled Architecture (Closed — Do Not Re-Debate)
 
 ### 2026-03-27 — Monorepo Layout Established
@@ -161,4 +216,15 @@
 - **Scout:**  base=`appAwgaX89x0JxG3Z` | table=`Submissions` | token=`patPR0WWxXCE0loRO...` (full in config.json)
 - **Smoke test:** ALL CHECKS PASSED — both Airtable sources 200 OK.
 - **Impact:** `user_config.py`, `config.py`, `setup_config.py`, `.env.example` updated.
+- **Closed:** Yes.
+
+### 2026-04-13 — Governance Hardened (QUICK REF + Proof-of-Read Mandate)
+- **Decision:** Added `QUICK REF` block to top of MEMORY.md (stack, module ownership, rules, open risks, last 3 decisions in one scan). Updated CLAUDE.md Step 1 to require an explicit `MEMORY CHECK` statement before any file operation. Less thinking, more decisions is now structurally enforced, not aspirational.
+- **Impact:** `CLAUDE.md`, `MEMORY.md`. No code changes.
+- **Closed:** Yes.
+
+### 2026-04-13 — Orchestration Map Bugs Fixed + 82-Check Audit Suite Added
+- **Decision:** `function tick(){}` declaration was eaten during guide-panel injection — restored via `replace_in_file`. HUD edge count hardcoded as 25, actual array is 27 — corrected. `served_dashboard/` files missing Architecture + Admin nav links (stale copy of generated HTML) — synced directly. Root cause of silent patch failures: large-file `write_text()` in inline scripts silently drops on Windows; use `replace_in_file` tool instead.
+- **Impact:** `orchestration_map.html`, `served_dashboard/executive_dashboard.html`, `served_dashboard/executive_dashboard_puppy_inline.html`, `_audit_final.py`.
+- **Rule added:** When patching large generated HTML files, always use `replace_in_file` tool — never `Path.write_text()` from an inline script.
 - **Closed:** Yes.

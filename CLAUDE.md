@@ -2,23 +2,37 @@
 # SiteOwlQA_App
 
 > Auto-loaded every session. This is law. Not a suggestion.
+> Violation = re-deriving settled work = wasting Maxim's time. Don't.
 
 ---
 
 ## ⚡ SESSION PROTOCOL — 5 Steps, Every Time, No Exceptions
 
 ```
-READ → CHECK SKILLS → EXECUTE → REMEMBER → EXTRACT
+READ → PROVE → CHECK SKILLS → EXECUTE → REMEMBER → EXTRACT
 ```
 
-### 1 · READ `MEMORY.md`
-Before touching anything — read `MEMORY.md`.
-Extract settled decisions. Do not re-derive closed questions. **Memory beats thinking.**
+### 1 · READ `MEMORY.md` — THEN PROVE YOU READ IT
+
+Before touching **anything** — open `MEMORY.md` and scan the QUICK REF block.
+
+**You must explicitly state (out loud, in your response) before any action:**
+
+> 🧠 MEMORY CHECK
+> - Stack: [one line summary]
+> - Config owner: config.py / `~/.siteowlqa/config.json`
+> - Open risks relevant to this task: [RISK-002 / RISK-003 / none]
+> - Last decision that affects this task: [date — title / none]
+> - Closed questions I will NOT re-open: [list or none]
+
+If you cannot fill this in — you haven't read MEMORY.md. Stop. Read it. Fill it in. Then act.
+
+**Memory beats thinking. Every time.**
 
 ### 2 · CHECK `skills/INDEX.md`
 Scan the Trigger column.
 Skill matches your task → open that skill file and follow it. Full stop.
-No match → proceed, but you're probably about to write a new skill (see Step 5).
+No match → proceed, but you're probably about to write a new skill (see Step 6).
 
 ### 3 · EXECUTE
 Use settled context. Skip the preamble. Act.
@@ -32,6 +46,8 @@ Any decision, architectural change, new pattern, or bug root cause → append to
 - **Impact:** Which files/modules.
 - **Closed:** Yes
 ```
+
+Also update the **Last 3 Decisions** list in the QUICK REF block (pop the oldest, push the new one).
 
 Nothing worth writing? Still say: *"Memory unchanged — no new decisions."*
 
@@ -70,7 +86,7 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 
 ---
 
-## 📏 Standing Code Rules
+## 📐 Standing Code Rules
 
 - DRY · YAGNI · SOLID · Zen of Python — always.
 - Files ≤ 600 lines. Split on cohesion, not line count.
@@ -87,11 +103,13 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 
 | Condition | Action |
 |---|---|
-| `MEMORY.md` missing | Create it, then proceed |
-| `MEMORY.md` exists | Read it before anything else |
+| Session starts | State the MEMORY CHECK block before any file operation |
+| `MEMORY.md` missing | Create it from scratch, then state MEMORY CHECK |
+| `MEMORY.md` exists | Read QUICK REF, state MEMORY CHECK, then proceed |
 | `skills/INDEX.md` missing | Create it, then proceed |
 | Skill matches the task | Use it — don't re-derive |
-| Decision made this session | Write it to `MEMORY.md` before signing off |
+| Decision made this session | Append to `MEMORY.md` + update Last 3 Decisions |
 | Task will repeat | Write a skill file before signing off |
+| `os.getenv` outside config.py | Reject and fix — not negotiate |
 
 **Less thinking. More decisions. Memory + Skills = autonomy.**

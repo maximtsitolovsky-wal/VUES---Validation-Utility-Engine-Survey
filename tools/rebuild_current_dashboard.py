@@ -7,17 +7,18 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC  = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-from airtable_client import AirtableClient
-from archive import Archive
-from config import load_config
-from dashboard import refresh_dashboards
-from metrics import refresh_all_metrics
-from realtime_metrics import refresh_realtime_metrics
-from team_dashboard_data import refresh_team_dashboard_data
-from utils import configure_logging
+from siteowlqa.airtable_client import AirtableClient
+from siteowlqa.archive import Archive
+from siteowlqa.config import load_config
+from siteowlqa.dashboard import refresh_dashboards
+from siteowlqa.metrics import refresh_all_metrics
+from siteowlqa.realtime_metrics import refresh_realtime_metrics
+from siteowlqa.team_dashboard_data import refresh_team_dashboard_data
+from siteowlqa.utils import configure_logging
 
 
 def main() -> None:

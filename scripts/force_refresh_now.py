@@ -10,6 +10,7 @@ from siteowlqa.config import load_config
 from siteowlqa.airtable_client import AirtableClient
 from siteowlqa.team_dashboard_data import refresh_team_dashboard_data
 from siteowlqa.dashboard import refresh_dashboards
+from siteowlqa.local_dashboard_server import ensure_dashboard_server, get_dashboard_url
 
 print("=== Force Refresh ===")
 cfg = load_config()
@@ -32,7 +33,9 @@ if scout.get("error"):
 print("Rebuilding executive dashboard HTML...")
 refresh_dashboards(output_dir)
 
-url = "http://127.0.0.1:8765/executive_dashboard.html"
+print("Starting / verifying dashboard server...")
+ensure_dashboard_server(output_dir)
+url = get_dashboard_url(output_dir)
 print(f"Opening {url}")
 webbrowser.open(url)
 print("Done.")

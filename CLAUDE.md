@@ -1,95 +1,49 @@
 # CLAUDE.md — Code Puppy Governance Constitution
 # SiteOwlQA_App
 
-> This file is auto-loaded by Code Puppy at the start of every session.
-> It is law. Not a suggestion.
+> Auto-loaded every session. This is law. Not a suggestion.
 
 ---
 
-## ⚡ MANDATORY MEMORY PROTOCOL
-
-**Every single session, no exceptions, no shortcuts:**
-
-### Step 1 — READ MEMORY.md FIRST
-Before writing a single line of code, before asking a clarifying question, before doing anything:
+## ⚡ SESSION PROTOCOL — 5 Steps, Every Time, No Exceptions
 
 ```
-READ MEMORY.md
+READ → CHECK SKILLS → EXECUTE → REMEMBER → EXTRACT
 ```
 
-Extract the relevant settled decisions. Do not re-derive what is already written there.
-Do not re-debate closed questions. **Memory beats thinking.**
+### 1 · READ `MEMORY.md`
+Before touching anything — read `MEMORY.md`.
+Extract settled decisions. Do not re-derive closed questions. **Memory beats thinking.**
 
-### Step 1b — CHECK skills/INDEX.md
-Scan the trigger column in `skills/INDEX.md`.
-If a skill matches → open it and follow it. Don't re-derive what's codified.
+### 2 · CHECK `skills/INDEX.md`
+Scan the Trigger column.
+Skill matches your task → open that skill file and follow it. Full stop.
+No match → proceed, but you're probably about to write a new skill (see Step 5).
 
-### Step 2 — DO THE WORK
-Use the settled context from MEMORY.md + skills to act faster and more decisively.
-Skip the preamble. Skip re-analyzing what is already known. Just execute.
+### 3 · EXECUTE
+Use settled context. Skip the preamble. Act.
 
-### Step 3 — UPDATE MEMORY.md LAST
-After completing any task that involves a decision, architectural change, new pattern,
-bug fix root cause, or convention established — append it to MEMORY.md under the
-correct section using this format:
+### 4 · WRITE to `MEMORY.md`
+Any decision, architectural change, new pattern, or bug root cause → append to `MEMORY.md`:
 
 ```markdown
 ### YYYY-MM-DD — <short title>
-- **Decision:** What was decided and why.
-- **Impact:** Which files/modules are affected.
-- **Closed:** Yes (do not re-open unless explicitly asked).
+- **Decision:** What and why.
+- **Impact:** Which files/modules.
+- **Closed:** Yes
 ```
 
-**If a task touched nothing worth remembering, you still confirm: "Memory unchanged — no new decisions."**
+Nothing worth writing? Still say: *"Memory unchanged — no new decisions."*
 
-### Step 4 — EXTRACT A SKILL (if it will repeat)
-Ask "Will I do this again?" YES → write a skill file. NO → skip.
+### 5 · EXTRACT a skill (if it will repeat)
+Ask: *"Will I do this again?"*
+- **Yes** → create `skills/SKILL_<NAME>.md`, add a row to `skills/INDEX.md`, commit.
+- **No** → skip. YAGNI applies to skills too.
 
----
-
-## 📐 Project Identity (Never Re-Derive This)
-
-- **App:** SiteOwlQA — automated vendor QA pipeline
-- **Stack:** Python, SQLite/SQL Server, Airtable API, SMTP email
-- **Platform:** Windows, single-process, no Docker, no cloud deps
-- **Source of truth for roadmap:** `development.md`
-- **Source of truth for settled decisions:** `MEMORY.md`
-- **Source of truth for architecture:** `prompts/architect_prompt.md`
-
----
-
-## 📏 Standing Code Rules (Always Enforced)
-
-- DRY, YAGNI, SOLID — always.
-- Zen of Python — always.
-- Files stay under 600 lines. Split on cohesion, not line count.
-- Config lives in `config.py`. No module calls `os.getenv` directly.
-- SQL lives in `sql.py`. Not scattered.
-- All shared types live in `models.py`.
-- Archive is **append-only**. Never delete lessons or execution records.
-- The main poll loop **never crashes**. Catch at record level.
-- Commit after every completed change. Small, scoped, clear commit messages.
-- Never force-push to git.
-
----
-
-## 🎓 SKILL PROTOCOL (runs between Step 1 and Step 2)
-
-### Before starting work — check skills/INDEX.md
-After reading MEMORY.md, open `skills/INDEX.md`.
-Scan the trigger column. If your task matches a skill → **open that skill file and follow it exactly.**
-Do not re-derive solutions that are already codified.
-
-### After completing work — extract a skill if it will repeat
-Ask: "Will I do this same type of task again?"
-- **YES** → Create `skills/SKILL_<NAME>.md`, add a row to `skills/INDEX.md`, commit.
-- **NO** → Skip. YAGNI applies to skills too.
-
-### Skill file format (always use this)
+Skill format (non-negotiable):
 ```markdown
 # SKILL: <Name>
-**Last Used:** YYYY-MM-DD
-**Times Used:** N
+**Last Used:** YYYY-MM-DD  **Times Used:** N
 
 ## Trigger
 ## Context — Read First
@@ -98,19 +52,46 @@ Ask: "Will I do this same type of task again?"
 ## Notes / Gotchas
 ```
 
-### Updating existing skills
-If you used a skill and found a better way → update the skill file.
-Increment `Times Used`. Update `Last Used`. Commit with `docs: update SKILL_<NAME>`.
+Used a skill and found a better way? Update the file. Bump `Times Used`. Commit `docs: update SKILL_<NAME>`.
 
 ---
 
-## 🔒 Memory + Skills Are Non-Negotiable
+## 📐 Project Identity (Never Re-Derive)
 
-If MEMORY.md does not exist → create it before proceeding.
-If MEMORY.md exists → read it before proceeding.
-If skills/INDEX.md does not exist → create it before proceeding.
-If a skill matches the task → use it. Don't re-derive.
-If a decision was made today → write it to MEMORY.md before signing off.
-If a task will repeat → write a skill file before signing off.
+| | |
+|---|---|
+| **App** | SiteOwlQA — automated vendor QA pipeline |
+| **Stack** | Python · SQL Server · Airtable API · SMTP |
+| **Platform** | Windows · single-process · no Docker · no cloud deps |
+| **Roadmap** | `development.md` |
+| **Settled decisions** | `MEMORY.md` |
+| **Architecture** | `prompts/architect_prompt.md` |
+| **Skill library** | `skills/INDEX.md` |
 
-**Less thinking. More decisions. Memory + Skills = the path to autonomy.**
+---
+
+## 📏 Standing Code Rules
+
+- DRY · YAGNI · SOLID · Zen of Python — always.
+- Files ≤ 600 lines. Split on cohesion, not line count.
+- `config.py` is the only module that calls `os.getenv`. No exceptions.
+- SQL lives in `sql.py`. Types live in `models.py`. Not scattered.
+- Archive is **append-only**. Never delete lessons or execution records.
+- Main poll loop **never crashes**. Catch at the record level.
+- Commit after every completed change. Small, scoped, clear message.
+- Never force-push to git.
+
+---
+
+## 🔒 Non-Negotiables
+
+| Condition | Action |
+|---|---|
+| `MEMORY.md` missing | Create it, then proceed |
+| `MEMORY.md` exists | Read it before anything else |
+| `skills/INDEX.md` missing | Create it, then proceed |
+| Skill matches the task | Use it — don't re-derive |
+| Decision made this session | Write it to `MEMORY.md` before signing off |
+| Task will repeat | Write a skill file before signing off |
+
+**Less thinking. More decisions. Memory + Skills = autonomy.**

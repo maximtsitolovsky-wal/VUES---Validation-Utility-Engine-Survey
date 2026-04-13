@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WinSW service descriptor for SiteOwlQA Pipeline Service.
+  Docs: https://github.com/winsw/winsw/blob/master/doc/xmlConfigFile.md
+
+  Logs written to: C:\SiteOwlQA_App\logs\n    SiteOwlQA.out.log  — stdout (main.py INFO/WARNING/ERROR output)
+    SiteOwlQA.err.log  — stderr
+    SiteOwlQA.wrapper.log — WinSW wrapper events (start/stop/crash)
+
+  Recovery:
+    1st failure  → restart after 10s
+    2nd failure  → restart after 1min
+    3rd+ failure → restart after 5min
+    Reset counter after 1 hour of clean uptime.
+-->
+<configuration>
+
+  <!-- Identity -->
+  <id>SiteOwlQA</id>
+  <name>SiteOwlQA Pipeline Service</name>
+  <description>
+    Polls Airtable (base apptK6zNN0Hf3OuoJ / table Submissions) every 60s.
+    Downloads vendor Excel files, grades them via SQL Server stored procs,
+    writes PASS / FAIL / ERROR back to Airtable. Airtable automation then
+    sends the vendor email. Runs 3 parallel worker threads.
+  </description>
+
+  <!-- What to run -->
+  <executable>C:\Windows\System32\cmd.exe</executable>
+  <arguments>/c C:\SiteOwlQA_App\run_siteowlqa.bat</arguments>
+  <workingdirectory>C:\SiteOwlQA_App</workingdirectory>
+
+  <!-- Startup -->
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+
+  <!-- Environment: force UTF-8 so unicode chars don't crash cp1252 logger -->
+  <env name="PYTHONUNBUFFERED" value="1"/>
+  <env name="PYTHONIOENCODING" value="utf-8"/>
+  <env name="PYTHONUTF8" value="1"/>
+
+  <!-- Logging: rotate at 10 MB, keep 8 files -->
+  <logmode>rotate</logmode>
+  <logpath>C:\SiteOwlQA_App\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>8</keepFiles>
+  </log>
+
+  <!-- Crash recovery -->
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="1 min"/>
+  <onfailure action="restart" delay="5 min"/>
+  <resetfailure>1 hour</resetfailure>
+
+  <!-- Graceful shutdown: send CTRL+C, wait 30s before force kill -->
+  <stopparentprocessfirst>true</stopparentprocessfirst>
+  <waithint>30000</waithint>
+  <sleeptime>1000</sleeptime>
+
+</configuration>

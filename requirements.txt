@@ -1,0 +1,26 @@
+# SiteOwlQA_App — Python 3.11 dependencies
+# Install with: pip install -r requirements.txt
+
+# Airtable API
+pyairtable>=2.3.3
+
+# Data processing
+pandas>=2.2.0
+openpyxl>=3.1.2      # XLSX read/write
+
+# SQL Server
+pyodbc>=5.1.0
+
+# HTTP
+requests>=2.31.0
+httpx>=0.27.0
+
+# LLM / AI
+pydantic-ai>=0.0.24
+openai>=1.51.0
+
+# Environment
+python-dotenv>=1.0.1
+
+# Standard library modules used (no install needed, listed for clarity):
+# smtplib, csv, json, logging, pathlib, dataclasses, typing, shutil

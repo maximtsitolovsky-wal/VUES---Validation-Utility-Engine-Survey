@@ -1,0 +1,43 @@
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+temp/
+logs/
+output/
+archive/
+served_dashboard/
+share/
+
+*.sqlite
+*.db
+*.csv
+*.xlsx
+*.xls
+*.log
+
+.DS_Store
+Thumbs.db
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+
+# Helper scripts (temporary refactoring tools)
+move_files.py
+fix_imports.py
+
+# Temporary script outputs and test files
+scripts/*_output.txt
+scripts/_*.txt

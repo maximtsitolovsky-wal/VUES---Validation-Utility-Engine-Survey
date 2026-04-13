@@ -149,7 +149,7 @@ canvas{display:block;position:fixed;top:48px;left:0;cursor:crosshair}
     <button id="guide-btn" onclick="toggleGuide()">≡ Guide</button>
     <div id="hud-stats">
       <div class="stat-blk"><div class="stat-n">23</div><div class="stat-l">Nodes</div></div>
-      <div class="stat-blk"><div class="stat-n">25</div><div class="stat-l">Edges</div></div>
+      <div class="stat-blk"><div class="stat-n">27</div><div class="stat-l">Edges</div></div>
       <div class="stat-blk"><div class="stat-n" id="clock">—</div><div class="stat-l">Live</div></div>
     </div>
   </div>
@@ -567,7 +567,8 @@ function toggleGuide() {
   CX = (guideOpen ? (W - 390) / 2 + 390 : W / 2);
 }
 
-// ── Clock ───────────────────────────────────────────────────────────────────────────────
+// ── Clock ────────────────────────────────────────────────────────────────────────────────────
+function tick(){
   document.getElementById('clock').textContent=
     new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }

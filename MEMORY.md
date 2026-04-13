@@ -80,7 +80,7 @@
 |----------|---------------------------------------------------|---------------------|
 | RISK-001 | Cross-submission contamination via SQL procs      | ✅ RESOLVED — Python owns grading |
 | RISK-002 | Project ID overwrite must remain authoritative    | 🔴 OPEN — needs stronger post-normalization verification |
-| RISK-003 | Airtable attachment URLs expire                   | 🔴 OPEN — no uptime monitoring yet |
+| RISK-003 | Airtable attachment URLs expire                   | ✅ RESOLVED — `scripts/download_all_attachments.py` mirrors all attachments to OneDrive labelled by Site ID; run on-demand or schedule |
 
 ---
 
@@ -114,7 +114,7 @@
 ## 🔮 Open Upgrade Paths (Prioritised)
 
 1. ⬜ **RISK-002** — Stronger post-normalization Project ID verification.
-2. ⬜ **RISK-003** — Uptime monitoring / heartbeat for Airtable attachment URL expiry.
+2. ✅ **RISK-003** — `scripts/download_all_attachments.py` mirrors all attachments to OneDrive (idempotent, labelled by Site ID).
 3. ⬜ Upgrade `memory.py` lesson retrieval to semantic search when lessons > 100.
 4. ⬜ Consider Windows Service wrapper instead of Task Scheduler.
 5. ⬜ Audit project structure for monorepo readiness (deeper split if needed).
@@ -129,6 +129,11 @@
 > - **Decision:** ...
 > - **Impact:** ...
 > - **Closed:** Yes / No
+
+### 2026-04-13 — RISK-003 Resolved: Attachment Mirror Script
+- **Decision:** Created `scripts/download_all_attachments.py`. Fetches all 57 Airtable records, downloads every attachment via PowerShell (NTLM proxy), labels files `SITE_{site_number}__{submission_id}__{filename}`, saves to `C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\VUE Submissions\ATTACHMENTS`. Fully idempotent (skips existing files). Supports `--dry-run`. Exit code 1 on any failure.
+- **Impact:** RISK-003 closed. Attachments are now on OneDrive and survive Airtable CDN URL expiry. Run again after any new submission batch.
+- **Closed:** Yes.
 
 ### 2026-04-13 — Meta-Skill Added (Self-Creating Loop Closed)
 - **Decision:** Added `SKILL_SKILL_EXTRACTION.md` — the meta-skill that teaches Code Puppy how to extract skills from any completed task. Defines the Skill vs Decision vs One-off distinction, naming convention, minimum viable skill, and when NOT to extract. This closes the self-creation loop: every session now has an explicit playbook for generating its own playbooks.

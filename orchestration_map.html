@@ -1,565 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SiteOwlQA — Orchestration Map</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* ── Walmart brand tokens ── */
-    :root {
-      --blue-100: #0053e2;
-      --blue-110: #0045c0;
-      --spark-100: #ffc220;
-      --spark-10:  #fff9e6;
-      --spark-140: #995213;
-      --green-100: #2a8703;
-      --red-100:   #ea1100;
-      --gray-160:  #1d1d1d;
-      --gray-100:  #74767c;
-      --gray-50:   #c4c6cb;
-      --gray-10:   #f2f3f4;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SiteOwlQA — Orchestration Map</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --blue:#0053e2; --blue-lt:#e8effc;
+  --spark:#ffc220; --spark-lt:#fff9e6; --spark-dk:#995213;
+  --green:#2a8703; --green-lt:#eaf4e4;
+  --red:#ea1100;   --red-lt:#fde8e6;
+  --purple:#7c3aed; --purple-lt:#f5f0ff;
+  --gray:#74767c;  --gray-lt:#f2f3f4; --gray-bd:#c4c6cb;
+  --text:#1d1d1d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#fff;color:var(--text)}
 
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-10); color: var(--gray-160); }
+/* ── Flowchart column ── */
+.fc{max-width:700px;margin:0 auto;padding:0 24px 48px}
 
-    /* ── pipeline steps ── */
-    .pipe-step {
-      position: relative;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.10);
-    }
-    .pipe-step .badge {
-      min-width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .step-blue   { background: #e8effc; border-left: 4px solid var(--blue-100); }
-    .step-yellow { background: var(--spark-10); border-left: 4px solid var(--spark-100); }
-    .step-green  { background: #eaf4e4; border-left: 4px solid var(--green-100); }
-    .step-red    { background: #fde8e6; border-left: 4px solid var(--red-100); }
-    .step-gray   { background: #f6f7f8; border-left: 4px solid var(--gray-100); }
-    .step-purple { background: #f0ebfa; border-left: 4px solid #7c3aed; }
+/* ── Phase divider ── */
+.phase{display:flex;align-items:center;gap:10px;margin:32px 0 14px}
+.phase-line{flex:1;height:1px;background:var(--gray-bd)}
+.phase-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gray);white-space:nowrap;padding:3px 12px;border-radius:9999px;
+  border:1px solid var(--gray-bd);background:#fff}
 
-    .badge-blue   { background: var(--blue-100);  color: #fff; }
-    .badge-yellow { background: var(--spark-100); color: var(--spark-140); }
-    .badge-green  { background: var(--green-100); color: #fff; }
-    .badge-red    { background: var(--red-100);   color: #fff; }
-    .badge-gray   { background: var(--gray-100);  color: #fff; }
-    .badge-purple { background: #7c3aed;           color: #fff; }
+/* ── Nodes ── */
+.node{background:#fff;border:1.5px solid var(--gray-bd);border-radius:8px;
+  padding:13px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.num{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ntitle{flex:1;font-size:14px;font-weight:600}
+.nsub{font-size:11px;color:var(--gray);margin-top:2px;font-weight:400}
+.mod{font-size:10px;font-weight:600;font-family:'Consolas',monospace;
+  color:var(--blue);background:var(--blue-lt);padding:3px 8px;border-radius:4px;
+  white-space:nowrap;flex-shrink:0}
 
-    /* ── arrow connector ── */
-    .arrow-down {
-      width: 2px;
-      height: 16px;
-      background: var(--gray-50);
-      margin: 0 auto;
-      position: relative;
-    }
-    .arrow-down::after {
-      content: '';
-      position: absolute;
-      bottom: -5px;
-      left: -4px;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 6px solid var(--gray-50);
-    }
+.n-infra{background:var(--gray-lt);border-color:var(--gray-bd)}
+.n-infra .num{background:var(--gray)}
+.n-memory{background:var(--spark-lt);border-color:var(--spark)}
+.n-memory .num{background:var(--spark);color:var(--spark-dk)}
+.n-memory .mod{color:var(--spark-dk);background:#fde8a0}
+.n-learn{background:var(--spark-lt);border-color:var(--spark-dk)}
+.n-learn .num{background:var(--spark-dk);color:#fff}
+.n-learn .mod{color:var(--spark-dk);background:#fde8a0}
+.n-review{background:var(--purple-lt);border-color:var(--purple)}
+.n-review .num{background:var(--purple)}
+.n-review .mod{color:var(--purple);background:#ede9fe}
+.n-start{border-color:var(--spark);background:var(--spark);border-radius:9999px;
+  justify-content:center;text-align:center;padding:13px 24px}
+.n-start .ntitle{color:var(--spark-dk);text-align:center}
 
-    /* ── module card ── */
-    .mod-card {
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-      border: 1px solid var(--gray-50);
-      background: #fff;
-    }
-    .mod-card .mod-name {
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--blue-100);
-      font-family: 'Consolas', monospace;
-    }
+/* ── Arrow connector ── */
+.arr{width:2px;height:28px;background:var(--gray-bd);margin:0 auto;position:relative}
+.arr::after{content:'';position:absolute;bottom:-6px;left:-4px;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-top:7px solid var(--gray-bd)}
 
-    /* ── learning loop ── */
-    .loop-node {
-      border-radius: 50%;
-      width: 110px;
-      height: 110px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,.12);
-    }
-    .loop-arrow {
-      display: flex;
-      align-items: center;
-      color: var(--gray-100);
-      font-size: 22px;
-      font-weight: 300;
-      padding: 0 4px;
-    }
+/* ── Diamond decision ── */
+.diamond-wrap{display:flex;justify-content:center;padding:20px 0 8px}
+.diamond{width:128px;height:128px;background:var(--blue-lt);border:2px solid var(--blue);
+  transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border-radius:6px}
+.diamond-in{transform:rotate(-45deg);font-size:11px;font-weight:700;color:var(--blue);
+  text-align:center;line-height:1.5}
+.d-labels{display:flex;justify-content:space-between;padding:0 4px;margin-bottom:10px}
+.d-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
-    /* ── skill stack ── */
-    .skill-tag {
-      display: inline-block;
-      background: #e8effc;
-      color: var(--blue-100);
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 10px;
-    }
+/* ── Branch PASS / FAIL ── */
+.branch{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bnode{border-radius:8px;padding:14px 16px;text-align:center}
+.bp{background:var(--green-lt);border:2px solid var(--green)}
+.bf{background:var(--red-lt);border:2px solid var(--red)}
+.bicon{font-size:24px;display:block;margin-bottom:4px}
+.btitle{font-size:15px;font-weight:700}
+.bsub{font-size:11px;margin-top:3px}
 
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--gray-100);
-      margin-bottom: 10px;
-    }
-  </style>
+/* Converge lines back to center */
+.cvg{display:flex;align-items:flex-start;height:32px}
+.cvg-l,.cvg-r{flex:1;border-top:1.5px solid var(--gray-bd)}
+.cvg-c{width:2px;background:var(--gray-bd);height:32px;position:relative;flex-shrink:0}
+.cvg-c::after{content:'';position:absolute;bottom:-6px;left:-4px;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-top:7px solid var(--gray-bd)}
+
+/* ── Conditional path ── */
+.cpath{display:flex;gap:10px;align-items:stretch;margin-top:20px}
+.cpath-spine{width:3px;background:var(--green);border-radius:2px;flex-shrink:0}
+.cpath-node{flex:1;border:1.5px dashed var(--green);border-radius:8px;
+  padding:12px 16px;background:var(--green-lt);display:flex;align-items:center;gap:12px}
+
+/* ── Async box ── */
+.async-box{border:1.5px dashed var(--gray-bd);border-radius:8px;padding:13px 16px;
+  background:var(--gray-lt);margin-top:14px;display:flex;align-items:center;gap:12px}
+.async-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--gray);color:#fff;padding:2px 8px;border-radius:4px;flex-shrink:0}
+
+/* ── Learning loop ── */
+.loop-node{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:108px;height:108px;border-radius:50%;text-align:center;font-size:11px;
+  font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.10);flex-shrink:0}
+.loop-arr{font-size:22px;color:var(--gray-bd);padding:0 2px;flex-shrink:0;
+  display:flex;align-items:center}
+.loop-ret{font-size:13px;font-weight:700;color:var(--gray);padding:0 8px;flex-shrink:0;
+  display:flex;align-items:center}
+
+/* ── Module table ── */
+.mt{width:100%;border-collapse:collapse;font-size:12.5px}
+.mt th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--gray);padding:9px 14px;
+  background:var(--gray-lt);border-bottom:1px solid var(--gray-bd)}
+.mt td{padding:10px 14px;border-bottom:1px solid var(--gray-lt);vertical-align:middle}
+.mt tr:last-child td{border-bottom:none}
+.mname{font-family:'Consolas',monospace;font-weight:600;color:var(--blue)}
+.hard{font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-lt);
+  padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+</style>
 </head>
-<body class="min-h-screen p-6">
+<body>
 
-  <!-- ── Header ── -->
-  <header style="background:var(--blue-100)" class="rounded-xl px-8 py-5 mb-8 flex items-center justify-between">
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header style="background:var(--blue);padding:20px 32px">
+  <div style="max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <div>
-      <div class="text-white text-xs font-semibold tracking-widest uppercase opacity-70 mb-1">SiteOwlQA · Agent Orchestration Map</div>
-      <h1 class="text-white text-2xl font-bold">How the Machine Thinks</h1>
-      <p class="text-blue-200 text-sm mt-1">Pipeline · Memory · Skills · Learning Loop</p>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#93b4f5;margin-bottom:6px">SiteOwlQA · Orchestration Map</div>
+      <h1 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:3px">How the Machine Thinks</h1>
+      <p style="font-size:12px;color:#93b4f5">Full pipeline · Decision flow · Learning loop · Module boundaries</p>
     </div>
-    <div class="text-right">
-      <div class="text-white text-xs opacity-60">Generated</div>
-      <div class="text-white font-mono text-sm">2026-04-13</div>
-      <div class="text-white text-xs opacity-60 mt-1">Single-process · Windows · Zero cloud deps</div>
+    <div style="display:flex;gap:20px">
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">15</div><div style="font-size:10px;color:#93b4f5">Steps</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">14</div><div style="font-size:10px;color:#93b4f5">Modules</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--spark)">1</div><div style="font-size:10px;color:#93b4f5">Process</div></div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- ── 3-column layout ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- ══ LEGEND ══════════════════════════════════════════════════════════════ -->
+<div style="max-width:700px;margin:20px auto 0;padding:0 24px">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:9px 14px;background:var(--gray-lt);border-radius:8px;font-size:11px;color:var(--text)">
+    <span style="font-weight:700;color:var(--gray);letter-spacing:.06em;text-transform:uppercase;font-size:10px">Legend</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block"></span>Core step</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--spark);display:inline-block"></span>Memory / Learn</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--purple);display:inline-block"></span>Review</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>PASS</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block"></span>FAIL</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--gray);display:inline-block"></span>Infrastructure</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:4px;border-top:2px dashed var(--gray-bd);display:inline-block"></span>Conditional / Async</span>
+  </div>
+</div>
 
-    <!-- COL 1: Pipeline Flow -->
-    <div class="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm">
-      <div class="section-title">📋 15-Step Pipeline · Per Submission</div>
+<!-- ══ FLOWCHART ════════════════════════════════════════════════════════════ -->
+<div class="fc" style="padding-top:8px">
 
-      <!-- Trigger -->
-      <div class="pipe-step step-gray mb-0" style="background:#fff7e0;border-left-color:var(--spark-140)">
-        <div class="badge" style="background:var(--spark-140);color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">▶</div>
-        <div>
-          <div class="font-bold text-sm">Vendor Form Submission</div>
-          <div class="text-xs text-gray-500">Airtable form → Processing Status blank</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <!-- ① INBOUND -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">① Inbound</div><div class="phase-line"></div></div>
 
-      <div class="pipe-step step-gray">
-        <div class="badge badge-gray">⏱</div>
-        <div>
-          <div class="font-semibold">Poll Loop · 60s</div>
-          <div class="text-xs text-gray-500">main.py · never crashes</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <div class="node n-start">
+    <div class="ntitle">▶ &nbsp;Vendor Form Submission</div>
+    <div class="nsub" style="color:var(--spark-dk)">Airtable form · Processing Status = blank / NEW / Pending</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node n-infra">
+    <div class="num" style="font-size:14px">⏱</div>
+    <div><div class="ntitle">Poll Loop · every 60 s</div><div class="nsub">Never crashes · exceptions caught at record level, not loop level</div></div>
+    <div class="mod" style="background:var(--gray);color:#fff">main.py</div>
+  </div>
 
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">1</div>
-        <div>
-          <div class="font-semibold">Validate Fields</div>
-          <div class="text-xs text-gray-500">Email · Site Number · Attachment URL</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <!-- ② VALIDATE & RECALL -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">② Validate &amp; Recall</div><div class="phase-line"></div></div>
 
-      <div class="pipe-step step-yellow">
-        <div class="badge badge-yellow">2</div>
-        <div>
-          <div class="font-semibold">Memory Recall</div>
-          <div class="text-xs" style="color:var(--spark-140)">memory.py ← archive.py · tag+keyword match</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <div class="node">
+    <div class="num">1</div>
+    <div><div class="ntitle">Validate Critical Fields</div><div class="nsub">Vendor Email · Site Number · Attachment URL — any missing = FAIL immediately, no grading</div></div>
+    <div class="mod">poll_airtable.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node n-memory">
+    <div class="num">2</div>
+    <div><div class="ntitle">Memory Recall</div><div class="nsub">Tag + keyword match against archived lessons · surfaces known risk patterns before any work starts</div></div>
+    <div class="mod">memory.py</div>
+  </div>
 
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">3</div>
-        <div>
-          <div class="font-semibold">Download Attachment</div>
-          <div class="text-xs text-gray-500">airtable_client.py → temp/</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <!-- ③ PROCESS -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">③ Process</div><div class="phase-line"></div></div>
 
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">4</div>
-        <div>
-          <div class="font-semibold">Normalize + Overwrite Project ID</div>
-          <div class="text-xs text-gray-500">file_processor.py · ProjectID ← Site Number</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <div class="node">
+    <div class="num">3</div>
+    <div><div class="ntitle">Download Attachment</div><div class="nsub">XLSX or CSV saved to temp/ · URL expires after download — RISK-003</div></div>
+    <div class="mod">airtable_client.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node">
+    <div class="num">4</div>
+    <div><div class="ntitle">Normalize + Overwrite Project ID</div><div class="nsub">Headers normalized case-insensitively · Project ID column always ← Airtable Site Number, no exceptions</div></div>
+    <div class="mod">file_processor.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node">
+    <div class="num">5</div>
+    <div><div class="ntitle">Fetch Reference Rows</div><div class="nsub">Site-scoped · read-only · SQL supplies data only — Python owns all grading logic</div></div>
+    <div class="mod">sql.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node">
+    <div class="num">6</div>
+    <div><div class="ntitle">Grade in Python</div><div class="nsub">Canonical header comparison · fingerprint matching · derive numeric score 0–100</div></div>
+    <div class="mod">python_grader.py</div>
+  </div>
 
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">5</div>
-        <div>
-          <div class="font-semibold">Fetch Reference Rows</div>
-          <div class="text-xs text-gray-500">sql.py · site-scoped, read-only</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
+  <!-- ④ DECISION DIAMOND -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">④ Decision</div><div class="phase-line"></div></div>
 
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">6</div>
-        <div>
-          <div class="font-semibold">Grade in Python</div>
-          <div class="text-xs text-gray-500">python_grader.py · canonical headers only</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">7</div>
-        <div>
-          <div class="font-semibold">Derive PASS / FAIL</div>
-          <div class="text-xs text-gray-500">status_from_score() · single source of truth</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <!-- Branch: PASS / FAIL -->
-      <div class="flex gap-2 mb-2">
-        <div class="flex-1 pipe-step step-green py-2">
-          <div class="badge badge-green" style="font-size:10px">✓</div>
-          <div class="text-xs"><strong>PASS</strong><br/><span class="text-gray-500">score ≥ threshold</span></div>
-        </div>
-        <div class="flex-1 pipe-step step-red py-2">
-          <div class="badge badge-red" style="font-size:10px">✗</div>
-          <div class="text-xs"><strong>FAIL</strong><br/><span class="text-gray-500">score &lt; threshold</span></div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">8</div>
-        <div>
-          <div class="font-semibold">Send Email</div>
-          <div class="text-xs text-gray-500">emailer.py · only if SMTP_ENABLED=true</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-blue">
-        <div class="badge badge-blue">9</div>
-        <div>
-          <div class="font-semibold">Update Airtable</div>
-          <div class="text-xs text-gray-500">Status · Score · Fail Summary · Notes</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-gray">
-        <div class="badge badge-gray">10</div>
-        <div>
-          <div class="font-semibold">Archive Submission</div>
-          <div class="text-xs text-gray-500">archive/ · append-only · never deleted</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-purple">
-        <div class="badge badge-purple">11</div>
-        <div>
-          <div class="font-semibold">Internal Review</div>
-          <div class="text-xs" style="color:#5b21b6">reviewer.py · architecture + business rules</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-gray">
-        <div class="badge badge-gray">12</div>
-        <div>
-          <div class="font-semibold">Archive Execution + Review</div>
-          <div class="text-xs text-gray-500">ExecutionRecord + ReviewResult → JSON</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-yellow">
-        <div class="badge badge-yellow">13</div>
-        <div>
-          <div class="font-semibold">Extract Lesson (on FAIL)</div>
-          <div class="text-xs" style="color:var(--spark-140)">archive.extract_lesson_from_failure()</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-green">
-        <div class="badge badge-green">15</div>
-        <div>
-          <div class="font-semibold">Post-Pass Correction</div>
-          <div class="text-xs" style="color:var(--green-100)">PASS + score ≥ 95 only · 3 output files</div>
-        </div>
-      </div>
-      <div class="arrow-down"></div>
-
-      <div class="pipe-step step-gray" style="background:#e8f0ff;border-left-color:var(--blue-100)">
-        <div class="badge badge-blue">📊</div>
-        <div>
-          <div class="font-semibold">Metrics + Dashboard Refresh</div>
-          <div class="text-xs text-gray-500">Async · MetricsRefreshWorker · mark_dirty()</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- COL 2: Module Map -->
-    <div class="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm">
-      <div class="section-title">📦 Module Ownership Boundaries</div>
-      <div class="space-y-2">
-
-        <div class="mod-card">
-          <div class="mod-name">main.py</div>
-          <div class="text-gray-500">Entry point · poll loop · signal handling · dependency wiring</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">poll_airtable.py</div>
-          <div class="text-gray-500">Per-record 15-step orchestrator · catch at record level</div>
-        </div>
-
-        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
-          <div class="mod-name">airtable_client.py</div>
-          <div class="text-gray-500"><strong>ALL</strong> Airtable API calls — fetch · download · patch · status update</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">file_processor.py</div>
-          <div class="text-gray-500">XLSX/CSV load · header normalization · ProjectID overwrite</div>
-        </div>
-
-        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
-          <div class="mod-name">sql.py</div>
-          <div class="text-gray-500"><strong>ALL</strong> SQL — connection + site-scoped reference row fetch only</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">python_grader.py</div>
-          <div class="text-gray-500">Canonical header comparison · score derivation · PASS/FAIL logic</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">emailer.py</div>
-          <div class="text-gray-500"><strong>ALL</strong> email sending · PASS / FAIL / ERROR templates</div>
-        </div>
-
-        <div class="mod-card" style="border-color:#7c3aed;background:#f5f0ff">
-          <div class="mod-name" style="color:#7c3aed">reviewer.py</div>
-          <div class="text-gray-500">Internal static code + run review · issues + severity</div>
-        </div>
-
-        <div class="mod-card" style="border-color:var(--spark-140);background:var(--spark-10)">
-          <div class="mod-name" style="color:var(--spark-140)">archive.py</div>
-          <div class="text-gray-500">Append-only JSON archive · raw file storage · lesson extraction</div>
-        </div>
-
-        <div class="mod-card" style="border-color:var(--spark-140);background:var(--spark-10)">
-          <div class="mod-name" style="color:var(--spark-140)">memory.py</div>
-          <div class="text-gray-500">Tag+keyword lesson retrieval · failure surface · rule recall</div>
-        </div>
-
-        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
-          <div class="mod-name">config.py</div>
-          <div class="text-gray-500"><strong>ONLY</strong> module that calls os.getenv — all env access centralized here</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">models.py</div>
-          <div class="text-gray-500">ALL shared data types — AirtableRecord · SubmissionResult · ExecutionRecord…</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">utils.py</div>
-          <div class="text-gray-500">Logging setup · ID generation · safe file ops</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">metrics.py</div>
-          <div class="text-gray-500">Compute metrics · export CSVs · async refresh worker</div>
-        </div>
-
-        <div class="mod-card">
-          <div class="mod-name">dashboard.py</div>
-          <div class="text-gray-500">Generate HTML dashboards from CSVs · refresh on dirty flag</div>
-        </div>
-
-      </div>
-
-      <!-- Known Risks -->
-      <div class="section-title mt-6">⚠️ Open Risks</div>
-      <div class="space-y-2">
-        <div class="rounded-lg p-3 text-xs" style="background:#fde8e6;border-left:3px solid var(--red-100)">
-          <strong>RISK-002</strong> — Project ID overwrite post-normalization verification needed
-        </div>
-        <div class="rounded-lg p-3 text-xs" style="background:#fde8e6;border-left:3px solid var(--red-100)">
-          <strong>RISK-003</strong> — Airtable attachment URLs expire · no uptime monitoring yet
-        </div>
-        <div class="rounded-lg p-3 text-xs" style="background:#eaf4e4;border-left:3px solid var(--green-100)">
-          <strong>RISK-001</strong> ✅ RESOLVED — Python owns grading · no proc-era contamination
-        </div>
-      </div>
-    </div>
-
-    <!-- COL 3: Thinking Model + Skills -->
-    <div class="lg:col-span-1 space-y-6">
-
-      <!-- Learning Loop -->
-      <div class="bg-white rounded-xl p-5 shadow-sm">
-        <div class="section-title">🧠 How the Agent Thinks (Learning Loop)</div>
-
-        <!-- Loop diagram -->
-        <div class="flex flex-wrap items-center justify-center gap-1 my-4">
-          <div class="loop-node text-center" style="background:var(--spark-10);border:2px solid var(--spark-100)">
-            <div style="font-size:22px">📖</div>
-            <div style="color:var(--spark-140)">Memory<br/>Recall</div>
-            <div style="font-size:9px;color:var(--gray-100)">memory.py</div>
-          </div>
-          <div class="loop-arrow">→</div>
-          <div class="loop-node" style="background:#e8effc;border:2px solid var(--blue-100)">
-            <div style="font-size:22px">⚙️</div>
-            <div style="color:var(--blue-100)">Execute<br/>Pipeline</div>
-            <div style="font-size:9px;color:var(--gray-100)">poll_airtable</div>
-          </div>
-          <div class="loop-arrow">→</div>
-          <div class="loop-node" style="background:#f5f0ff;border:2px solid #7c3aed">
-            <div style="font-size:22px">🔍</div>
-            <div style="color:#7c3aed">Internal<br/>Review</div>
-            <div style="font-size:9px;color:var(--gray-100)">reviewer.py</div>
-          </div>
-        </div>
-        <div class="flex justify-center mb-2">
-          <div style="font-size:12px;color:var(--gray-100)">↓ on FAIL: extract lesson</div>
-        </div>
-        <div class="flex flex-wrap items-center justify-center gap-1">
-          <div class="loop-node" style="background:#eaf4e4;border:2px solid var(--green-100)">
-            <div style="font-size:22px">💡</div>
-            <div style="color:var(--green-100)">Lesson<br/>Written</div>
-            <div style="font-size:9px;color:var(--gray-100)">archive.py</div>
-          </div>
-          <div class="loop-arrow">←</div>
-          <div class="loop-node" style="background:var(--spark-10);border:2px dashed var(--spark-100)">
-            <div style="font-size:22px">📚</div>
-            <div style="color:var(--spark-140)">Skill<br/>Extracted</div>
-            <div style="font-size:9px;color:var(--gray-100)">skills/</div>
-          </div>
-        </div>
-        <div class="text-xs text-center mt-3" style="color:var(--gray-100)">
-          Loop is continuous. Every failure teaches the next run.
-        </div>
-      </div>
-
-      <!-- Decision Protocol -->
-      <div class="bg-white rounded-xl p-5 shadow-sm">
-        <div class="section-title">⚡ Code Puppy Decision Protocol</div>
-        <ol class="space-y-2 text-sm">
-          <li class="flex gap-2 items-start">
-            <span class="font-bold" style="color:var(--blue-100)">1.</span>
-            <span>Read <code class="bg-gray-100 px-1 rounded">MEMORY.md</code> — skip thinking on settled decisions</span>
-          </li>
-          <li class="flex gap-2 items-start">
-            <span class="font-bold" style="color:var(--blue-100)">2.</span>
-            <span>Check <code class="bg-gray-100 px-1 rounded">skills/INDEX.md</code> — apply existing skill if pattern matches</span>
-          </li>
-          <li class="flex gap-2 items-start">
-            <span class="font-bold" style="color:var(--blue-100)">3.</span>
-            <span>Execute task using settled context</span>
-          </li>
-          <li class="flex gap-2 items-start">
-            <span class="font-bold" style="color:var(--blue-100)">4.</span>
-            <span>Write new decision to <code class="bg-gray-100 px-1 rounded">MEMORY.md</code></span>
-          </li>
-          <li class="flex gap-2 items-start">
-            <span class="font-bold" style="color:var(--blue-100)">5.</span>
-            <span>Extract reusable skill to <code class="bg-gray-100 px-1 rounded">skills/</code> if pattern will repeat</span>
-          </li>
-        </ol>
-        <div class="mt-3 rounded-lg p-3 text-xs font-semibold text-center" style="background:#e8effc;color:var(--blue-100)">
-          Less thinking. More decisions. Memory + Skills = autonomy.
-        </div>
-      </div>
-
-      <!-- Skill Library -->
-      <div class="bg-white rounded-xl p-5 shadow-sm">
-        <div class="section-title">🎓 Skill Library (skills/)</div>
-        <p class="text-xs text-gray-500 mb-3">Skills are reusable playbooks extracted from completed tasks. Code Puppy checks these before re-deriving solutions from scratch.</p>
-        <div class="space-y-2 text-xs">
-          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
-            <div class="font-bold text-gray-700">SKILL_GOVERNANCE_SETUP</div>
-            <div class="text-gray-500">Bootstrap CLAUDE.md + MEMORY.md for any project</div>
-            <div class="mt-1"><span class="skill-tag">governance</span> <span class="skill-tag">bootstrap</span></div>
-          </div>
-          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
-            <div class="font-bold text-gray-700">SKILL_FLAT_HTML_REPORT</div>
-            <div class="text-gray-500">Tailwind + Chart.js flat HTML report template</div>
-            <div class="mt-1"><span class="skill-tag">reporting</span> <span class="skill-tag">html</span></div>
-          </div>
-          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
-            <div class="font-bold text-gray-700">SKILL_GIT_FOCUSED_COMMIT</div>
-            <div class="text-gray-500">Stage, verify diff, commit one concern at a time</div>
-            <div class="mt-1"><span class="skill-tag">git</span> <span class="skill-tag">hygiene</span></div>
-          </div>
-          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
-            <div class="font-bold text-gray-700">SKILL_ORCHESTRATION_MAP</div>
-            <div class="text-gray-500">Visual pipeline + module map HTML for any Python app</div>
-            <div class="mt-1"><span class="skill-tag">visualisation</span> <span class="skill-tag">html</span></div>
-          </div>
-        </div>
-        <div class="mt-3 text-xs" style="color:var(--gray-100)">
-          → New skills auto-extracted after each Code Puppy session.<br/>
-          → See <code>skills/INDEX.md</code> for full library.
-        </div>
-      </div>
-
-      <!-- SMTP Gate -->
-      <div class="bg-white rounded-xl p-5 shadow-sm">
-        <div class="section-title">📧 Email Gate Logic</div>
-        <div class="text-xs space-y-2">
-          <div class="flex items-start gap-2">
-            <span style="color:var(--green-100);font-size:16px">●</span>
-            <span><strong>SMTP_ENABLED=true</strong> — Python sends email directly via emailer.py</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <span style="color:var(--gray-100);font-size:16px">●</span>
-            <span><strong>SMTP_ENABLED=false (default)</strong> — Python writes status to Airtable field. Airtable automation rule watches that field and sends the email.</span>
-          </div>
-          <div class="mt-2 rounded p-2" style="background:var(--spark-10);color:var(--spark-140)">
-            ⚠️ Business rule: NEVER write ERROR to Airtable. Pipeline exception → FAIL with score 0.
-          </div>
-        </div>
-      </div>
-
+  <div class="diamond-wrap">
+    <div class="diamond">
+      <div class="diamond-in">status_from_<br/>score()<br/><span style="font-weight:400;font-size:9px;opacity:.8">single source of truth</span></div>
     </div>
   </div>
 
-  <!-- ── Footer ── -->
-  <footer class="rounded-xl px-6 py-4 text-center text-xs" style="background:var(--gray-160);color:var(--gray-50)">
-    SiteOwlQA · Single-process Windows pipeline · No Docker · No cloud deps ·
-    Source of truth: <code class="text-blue-300">development.md</code> · Decisions: <code class="text-blue-300">MEMORY.md</code> · Skills: <code class="text-blue-300">skills/INDEX.md</code>
-  </footer>
+  <div class="d-labels">
+    <span class="d-lbl" style="color:var(--green)">✓ score ≥ threshold</span>
+    <span class="d-lbl" style="color:var(--red)">✗ score &lt; threshold</span>
+  </div>
+
+  <div class="branch">
+    <div class="bnode bp">
+      <span class="bicon">✅</span>
+      <div class="btitle" style="color:var(--green)">PASS</div>
+      <div class="bsub" style="color:var(--green)">Vendor file meets reference</div>
+    </div>
+    <div class="bnode bf">
+      <span class="bicon">❌</span>
+      <div class="btitle" style="color:var(--red)">FAIL</div>
+      <div class="bsub" style="color:var(--red)">Mismatches or missing rows</div>
+    </div>
+  </div>
+  <!-- Converge lines -->
+  <div class="cvg"><div class="cvg-l"></div><div class="cvg-c"></div><div class="cvg-r"></div></div>
+
+  <!-- ⑤ OUTPUT -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">⑤ Output</div><div class="phase-line"></div></div>
+
+  <div class="node">
+    <div class="num">8</div>
+    <div><div class="ntitle">Send Email</div><div class="nsub">Only when SMTP_ENABLED=true · otherwise Airtable automation watches the status field and handles vendor notification</div></div>
+    <div class="mod">emailer.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node">
+    <div class="num">9</div>
+    <div><div class="ntitle">Update Airtable</div><div class="nsub">PATCH Status · True Score · Score % · Fail Summary · Internal Notes — all fields always written, never blank</div></div>
+    <div class="mod">airtable_client.py</div>
+  </div>
+
+  <!-- ⑥ ARCHIVE & LEARN -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">⑥ Archive &amp; Learn</div><div class="phase-line"></div></div>
+
+  <div class="node">
+    <div class="num">10</div>
+    <div><div class="ntitle">Archive Submission</div><div class="nsub">Raw file → archive/submissions/YYYY/MM/DD/ · metadata as JSON · append-only, nothing ever deleted</div></div>
+    <div class="mod">archive.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node n-review">
+    <div class="num">11</div>
+    <div><div class="ntitle">Internal Review</div><div class="nsub">Architecture + business rule audit · issues classified LOW / HIGH / CRITICAL · never mutates pipeline state</div></div>
+    <div class="mod">reviewer.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node">
+    <div class="num">12</div>
+    <div><div class="ntitle">Archive Execution + Review</div><div class="nsub">ExecutionRecord + ReviewResult → JSON · execution_id links both records together</div></div>
+    <div class="mod">archive.py</div>
+  </div>
+  <div class="arr"></div>
+  <div class="node n-learn">
+    <div class="num">13</div>
+    <div>
+      <div class="ntitle">Extract Lesson <span style="font-weight:400;font-size:11px;color:var(--spark-dk)">— on FAIL, HIGH/CRITICAL issues only</span></div>
+      <div class="nsub">Generalized rule → tagged lesson in archive · confidence 0.75 · feeds next memory.recall()</div>
+    </div>
+    <div class="mod">archive.py</div>
+  </div>
+
+  <!-- ⑦ CONDITIONAL -->
+  <div class="phase"><div class="phase-line"></div><div class="phase-lbl">⑦ Conditional Paths</div><div class="phase-line"></div></div>
+
+  <div class="cpath">
+    <div class="cpath-spine"></div>
+    <div class="cpath-node">
+      <div class="num" style="background:var(--green)">15</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">Post-Pass Correction</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">PASS + true_score ≥ 95 only · outputs RAW, CORRECTED CSV, LOG · never re-grades · never writes back to Airtable</div>
+      </div>
+      <div class="mod" style="color:var(--green);background:var(--green-lt)">post_pass_correction.py</div>
+    </div>
+  </div>
+
+  <div class="async-box">
+    <div class="async-badge">Async Worker</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:600">Metrics + Dashboard Refresh</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:2px">MetricsRefreshWorker · mark_dirty() flag → rewrites 3 CSVs + 2 HTML dashboards · never blocks the main pipeline</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <div class="mod" style="background:var(--gray);color:#fff">metrics.py</div>
+      <div class="mod" style="background:var(--gray);color:#fff">dashboard.py</div>
+    </div>
+  </div>
+
+</div><!-- /fc -->
+
+<!-- ══ LEARNING LOOP ════════════════════════════════════════════════════════ -->
+<section style="background:var(--gray-lt);padding:40px 24px;border-top:1px solid var(--gray-bd)">
+  <div style="max-width:860px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Self-Improving System</div>
+      <div style="font-size:20px;font-weight:800">The Learning Loop</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:4px">Every FAIL teaches the next run. The loop never stops.</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0">
+      <div class="loop-node" style="background:var(--spark-lt);border:2px solid var(--spark)">
+        <div style="font-size:24px;margin-bottom:4px">📖</div>
+        <div style="color:var(--spark-dk)">Memory<br/>Recall</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:2px">memory.py</div>
+      </div>
+      <div class="loop-arr">→</div>
+      <div class="loop-node" style="background:var(--blue-lt);border:2px solid var(--blue)">
+        <div style="font-size:24px;margin-bottom:4px">⚙️</div>
+        <div style="color:var(--blue)">Execute<br/>Pipeline</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:2px">poll_airtable.py</div>
+      </div>
+      <div class="loop-arr">→</div>
+      <div class="loop-node" style="background:var(--purple-lt);border:2px solid var(--purple)">
+        <div style="font-size:24px;margin-bottom:4px">🔍</div>
+        <div style="color:var(--purple)">Internal<br/>Review</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:2px">reviewer.py</div>
+      </div>
+      <div class="loop-arr">→</div>
+      <div class="loop-node" style="background:var(--spark-lt);border:2px dashed var(--spark-dk)">
+        <div style="font-size:24px;margin-bottom:4px">💡</div>
+        <div style="color:var(--spark-dk)">Extract<br/>Lesson</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:2px">archive.py</div>
+      </div>
+      <div class="loop-arr">→</div>
+      <div class="loop-node" style="background:#f0fdf4;border:2px dashed var(--green)">
+        <div style="font-size:24px;margin-bottom:4px">📚</div>
+        <div style="color:var(--green)">Skill<br/>Library</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:2px">skills/</div>
+      </div>
+      <div class="loop-ret">↩ feeds<br/>Memory</div>
+    </div>
+    <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--gray)">
+      FAIL → lesson extracted (confidence 0.75) → tagged in archive → surfaced by <code style="background:#e5e7eb;padding:1px 5px;border-radius:3px">memory.recall()</code> on the next similar submission
+    </div>
+  </div>
+</section>
+
+<!-- ══ MODULE TABLE ═════════════════════════════════════════════════════════ -->
+<section style="padding:40px 24px;border-top:1px solid var(--gray-lt)">
+  <div style="max-width:860px;margin:0 auto">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:14px">Module Ownership · Hard Boundaries</div>
+    <div style="border:1px solid var(--gray-bd);border-radius:10px;overflow:hidden">
+      <table class="mt">
+        <thead><tr><th style="width:195px">Module</th><th>Exclusively Owns</th><th style="width:64px;text-align:right">Lines</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mname">main.py</span></td><td>Entry point · poll loop · signal handling · dependency wiring</td><td style="text-align:right;color:var(--gray)">126</td></tr>
+          <tr><td><span class="mname">poll_airtable.py</span></td><td>Per-record 15-step orchestrator · catches all exceptions at record level</td><td style="text-align:right;color:var(--gray)">354</td></tr>
+          <tr style="background:var(--blue-lt)"><td><span class="mname">airtable_client.py</span></td><td><b>ALL</b> Airtable API calls — fetch · download · patch · status update<span class="hard">HARD BOUNDARY</span></td><td style="text-align:right;color:var(--gray)">207</td></tr>
+          <tr><td><span class="mname">file_processor.py</span></td><td>XLSX/CSV load · header normalization · Project ID overwrite</td><td style="text-align:right;color:var(--gray)">159</td></tr>
+          <tr style="background:var(--blue-lt)"><td><span class="mname">sql.py</span></td><td><b>ALL</b> SQL — connection + site-scoped reference rows only<span class="hard">HARD BOUNDARY</span></td><td style="text-align:right;color:var(--gray)">90</td></tr>
+          <tr><td><span class="mname">python_grader.py</span></td><td>Canonical comparison · score derivation · <code style="font-size:11px;background:#f3f4f6;padding:1px 4px;border-radius:3px">status_from_score()</code> is the only source of truth</td><td style="text-align:right;color:var(--gray)">—</td></tr>
+          <tr style="background:var(--blue-lt)"><td><span class="mname">config.py</span></td><td><b>ONLY</b> module that calls <code style="font-size:11px;background:#dbeafe;padding:1px 4px;border-radius:3px">os.getenv</code> — all env access centralized<span class="hard">HARD BOUNDARY</span></td><td style="text-align:right;color:var(--gray)">192</td></tr>
+          <tr><td><span class="mname">emailer.py</span></td><td>ALL email sending · PASS / FAIL / ERROR templates · bypassed when SMTP_ENABLED=false</td><td style="text-align:right;color:var(--gray)">195</td></tr>
+          <tr style="background:var(--purple-lt)"><td><span class="mname" style="color:var(--purple)">reviewer.py</span></td><td>Internal static code + run review · severity: LOW / HIGH / CRITICAL · never mutates state</td><td style="text-align:right;color:var(--gray)">462</td></tr>
+          <tr style="background:var(--spark-lt)"><td><span class="mname" style="color:var(--spark-dk)">archive.py</span></td><td>Append-only JSON archive · raw file storage · lesson extraction — nothing ever deleted</td><td style="text-align:right;color:var(--gray)">259</td></tr>
+          <tr style="background:var(--spark-lt)"><td><span class="mname" style="color:var(--spark-dk)">memory.py</span></td><td>Tag + keyword lesson retrieval · failure surface · high-confidence rule export</td><td style="text-align:right;color:var(--gray)">227</td></tr>
+          <tr><td><span class="mname">models.py</span></td><td>ALL shared data types — AirtableRecord · SubmissionResult · ExecutionRecord · ReviewResult…</td><td style="text-align:right;color:var(--gray)">260</td></tr>
+          <tr><td><span class="mname">metrics.py</span></td><td>Compute metrics · export 3 CSVs · MetricsRefreshWorker (async, never blocks pipeline)</td><td style="text-align:right;color:var(--gray)">264</td></tr>
+          <tr><td><span class="mname">dashboard.py</span></td><td>Generate 2 HTML dashboards from CSVs · refresh only when dirty flag is set</td><td style="text-align:right;color:var(--gray)">212</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Risks -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:18px">
+      <div style="background:var(--green-lt);border:1px solid var(--green);border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:.08em;margin-bottom:4px">RISK-001 · RESOLVED ✅</div>
+        <div style="font-size:12px">Python owns grading. No proc-era cross-submission contamination.</div>
+      </div>
+      <div style="background:var(--red-lt);border:1px solid var(--red);border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:.08em;margin-bottom:4px">RISK-002 · OPEN 🔴</div>
+        <div style="font-size:12px">Project ID post-normalization verification needs strengthening.</div>
+      </div>
+      <div style="background:var(--red-lt);border:1px solid var(--red);border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:.08em;margin-bottom:4px">RISK-003 · OPEN 🔴</div>
+        <div style="font-size:12px">Airtable attachment URLs expire. No uptime monitoring yet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ═══════════════════════════════════════════════════════════════ -->
+<footer style="background:#1d1d1d;color:#c4c6cb;padding:14px 24px;text-align:center;font-size:12px">
+  SiteOwlQA · Single-process · Windows · No Docker · No cloud deps &nbsp;·&nbsp;
+  <code style="color:#93b4f5">development.md</code> (roadmap) &nbsp;·&nbsp;
+  <code style="color:#93b4f5">MEMORY.md</code> (decisions) &nbsp;·&nbsp;
+  <code style="color:#93b4f5">skills/INDEX.md</code> (playbooks)
+</footer>
 
 </body>
 </html>

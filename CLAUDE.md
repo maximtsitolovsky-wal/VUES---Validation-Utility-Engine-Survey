@@ -20,8 +20,12 @@ READ MEMORY.md
 Extract the relevant settled decisions. Do not re-derive what is already written there.
 Do not re-debate closed questions. **Memory beats thinking.**
 
+### Step 1b — CHECK skills/INDEX.md
+Scan the trigger column in `skills/INDEX.md`.
+If a skill matches → open it and follow it. Don't re-derive what's codified.
+
 ### Step 2 — DO THE WORK
-Use the settled context from MEMORY.md to act faster and more decisively.
+Use the settled context from MEMORY.md + skills to act faster and more decisively.
 Skip the preamble. Skip re-analyzing what is already known. Just execute.
 
 ### Step 3 — UPDATE MEMORY.md LAST
@@ -37,6 +41,9 @@ correct section using this format:
 ```
 
 **If a task touched nothing worth remembering, you still confirm: "Memory unchanged — no new decisions."**
+
+### Step 4 — EXTRACT A SKILL (if it will repeat)
+Ask "Will I do this again?" YES → write a skill file. NO → skip.
 
 ---
 
@@ -66,10 +73,44 @@ correct section using this format:
 
 ---
 
-## 🔒 Memory Is Non-Negotiable
+## 🎓 SKILL PROTOCOL (runs between Step 1 and Step 2)
+
+### Before starting work — check skills/INDEX.md
+After reading MEMORY.md, open `skills/INDEX.md`.
+Scan the trigger column. If your task matches a skill → **open that skill file and follow it exactly.**
+Do not re-derive solutions that are already codified.
+
+### After completing work — extract a skill if it will repeat
+Ask: "Will I do this same type of task again?"
+- **YES** → Create `skills/SKILL_<NAME>.md`, add a row to `skills/INDEX.md`, commit.
+- **NO** → Skip. YAGNI applies to skills too.
+
+### Skill file format (always use this)
+```markdown
+# SKILL: <Name>
+**Last Used:** YYYY-MM-DD
+**Times Used:** N
+
+## Trigger
+## Context — Read First
+## Steps
+## Template / Example
+## Notes / Gotchas
+```
+
+### Updating existing skills
+If you used a skill and found a better way → update the skill file.
+Increment `Times Used`. Update `Last Used`. Commit with `docs: update SKILL_<NAME>`.
+
+---
+
+## 🔒 Memory + Skills Are Non-Negotiable
 
 If MEMORY.md does not exist → create it before proceeding.
 If MEMORY.md exists → read it before proceeding.
+If skills/INDEX.md does not exist → create it before proceeding.
+If a skill matches the task → use it. Don't re-derive.
 If a decision was made today → write it to MEMORY.md before signing off.
+If a task will repeat → write a skill file before signing off.
 
-**Less thinking. More decisions. Memory is the shortcut.**
+**Less thinking. More decisions. Memory + Skills = the path to autonomy.**

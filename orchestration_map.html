@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SiteOwlQA — Orchestration Map</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ── Walmart brand tokens ── */
+    :root {
+      --blue-100: #0053e2;
+      --blue-110: #0045c0;
+      --spark-100: #ffc220;
+      --spark-10:  #fff9e6;
+      --spark-140: #995213;
+      --green-100: #2a8703;
+      --red-100:   #ea1100;
+      --gray-160:  #1d1d1d;
+      --gray-100:  #74767c;
+      --gray-50:   #c4c6cb;
+      --gray-10:   #f2f3f4;
+    }
+
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-10); color: var(--gray-160); }
+
+    /* ── pipeline steps ── */
+    .pipe-step {
+      position: relative;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.10);
+    }
+    .pipe-step .badge {
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-blue   { background: #e8effc; border-left: 4px solid var(--blue-100); }
+    .step-yellow { background: var(--spark-10); border-left: 4px solid var(--spark-100); }
+    .step-green  { background: #eaf4e4; border-left: 4px solid var(--green-100); }
+    .step-red    { background: #fde8e6; border-left: 4px solid var(--red-100); }
+    .step-gray   { background: #f6f7f8; border-left: 4px solid var(--gray-100); }
+    .step-purple { background: #f0ebfa; border-left: 4px solid #7c3aed; }
+
+    .badge-blue   { background: var(--blue-100);  color: #fff; }
+    .badge-yellow { background: var(--spark-100); color: var(--spark-140); }
+    .badge-green  { background: var(--green-100); color: #fff; }
+    .badge-red    { background: var(--red-100);   color: #fff; }
+    .badge-gray   { background: var(--gray-100);  color: #fff; }
+    .badge-purple { background: #7c3aed;           color: #fff; }
+
+    /* ── arrow connector ── */
+    .arrow-down {
+      width: 2px;
+      height: 16px;
+      background: var(--gray-50);
+      margin: 0 auto;
+      position: relative;
+    }
+    .arrow-down::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: -4px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--gray-50);
+    }
+
+    /* ── module card ── */
+    .mod-card {
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      border: 1px solid var(--gray-50);
+      background: #fff;
+    }
+    .mod-card .mod-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--blue-100);
+      font-family: 'Consolas', monospace;
+    }
+
+    /* ── learning loop ── */
+    .loop-node {
+      border-radius: 50%;
+      width: 110px;
+      height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .loop-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--gray-100);
+      font-size: 22px;
+      font-weight: 300;
+      padding: 0 4px;
+    }
+
+    /* ── skill stack ── */
+    .skill-tag {
+      display: inline-block;
+      background: #e8effc;
+      color: var(--blue-100);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--gray-100);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6">
+
+  <!-- ── Header ── -->
+  <header style="background:var(--blue-100)" class="rounded-xl px-8 py-5 mb-8 flex items-center justify-between">
+    <div>
+      <div class="text-white text-xs font-semibold tracking-widest uppercase opacity-70 mb-1">SiteOwlQA · Agent Orchestration Map</div>
+      <h1 class="text-white text-2xl font-bold">How the Machine Thinks</h1>
+      <p class="text-blue-200 text-sm mt-1">Pipeline · Memory · Skills · Learning Loop</p>
+    </div>
+    <div class="text-right">
+      <div class="text-white text-xs opacity-60">Generated</div>
+      <div class="text-white font-mono text-sm">2026-04-13</div>
+      <div class="text-white text-xs opacity-60 mt-1">Single-process · Windows · Zero cloud deps</div>
+    </div>
+  </header>
+
+  <!-- ── 3-column layout ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+    <!-- COL 1: Pipeline Flow -->
+    <div class="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm">
+      <div class="section-title">📋 15-Step Pipeline · Per Submission</div>
+
+      <!-- Trigger -->
+      <div class="pipe-step step-gray mb-0" style="background:#fff7e0;border-left-color:var(--spark-140)">
+        <div class="badge" style="background:var(--spark-140);color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">▶</div>
+        <div>
+          <div class="font-bold text-sm">Vendor Form Submission</div>
+          <div class="text-xs text-gray-500">Airtable form → Processing Status blank</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-gray">
+        <div class="badge badge-gray">⏱</div>
+        <div>
+          <div class="font-semibold">Poll Loop · 60s</div>
+          <div class="text-xs text-gray-500">main.py · never crashes</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">1</div>
+        <div>
+          <div class="font-semibold">Validate Fields</div>
+          <div class="text-xs text-gray-500">Email · Site Number · Attachment URL</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-yellow">
+        <div class="badge badge-yellow">2</div>
+        <div>
+          <div class="font-semibold">Memory Recall</div>
+          <div class="text-xs" style="color:var(--spark-140)">memory.py ← archive.py · tag+keyword match</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">3</div>
+        <div>
+          <div class="font-semibold">Download Attachment</div>
+          <div class="text-xs text-gray-500">airtable_client.py → temp/</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">4</div>
+        <div>
+          <div class="font-semibold">Normalize + Overwrite Project ID</div>
+          <div class="text-xs text-gray-500">file_processor.py · ProjectID ← Site Number</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">5</div>
+        <div>
+          <div class="font-semibold">Fetch Reference Rows</div>
+          <div class="text-xs text-gray-500">sql.py · site-scoped, read-only</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">6</div>
+        <div>
+          <div class="font-semibold">Grade in Python</div>
+          <div class="text-xs text-gray-500">python_grader.py · canonical headers only</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">7</div>
+        <div>
+          <div class="font-semibold">Derive PASS / FAIL</div>
+          <div class="text-xs text-gray-500">status_from_score() · single source of truth</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <!-- Branch: PASS / FAIL -->
+      <div class="flex gap-2 mb-2">
+        <div class="flex-1 pipe-step step-green py-2">
+          <div class="badge badge-green" style="font-size:10px">✓</div>
+          <div class="text-xs"><strong>PASS</strong><br/><span class="text-gray-500">score ≥ threshold</span></div>
+        </div>
+        <div class="flex-1 pipe-step step-red py-2">
+          <div class="badge badge-red" style="font-size:10px">✗</div>
+          <div class="text-xs"><strong>FAIL</strong><br/><span class="text-gray-500">score &lt; threshold</span></div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">8</div>
+        <div>
+          <div class="font-semibold">Send Email</div>
+          <div class="text-xs text-gray-500">emailer.py · only if SMTP_ENABLED=true</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-blue">
+        <div class="badge badge-blue">9</div>
+        <div>
+          <div class="font-semibold">Update Airtable</div>
+          <div class="text-xs text-gray-500">Status · Score · Fail Summary · Notes</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-gray">
+        <div class="badge badge-gray">10</div>
+        <div>
+          <div class="font-semibold">Archive Submission</div>
+          <div class="text-xs text-gray-500">archive/ · append-only · never deleted</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-purple">
+        <div class="badge badge-purple">11</div>
+        <div>
+          <div class="font-semibold">Internal Review</div>
+          <div class="text-xs" style="color:#5b21b6">reviewer.py · architecture + business rules</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-gray">
+        <div class="badge badge-gray">12</div>
+        <div>
+          <div class="font-semibold">Archive Execution + Review</div>
+          <div class="text-xs text-gray-500">ExecutionRecord + ReviewResult → JSON</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-yellow">
+        <div class="badge badge-yellow">13</div>
+        <div>
+          <div class="font-semibold">Extract Lesson (on FAIL)</div>
+          <div class="text-xs" style="color:var(--spark-140)">archive.extract_lesson_from_failure()</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-green">
+        <div class="badge badge-green">15</div>
+        <div>
+          <div class="font-semibold">Post-Pass Correction</div>
+          <div class="text-xs" style="color:var(--green-100)">PASS + score ≥ 95 only · 3 output files</div>
+        </div>
+      </div>
+      <div class="arrow-down"></div>
+
+      <div class="pipe-step step-gray" style="background:#e8f0ff;border-left-color:var(--blue-100)">
+        <div class="badge badge-blue">📊</div>
+        <div>
+          <div class="font-semibold">Metrics + Dashboard Refresh</div>
+          <div class="text-xs text-gray-500">Async · MetricsRefreshWorker · mark_dirty()</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: Module Map -->
+    <div class="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm">
+      <div class="section-title">📦 Module Ownership Boundaries</div>
+      <div class="space-y-2">
+
+        <div class="mod-card">
+          <div class="mod-name">main.py</div>
+          <div class="text-gray-500">Entry point · poll loop · signal handling · dependency wiring</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">poll_airtable.py</div>
+          <div class="text-gray-500">Per-record 15-step orchestrator · catch at record level</div>
+        </div>
+
+        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
+          <div class="mod-name">airtable_client.py</div>
+          <div class="text-gray-500"><strong>ALL</strong> Airtable API calls — fetch · download · patch · status update</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">file_processor.py</div>
+          <div class="text-gray-500">XLSX/CSV load · header normalization · ProjectID overwrite</div>
+        </div>
+
+        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
+          <div class="mod-name">sql.py</div>
+          <div class="text-gray-500"><strong>ALL</strong> SQL — connection + site-scoped reference row fetch only</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">python_grader.py</div>
+          <div class="text-gray-500">Canonical header comparison · score derivation · PASS/FAIL logic</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">emailer.py</div>
+          <div class="text-gray-500"><strong>ALL</strong> email sending · PASS / FAIL / ERROR templates</div>
+        </div>
+
+        <div class="mod-card" style="border-color:#7c3aed;background:#f5f0ff">
+          <div class="mod-name" style="color:#7c3aed">reviewer.py</div>
+          <div class="text-gray-500">Internal static code + run review · issues + severity</div>
+        </div>
+
+        <div class="mod-card" style="border-color:var(--spark-140);background:var(--spark-10)">
+          <div class="mod-name" style="color:var(--spark-140)">archive.py</div>
+          <div class="text-gray-500">Append-only JSON archive · raw file storage · lesson extraction</div>
+        </div>
+
+        <div class="mod-card" style="border-color:var(--spark-140);background:var(--spark-10)">
+          <div class="mod-name" style="color:var(--spark-140)">memory.py</div>
+          <div class="text-gray-500">Tag+keyword lesson retrieval · failure surface · rule recall</div>
+        </div>
+
+        <div class="mod-card" style="border-color:var(--blue-100);background:#f0f5ff">
+          <div class="mod-name">config.py</div>
+          <div class="text-gray-500"><strong>ONLY</strong> module that calls os.getenv — all env access centralized here</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">models.py</div>
+          <div class="text-gray-500">ALL shared data types — AirtableRecord · SubmissionResult · ExecutionRecord…</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">utils.py</div>
+          <div class="text-gray-500">Logging setup · ID generation · safe file ops</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">metrics.py</div>
+          <div class="text-gray-500">Compute metrics · export CSVs · async refresh worker</div>
+        </div>
+
+        <div class="mod-card">
+          <div class="mod-name">dashboard.py</div>
+          <div class="text-gray-500">Generate HTML dashboards from CSVs · refresh on dirty flag</div>
+        </div>
+
+      </div>
+
+      <!-- Known Risks -->
+      <div class="section-title mt-6">⚠️ Open Risks</div>
+      <div class="space-y-2">
+        <div class="rounded-lg p-3 text-xs" style="background:#fde8e6;border-left:3px solid var(--red-100)">
+          <strong>RISK-002</strong> — Project ID overwrite post-normalization verification needed
+        </div>
+        <div class="rounded-lg p-3 text-xs" style="background:#fde8e6;border-left:3px solid var(--red-100)">
+          <strong>RISK-003</strong> — Airtable attachment URLs expire · no uptime monitoring yet
+        </div>
+        <div class="rounded-lg p-3 text-xs" style="background:#eaf4e4;border-left:3px solid var(--green-100)">
+          <strong>RISK-001</strong> ✅ RESOLVED — Python owns grading · no proc-era contamination
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: Thinking Model + Skills -->
+    <div class="lg:col-span-1 space-y-6">
+
+      <!-- Learning Loop -->
+      <div class="bg-white rounded-xl p-5 shadow-sm">
+        <div class="section-title">🧠 How the Agent Thinks (Learning Loop)</div>
+
+        <!-- Loop diagram -->
+        <div class="flex flex-wrap items-center justify-center gap-1 my-4">
+          <div class="loop-node text-center" style="background:var(--spark-10);border:2px solid var(--spark-100)">
+            <div style="font-size:22px">📖</div>
+            <div style="color:var(--spark-140)">Memory<br/>Recall</div>
+            <div style="font-size:9px;color:var(--gray-100)">memory.py</div>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node" style="background:#e8effc;border:2px solid var(--blue-100)">
+            <div style="font-size:22px">⚙️</div>
+            <div style="color:var(--blue-100)">Execute<br/>Pipeline</div>
+            <div style="font-size:9px;color:var(--gray-100)">poll_airtable</div>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node" style="background:#f5f0ff;border:2px solid #7c3aed">
+            <div style="font-size:22px">🔍</div>
+            <div style="color:#7c3aed">Internal<br/>Review</div>
+            <div style="font-size:9px;color:var(--gray-100)">reviewer.py</div>
+          </div>
+        </div>
+        <div class="flex justify-center mb-2">
+          <div style="font-size:12px;color:var(--gray-100)">↓ on FAIL: extract lesson</div>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-1">
+          <div class="loop-node" style="background:#eaf4e4;border:2px solid var(--green-100)">
+            <div style="font-size:22px">💡</div>
+            <div style="color:var(--green-100)">Lesson<br/>Written</div>
+            <div style="font-size:9px;color:var(--gray-100)">archive.py</div>
+          </div>
+          <div class="loop-arrow">←</div>
+          <div class="loop-node" style="background:var(--spark-10);border:2px dashed var(--spark-100)">
+            <div style="font-size:22px">📚</div>
+            <div style="color:var(--spark-140)">Skill<br/>Extracted</div>
+            <div style="font-size:9px;color:var(--gray-100)">skills/</div>
+          </div>
+        </div>
+        <div class="text-xs text-center mt-3" style="color:var(--gray-100)">
+          Loop is continuous. Every failure teaches the next run.
+        </div>
+      </div>
+
+      <!-- Decision Protocol -->
+      <div class="bg-white rounded-xl p-5 shadow-sm">
+        <div class="section-title">⚡ Code Puppy Decision Protocol</div>
+        <ol class="space-y-2 text-sm">
+          <li class="flex gap-2 items-start">
+            <span class="font-bold" style="color:var(--blue-100)">1.</span>
+            <span>Read <code class="bg-gray-100 px-1 rounded">MEMORY.md</code> — skip thinking on settled decisions</span>
+          </li>
+          <li class="flex gap-2 items-start">
+            <span class="font-bold" style="color:var(--blue-100)">2.</span>
+            <span>Check <code class="bg-gray-100 px-1 rounded">skills/INDEX.md</code> — apply existing skill if pattern matches</span>
+          </li>
+          <li class="flex gap-2 items-start">
+            <span class="font-bold" style="color:var(--blue-100)">3.</span>
+            <span>Execute task using settled context</span>
+          </li>
+          <li class="flex gap-2 items-start">
+            <span class="font-bold" style="color:var(--blue-100)">4.</span>
+            <span>Write new decision to <code class="bg-gray-100 px-1 rounded">MEMORY.md</code></span>
+          </li>
+          <li class="flex gap-2 items-start">
+            <span class="font-bold" style="color:var(--blue-100)">5.</span>
+            <span>Extract reusable skill to <code class="bg-gray-100 px-1 rounded">skills/</code> if pattern will repeat</span>
+          </li>
+        </ol>
+        <div class="mt-3 rounded-lg p-3 text-xs font-semibold text-center" style="background:#e8effc;color:var(--blue-100)">
+          Less thinking. More decisions. Memory + Skills = autonomy.
+        </div>
+      </div>
+
+      <!-- Skill Library -->
+      <div class="bg-white rounded-xl p-5 shadow-sm">
+        <div class="section-title">🎓 Skill Library (skills/)</div>
+        <p class="text-xs text-gray-500 mb-3">Skills are reusable playbooks extracted from completed tasks. Code Puppy checks these before re-deriving solutions from scratch.</p>
+        <div class="space-y-2 text-xs">
+          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
+            <div class="font-bold text-gray-700">SKILL_GOVERNANCE_SETUP</div>
+            <div class="text-gray-500">Bootstrap CLAUDE.md + MEMORY.md for any project</div>
+            <div class="mt-1"><span class="skill-tag">governance</span> <span class="skill-tag">bootstrap</span></div>
+          </div>
+          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
+            <div class="font-bold text-gray-700">SKILL_FLAT_HTML_REPORT</div>
+            <div class="text-gray-500">Tailwind + Chart.js flat HTML report template</div>
+            <div class="mt-1"><span class="skill-tag">reporting</span> <span class="skill-tag">html</span></div>
+          </div>
+          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
+            <div class="font-bold text-gray-700">SKILL_GIT_FOCUSED_COMMIT</div>
+            <div class="text-gray-500">Stage, verify diff, commit one concern at a time</div>
+            <div class="mt-1"><span class="skill-tag">git</span> <span class="skill-tag">hygiene</span></div>
+          </div>
+          <div class="rounded-lg p-3" style="background:var(--gray-10);border:1px solid var(--gray-50)">
+            <div class="font-bold text-gray-700">SKILL_ORCHESTRATION_MAP</div>
+            <div class="text-gray-500">Visual pipeline + module map HTML for any Python app</div>
+            <div class="mt-1"><span class="skill-tag">visualisation</span> <span class="skill-tag">html</span></div>
+          </div>
+        </div>
+        <div class="mt-3 text-xs" style="color:var(--gray-100)">
+          → New skills auto-extracted after each Code Puppy session.<br/>
+          → See <code>skills/INDEX.md</code> for full library.
+        </div>
+      </div>
+
+      <!-- SMTP Gate -->
+      <div class="bg-white rounded-xl p-5 shadow-sm">
+        <div class="section-title">📧 Email Gate Logic</div>
+        <div class="text-xs space-y-2">
+          <div class="flex items-start gap-2">
+            <span style="color:var(--green-100);font-size:16px">●</span>
+            <span><strong>SMTP_ENABLED=true</strong> — Python sends email directly via emailer.py</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span style="color:var(--gray-100);font-size:16px">●</span>
+            <span><strong>SMTP_ENABLED=false (default)</strong> — Python writes status to Airtable field. Airtable automation rule watches that field and sends the email.</span>
+          </div>
+          <div class="mt-2 rounded p-2" style="background:var(--spark-10);color:var(--spark-140)">
+            ⚠️ Business rule: NEVER write ERROR to Airtable. Pipeline exception → FAIL with score 0.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="rounded-xl px-6 py-4 text-center text-xs" style="background:var(--gray-160);color:var(--gray-50)">
+    SiteOwlQA · Single-process Windows pipeline · No Docker · No cloud deps ·
+    Source of truth: <code class="text-blue-300">development.md</code> · Decisions: <code class="text-blue-300">MEMORY.md</code> · Skills: <code class="text-blue-300">skills/INDEX.md</code>
+  </footer>
+
+</body>
+</html>

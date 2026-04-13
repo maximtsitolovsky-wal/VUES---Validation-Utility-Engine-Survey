@@ -130,6 +130,16 @@
 > - **Impact:** ...
 > - **Closed:** Yes / No
 
+### 2026-04-13 — Skill Framework Established
+- **Decision:** Created `skills/` directory with `INDEX.md` + 4 seed skills: GOVERNANCE_SETUP, FLAT_HTML_REPORT, GIT_FOCUSED_COMMIT, ORCHESTRATION_MAP. Code Puppy is now mandated to check `skills/INDEX.md` before every task and extract a skill after any repeatable task. This is the mechanism for moving from repetition to autonomy.
+- **Impact:** `CLAUDE.md` updated with SKILL PROTOCOL (Step 1b + Step 4). All future sessions gain accumulated playbooks.
+- **Closed:** Yes.
+
+### 2026-04-13 — Orchestration Map Created
+- **Decision:** Created `orchestration_map.html` — a self-contained visual of the 15-step pipeline, module boundaries, learning loop, and decision protocol. Lives in project root. Not served — open directly in browser.
+- **Impact:** No code changes. Documentation artifact only.
+- **Closed:** Yes.
+
 ### 2026-04-13 — Governance Layer Established
 - **Decision:** Created `CLAUDE.md` (Code Puppy governance constitution) and `MEMORY.md` (this file). Code Puppy is mandated to read MEMORY.md before every task and update it after every decision. Goal: less thinking, more execution.
 - **Impact:** All future Code Puppy sessions are governed by this protocol. No new decisions should re-derive what is already in this file.

@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from datetime import datetime, timezone
 from functools import partial
 from http import HTTPStatus
@@ -119,38 +120,38 @@ def _launch_powershell_script(script_path: Path, *, action: str) -> dict[str, An
     if not script_path.exists():
         return {"ok": False, "error": f"Script not found: {script_path}", "running": _is_app_running()}
 
-    # Run synchronously so we know whether it succeeded before checking status.
-    # The start script waits 800 ms internally to catch immediate crashes, so
-    # this call takes ~1-2 s but returns accurate "STARTED" / "ALREADY_RUNNING".
-    try:
-        result = subprocess.run(
-            [
-                "powershell",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(script_path),
-            ],
-            cwd=_WORKDIR,
-            capture_output=True,
-            text=True,
-            stdin=subprocess.DEVNULL,
-            timeout=20,
-            check=False,
-        )
-        script_ok = result.returncode == 0
-        script_out = (result.stdout or "").strip()
-    except subprocess.TimeoutExpired:
-        script_ok = False
-        script_out = "timeout"
+    # Fire the script non-blocking (Popen) so the HTTP handler does not stall
+    # for the full 20-second worst-case PS1 timeout.
+    # Then sleep briefly to let PowerShell spawn Python and the 800 ms internal
+    # startup check complete before we query the process list.
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+    subprocess.Popen(  # noqa: S603
+        [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(script_path),
+        ],
+        cwd=_WORKDIR,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        creationflags=creationflags,
+        close_fds=True,
+    )
 
-    if action == "start" and script_ok:
+    # Wait long enough for the PS1 to finish its built-in 800 ms startup
+    # verification and for the process to appear in Get-CimInstance.
+    time.sleep(2)
+
+    if action == "start":
         _trigger_dashboard_rebuild_background()
 
     return {
-        "ok": script_ok,
-        "result": script_out or f"{action} requested",
+        "ok": True,
+        "result": f"{action} requested",
         **_app_status_payload(),
     }
 

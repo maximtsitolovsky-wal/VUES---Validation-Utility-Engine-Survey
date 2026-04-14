@@ -1,0 +1,130 @@
+# =============================================================================
+# SiteOwlQA — Docker Compose (Dev, Hot-reload via Compose Watch)
+#
+# Usage:
+#   docker compose watch            ← starts + watches (preferred for dev)
+#   docker compose up               ← starts without watch
+#   docker compose down -v          ← stops and removes volumes
+#
+# Hot-reload matrix:
+#   src/**/*.py          → sync into container → watchmedo restarts process
+#   tools/**/*.py        → sync into container → watchmedo restarts process
+#   ui/**                → sync into container → watchmedo restarts process
+#   prompts/**           → sync into container → watchmedo restarts process
+#   .env                 → sync+restart        → full container restart
+#   main.py              → sync+restart        → full container restart
+#   pyproject.toml       → rebuild             → full image rebuild
+#   Dockerfile           → rebuild             → full image rebuild
+#
+# Secrets / user config:
+#   Your sensitive config in ~/.siteowlqa/config.json is mounted read-only
+#   at /root/.siteowlqa/config.json inside the container.
+# =============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      target: dev       # Only the 'dev' stage — watchmedo included
+
+    # Override all Windows-style paths from .env with container-local paths.
+    # These keys shadow whatever .env says — Compose merges env_file FIRST,
+    # then the environment block wins. So no Windows path leaks into Linux.
+    env_file:
+      - .env            # Non-sensitive pipeline config (poll interval, threads…)
+
+    environment:
+      # Container-local path overrides (replaces Windows paths from .env)
+      OUTPUT_DIR: /app/output
+      TEMP_DIR: /app/temp
+      LOG_DIR: /app/logs
+      ARCHIVE_DIR: /app/archive
+      SUBMISSIONS_DIR: /app/archive/submissions
+      CORRECTION_CORRECTED_DIR: /app/output/corrections/corrected
+      CORRECTION_LOG_DIR: /app/output/corrections/logs
+      CORRECTION_RAW_DIR: /app/output/corrections/raw
+
+    ports:
+      - "8765:8765"     # Dashboard server (executive_dashboard.html)
+
+    volumes:
+      # Sensitive user config — read-only mount so container can't modify it.
+      # Windows path: %USERPROFILE%\.siteowlqa\config.json
+      - type: bind
+        source: ${USERPROFILE}/.siteowlqa
+        target: /root/.siteowlqa
+        read_only: true
+
+      # Persist generated outputs (dashboards, CSVs, correction files)
+      # so they survive container restarts without being re-generated.
+      - output:/app/output
+      - logs:/app/logs
+      - archive:/app/archive
+      - temp:/app/temp
+
+    # ── Docker Compose Watch ─────────────────────────────────────────────────
+    # 'docker compose watch' monitors these paths on your HOST machine.
+    # Changes are streamed directly into the running container — no rebuild.
+    #
+    # action: sync         → copy changed file into container
+    #                         (watchmedo sees the .py change and restarts)
+    # action: sync+restart → copy file AND restart the container
+    #                         (for config/entrypoint changes watchmedo can't handle)
+    # action: rebuild      → trigger a full 'docker compose build'
+    #                         (only when deps or the Dockerfile itself changes)
+    develop:
+      watch:
+        # ── Python source → watchmedo handles the reload ──────────────────
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - "**/__pycache__/"
+            - "**/*.pyc"
+            - "**/*.pyo"
+            - "**/*.pyd"
+            - "**/*.log"
+
+        # ── Tools (auditor, dashboard server script, etc.) ────────────────
+        - action: sync
+          path: ./tools
+          target: /app/tools
+          ignore:
+            - "**/__pycache__/"
+            - "**/*.pyc"
+
+        # ── UI templates (HTML/CSS/JS for the dashboard) ──────────────────
+        - action: sync
+          path: ./ui
+          target: /app/ui
+
+        # ── Prompt files (LLM prompt text files) ─────────────────────────
+        - action: sync
+          path: ./prompts
+          target: /app/prompts
+
+        # ── .env changes need a full container restart (config re-read) ───
+        - action: sync+restart
+          path: ./.env
+          target: /app/.env
+
+        # ── Root entry-point — sync+restart since watchmedo watches src/ ──
+        - action: sync+restart
+          path: ./main.py
+          target: /app/main.py
+
+        # ── Dep changes → rebuild the whole image ────────────────────────
+        - action: rebuild
+          path: ./pyproject.toml
+
+        - action: rebuild
+          path: ./Dockerfile
+
+# =============================================================================
+# Named volumes — data persists across 'docker compose down' (not '-v')
+# =============================================================================
+volumes:
+  output:
+  logs:
+  archive:
+  temp:

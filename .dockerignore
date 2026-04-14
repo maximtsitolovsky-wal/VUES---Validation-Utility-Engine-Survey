@@ -1,0 +1,52 @@
+# =============================================================================
+# .dockerignore — keeps the build context tight and fast
+#
+# Rule of thumb: if it's generated, secret, or binary, exclude it.
+# The build only needs source code + manifests.
+# =============================================================================
+
+# ── Secrets (NEVER in an image) ─────────────────────────────────────────────
+.env
+*.env.*
+!.env.example
+
+# ── Generated output (large, host-specific) ──────────────────────────────────
+output/
+archive/
+logs/
+temp/
+served_dashboard/
+share/
+
+# ── Compiled binary / exe ────────────────────────────────────────────────────
+*.exe
+*.dll
+*.so
+*.pyc
+*.pyo
+*.pyd
+**/__pycache__/
+**/*.egg-info/
+
+# ── Git & editor noise ───────────────────────────────────────────────────────
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Test artefacts ───────────────────────────────────────────────────────────
+tests/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ── Windows-specific ─────────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+
+# ── Python virtual environments ──────────────────────────────────────────────
+.venv/
+venv/
+env/

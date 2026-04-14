@@ -1,19 +1,27 @@
 # update_shortcut.ps1 — rebuilds the SiteOwlQA desktop shortcut
 # Run once: powershell -ExecutionPolicy Bypass -File ops\windows\update_shortcut.ps1
+#
+# Target: launch_siteowlqa_dashboard.ps1 (via PowerShell)
+#   This script is the authoritative launcher: it starts the pipeline,
+#   rebuilds the dashboard, spins up run_dashboard_server.py on a free port,
+#   verifies the server is alive, then opens the browser.
+#   Do NOT point the shortcut at start_pipeline.bat — that bat never starts
+#   run_dashboard_server.py, so the browser would open to a dead port.
 
-$lnkPath = Join-Path $env:USERPROFILE 'OneDrive - Walmart Inc\Desktop\SiteOwlQA Launcher.lnk'
-$batPath  = 'C:\SiteOwlQA_App\ops\windows\start_pipeline.bat'
+$lnkPath  = Join-Path $env:USERPROFILE 'OneDrive - Walmart Inc\Desktop\SiteOwlQA Launcher.lnk'
+$ps1Path  = 'C:\SiteOwlQA_App\ops\windows\launch_siteowlqa_dashboard.ps1'
 $exePath  = 'C:\SiteOwlQA_App\SiteOwlQA.exe'
+$psExe    = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
 $sh  = New-Object -ComObject WScript.Shell
 $lnk = $sh.CreateShortcut($lnkPath)
 
-$lnk.TargetPath       = 'C:\Windows\System32\cmd.exe'
-$lnk.Arguments        = "/c `"$batPath`""
+$lnk.TargetPath       = $psExe
+$lnk.Arguments        = "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ps1Path`""
 $lnk.WorkingDirectory = 'C:\SiteOwlQA_App'
-$lnk.Description      = 'SiteOwlQA - starts pipeline, bottleneck auditor, docker platform engineer, specialist output validator, and opens dashboard'
+$lnk.Description      = 'SiteOwlQA - starts pipeline and opens dashboard'
 $lnk.IconLocation     = "$exePath,0"
-$lnk.WindowStyle      = 7   # minimised — launcher window flashes and hides
+$lnk.WindowStyle      = 1   # normal — PowerShell handles its own Hidden flag
 
 $lnk.Save()
 Write-Host ''

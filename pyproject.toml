@@ -20,6 +20,13 @@ dependencies = [
   "python-dotenv>=1.0.1",
 ]
 
+[project.optional-dependencies]
+bigquery = [
+  "google-cloud-bigquery>=3.11.0",
+  "google-auth>=2.28.0",
+  "db-dtypes>=1.2.0",  # required by bigquery.to_dataframe()
+]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 

@@ -22,6 +22,7 @@ import pandas as pd
 
 from siteowlqa.config import AppConfig, VENDOR_GRADE_COLUMNS, VENDOR_HEADER_ALIASES
 from siteowlqa.sql import fetch_reference_rows_from_sql
+from siteowlqa.bigquery_provider import fetch_reference_rows_from_bigquery
 from siteowlqa.utils import canon_site_id
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,8 @@ def fetch_reference_rows(cfg: AppConfig, site_number: str) -> pd.DataFrame:
     if source == "excel":
         workbook_path = _require_workbook_path(cfg)
         return _fetch_reference_rows_from_excel(cfg, workbook_path, site_number)
+    if source == "bigquery":
+        return fetch_reference_rows_from_bigquery(cfg, site_number)
     return fetch_reference_rows_from_sql(cfg, site_number)
 
 
@@ -96,10 +99,10 @@ def normalize_reference_dataframe(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 def _resolve_reference_source(cfg: AppConfig) -> str:
     source = (cfg.reference_source or "sql").strip().lower()
-    if source not in {"sql", "excel", "auto"}:
+    if source not in {"sql", "excel", "auto", "bigquery"}:
         raise ValueError(
             f"Unsupported REFERENCE_SOURCE='{cfg.reference_source}'. "
-            "Expected one of: sql, excel, auto."
+            "Expected one of: sql, excel, auto, bigquery."
         )
     if source == "auto":
         return "excel" if cfg.reference_workbook_path else "sql"

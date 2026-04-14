@@ -150,6 +150,14 @@ class AppConfig:
     reference_workbook_sheet: str = ""
     reference_workbook_site_id_column: str = "SelectedSiteID"
 
+    # Optional: BigQuery reference source (from .env)
+    # Credentials path: use GOOGLE_APPLICATION_CREDENTIALS (standard GCP convention)
+    # or SITEOWLQA_GCP_CREDENTIALS as an alias. Both are accepted.
+    gcp_project: str = ""
+    bigquery_dataset: str = ""
+    bigquery_location: str = "US"
+    gcp_credentials_path: str = ""  # empty → Application Default Credentials
+
     # Optional: Element LLM Gateway (from user config)
     element_llm_gateway_url: str = ""
     element_llm_gateway_api_key: str = ""
@@ -291,6 +299,15 @@ def load_config() -> AppConfig:
         submissions_dir=_ensure_path("SUBMISSIONS_DIR", str(base / "archive" / "submissions")),
         # Behavior (from .env)
         reference_source=os.getenv("REFERENCE_SOURCE", "sql").strip().lower() or "sql",
+        # BigQuery — non-sensitive project/dataset from .env;
+        # credential path from GOOGLE_APPLICATION_CREDENTIALS (standard) or SITEOWLQA_GCP_CREDENTIALS.
+        gcp_project=os.getenv("SITEOWLQA_GCP_PROJECT", "").strip(),
+        bigquery_dataset=os.getenv("SITEOWLQA_BIGQUERY_DATASET", "").strip(),
+        bigquery_location=os.getenv("SITEOWLQA_BIGQUERY_LOCATION", "US").strip() or "US",
+        gcp_credentials_path=(
+            os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+            or os.getenv("SITEOWLQA_GCP_CREDENTIALS", "")
+        ).strip(),
         poll_interval_seconds=int(os.getenv("POLL_INTERVAL_SECONDS", "60")),
         worker_threads=int(os.getenv("WORKER_THREADS", "3")),
         # Reference workbook (from user config or .env)

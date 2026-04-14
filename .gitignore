@@ -2,6 +2,11 @@
 .env.*
 !.env.example
 
+# GCP service account credentials — NEVER commit these
+.secrets/
+*.json
+!pyproject.toml
+
 __pycache__/
 *.py[cod]
 *.pyo

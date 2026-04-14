@@ -1,6 +1,6 @@
 # SiteOwlQA Automation Pipeline
 
-> Automated vendor QA pipeline: Airtable → Python → SQL-backed reference lookup → SMTP email.
+> Automated vendor QA pipeline: Airtable → Python → SQL-backed reference lookup → grading results.
 > Runs 24/7 on a Windows machine with zero cloud dependencies.
 
 > Active roadmap, delivery notes, and commit workflow live in [`development.md`](./development.md).
@@ -128,11 +128,12 @@ SiteOwlQA_App/
 │   └── user_config.py             # user config read/write (~/.siteowlqa/)
 │
 ├── ops/windows/                   # Windows launchers and scheduler scripts
-│   ├── start_pipeline.bat         # daily launcher (background + browser)
-│   ├── stop_pipeline.bat          # stop the running pipeline
-│   ├── run_siteowlqa.bat          # foreground launcher for debugging
-│   ├── setup_scheduler.bat        # register Windows Task Scheduler (admin)
-│   └── README.md                  # ops script documentation
+│   ├── launch_siteowlqa_dashboard.ps1  # PRIMARY: start + rebuild + open browser
+│   ├── start_siteowlqa_background.ps1  # start main.py in background only
+│   ├── stop_siteowlqa_background.ps1   # stop main.py
+│   ├── run_siteowlqa.bat               # foreground / debug (shows live output)
+│   ├── setup_scheduler.bat             # register Windows Task Scheduler (admin)
+│   └── README.md                       # ops script documentation
 │
 ├── tools/                         # developer/utility scripts
 │   └── run_dashboard_server.py    # standalone localhost dashboard server
@@ -159,8 +160,8 @@ SiteOwlQA_App/
 ### 1. Clone and create the virtual environment
 
 ```bat
-git clone <repo-url>
-cd SiteOwlQA_App
+git clone https://github.com/maximtsitolovsky-wal/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
 
 python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
@@ -169,43 +170,36 @@ python -m venv .venv
 
 > ℹ️ All launchers auto-detect `.venv\Scripts\python.exe`. If not found they fall back to `python` on your PATH.
 
-### 2. Create your runtime config (`.env`)
+### 2. Run the secrets wizard
 
-```bat
-copy .env.example .env
-```
-
-Edit `.env` to set folder paths, poll interval, and worker count. The defaults work fine for most setups.
-
-### 3. Create your secrets config
-
-Run the interactive setup wizard (stores credentials in `~/.siteowlqa/config.json`, **never** in the repo):
+Stores credentials in `~/.siteowlqa/config.json` — **never committed to the repo**:
 
 ```bat
 .venv\Scripts\python -m siteowlqa.setup_config
 ```
 
-This will prompt you for:
+Prompts you for:
 - SQL Server connection details
 - Airtable API token, base ID, and table name
 - (Optional) LLM Gateway credentials
 - (Optional) Reference data workbook path
 
-### 4. Run the Pipeline
+### 3. Launch
 
-**Recommended — background mode + auto-opens dashboard:**
-```bat
-ops\windows\start_pipeline.bat
+**Recommended — double-click the Desktop shortcut:**
+```
+SiteOwlQA Launcher  (Desktop shortcut)
+```
+This starts the grading pipeline, builds the dashboard, and opens it in your browser automatically.
+
+**Or run the launcher script directly from PowerShell:**
+```powershell
+powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1
 ```
 
-**Foreground mode (see live output, great for debugging):**
+**Foreground / debug mode (shows live log output):**
 ```bat
 ops\windows\run_siteowlqa.bat
-```
-
-**Or call Python directly:**
-```bat
-.venv\Scripts\python main.py
 ```
 
 ---
@@ -229,13 +223,18 @@ ops\windows\run_siteowlqa.bat
 
 ### Daily Operation (Windows)
 
-All launchers live in `ops\windows\`. Double-click or call from a terminal:
+| What | How |
+|---|---|
+| **Start everything** (recommended) | Double-click **SiteOwlQA Launcher** on the Desktop |
+| Start via terminal | `powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1` |
+| Start pipeline only (no browser) | `powershell -ExecutionPolicy Bypass -File ops\windows\start_siteowlqa_background.ps1` |
+| Stop the pipeline | `powershell -ExecutionPolicy Bypass -File ops\windows\stop_siteowlqa_background.ps1` |
+| Foreground / debug | `ops\windows\run_siteowlqa.bat` |
 
-| File | Purpose |
-|------|----------|
-| `ops\windows\start_pipeline.bat` | Start pipeline in background + open dashboard |
-| `ops\windows\stop_pipeline.bat` | Stop the running pipeline |
-| `ops\windows\run_siteowlqa.bat` | Foreground mode (live output, great for debugging) |
+The launcher does three things in sequence:
+1. Starts `main.py` in the background (or confirms it is already running)
+2. Rebuilds the executive dashboard from current data
+3. Opens `http://127.0.0.1:8765/executive_dashboard.html` in your browser
 
 **See [`ops/windows/README.md`](./ops/windows/README.md)** for complete launcher documentation.
 
@@ -404,11 +403,16 @@ After every processed submission, three CSV files and two HTML files are refresh
 `date`, `total_submissions`, `total_pass`, `total_fail`, `total_error`,
 `pass_rate_pct`, `unique_vendors`, `unique_sites`
 
-### How to open the HTML dashboards
+### How to open the dashboards
 
-1. Navigate to `C:\SiteOwlQA_App\output\`
-2. Double-click `vendor_metrics.html` — opens in your browser
-3. Double-click `processing_summary.html` — opens in your browser
+The dashboard is served from a local HTTP server started by the launcher — just use the shortcut or the launcher script and your browser opens automatically.
+
+Direct URL (once the server is running):
+```
+http://127.0.0.1:8765/executive_dashboard.html
+```
+
+The dashboard has three control buttons to **Start**, **Stop**, and **Rebuild** the pipeline without touching a terminal.
 
 Row colors in `vendor_metrics.html`:
 - Green = pass rate ≥ 95%

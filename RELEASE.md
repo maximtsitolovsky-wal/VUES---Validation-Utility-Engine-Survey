@@ -2,6 +2,42 @@
 
 ---
 
+## v1.3.0 — 2026-04-14
+
+### What's in this release
+
+Launcher and dashboard control buttons fully fixed. Startup is now one click.
+
+---
+
+### How to upgrade
+
+```bat
+git pull
+.venv\Scripts\python -m pip install -r requirements.txt
+```
+
+Then restart via the Desktop shortcut or:
+```powershell
+powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1
+```
+
+> **No config changes required.** No DB migrations.
+
+---
+
+### What changed in v1.3.0
+
+| Area | Change |
+|---|---|
+| **Launcher shortcut** | Desktop shortcut now reliably targets `launch_siteowlqa_dashboard.ps1` via PowerShell |
+| **Dashboard buttons** | Start / Stop / Rebuild buttons now correctly report `running: true/false` after acting |
+| **Process detection** | Fixed PowerShell `-like` pattern escaping — `*\main.py*` was double-escaped, always returned `false` |
+| **Button response time** | Replaced blocking `subprocess.run(timeout=20)` with `Popen + sleep(2)` — buttons now respond in ~3s instead of timing out |
+| **Stale server guard** | Multiple dashboard server instances no longer accumulate across restarts |
+
+---
+
 ## v1.2.0 — 2026-04-14
 
 ### What's in this release
@@ -17,36 +53,32 @@ async queue architecture, and a hosted executive dashboard.
 
 ```bat
 REM 1. Clone the repo
-git clone <repo-url>
-cd SiteOwlQA_App
+git clone https://github.com/maximtsitolovsky-wal/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
 
 REM 2. Create the virtual environment
 python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 .venv\Scripts\python -m pip install -r requirements.txt
 
-REM 3. Copy runtime settings
-copy .env.example .env
-REM  → edit .env if your paths differ from the defaults
-
-REM 4. Run the interactive secrets wizard
+REM 3. Run the interactive secrets wizard
 REM  → creates %USERPROFILE%\.siteowlqa\config.json (never committed)
 .venv\Scripts\python -m siteowlqa.setup_config
 
-REM 5. Start the pipeline
-ops\windows\start_pipeline.bat
+REM 4. Launch (opens browser automatically)
+powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1
 ```
 
-> The dashboard opens automatically at `http://127.0.0.1:8765/executive_dashboard.html`
+> Or double-click the **SiteOwlQA Launcher** Desktop shortcut after first run.
 
 #### Upgrade from a previous version
 
 ```bat
 git pull
 .venv\Scripts\python -m pip install -r requirements.txt
-REM Re-run setup_config only if new fields were added (the wizard will tell you)
-ops\windows\start_pipeline.bat
 ```
+
+Then restart via the Desktop shortcut or the launcher script above.
 
 > **No DB migrations required** for this release.
 

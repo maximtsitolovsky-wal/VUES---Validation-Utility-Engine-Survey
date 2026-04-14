@@ -42,8 +42,6 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-> Launch scripts auto-detect `.venv\Scripts\python.exe`. If not found, they fall back to `python` on PATH.
-
 ---
 
 ## 4) Configure secrets and runtime settings
@@ -61,38 +59,46 @@ This creates:
 Includes:
 - SQL server/database/driver
 - Airtable token/base/table
-- Optional SMTP creds
 - Optional LLM Gateway
 - Optional reference workbook settings
 
-### 4.2 Runtime non-secret settings (.env)
+### 4.2 Runtime non-secret settings (.env) — optional
+
+The defaults work for most setups. Only needed if your paths or intervals differ:
 
 ```bat
 copy .env.example .env
 ```
 
-Then edit `.env` (poll interval, workers, output dirs, correction paths, etc).
-
 ---
 
 ## 5) Run modes
 
-## Foreground debug mode
+### Recommended — Desktop shortcut
+Double-click **SiteOwlQA Launcher** on the Desktop.
+Starts the pipeline, rebuilds the dashboard, and opens your browser automatically.
+
+### Via terminal (same as the shortcut)
+```powershell
+powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1
+```
+
+### Background pipeline only (no browser)
+```powershell
+powershell -ExecutionPolicy Bypass -File ops\windows\start_siteowlqa_background.ps1
+```
+
+### Stop pipeline
+```powershell
+powershell -ExecutionPolicy Bypass -File ops\windows\stop_siteowlqa_background.ps1
+```
+
+### Foreground debug mode (live log output)
 ```bat
 ops\windows\run_siteowlqa.bat
 ```
 
-## Background + dashboard mode
-```bat
-ops\windows\start_pipeline.bat
-```
-
-## Stop pipeline
-```bat
-ops\windows\stop_pipeline.bat
-```
-
-## Auto-start on machine boot (admin)
+### Auto-start on machine boot (admin)
 ```bat
 ops\windows\setup_scheduler.bat
 ```

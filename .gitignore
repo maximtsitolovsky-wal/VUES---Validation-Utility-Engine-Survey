@@ -19,6 +19,10 @@ archive/
 served_dashboard/
 share/
 
+# Memory agent archive (nested — exempt from above)
+!docs/memory-agent/store/archive/
+!docs/memory-agent/store/archive/**
+
 *.sqlite
 *.db
 *.csv

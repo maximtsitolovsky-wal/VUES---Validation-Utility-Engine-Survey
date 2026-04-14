@@ -1,5 +1,28 @@
 # SiteOwlQA — Infra & Docker Deployment Guide
 
+## Service Boundary Design
+
+Two services. One public entrypoint. Internal services never exposed.
+
+| Service  | Role                                    | Network(s)     | Public Port           |
+|----------|-----------------------------------------|----------------|-----------------------|
+| proxy    | Reverse proxy — single public entrypoint | edge + backend | 80                    |
+| pipeline | Python pipeline + dashboard server      | backend only   | none (internal :8765) |
+
+### Network Topology
+- `edge`: proxy only. Accepts traffic from the outside world.
+- `backend` (`internal: true`): pipeline + proxy internal leg. No host port exposure.
+- SQL Server, Airtable, and Element LLM Gateway are **external** — not containerised.
+
+### Boundary Decisions
+- `pipeline` co-locates API and dashboard: no operational reason to split.
+- No `db` container: SQL Server is managed externally.
+- No `cache` container: no shared session or rate-limit state; single-process pipeline.
+- No `worker` container: workers are daemon threads inside `pipeline` (same runtime).
+- `proxy` is separate: different failure domain, owns the public interface.
+
+---
+
 ## Prerequisites
 - Docker Engine 24+ and Docker Compose v2
 - SQL Server accessible from the Docker host (not containerized)

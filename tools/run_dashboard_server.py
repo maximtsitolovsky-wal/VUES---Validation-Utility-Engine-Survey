@@ -88,14 +88,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def _is_app_running() -> bool:
-    # Use the actual resolved path so this works on any machine / clone location.
-    main_path = str(_MAIN_SCRIPT).replace("\\", "\\\\")
+    # PowerShell -like treats backslash as a literal character (no special meaning).
+    # So '*\\main.py*' in this Python string becomes '*\main.py*' in the
+    # PowerShell command, which matches any CommandLine containing \main.py.
     cmd = (
         "Get-CimInstance Win32_Process | Where-Object { "
-        "$_.Name -match '^python(\\.exe)?$' -and ("
-        f"$_.CommandLine -like '*{main_path}*' -or "
-        "$_.CommandLine -match '(^|\\s)main\\.py(\\s|$)'"
-        ") } | Select-Object -First 1 | ForEach-Object { 'RUNNING' }"
+        "$_.Name -match '^python(\\.exe)?$' -and "
+        "$_.CommandLine -like '*\\main.py*'"
+        " } | Select-Object -First 1 | ForEach-Object { 'RUNNING' }"
     )
     result = subprocess.run(
         [
@@ -109,6 +109,7 @@ def _is_app_running() -> bool:
         cwd=_WORKDIR,
         capture_output=True,
         text=True,
+        timeout=10,
         check=False,
     )
     return "RUNNING" in (result.stdout or "")
@@ -118,30 +119,38 @@ def _launch_powershell_script(script_path: Path, *, action: str) -> dict[str, An
     if not script_path.exists():
         return {"ok": False, "error": f"Script not found: {script_path}", "running": _is_app_running()}
 
-    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
-    subprocess.Popen(  # noqa: S603
-        [
-            "powershell",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            str(script_path),
-        ],
-        cwd=_WORKDIR,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        stdin=subprocess.DEVNULL,
-        creationflags=creationflags,
-        close_fds=True,
-    )
+    # Run synchronously so we know whether it succeeded before checking status.
+    # The start script waits 800 ms internally to catch immediate crashes, so
+    # this call takes ~1-2 s but returns accurate "STARTED" / "ALREADY_RUNNING".
+    try:
+        result = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script_path),
+            ],
+            cwd=_WORKDIR,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=20,
+            check=False,
+        )
+        script_ok = result.returncode == 0
+        script_out = (result.stdout or "").strip()
+    except subprocess.TimeoutExpired:
+        script_ok = False
+        script_out = "timeout"
 
-    if action == "start":
+    if action == "start" and script_ok:
         _trigger_dashboard_rebuild_background()
 
     return {
-        "ok": True,
-        "result": f"{action} requested",
+        "ok": script_ok,
+        "result": script_out or f"{action} requested",
         **_app_status_payload(),
     }
 

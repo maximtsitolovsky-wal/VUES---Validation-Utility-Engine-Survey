@@ -1150,7 +1150,15 @@ def _exec_metrics_tabs_section_html(
         syncAppControlButtons();
         updateLastSyncInfo();
         renderAdminHealth();
-        void refreshRuntimeAppStatus();
+        // On page load: check status and auto-start the pipeline if it is off.
+        // This ensures the app is always on when the dashboard opens via the launcher.
+        void (async () => {
+          const data = await refreshRuntimeAppStatus();
+          if (data && data.running === false) {
+            setAppControlMessage('App was off — starting automatically…');
+            void postAppControl('start');
+          }
+        })();
         window.setInterval(() => { void refreshRuntimeAppStatus(); }, 15000);
       }
 

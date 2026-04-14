@@ -72,7 +72,8 @@
 - **Closed:** Yes.
 
 ### 2026-03-27 — Single-Process Architecture
-- **Decision:** One Python process. No message queues. No Docker. No cloud dependencies.
+- **Decision:** One Python process. No message queues. No cloud dependencies.
+- **Docker (2026-04-14):** Docker Desktop installed (Hyper-V backend, `WslEngineEnabled:false`). Dev hot-reload via `docker compose watch` + `watchmedo`. `Dockerfile`, `docker-compose.yml`, `.dockerignore` committed. Dashboard exposed on port 8765. User config mounted read-only from `%USERPROFILE%/.siteowlqa/`.
 - **Rationale:** Target environment is a Windows machine with no infrastructure budget. Simplicity beats scalability here.
 - **Closed:** Yes.
 

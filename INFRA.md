@@ -27,7 +27,7 @@
 | Node.js    | v24.11.1        | Used for front-end tooling / UI            |
 | npm        | 11.6.2          | Node package manager                       |
 | Git        | 2.47.1.windows.2| Source control                             |
-| Docker     | ❌ Not installed | Not in use                                 |
+| Docker     | 29.4.0 (Desktop 4.69) | Hyper-V backend; dev hot-reload via Compose Watch |
 
 ---
 

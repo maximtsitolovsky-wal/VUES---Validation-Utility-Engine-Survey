@@ -155,6 +155,21 @@ def review_pipeline_run(
         )
         recommended_fixes.append(pattern["fix"])
 
+    # P1-C: Surface memory warnings from the lesson archive.
+    # These are high-confidence generalized rules learned from past failures.
+    # Injected as INFO issues so they surface in the review output without
+    # inflating the risk level.
+    memory_warnings: list[str] = (extra_context or {}).get("memory_warnings", [])
+    for warning in memory_warnings:
+        issues.append(ReviewIssue(
+            severity=IssueSeverity.INFO,
+            issue_type="MemoryWarning",
+            detail=f"[Past lesson] {warning}",
+        ))
+        recommended_fixes.append("See archived lesson for remediation detail.")
+    if memory_warnings:
+        log.info("Reviewer enriched with %d memory warning(s).", len(memory_warnings))
+
     # Contextual checks
     if rows_loaded == 0:
         issues.append(ReviewIssue(

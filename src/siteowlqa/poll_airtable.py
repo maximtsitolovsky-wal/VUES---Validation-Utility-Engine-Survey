@@ -109,12 +109,19 @@ def process_record(
         airtable.patch_submission_id(record.record_id, record.submission_id)
 
         # Step 2: Consult memory before doing anything
-        mem_context = memory.recall(
-            tags=["sql_import", "file_parse", "project_id"],
-            query="project id overwrite submission raw",
-        )
-        if mem_context["rules"]:
-            log.info("Memory context: %s", mem_context["summary"])
+        # P1-B: Eligibility gate — skip the full O(N) archive scan if the
+        # lesson library is empty (common on a fresh deployment).
+        if memory.has_lessons():
+            # P1-A: Dynamic tags from the record instead of hardcoded strings.
+            mem_context = memory.recall(
+                tags=[record.vendor_name.lower(), record.site_number, "file_parse"],
+                query=f"site {record.site_number} vendor {record.vendor_name}",
+            )
+            if mem_context["rules"]:
+                log.info("Memory context: %s", mem_context["summary"])
+        else:
+            log.debug("Memory: lesson archive empty — skipping recall.")
+            mem_context: dict = {"lessons": [], "failures": [], "rules": [], "summary": ""}
 
         # Step 3: Download attachment
         attachment_path = airtable.download_attachment(record)
@@ -291,6 +298,9 @@ def process_record(
         safe_delete(attachment_path)
 
         # Step 12: Internal reviewer
+        # P1-C: Wire memory warnings into the reviewer via extra_context.
+        # surface_warnings_for_review() was defined but never called — fixed.
+        memory_warnings = memory.surface_warnings_for_review() if memory.has_lessons() else []
         review = review_pipeline_run(
             submission_id=record.submission_id,
             site_number=record.site_number,
@@ -298,6 +308,7 @@ def process_record(
             status=final_status.value,
             score=canonical_score,
             error_message=error_message,
+            extra_context={"memory_warnings": memory_warnings} if memory_warnings else None,
         )
 
         # Step 13: Archive execution + review

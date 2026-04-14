@@ -128,6 +128,14 @@ class Memory:
             for l in all_lessons
         )
 
+    def has_lessons(self) -> bool:
+        """Return True if any lessons exist in the archive.
+
+        Use this as a fast eligibility gate before calling recall() —
+        avoids a full O(N) file scan when the archive is empty.
+        """
+        return self._archive.count_lessons() > 0
+
     def execution_count(self) -> int:
         """Return total number of archived executions."""
         return len(self._archive.load_all_executions())

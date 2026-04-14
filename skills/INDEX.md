@@ -26,6 +26,7 @@
 | [SKILL_GIT_FOCUSED_COMMIT.md](SKILL_GIT_FOCUSED_COMMIT.md) | "commit this", "git commit", "push changes", "save changes" | git, hygiene, version-control |
 | [SKILL_GIT_TRUTH_GUARD.md](SKILL_GIT_TRUTH_GUARD.md) | "make sure it got pushed", "verify git", "show me receipts", "don't let the agent lie" | git, verification, orchestration, governance |
 | [SKILL_ORCHESTRATION_MAP.md](SKILL_ORCHESTRATION_MAP.md) | "show me the flow", "visualise pipeline", "orchestration diagram", "how does it work" | visualisation, html, pipeline |
+| [SKILL_RELENTLESS_MEMORY.md](SKILL_RELENTLESS_MEMORY.md) | "take notes this session", "run memory agent", "write a handoff", "end of session", any session with ≥3 files or ≥2 decisions | memory, handoff, session, governance |
 
 ---
 

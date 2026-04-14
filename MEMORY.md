@@ -58,8 +58,8 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-13** — Architecture rebuilt: 59 real nodes across 8 drill-down realms (root/pipeline/grader/async_workers/datastore/airtable/correction/output), mapped directly from source code. `served_dashboard/` synced from `output/` via `tools/publish_served_dashboard.py`. Scout + vendorHeatmap confirmed present in both.
-2. **2026-04-13** — Architecture tab rebuilt with luxury neural-map UI. Drill-down realm system, brain-shaped nodes, SVG multi-strand edges, glass morphism.
+1. **2026-04-14** — Relentless Memory Agent built: 5 spec docs in `docs/memory-agent/`, file backend (MEMORY.md + durable.jsonl), session notes, handoff system. Registered as `SKILL_RELENTLESS_MEMORY`. Memory store seeded with 3 bootstrap records.
+2. **2026-04-13** — Architecture rebuilt: 59 real nodes across 8 drill-down realms (root/pipeline/grader/async_workers/datastore/airtable/correction/output), mapped directly from source code. `served_dashboard/` synced from `output/` via `tools/publish_served_dashboard.py`.
 3. **2026-04-13** — Airtable credentials live in `~/.siteowlqa/config.json`. Not `.env`.
 
 ---
@@ -184,6 +184,12 @@
 > - **Decision:** ...
 > - **Impact:** ...
 > - **Closed:** Yes / No
+
+### 2026-04-14 — Relentless Memory Agent System Built
+- **Decision:** Built a full memory agent system for SiteOwlQA: 5 spec files in `docs/memory-agent/` (AGENT.md, MEMORY_POLICY.md, MEMORY_SCHEMA.md, HANDOFF_SPEC.md, MEMORY_BACKEND_SPEC.md). Backend is file-only: `MEMORY.md` as human-readable canonical + `durable.jsonl` as machine-searchable index. Session notes per day. Handoff blocks at session close. Registered as `SKILL_RELENTLESS_MEMORY` in `skills/`. Store seeded with 3 bootstrap records (MEM-20260414-001/002/003).
+- **Impact:** `docs/memory-agent/` (5 new files + store/ dir structure), `skills/SKILL_RELENTLESS_MEMORY.md`, `skills/INDEX.md`, `INFRA.md` (created same session).
+- **Rule:** Load `docs/memory-agent/store/handoff_index.md` at session start if continuing prior complex work. Token budget: ≤5 records, ≤800 tokens. Never dump full MEMORY.md into context.
+- **Closed:** Yes.
 
 ### 2026-04-13 — Git Truth Guard Added
 - **Decision:** Added a dedicated git-verification layer: `tools/git_truth_guard.py`, `skills/SKILL_GIT_TRUTH_GUARD.md`, `prompts/git_truth_guard_prompt.md`, and `docs/git-truth-orchestration.md`. Completion claims now require proof that local HEAD equals the authoritative remote branch HEAD, not just a claimed push.

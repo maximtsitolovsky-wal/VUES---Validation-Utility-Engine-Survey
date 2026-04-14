@@ -76,6 +76,50 @@ def _build_banner(version: str = "1.2.0") -> str:
 
 
 # ---------------------------------------------------------------------------
+# Startup bottleneck audit
+# ---------------------------------------------------------------------------
+
+_AUDITOR_SCRIPT = Path(__file__).resolve().parents[2] / "tools" / "system_bottleneck_auditor.py"
+
+
+def _run_startup_audit(startup_delay: float = 8.0) -> None:
+    """Run the System Bottleneck Auditor once in a background thread at startup.
+
+    Waits *startup_delay* seconds so the main pipeline is fully up before
+    the audit scan begins.  Runs as a subprocess so a crash or long LLM call
+    never touches the polling loop.  Report lands in output/ with a timestamp.
+    """
+    import subprocess  # noqa: PLC0415 — local import keeps module-level clean
+
+    time.sleep(startup_delay)
+
+    if not _AUDITOR_SCRIPT.exists():
+        log.warning("Startup audit: auditor script not found at %s — skipping.", _AUDITOR_SCRIPT)
+        return
+
+    log.info("Startup audit: launching System Bottleneck Auditor ...")
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+    try:
+        result = subprocess.run(  # noqa: S603
+            [sys.executable, str(_AUDITOR_SCRIPT), "--no-browser"],
+            cwd=str(_AUDITOR_SCRIPT.parent.parent),
+            capture_output=True,
+            text=True,
+            timeout=180,
+            creationflags=creationflags,
+        )
+        for line in (result.stdout or "").splitlines():
+            log.info("[audit] %s", line.strip())
+        if result.returncode != 0:
+            for line in (result.stderr or "").splitlines():
+                log.warning("[audit] %s", line.strip())
+    except subprocess.TimeoutExpired:
+        log.warning("Startup audit: timed out after 180s — skipping this run.")
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Startup audit: unexpected error — %s", exc)
+
+
+# ---------------------------------------------------------------------------
 # Dashboard launcher
 # ---------------------------------------------------------------------------
 
@@ -340,6 +384,14 @@ def run_forever() -> None:
 
     # Open dashboards in the browser once the first metrics refresh completes.
     _open_dashboards(cfg.output_dir)
+
+    # Run the System Bottleneck Auditor once in the background after startup.
+    # Daemon thread — never blocks shutdown or the poll loop.
+    threading.Thread(
+        target=_run_startup_audit,
+        daemon=True,
+        name="startup-audit",
+    ).start()
 
     while True:
         try:

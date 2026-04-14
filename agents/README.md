@@ -43,6 +43,12 @@ pydantic-ai `Agent` instances that call the Element LLM Gateway at runtime.
 | Element LLM Gateway | `element-llm-gateway.md` | `src/siteowlqa/weekly_highlights.py` | Weekly executive report generation | ✅ |
 | Docker Platform Engineer | `docker-platform-engineer.md` | `tools/docker_platform_engineer.py` | On-demand: `python tools/docker_platform_engineer.py` | ✅ |
 | System Bottleneck Auditor | `system-bottleneck-auditor.md` | `tools/system_bottleneck_auditor.py` | On-demand: `python tools/system_bottleneck_auditor.py` | ✅ |
+| Specialist Output Validator | `specialist-output-validator.md` | `tools/specialist_output_validator.py` | On-demand: validates outputs of the above tool agents | ✅ |
+
+### ⚠️ Planned — Not Yet Built
+| Agent | Referenced In | Status |
+|---|---|---|
+| Memory & Token Optimization Engineer | `tools/specialist_output_validator.py` | ❌ Not implemented — no source file, no output yet |
 
 ---
 
@@ -110,5 +116,9 @@ agents/
 └── [Category 3 — Runtime LLM Agents]
     ├── element-llm-gateway.md
     ├── docker-platform-engineer.md
-    └── system-bottleneck-auditor.md
+    ├── system-bottleneck-auditor.md
+    └── specialist-output-validator.md
+
+# Planned (not yet built)
+#   memory-token-engineer.md  ← referenced in specialist_output_validator.py
 ```

@@ -9,7 +9,7 @@ You ensure the system stays simple, stable, and maintainable.
 1. One Python process. No message queues, no Docker, no cloud dependencies.
 2. Polling over webhooks (Airtable webhook action not available).
 3. Python is the source of truth for grading. SQL Server only supplies site-scoped reference rows.
-4. Module boundaries are hard: SQL in sql.py, email in emailer.py, Airtable in airtable_client.py.
+4. Module boundaries are hard: SQL in sql.py, Airtable in airtable_client.py.
 5. Config is centralised in config.py. No module calls os.getenv.
 6. Archive is append-only. Never delete lessons or execution records.
 7. The main loop never crashes. Catch at the record level, not the loop level.
@@ -20,11 +20,10 @@ You ensure the system stays simple, stable, and maintainable.
 - RISK-002: Project ID overwrite must remain authoritative before comparison.
 - RISK-003: Airtable attachment URLs expire. Monitor uptime.
 
-## Email Architecture
-SMTP is OPTIONAL. When SMTP_ENABLED=false (default), the Python layer writes
-PASS/FAIL/ERROR back to the Airtable 'Processing Status' field. An Airtable
-automation rule watches that field and sends the vendor email independently.
-Python emailer.py is preserved but bypassed until SMTP_ENABLED=true.
+## Email
+Airtable automation handles all vendor email. The pipeline writes PASS/FAIL/ERROR
+to the Airtable 'Processing Status' field; an Airtable automation rule watches
+that field and sends email independently. There is no SMTP code in this codebase.
 
 ## Upgrade Paths (in priority order)
 1. Add stronger post-normalization verification that Project ID always equals Airtable Site Number (RISK-002)
@@ -40,7 +39,6 @@ Python emailer.py is preserved but bypassed until SMTP_ENABLED=true.
 | airtable_client  | All Airtable API calls                    |
 | file_processor   | XLSX/CSV load and normalisation           |
 | sql.py           | SQL connection + reference row access     |
-| emailer.py       | All email sending                         |
 | reviewer.py      | Internal code/run review                  |
 | archive.py       | Append-only JSON archive                  |
 | memory.py        | Lesson retrieval                          |

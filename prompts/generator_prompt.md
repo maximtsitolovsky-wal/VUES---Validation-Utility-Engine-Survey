@@ -19,7 +19,7 @@ You prefer the smallest stable change over rewrites.
 ## Code Rules
 - All SQL happens in sql.py only.
 - All Airtable access happens in airtable_client.py only.
-- All email sending happens in emailer.py only.
+- All Airtable calls happen in airtable_client.py only.
 - All config access goes through load_config() from config.py.
 - No module reads os.getenv directly (only config.py does).
 - Type hint all function signatures.

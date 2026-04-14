@@ -30,13 +30,6 @@ class UserConfig:
     # Optional: SQL Server (with default)
     sql_driver: str = "ODBC Driver 17 for SQL Server"
     
-    # SMTP (optional)
-    smtp_server: str = ""
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_pass: str = ""
-    from_email: str = ""
-    
     # Element LLM Gateway (optional)
     element_llm_gateway_url: str = ""
     element_llm_gateway_api_key: str = ""
@@ -76,8 +69,12 @@ def load_user_config() -> Optional[UserConfig]:
         return None
     
     try:
+        import dataclasses
         data = json.loads(config_path.read_text(encoding='utf-8'))
-        return UserConfig(**data)
+        # Filter out keys not in UserConfig (e.g. smtp_* from old configs)
+        valid_fields = {f.name for f in dataclasses.fields(UserConfig)}
+        filtered = {k: v for k, v in data.items() if k in valid_fields}
+        return UserConfig(**filtered)
     except Exception as e:
         log.warning(f"Failed to load user config from {config_path}: {e}")
         return None
@@ -96,11 +93,6 @@ def save_user_config(config: UserConfig) -> None:
         'airtable_token': config.airtable_token,
         'airtable_base_id': config.airtable_base_id,
         'airtable_table_name': config.airtable_table_name,
-        'smtp_server': config.smtp_server,
-        'smtp_port': config.smtp_port,
-        'smtp_user': config.smtp_user,
-        'smtp_pass': config.smtp_pass,
-        'from_email': config.from_email,
         'element_llm_gateway_url': config.element_llm_gateway_url,
         'element_llm_gateway_api_key': config.element_llm_gateway_api_key,
         'element_llm_gateway_model': config.element_llm_gateway_model,
@@ -169,22 +161,8 @@ def create_user_config_interactive() -> UserConfig:
     airtable_base_id = input("  Airtable Base ID (from URL airtable.com/app<BASE_ID>/...): ").strip()
     airtable_table_name = input("  Airtable Table Name (exact name, case-sensitive): ").strip()
     
-    # SMTP
-    print("\n[3/7] SMTP Configuration (optional - leave blank to skip)")
-    smtp_server = input("  SMTP Server (e.g., smtp.office365.com): ").strip()
-    smtp_port = 587
-    smtp_user = ""
-    smtp_pass = ""
-    from_email = ""
-    
-    if smtp_server:
-        smtp_port = int(input(f"  SMTP Port [default: 587]: ").strip() or "587")
-        smtp_user = input("  SMTP Username (email): ").strip()
-        smtp_pass = input("  SMTP Password: ").strip()
-        from_email = input("  From Email Address: ").strip()
-    
     # Element LLM Gateway
-    print("\n[4/7] Element LLM Gateway (optional - leave blank to skip)")
+    print("\n[3/6] Element LLM Gateway (optional - leave blank to skip)")
     element_llm_gateway_url = input("  LLM Gateway URL: ").strip()
     element_llm_gateway_api_key = ""
     element_llm_gateway_project_id = ""
@@ -196,7 +174,7 @@ def create_user_config_interactive() -> UserConfig:
         wmt_ca_path = input("  Walmart CA Certificate Path: ").strip()
     
     # Reference Workbook
-    print("\n[5/7] Reference Data Workbook (optional)")
+    print("\n[4/6] Reference Data Workbook (optional)")
     reference_workbook_path = input("  Excel file path (leave blank to use SQL Server): ").strip()
     reference_workbook_sheet = ""
     reference_workbook_site_id_column = "SelectedSiteID"
@@ -210,7 +188,7 @@ def create_user_config_interactive() -> UserConfig:
             reference_workbook_site_id_column = "SelectedSiteID"
 
     # Scout Airtable
-    print("\n[6/7] Scout Airtable Source (for Scout dashboard tab)")
+    print("\n[5/6] Scout Airtable Source (for Scout dashboard tab)")
     print("  Leave base ID + table blank to disable the Scout tab.")
     scout_airtable_base_id = input("  Scout Base ID (app...): ").strip()
     scout_airtable_table_name = ""
@@ -224,7 +202,7 @@ def create_user_config_interactive() -> UserConfig:
 
     # Confirm
     print("\n" + "-"*70)
-    print("[7/7] Review Configuration")
+    print("[6/6] Review Configuration")
     print("-"*70)
     print(f"  SQL Server:        {sql_server} / {sql_database}")
     print(f"  Survey Airtable:   {airtable_base_id} / {airtable_table_name}")
@@ -232,8 +210,6 @@ def create_user_config_interactive() -> UserConfig:
         print(f"  Scout Airtable:    {scout_airtable_base_id} / {scout_airtable_table_name}")
     else:
         print(f"  Scout Airtable:    (disabled)")
-    if smtp_server:
-        print(f"  SMTP:              {smtp_server}:{smtp_port} ({smtp_user})")
     if element_llm_gateway_url:
         print(f"  LLM Gateway:       Configured")
     if reference_workbook_path:
@@ -251,11 +227,6 @@ def create_user_config_interactive() -> UserConfig:
         airtable_token=airtable_token,
         airtable_base_id=airtable_base_id,
         airtable_table_name=airtable_table_name,
-        smtp_server=smtp_server,
-        smtp_port=smtp_port,
-        smtp_user=smtp_user,
-        smtp_pass=smtp_pass,
-        from_email=from_email,
         element_llm_gateway_url=element_llm_gateway_url,
         element_llm_gateway_api_key=element_llm_gateway_api_key,
         element_llm_gateway_project_id=element_llm_gateway_project_id,

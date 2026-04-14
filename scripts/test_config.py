@@ -14,7 +14,6 @@ try:
     results.append(f'reference_workbook_sheet: {cfg.reference_workbook_sheet}')
     results.append(f'poll_interval_seconds: {cfg.poll_interval_seconds}')
     results.append(f'worker_threads: {cfg.worker_threads}')
-    results.append(f'smtp_enabled: {cfg.smtp_enabled}')
     results.append('LOAD SUCCESS')
 except Exception as e:
     import traceback

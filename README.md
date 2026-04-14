@@ -42,7 +42,6 @@
 | `airtable_client.py` | 207 | Airtable REST API (fetch, download, status update) |
 | `file_processor.py` | 159 | XLSX/CSV load, header normalization, ProjectID overwrite |
 | `sql.py` | 90 | SQL connection + site-scoped reference fetch |
-| `emailer.py` | 195 | PASS/FAIL/ERROR emails with CSV attachment |
 | `reviewer.py` | 462 | Internal static code reviewer |
 | `archive.py` | 259 | Append-only JSON archive + raw file storage |
 | `memory.py` | 227 | Tag+keyword lesson retrieval |
@@ -94,7 +93,6 @@ SiteOwlQA_App/
 ├── airtable_client.py       # Airtable REST API
 ├── file_processor.py        # XLSX/CSV parser
 ├── sql.py                   # SQL Server reference data access
-├── emailer.py               # SMTP email sender
 ├── reviewer.py              # internal code reviewer
 ├── archive.py               # append-only archive
 ├── memory.py                # lesson retrieval
@@ -249,7 +247,7 @@ Each log line looks like:
 2025-05-01 09:01:45,111 | INFO     | sql             | Stored proc dbo.usp_LoadSubmissionFromRaw completed
 2025-05-01 09:01:46,222 | INFO     | sql             | Stored proc dbo.usp_GradeSubmission completed
 2025-05-01 09:01:46,333 | INFO     | sql             | Grade result: status=PASS score=98.5
-2025-05-01 09:01:47,444 | INFO     | emailer         | PASS email sent to vendor@example.com
+2025-05-01 09:01:47,444 | INFO     | airtable_client | Airtable automation will send PASS email to vendor
 2025-05-01 09:01:47,555 | INFO     | airtable_client | Record recABC123 → Processing Status = 'PASS'
 2025-05-01 09:01:48,666 | INFO     | archive         | Submission metadata archived: SUB001_meta.json
 2025-05-01 09:01:48,777 | INFO     | metrics         | submission_history.csv updated: 1 rows

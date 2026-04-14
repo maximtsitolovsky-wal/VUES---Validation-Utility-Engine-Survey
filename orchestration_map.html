@@ -147,7 +147,7 @@ pipeline:{id:"pipeline",name:"Record Pipeline · 14 Steps",nodes:[
    manages:"python_grader.py · 0-100 scoring · status_from_score() · GradingInconsistencyError",realmTarget:"grader"},
   {id:"out",    title:"⑧⑨ Notify & Record",    x:50,y:84,size:100,hue:"emerald",
    summary:"Sends the vendor a PASS, FAIL, or ERROR email and saves all result fields back to Airtable in one write. Every field is always overwritten — no stale values from previous submissions can leak through. Click to drill in.",
-   manages:"emailer.py · SMTP · Airtable PATCH · all-fields-always rule · ghost data prevention",realmTarget:"output"},
+   manages:"Airtable PATCH · all-fields-always rule · ghost data prevention",realmTarget:"output"},
   {id:"arch",   title:"⑩⑮ Archive & Learn",x:22,y:76,size:100,hue:"blue",
    summary:"Stores the raw vendor file, runs an internal quality audit, saves execution metadata, extracts a reusable lesson from any failure, and triggers automatic correction if the submission passed. Click to drill in.",
    manages:"archive.py · reviewer.py · extract_lesson_from_failure · post_pass_correction",realmTarget:"datastore"}
@@ -178,7 +178,7 @@ grader:{id:"grader",name:"Scoring Engine",nodes:[
    summary:"Assert that status is consistent with true_score. Raises GradingInconsistencyError if score=95.6 but status=FAIL (data integrity violation, not a display bug). Every instance is a pipeline bug to be fixed immediately.",
    manages:"GradingInconsistencyError · integrity guard · score/status assertion"},
   {id:"sres",  title:"Grading Result",          x:20,y:70,size:96,hue:"pink",
-   summary:"Dataclass bundling all grading outputs: true_score, score_pct, status (ProcessingStatus), fail_summary, notes_internal, matched_columns. Passed downstream to emailer and Airtable PATCH.",
+   summary:"Dataclass bundling all grading outputs: true_score, score_pct, status (ProcessingStatus), fail_summary, notes_internal, matched_columns. Passed downstream to Airtable PATCH.",
    manages:"models.py · SubmissionResult · fail_summary · matched_columns · output contract"}
 ],edges:[
   {id:"g1",from:"gcore",to:"cfp",  strength:0.82},{id:"g2",from:"cfp",to:"idc",   strength:0.64},
@@ -309,19 +309,19 @@ correction:{id:"correction",name:"Auto-Correction System",nodes:[
   {id:"c7",from:"ppc",to:"afl",      strength:0.70}
 ]},
 
-output:{id:"output",name:"Notifications & Results",nodes:[
-  {id:"eml",   title:"Email Sender",                x:50,y:44,size:124,hue:"core",
-   summary:"emailer.py (6.5 KB). Sends PASS/FAIL/ERROR templated emails to vendors. When SMTP_ENABLED=false, email is bypassed and Airtable automation handles vendor notification — the pipeline still writes all result fields.",
-   manages:"emailer.py · SMTP delivery · SMTP_ENABLED flag · template selection · error alerting"},
-  {id:"pe",    title:"Send Pass Email",          x:20,y:22,size:96,hue:"emerald",
-   summary:"PASS template. Includes: True Score, Score%, confirmation message, archive reference. Sent only when status=PASS AND SMTP_ENABLED. Subject line and body configurable via AppConfig.",
-   manages:"PASS template · score in email · vendor confirmation · SMTP send"},
-  {id:"fe",    title:"Send Fail Email",          x:54,y:14,size:96,hue:"pink",
-   summary:"FAIL template. Includes: True Score, Score%, Fail Summary with column-level breakdown, corrective guidance, resubmission instructions. The fail_summary field drives the content — grader output goes directly to vendor.",
-   manages:"FAIL template · fail_summary injection · column-level feedback · corrective guidance"},
-  {id:"ee",    title:"Send Error Alert",         x:80,y:26,size:96,hue:"amber",
-   summary:"ERROR template. Sent to configured admin addresses (not vendor). Includes execution_id, record_id, error_message for debugging. Allows errors to surface without exposing internals to vendors.",
-   manages:"ERROR template · admin alert · execution_id · internal error visibility"},
+output:{id:"output",name:"Output Layer · Airtable Writeback",nodes:[
+  {id:"eml",   title:"Airtable Writeback",         x:50,y:44,size:124,hue:"core",
+   summary:"Email is handled entirely by Airtable automation. The pipeline writes PASS/FAIL/ERROR to Processing Status and Fail Summary; an Airtable rule watches that field and sends vendor email. No SMTP code.",
+   manages:"Airtable status writeback · Processing Status · Fail Summary · automation trigger"},
+  {id:"pe",    title:"Airtable Automation (PASS)",  x:20,y:22,size:96,hue:"emerald",
+   summary:"Airtable automation rule watches for PASS status and sends the vendor a pass confirmation. Configured in Airtable — zero Python overhead.",
+   manages:"Airtable automation rule · PASS notification · vendor email"},
+  {id:"fe",    title:"Airtable Automation (FAIL)",  x:54,y:14,size:96,hue:"pink",
+   summary:"Airtable automation watches for FAIL status. The pipeline writes Fail Summary before patching status, so the automation email includes column-level feedback without any SMTP.",
+   manages:"Airtable automation rule · FAIL notification · Fail Summary field · corrective feedback"},
+  {id:"ee",    title:"Airtable Automation (ERROR)", x:80,y:26,size:96,hue:"amber",
+   summary:"On ERROR, the pipeline writes ERROR status and an error summary to Notes before patching. Airtable automation can alert admins. No Python SMTP.",
+   manages:"Airtable automation rule · ERROR status · Notes field · admin alert"},
   {id:"apatch",title:"Save to Airtable",x:80,y:66,size:104,hue:"blue",
    summary:"patch_results() via AirtableClient. Writes Processing Status, True Score, Score%, Fail Summary, Notes in a single PATCH. HARD RULE: all fields always written, never blank. Prevents stale values from prior submissions appearing on current record.",
    manages:"airtable_client.patch_results() · all 5 result fields · single PATCH call · atomic write"},

@@ -33,7 +33,7 @@
 | `poll_airtable.py` | Per-record 15-step orchestration |
 | `airtable_client.py` | All Airtable API calls |
 | `file_processor.py` | XLSX/CSV load + header normalisation |
-| `emailer.py` | All email. Bypassed when `SMTP_ENABLED=false`. |
+| `emailer.py` | Deleted. Airtable automation handles all vendor email. |
 | `archive.py` | Append-only JSON store. **Never delete.** |
 | `memory.py` | Lesson retrieval (tag + keyword) |
 | `metrics.py` | Compute metrics, export CSVs |
@@ -95,7 +95,7 @@
 | `airtable_client.py` | All Airtable API calls                  |
 | `file_processor.py`| XLSX/CSV load and header normalization    |
 | `sql.py`           | SQL connection + site-scoped ref rows     |
-| `emailer.py`       | All email sending                         |
+| `emailer.py`       | Deleted — Airtable automation handles email       |
 | `reviewer.py`      | Internal static code/run review           |
 | `archive.py`       | Append-only JSON archive + raw file store |
 | `memory.py`        | Lesson retrieval (tag+keyword)            |
@@ -121,10 +121,10 @@
 
 ---
 
-## 📧 Email / SMTP Architecture (Closed)
+## 📧 Email Architecture
 
-### 2026-03-27 — SMTP is Optional / Airtable-Delegated by Default
-- **Decision:** `SMTP_ENABLED=false` by default. Python writes PASS/FAIL/ERROR back to Airtable `Processing Status`. An Airtable automation rule triggers vendor email independently. `emailer.py` is preserved but bypassed until `SMTP_ENABLED=true`.
+### 2026-04-13 — SMTP Removed, Airtable Automation Handles All Email
+- **Decision:** `emailer.py` deleted. No SMTP code in codebase. Pipeline writes PASS/FAIL/ERROR to Airtable `Processing Status`; an Airtable automation rule watches that field and sends vendor email independently.
 - **Closed:** Yes.
 
 ---

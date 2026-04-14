@@ -23,7 +23,6 @@ from siteowlqa.archive import Archive, extract_lesson_from_failure
 from siteowlqa.airtable_client import AirtableClient
 from siteowlqa.config import AppConfig, STATUS_FAIL, STATUS_PASS
 from siteowlqa.correction_state import CorrectionStateDB
-from siteowlqa.emailer import send_error_email, send_fail_email, send_pass_email
 from siteowlqa.file_processor import load_vendor_file_with_metadata
 from siteowlqa.post_pass_correction import run_post_pass_correction
 from siteowlqa.python_grader import (
@@ -199,20 +198,9 @@ def process_record(
         error_count = len(error_df) if error_df is not None else 0
         error_message = result.message
 
-        # Step 9: Send email (only when SMTP_ENABLED=true in .env).
-        # When Airtable automation handles emails, skip this entirely —
-        # the Airtable status update in Step 10 triggers the automation.
+        # Step 9: Airtable automation handles vendor email — no action needed here.
+        # The status written in Step 10 triggers the Airtable automation rule.
         output_report_path = ""
-        if cfg.smtp_enabled:
-            output_report_path = _send_result_email(
-                cfg, record, result, error_df
-            )
-        else:
-            log.info(
-                "SMTP disabled — skipping email for submission=%s status=%s. "
-                "Airtable automation will handle vendor notification.",
-                record.submission_id, final_status.value,
-            )
 
         # Step 10: Write Processing Status + Score + Fail Summary to Airtable.
         #
@@ -513,47 +501,6 @@ def _validate_record(record: AirtableRecord) -> None:
         )
 
 
-def _send_result_email(
-    cfg: AppConfig,
-    record: AirtableRecord,
-    result,  # SubmissionResult
-    error_df: pd.DataFrame | None,
-) -> str:
-    """Dispatch the appropriate email. Returns output report path string."""
-    to_email = cfg.email_override_to.strip() if cfg.email_override_to else record.vendor_email
-
-    if result.status == ProcessingStatus.PASS:
-        send_pass_email(
-            cfg=cfg,
-            to_email=to_email,
-            submission_id=record.submission_id,
-        )
-        return ""
-
-    if result.status == ProcessingStatus.FAIL:
-        send_fail_email(
-            cfg=cfg,
-            to_email=to_email,
-            submission_id=record.submission_id,
-            score=result.score,
-            error_df=error_df,
-            output_dir=cfg.output_dir,
-        )
-        safe_id = record.submission_id.replace("/", "-")
-        return str(cfg.output_dir / f"QA_Errors_{safe_id}.csv")
-
-    log.warning(
-        "Unexpected result status '%s' — sending error email.", result.status
-    )
-    send_error_email(
-        cfg=cfg,
-        to_email=to_email,
-        submission_id=record.submission_id,
-        error_message=result.message,
-    )
-    return ""
-
-
 def _handle_failure(
     airtable: AirtableClient,
     cfg: AppConfig,
@@ -592,24 +539,10 @@ def _handle_failure(
                 "Failed even status-only write for record %s: %s",
                 record.record_id, exc2,
             )
-    if record.vendor_email and cfg.smtp_enabled:
-        try:
-            to_email = cfg.email_override_to.strip() if cfg.email_override_to else record.vendor_email
-            send_error_email(
-                cfg=cfg,
-                to_email=to_email,
-                submission_id=record.submission_id,
-                error_message=error_message,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.error(
-                "Failed to send ERROR email to %s: %s",
-                record.vendor_email, exc,
-            )
-    elif record.vendor_email and not cfg.smtp_enabled:
+    if record.vendor_email:
         log.info(
-            "SMTP disabled — Airtable automation will handle ERROR notification "
-            "for submission=%s.", record.submission_id,
+            "Airtable automation will handle ERROR notification for submission=%s.",
+            record.submission_id,
         )
 
 

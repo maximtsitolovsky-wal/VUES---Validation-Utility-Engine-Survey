@@ -10,7 +10,6 @@ Covers:
   - ODBC driver availability
   - SQL Server connection + dbo.vw_ReferenceNormalized (current schema)
   - Airtable API reachability
-  - SMTP socket connect (if enabled)
   - Element LLM Gateway HTTP ping (if configured)
   - Required directories exist and are writable
   - Correction output directories (if configured)
@@ -20,7 +19,6 @@ Covers:
 
 from __future__ import annotations
 
-import socket
 import sys
 from pathlib import Path
 
@@ -89,7 +87,6 @@ _MODULES = [
     "siteowlqa.metrics",
     "siteowlqa.dashboard",
     "siteowlqa.file_processor",
-    "siteowlqa.emailer",
     "siteowlqa.airtable_client",
     "siteowlqa.sql",
     "siteowlqa.python_grader",
@@ -129,7 +126,6 @@ try:
         "reference_source":      cfg.reference_source,
         "poll_interval_seconds": cfg.poll_interval_seconds,
         "worker_threads":        cfg.worker_threads,
-        "smtp_enabled":          cfg.smtp_enabled,
         "temp_dir":              cfg.temp_dir,
         "output_dir":            cfg.output_dir,
         "log_dir":               cfg.log_dir,
@@ -146,14 +142,7 @@ try:
     else:
         ok("config required values populated")
 
-    if cfg.smtp_enabled:
-        smtp_missing = [k for k, v in {"smtp_user": cfg.smtp_user, "from_email": cfg.from_email}.items() if not str(v).strip()]
-        if smtp_missing:
-            fail("smtp config", f"smtp_enabled but blank: {smtp_missing}")
-        else:
-            ok("SMTP config populated")
-    else:
-        ok("SMTP disabled")
+    ok("SMTP removed — Airtable automation handles email")
 
     if VENDOR_TO_SQL_COLUMNS:
         ok(f"VENDOR_TO_SQL_COLUMNS has {len(VENDOR_TO_SQL_COLUMNS)} entries")
@@ -311,22 +300,6 @@ if cfg and cfg.airtable_token and cfg.airtable_base_id:
         ok("Scout Airtable not configured (optional)")
 else:
     print("  (skipped — config not loaded or token/base_id missing)")
-
-# ---------------------------------------------------------------------------
-# 7. SMTP (socket connect only — no email sent)
-# ---------------------------------------------------------------------------
-section("SMTP")
-if cfg and cfg.smtp_enabled and cfg.smtp_server:
-    try:
-        with socket.create_connection((cfg.smtp_server, cfg.smtp_port), timeout=8) as sock:
-            banner = sock.recv(256).decode(errors="replace").strip()
-        ok(f"SMTP socket connected — {cfg.smtp_server}:{cfg.smtp_port}  banner={banner[:80]!r}")
-    except Exception as exc:
-        fail(f"SMTP socket {cfg.smtp_server}:{cfg.smtp_port}", str(exc))
-elif cfg and not cfg.smtp_enabled:
-    ok("SMTP disabled — skipped")
-else:
-    print("  (skipped — config not loaded)")
 
 # ---------------------------------------------------------------------------
 # 8. Element LLM Gateway (HTTP ping, no prompt sent)

@@ -5,7 +5,6 @@ Configuration is loaded from two sources:
 1. User Profile (~/.siteowlqa/config.json) - Sensitive data
    - Airtable tokens
    - SQL Server credentials
-   - SMTP passwords
    - LLM API keys
    
 2. .env file - Non-sensitive settings
@@ -145,20 +144,11 @@ class AppConfig:
     reference_source: str = "sql"
     poll_interval_seconds: int = 60
     worker_threads: int = 3
-    email_override_to: str = ""
 
     # Optional: Reference workbook (from user config or .env)
     reference_workbook_path: Path | None = None
     reference_workbook_sheet: str = ""
     reference_workbook_site_id_column: str = "SelectedSiteID"
-
-    # Optional: SMTP (from user config)
-    smtp_enabled: bool = False
-    smtp_server: str = ""
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_pass: str = ""
-    from_email: str = ""
 
     # Optional: Element LLM Gateway (from user config)
     element_llm_gateway_url: str = ""
@@ -274,14 +264,11 @@ def load_config() -> AppConfig:
             f"  python -m siteowlqa.setup_config\n"
             f"\n"
             f"This will interactively create your configuration file\n"
-            f"with your Airtable tokens, SQL credentials, and SMTP settings.\n"
+            f"with your Airtable tokens and SQL credentials.\n"
         )
 
     # Build config with user profile + .env values
     base = Path(__file__).parent.parent.parent  # repo root
-    
-    # SMTP enabled if user provided server config
-    smtp_enabled = bool(user_cfg.smtp_server and user_cfg.smtp_user)
     
     # Reference workbook path
     ref_workbook_path = None
@@ -306,18 +293,10 @@ def load_config() -> AppConfig:
         reference_source=os.getenv("REFERENCE_SOURCE", "sql").strip().lower() or "sql",
         poll_interval_seconds=int(os.getenv("POLL_INTERVAL_SECONDS", "60")),
         worker_threads=int(os.getenv("WORKER_THREADS", "3")),
-        email_override_to=os.getenv("EMAIL_OVERRIDE_TO", "").strip(),
         # Reference workbook (from user config or .env)
         reference_workbook_path=ref_workbook_path,
         reference_workbook_sheet=user_cfg.reference_workbook_sheet,
         reference_workbook_site_id_column=user_cfg.reference_workbook_site_id_column,
-        # SMTP (from user config)
-        smtp_enabled=smtp_enabled,
-        smtp_server=user_cfg.smtp_server,
-        smtp_port=user_cfg.smtp_port,
-        smtp_user=user_cfg.smtp_user,
-        smtp_pass=user_cfg.smtp_pass,
-        from_email=user_cfg.from_email,
         # Element LLM Gateway (from user config)
         element_llm_gateway_url=user_cfg.element_llm_gateway_url,
         element_llm_gateway_api_key=user_cfg.element_llm_gateway_api_key,

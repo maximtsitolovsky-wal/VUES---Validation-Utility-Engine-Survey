@@ -6,8 +6,9 @@ REM  SiteOwlQA — Master Launcher
 REM  Starts every component of the platform as a standalone process:
 REM    1. System Bottleneck Auditor  (background, no browser)
 REM    2. Docker Platform Engineer   (background, no browser)
-REM    3. SiteOwlQA Pipeline         (background, logs to logs/)
-REM    4. Opens dashboard in browser (waits for port file)
+REM    3. Specialist Output Validator (background, 90s delayed start)
+REM    4. SiteOwlQA Pipeline         (background, logs to logs/)
+REM    5. Opens dashboard in browser (waits for port file)
 REM =========================================================================
 
 REM --- resolve repo root from script location (works from any clone path) ---
@@ -35,6 +36,7 @@ set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
 set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
 set AUDIT_LOG=%LOGDIR%\bottleneck_audit.log
 set DOCKER_LOG=%LOGDIR%\docker_platform.log
+set VALIDATOR_LOG=%LOGDIR%\specialist_validator.log
 
 if not exist "%LOGDIR%"          mkdir "%LOGDIR%"
 if not exist "%WORKDIR%\output"  mkdir "%WORKDIR%\output"
@@ -77,7 +79,18 @@ if exist "%WORKDIR%\tools\docker_platform_engineer.py" (
 )
 
 REM =========================================================================
-REM  3. SiteOwlQA Pipeline — background, logs to logs/siteowlqa.*.log
+REM  3. Specialist Output Validator — waits 90s so tools above finish first
+REM =========================================================================
+if exist "%WORKDIR%\tools\specialist_output_validator.py" (
+  echo [START] Specialist Output Validator (90s delayed start) ...
+  start "SiteOwlQA-Validator" /b cmd /c ^
+    "timeout /t 90 /nobreak >nul && "%PYTHON%" -u "%WORKDIR%\tools\specialist_output_validator.py" --no-browser >> "%VALIDATOR_LOG%" 2>&1"
+) else (
+  echo [SKIP]  specialist_output_validator.py not found
+)
+
+REM =========================================================================
+REM  4. SiteOwlQA Pipeline — background, logs to logs/siteowlqa.*.log
 REM =========================================================================
 echo [START] SiteOwlQA Pipeline ...
 start "SiteOwlQA" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
@@ -85,9 +98,10 @@ start "SiteOwlQA" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
 echo.
 echo [INFO] All components started. Waiting for dashboard ...
 echo [INFO] Logs:
-echo         Pipeline : %STDOUT_LOG%
-echo         Audit    : %AUDIT_LOG%
-echo         Docker   : %DOCKER_LOG%
+echo         Pipeline  : %STDOUT_LOG%
+echo         Audit     : %AUDIT_LOG%
+echo         Docker    : %DOCKER_LOG%
+echo         Validator : %VALIDATOR_LOG% (starts after 90s)
 echo.
 
 REM =========================================================================

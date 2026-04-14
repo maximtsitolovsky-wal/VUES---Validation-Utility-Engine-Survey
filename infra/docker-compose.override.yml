@@ -1,0 +1,24 @@
+# Local development overrides — NOT for production.
+# Mounts source code for hot-reload and exposes pipeline port directly.
+version: "3.9"
+
+services:
+  pipeline:
+    build:
+      target: runtime
+    volumes:
+      # Live source mount — changes take effect on restart
+      - ../src:/app/src:ro
+      - ../main.py:/app/main.py:ro
+      - ../tools:/app/tools:ro
+      - ../prompts:/app/prompts:ro
+    ports:
+      # Expose pipeline dashboard directly for dev debugging
+      - "8765:8765"
+    environment:
+      POLL_INTERVAL_SECONDS: "30"
+
+  proxy:
+    ports:
+      # Use 8080 in dev to avoid conflicts with system port 80
+      - "8080:80"

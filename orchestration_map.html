@@ -6,7 +6,6 @@
   <style>
     :root{--bg:#04070d;--text:#e8f1ff;--muted:rgba(232,241,255,0.5);--border:rgba(255,255,255,0.09);--glass:rgba(10,12,18,0.62);--glass2:rgba(10,12,18,0.78)}
     *{box-sizing:border-box}
-    html{zoom:0.9}
     html,body{width:100%;height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at center,#0b1220 0%,#060a12 34%,#03050a 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,sans-serif}
     #bg{position:fixed;inset:0;z-index:0;pointer-events:none}
     #app{position:relative;width:100vw;height:100vh;overflow:hidden;z-index:1}
@@ -22,8 +21,8 @@
     .stat-blk{text-align:center}
     .stat-n{font-size:18px;font-weight:800;color:#0053e2;line-height:1}
     .stat-l{font-size:9px;color:rgba(232,241,255,0.4);text-transform:uppercase;letter-spacing:.14em}
-    #network{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:2}
-    #nodes{position:absolute;inset:0;z-index:3}
+    #network{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:2;transform:scale(0.9);transform-origin:top center}
+    #nodes{position:absolute;inset:0;z-index:3;transform:scale(0.9);transform-origin:top center}
     .node{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;transition:transform .22s,filter .22s}
     .node.active{z-index:20}
     .node:hover{filter:brightness(1.08)}

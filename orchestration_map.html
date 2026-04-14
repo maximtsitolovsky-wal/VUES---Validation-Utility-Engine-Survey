@@ -112,14 +112,18 @@ root:{id:"root",name:"SiteOwlQA Pipeline",nodes:[
    manages:"airtable_client.py · polling · status updates · attachment download · result PATCH",realmTarget:"airtable"},
   {id:"datalyr",title:"Archive & Memory",      x:18,y:54,size:100,hue:"blue",
    summary:"Append-only archive (archive.py) stores executions, submissions, reviews, lessons, prompts, code snapshots. Memory (memory.py) retrieves lessons by tag+keyword for context injection.",
-   manages:"archive.py · memory.py · reviewer.py · 6 archive subdirs · lesson recall",realmTarget:"datastore"}
+   manages:"archive.py · memory.py · reviewer.py · 6 archive subdirs · lesson recall",realmTarget:"datastore"},
+  {id:"launcher",title:"Desktop Launcher",       x:50,y:86,size:96,hue:"amber",
+   summary:"SiteOwlQA Launcher.lnk (desktop shortcut) → cmd.exe /c start_pipeline.bat. On click: WMIC checks if main.py is already running. If yes, reads output/dashboard.port and opens browser at the live URL in under 1 second. If no, starts main.py in background, polls for the port file up to 25s, then opens browser automatically. Port 8765 preferred; OS assigns a free port if taken.",
+   manages:"SiteOwlQA Launcher.lnk · start_pipeline.bat · WMIC process check · output/dashboard.port · browser open · port fallback"}
 ],edges:[
-  {id:"e1",from:"main",to:"queue",     strength:0.86},{id:"e2",from:"main",to:"worker",    strength:0.86},
-  {id:"e3",from:"main",to:"mworker",   strength:0.80},{id:"e4",from:"main",to:"corrwkr",   strength:0.72},
-  {id:"e5",from:"main",to:"airtlyr",   strength:0.68},{id:"e6",from:"main",to:"datalyr",   strength:0.68},
-  {id:"e7",from:"queue",to:"worker",   strength:0.78},{id:"e8",from:"worker",to:"pipeline", strength:0.88},
-  {id:"e9",from:"pipeline",to:"airtlyr",strength:0.76},{id:"e10",from:"pipeline",to:"datalyr",strength:0.78},
-  {id:"e11",from:"mworker",to:"airtlyr",strength:0.54},{id:"e12",from:"corrwkr",to:"datalyr",strength:0.58}
+  {id:"e1",from:"main",to:"queue",       strength:0.86},{id:"e2",from:"main",to:"worker",    strength:0.86},
+  {id:"e3",from:"main",to:"mworker",     strength:0.80},{id:"e4",from:"main",to:"corrwkr",   strength:0.72},
+  {id:"e5",from:"main",to:"airtlyr",     strength:0.68},{id:"e6",from:"main",to:"datalyr",   strength:0.68},
+  {id:"e7",from:"queue",to:"worker",     strength:0.78},{id:"e8",from:"worker",to:"pipeline", strength:0.88},
+  {id:"e9",from:"pipeline",to:"airtlyr", strength:0.76},{id:"e10",from:"pipeline",to:"datalyr",strength:0.78},
+  {id:"e11",from:"mworker",to:"airtlyr", strength:0.54},{id:"e12",from:"corrwkr",to:"datalyr",strength:0.58},
+  {id:"e13",from:"launcher",to:"main",   strength:0.92}
 ]},
 
 pipeline:{id:"pipeline",name:"Record Pipeline (14 Steps)",nodes:[
@@ -206,8 +210,8 @@ async_workers:{id:"async_workers",name:"MetricsRefreshWorker · Async Layer",nod
    summary:"dashboard.py (1.5 KB) calls refresh_dashboards() which invokes dashboard_exec.py (101.2 KB). The exec module injects all metric data into the ui/ template and writes to output/executive_dashboard.html.",
    manages:"dashboard.py · dashboard_exec.py · template injection · output/executive_dashboard.html"},
   {id:"ldsrv", title:"local_dashboard_server.py", x:16,y:52,size:96,hue:"blue",
-   summary:"Tiny localhost HTTP server. Port 8765 (preferred) with OS fallback. Serves output/ with no-cache headers so browser always sees fresh HTML. Port written to output/dashboard.port.",
-   manages:"local_dashboard_server.py · port 8765 · no-cache headers · output/dashboard.port"}
+   summary:"Tiny localhost HTTP server. Tries port 8765 first; if taken, OS assigns any free port. Chosen port written to output/dashboard.port (ASCII, no BOM). Serves output/ with no-cache headers. Desktop Launcher reads this file to open the correct URL.",
+   manages:"local_dashboard_server.py · port 8765 preferred · OS free-port fallback · output/dashboard.port · no-cache headers"}
 ],edges:[
   {id:"a1",from:"mwcore",to:"mdf",   strength:0.70},{id:"a2",from:"mdf",to:"mpy",     strength:0.86},
   {id:"a3",from:"mpy",to:"rtm",      strength:0.74},{id:"a4",from:"rtm",to:"tdd",     strength:0.72},

@@ -147,5 +147,5 @@ def ensure_dashboard_server(output_dir: Path) -> str:
 
     raise RuntimeError(
         f"Dashboard server did not start on {base_url} — "
-        "check that run_dashboard_server.py is present in src/siteowlqa/tools/"
+        "check that run_dashboard_server.py is present in tools/ at the project root"
     )

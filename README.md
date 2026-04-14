@@ -32,21 +32,30 @@
 
 ### Module Map
 
-| File | Lines | Purpose |
-|---|---|---|
-| `main.py` | 126 | Entry point, poll loop, signal handling |
-| `poll_airtable.py` | 354 | 15-step per-record orchestrator |
-| `config.py` | 192 | ALL env var access — centralized |
-| `models.py` | 260 | All domain types (AirtableRecord, SubmissionResult…) |
-| `utils.py` | 105 | Logging setup, ID generation, safe file delete |
-| `airtable_client.py` | 207 | Airtable REST API (fetch, download, status update) |
-| `file_processor.py` | 159 | XLSX/CSV load, header normalization, ProjectID overwrite |
-| `sql.py` | 90 | SQL connection + site-scoped reference fetch |
-| `reviewer.py` | 462 | Internal static code reviewer |
-| `archive.py` | 259 | Append-only JSON archive + raw file storage |
-| `memory.py` | 227 | Tag+keyword lesson retrieval |
-| `metrics.py` | 264 | Compute metrics, export CSVs |
-| `dashboard.py` | 212 | Generate HTML dashboards from CSVs |
+| File | Purpose |
+|---|---|
+| `src/siteowlqa/main.py` | Poll loop, worker lifecycle, crash recovery, dashboard open |
+| `src/siteowlqa/poll_airtable.py` | 15-step per-record orchestrator |
+| `src/siteowlqa/config.py` | ALL env var + user config access — centralized |
+| `src/siteowlqa/models.py` | All domain types (AirtableRecord, SubmissionResult…) |
+| `src/siteowlqa/utils.py` | Logging setup, ID generation, safe file delete |
+| `src/siteowlqa/airtable_client.py` | Airtable REST API (fetch, download, status update) |
+| `src/siteowlqa/file_processor.py` | XLSX/CSV load, header normalization, ProjectID overwrite |
+| `src/siteowlqa/sql.py` | SQL connection + site-scoped reference fetch |
+| `src/siteowlqa/python_grader.py` | Python-side grading engine (canonical header comparison) |
+| `src/siteowlqa/reference_data.py` | Reference data loader with warm cache |
+| `src/siteowlqa/reviewer.py` | Internal static code reviewer |
+| `src/siteowlqa/archive.py` | Append-only JSON archive + raw file storage |
+| `src/siteowlqa/memory.py` | Tag+keyword lesson retrieval |
+| `src/siteowlqa/metrics.py` | Compute metrics, export CSVs |
+| `src/siteowlqa/metrics_worker.py` | Single-owner metrics refresh thread |
+| `src/siteowlqa/dashboard.py` | Generate HTML dashboards from CSVs |
+| `src/siteowlqa/dashboard_exec.py` | Executive dashboard builder |
+| `src/siteowlqa/local_dashboard_server.py` | Localhost no-cache HTTP server |
+| `src/siteowlqa/submission_queue.py` | In-process dedup submission queue |
+| `src/siteowlqa/queue_worker.py` | Worker thread: QUEUED → PROCESSING → result |
+| `src/siteowlqa/correction_worker.py` | Autonomous post-pass correction thread |
+| `src/siteowlqa/correction_state.py` | Idempotent correction state DB |
 
 ---
 
@@ -85,81 +94,118 @@
 
 ```
 SiteOwlQA_App/
-├── main.py                  # entry point
-├── poll_airtable.py         # per-record 15-step processor
-├── config.py                # all env vars + constants
-├── models.py                # domain types
-├── utils.py                 # helpers
-├── airtable_client.py       # Airtable REST API
-├── file_processor.py        # XLSX/CSV parser
-├── sql.py                   # SQL Server reference data access
-├── reviewer.py              # internal code reviewer
-├── archive.py               # append-only archive
-├── memory.py                # lesson retrieval
-├── metrics.py               # compute + export CSV metrics
-├── dashboard.py             # generate HTML dashboards
-├── .env                     # secrets (never commit this)
-├── .env.example             # template
-├── requirements.txt
-├── prompts/
-├── logs/                    # rotating log files
-├── temp/                    # downloaded attachments (auto-cleaned)
-├── output/                  # CSV exports + HTML dashboards
+├── main.py                        # entry point (delegates to src/siteowlqa/main.py)
+├── pyproject.toml                 # project metadata and build config
+├── requirements.txt               # pip-compatible dependency list
+├── .env                           # non-secret runtime settings (never commit)
+├── .env.example                   # template — copy to .env
+│
+├── src/siteowlqa/                 # main application package
+│   ├── main.py                    # poll loop, worker lifecycle, crash recovery
+│   ├── poll_airtable.py           # per-record 15-step orchestrator
+│   ├── config.py                  # all env var + user config access
+│   ├── models.py                  # domain types (AirtableRecord, SubmissionResult…)
+│   ├── utils.py                   # logging setup, ID generation
+│   ├── airtable_client.py         # Airtable REST API (fetch, download, PATCH)
+│   ├── file_processor.py          # XLSX/CSV loader + header normalization
+│   ├── sql.py                     # SQL connection + reference fetch
+│   ├── python_grader.py           # Python-side grading engine
+│   ├── reference_data.py          # reference data loader + cache
+│   ├── reviewer.py                # internal static code reviewer
+│   ├── archive.py                 # append-only JSON + raw file archive
+│   ├── memory.py                  # lesson tag/keyword retrieval
+│   ├── metrics.py                 # CSV metric computation
+│   ├── metrics_worker.py          # single-writer metrics refresh thread
+│   ├── dashboard.py               # HTML dashboard generation
+│   ├── dashboard_exec.py          # executive dashboard builder
+│   ├── local_dashboard_server.py  # localhost no-cache HTTP server
+│   ├── submission_queue.py        # in-process submission queue
+│   ├── queue_worker.py            # worker thread (QUEUED → result)
+│   ├── correction_worker.py       # autonomous post-pass correction thread
+│   ├── correction_state.py        # idempotent correction state DB
+│   ├── post_pass_correction.py    # post-pass field correction logic
+│   ├── setup_config.py            # interactive config wizard entry point
+│   └── user_config.py             # user config read/write (~/.siteowlqa/)
+│
+├── ops/windows/                   # Windows launchers and scheduler scripts
+│   ├── start_pipeline.bat         # daily launcher (background + browser)
+│   ├── stop_pipeline.bat          # stop the running pipeline
+│   ├── run_siteowlqa.bat          # foreground launcher for debugging
+│   ├── setup_scheduler.bat        # register Windows Task Scheduler (admin)
+│   └── README.md                  # ops script documentation
+│
+├── tools/                         # developer/utility scripts
+│   └── run_dashboard_server.py    # standalone localhost dashboard server
+│
+├── scripts/                       # one-off utilities and backfill helpers
+├── tests/                         # pytest test suite
+├── docs/                          # extended documentation
+├── logs/                          # rotating log files (auto-created)
+├── temp/                          # downloaded attachments (auto-cleaned)
+├── output/                        # CSV exports + HTML dashboards
 └── archive/
-    ├── submissions/           # YYYY/MM/DD/<id>_meta.json + raw file copy
-    ├── executions/            # <execution_id>.json
-    ├── reviews/               # <execution_id>_review.json
-    ├── lessons/               # LESSON_NNN.json
-    ├── prompts/               # prompt snapshots
-    └── code/                  # code snapshots
+    ├── submissions/               # YYYY/MM/DD/<id>_meta.json + raw file
+    ├── executions/                # <execution_id>.json
+    ├── reviews/                   # <execution_id>_review.json
+    └── lessons/                   # LESSON_NNN.json
 ```
 
 ---
 
 ## Quick Start Setup
 
-> New teammate onboarding? Use **[`docs/clone-and-run.md`](./docs/clone-and-run.md)** for the complete clone/bootstrap/run guide (including orchestrators, workers, and all pipeline phases).
+> New teammate onboarding? See **[`docs/clone-and-run.md`](./docs/clone-and-run.md)** for the full step-by-step guide.
 
+### 1. Clone and create the virtual environment
 
-### 1. Install Dependencies
+```bat
+git clone <repo-url>
+cd SiteOwlQA_App
 
-```bash
-# Install Python 3.11+ from https://python.org
-# Install ODBC Driver 17 for SQL Server (if not present)
-# Then:
-
-cd C:\SiteOwlQA_App
-pip install -r requirements.txt
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-### 2. Create User Configuration
+> ℹ️ All launchers auto-detect `.venv\Scripts\python.exe`. If not found they fall back to `python` on your PATH.
 
-Run the interactive setup wizard:
+### 2. Create your runtime config (`.env`)
 
-```bash
-python -m siteowlqa.setup_config
+```bat
+copy .env.example .env
+```
+
+Edit `.env` to set folder paths, poll interval, and worker count. The defaults work fine for most setups.
+
+### 3. Create your secrets config
+
+Run the interactive setup wizard (stores credentials in `~/.siteowlqa/config.json`, **never** in the repo):
+
+```bat
+.venv\Scripts\python -m siteowlqa.setup_config
 ```
 
 This will prompt you for:
 - SQL Server connection details
-- Airtable API token and base ID
-- (Optional) SMTP server settings
+- Airtable API token, base ID, and table name
 - (Optional) LLM Gateway credentials
 - (Optional) Reference data workbook path
 
-**Your sensitive data is saved to** `~/.siteowlqa/config.json` (NOT in the repo).
+### 4. Run the Pipeline
 
-### 3. Run the Pipeline
-
-**On Windows (recommended):**
-```bash
-start_pipeline.bat
+**Recommended — background mode + auto-opens dashboard:**
+```bat
+ops\windows\start_pipeline.bat
 ```
-This opens the dashboard in your browser.
 
-**Or directly:**
-```bash
-python main.py
+**Foreground mode (see live output, great for debugging):**
+```bat
+ops\windows\run_siteowlqa.bat
+```
+
+**Or call Python directly:**
+```bat
+.venv\Scripts\python main.py
 ```
 
 ---
@@ -183,13 +229,13 @@ python main.py
 
 ### Daily Operation (Windows)
 
-Double-click one of these batch files:
+All launchers live in `ops\windows\`. Double-click or call from a terminal:
 
 | File | Purpose |
 |------|----------|
-| `start_pipeline.bat` | Start pipeline + open dashboard |
-| `stop_pipeline.bat` | Stop the running pipeline |
-| `run_siteowlqa.bat` | Foreground mode (for debugging) |
+| `ops\windows\start_pipeline.bat` | Start pipeline in background + open dashboard |
+| `ops\windows\stop_pipeline.bat` | Stop the running pipeline |
+| `ops\windows\run_siteowlqa.bat` | Foreground mode (live output, great for debugging) |
 
 **See [`ops/windows/README.md`](./ops/windows/README.md)** for complete launcher documentation.
 

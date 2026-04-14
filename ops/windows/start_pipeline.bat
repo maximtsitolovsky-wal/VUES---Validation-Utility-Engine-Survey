@@ -1,13 +1,28 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set WORKDIR=C:\SiteOwlQA_App
+REM Resolve repo root relative to this script so clones work anywhere
+for %%I in ("%~dp0..\..") do set WORKDIR=%%~fI
+
 set PORT_FILE=%WORKDIR%\output\dashboard.port
 set FALLBACK_PORT=8765
-set PYTHON=%WORKDIR%\.venv\Scripts\python.exe
 set LOGDIR=%WORKDIR%\logs
 set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
 set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
+
+REM Prefer project venv; otherwise fall back to Python on PATH
+if exist "%WORKDIR%\.venv\Scripts\python.exe" (
+  set PYTHON=%WORKDIR%\.venv\Scripts\python.exe
+) else (
+  for /f "delims=" %%P in ('where python 2^>nul') do (
+    set PYTHON=%%P
+    goto :python_found
+  )
+  echo [ERROR] Python not found. Install Python 3.11+ or create .venv.
+  pause
+  exit /b 1
+)
+:python_found
 
 if not exist "%LOGDIR%"         mkdir "%LOGDIR%"
 if not exist "%WORKDIR%\output" mkdir "%WORKDIR%\output"

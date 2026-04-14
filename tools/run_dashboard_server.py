@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import threading
 from datetime import datetime, timezone
 from functools import partial
@@ -21,9 +22,11 @@ from typing import Any
 from urllib.parse import urlsplit
 
 _WORKDIR = Path(__file__).resolve().parents[1]
-_START_SCRIPT = _WORKDIR / "start_siteowlqa_background.ps1"
-_STOP_SCRIPT = _WORKDIR / "stop_siteowlqa_background.ps1"
-_PYTHON = Path(r"C:\Python314\python.exe")
+_START_SCRIPT = _WORKDIR / "ops" / "windows" / "start_siteowlqa_background.ps1"
+_STOP_SCRIPT = _WORKDIR / "ops" / "windows" / "stop_siteowlqa_background.ps1"
+# Prefer project venv; fall back to the interpreter running this very server
+_VENV_PYTHON = _WORKDIR / ".venv" / "Scripts" / "python.exe"
+_PYTHON = _VENV_PYTHON if _VENV_PYTHON.exists() else Path(sys.executable)
 _MAIN_SCRIPT = _WORKDIR / "main.py"
 _OUTPUT_DIR = _WORKDIR / "output"
 _REALTIME_SNAPSHOT = _OUTPUT_DIR / "realtime_snapshot.json"
@@ -85,10 +88,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def _is_app_running() -> bool:
+    # Use the actual resolved path so this works on any machine / clone location.
+    main_path = str(_MAIN_SCRIPT).replace("\\", "\\\\")
     cmd = (
         "Get-CimInstance Win32_Process | Where-Object { "
         "$_.Name -match '^python(\\.exe)?$' -and ("
-        "$_.CommandLine -like '*C:\\SiteOwlQA_App\\main.py*' -or "
+        f"$_.CommandLine -like '*{main_path}*' -or "
         "$_.CommandLine -match '(^|\\s)main\\.py(\\s|$)'"
         ") } | Select-Object -First 1 | ForEach-Object { 'RUNNING' }"
     )

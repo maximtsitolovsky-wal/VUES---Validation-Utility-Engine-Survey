@@ -221,6 +221,19 @@ def _optional_path(name: str) -> Path | None:
 
 
 _config_singleton: AppConfig | None = None
+_config_file_mtime: float = 0.0  # mtime when singleton was last loaded
+
+
+def reset_config_singleton() -> None:
+    """Clear the cached config so the next load_config() call reloads from disk.
+
+    Call this when credentials change at runtime (e.g. from an admin API handler).
+    Thread-safe for reads; callers should not rely on atomicity of write.
+    """
+    global _config_singleton, _config_file_mtime
+    _config_singleton = None
+    _config_file_mtime = 0.0
+    log.info("Config singleton cleared — will reload on next load_config() call.")
 
 
 def load_config() -> AppConfig:
@@ -232,7 +245,20 @@ def load_config() -> AppConfig:
     Raises:
         EnvironmentError: if user config not found or required values missing
     """
-    global _config_singleton
+    global _config_singleton, _config_file_mtime
+
+    # Hot-reload: if credentials file was modified since last load, drop the cache.
+    try:
+        current_mtime = get_user_config_path().stat().st_mtime
+        if _config_singleton is not None and current_mtime != _config_file_mtime:
+            log.info(
+                "config.json changed on disk (mtime %s → %s) — reloading.",
+                _config_file_mtime, current_mtime,
+            )
+            _config_singleton = None
+    except FileNotFoundError:
+        pass  # config missing; let the normal path raise EnvironmentError
+
     if _config_singleton is not None:
         return _config_singleton
 
@@ -320,6 +346,7 @@ def load_config() -> AppConfig:
     )
 
     _config_singleton = cfg
+    _config_file_mtime = get_user_config_path().stat().st_mtime
     log.info(
         "Config loaded from ~/.siteowlqa/config.json — server=%s db=%s table=%s poll=%ds workers=%d",
         cfg.sql_server,

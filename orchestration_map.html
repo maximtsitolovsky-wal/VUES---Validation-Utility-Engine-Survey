@@ -54,7 +54,7 @@
 <div id="app">
   <div class="brain-shell"></div>
   <div class="topbar">
-    <a href="ui/executive_dashboard.html" class="lux-btn">
+    <a href="executive_dashboard.html" class="lux-btn">
       <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></div>
       <span>Dashboard</span>
     </a>
@@ -62,11 +62,11 @@
       <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></div>
       <span>Back</span>
     </button>
-    <div id="breadcrumb" class="lux-pill">SiteOwlQA Architecture</div>
+    <div id="breadcrumb" class="lux-pill">SiteOwlQA · System Architecture</div>
   </div>
   <div class="statsbar">
-    <div class="stat-blk"><div class="stat-n" id="sN">8</div><div class="stat-l">Nodes</div></div>
-    <div class="stat-blk"><div class="stat-n" id="sE">12</div><div class="stat-l">Edges</div></div>
+    <div class="stat-blk"><div class="stat-n" id="sN">8</div><div class="stat-l">Components</div></div>
+    <div class="stat-blk"><div class="stat-n" id="sE">12</div><div class="stat-l">Connections</div></div>
     <div class="stat-blk"><div class="stat-n" id="sClock">—</div><div class="stat-l">Live</div></div>
   </div>
   <svg id="network"></svg>
@@ -88,30 +88,30 @@
 <script>
 // ── Architecture data ────────────────────────────────────────────────────────
 const R={
-root:{id:"root",name:"SiteOwlQA Pipeline",nodes:[
-  {id:"main",   title:"main.py",              x:50,y:48,size:148,hue:"core",
-   summary:"Entry point. poll_once() every N secs. Spawns all daemon threads on startup. Crash-recovers stuck QUEUED/PROCESSING records. Auto-opens browser when fresh dashboard detected.",
+root:{id:"root",name:"SiteOwlQA · Full System",nodes:[
+  {id:"main",   title:"System Heartbeat",              x:50,y:48,size:148,hue:"core",
+   summary:"Wakes up every N seconds, checks Airtable for new form submissions, and sends them to workers for processing. Manages startup, shutdown, crash recovery, and auto-opens the live dashboard.",
    manages:"Poll loop · SubmissionQueue · worker lifecycle · crash recovery · dashboard auto-open · graceful Ctrl+C shutdown",realmTarget:null},
-  {id:"queue",  title:"SubmissionQueue",       x:20,y:22,size:100,hue:"blue",
-   summary:"Thread-safe deduplication queue. Workers pull records off it. A dedup-set prevents the same record_id entering twice even if Airtable write hasn't propagated yet.",
+  {id:"queue",  title:"Work Queue",       x:20,y:22,size:100,hue:"blue",
+   summary:"A thread-safe inbox. New submissions go in; workers pick them up one at a time. Prevents the same submission from being processed twice, even under race conditions.",
    manages:"Thread-safe enqueue/dequeue · record_id dedup set · shutdown signal propagation"},
-  {id:"worker", title:"SubmissionWorker × N",  x:50,y:14,size:100,hue:"violet",
-   summary:"N daemon threads (cfg.worker_threads). Each pulls from the queue and calls process_record(). One bad record never crashes a worker — exception boundary wraps every record.",
+  {id:"worker", title:"QA Workers",  x:50,y:14,size:100,hue:"violet",
+   summary:"Parallel workers that each pull one submission and run it through the full 14-step QA process. If one record fails, the others keep going unaffected.",
    manages:"queue_worker.py · per-record exception fence · parallel grading throughput"},
   {id:"pipeline",title:"Record Pipeline",      x:79,y:24,size:106,hue:"cyan",
-   summary:"14-step per-record QA processor (poll_airtable.py). Validate → Recall → Download → Normalize → SQL Ref → Grade → Email → PATCH → Archive → Review → Lesson → Correction.",
+   summary:"The full per-record QA flow, in order: validate fields → recall past lessons → download file → normalize data → fetch site reference → grade → notify vendor → save results → archive → audit → extract lesson → auto-correct if passed. Click to drill in.",
    manages:"poll_airtable.process_record() · 14 ordered steps · per-record exception boundary",realmTarget:"pipeline"},
-  {id:"mworker",title:"MetricsRefreshWorker",  x:82,y:54,size:102,hue:"emerald",
-   summary:"Single-owner background thread. Workers call mark_dirty() when a submission finishes; this thread batches rapid completions and runs the full refresh chain. 60s backstop prevents stale dashboards.",
+  {id:"mworker",title:"Dashboard Refresher",  x:82,y:54,size:102,hue:"emerald",
+   summary:"Background thread that updates all dashboard stats and charts whenever submissions complete. Workers signal it when done; it batches rapid completions to avoid thrashing. Refreshes on a 60-second timer as a safety net. Click to drill in.",
    manages:"Dirty-flag pattern · metrics.py · realtime_metrics · team data · dashboard HTML",realmTarget:"async_workers"},
-  {id:"corrwkr",title:"CorrectionWorker",      x:68,y:80,size:100,hue:"amber",
-   summary:"Independent daemon. Polls Airtable every N secs for PASS records with True Score ≥ 95. Acts as a safety net for Step 15. Uses CorrectionStateDB to prevent double-processing.",
+  {id:"corrwkr",title:"Auto-Corrector",      x:68,y:80,size:100,hue:"amber",
+   summary:"Background daemon that finds passing submissions (score ≥ 95) and generates corrected output files. Completely independent of the main pipeline. Never processes the same record twice. Click to drill in.",
    manages:"correction_worker.py · CorrectionStateDB · post_pass_correction.py · score≥95 polling",realmTarget:"correction"},
-  {id:"airtlyr",title:"Airtable Layer",        x:32,y:80,size:100,hue:"pink",
-   summary:"ALL Airtable API calls live in airtable_client.py (33.9 KB). No other module touches the API. Rate limiter with exponential backoff. RISK-003 CDN URL mitigated via OneDrive mirror.",
+  {id:"airtlyr",title:"Form Intake",        x:32,y:80,size:100,hue:"pink",
+   summary:"The only code that ever touches Airtable. Fetches new forms, downloads attachments, updates statuses, and writes grading results back. Rate-limited with automatic retries. Uses an OneDrive mirror as backup if Airtable's file CDN expires. Click to drill in.",
    manages:"airtable_client.py · polling · status updates · attachment download · result PATCH",realmTarget:"airtable"},
-  {id:"datalyr",title:"Archive & Memory",      x:18,y:54,size:100,hue:"blue",
-   summary:"Append-only archive (archive.py) stores executions, submissions, reviews, lessons, prompts, code snapshots. Memory (memory.py) retrieves lessons by tag+keyword for context injection.",
+  {id:"datalyr",title:"History & Memory",      x:18,y:54,size:100,hue:"blue",
+   summary:"Stores every run's output files, submission originals, review reports, and lessons learned. The memory layer searches past lessons before each new grading run so the system gets smarter over time. Click to drill in.",
    manages:"archive.py · memory.py · reviewer.py · 6 archive subdirs · lesson recall",realmTarget:"datastore"},
   {id:"launcher",title:"Desktop Launcher",       x:50,y:86,size:96,hue:"amber",
    summary:"SiteOwlQA Launcher.lnk (desktop shortcut) → cmd.exe /c start_pipeline.bat. On click: WMIC checks if main.py is already running. If yes, reads output/dashboard.port and opens browser at the live URL in under 1 second. If no, starts main.py in background, polls for the port file up to 25s, then opens browser automatically. Port 8765 preferred; OS assigns a free port if taken.",
@@ -126,30 +126,30 @@ root:{id:"root",name:"SiteOwlQA Pipeline",nodes:[
   {id:"e13",from:"launcher",to:"main",   strength:0.92}
 ]},
 
-pipeline:{id:"pipeline",name:"Record Pipeline (14 Steps)",nodes:[
-  {id:"proc",   title:"process_record()",      x:50,y:48,size:132,hue:"core",
-   summary:"poll_airtable.py. Orchestrates all 14 steps. Exception boundary wraps the full run — one bad record never crashes the loop. Metrics refresh is intentionally NOT here (async via MetricsRefreshWorker).",
+pipeline:{id:"pipeline",name:"Record Pipeline · 14 Steps",nodes:[
+  {id:"proc",   title:"QA Orchestrator",      x:50,y:48,size:132,hue:"core",
+   summary:"Runs 14 ordered steps for a single submission. One exception boundary wraps everything — a broken record never crashes the whole pipeline. Dashboard refresh is handled by a separate background worker.",
    manages:"14-step sequencer · execution_id · timing · error containment"},
-  {id:"sv",     title:"Step 1 · site_validation",x:20,y:22,size:98,hue:"blue",
-   summary:"site_validation.py validates site number, required Airtable fields, and submission format. Missing fields → ERROR status, processing halted immediately. Zero ambiguity on required data.",
+  {id:"sv",     title:"① Validate Fields",x:20,y:22,size:98,hue:"blue",
+   summary:"Checks that the site number and all required form fields are present. Stops immediately with ERROR status if anything is missing. No ambiguous failures — the record either has what it needs or it doesn't.",
    manages:"site_validation.py · required field check · ERROR halt · site number authority"},
-  {id:"mem",    title:"Step 2 · memory.recall()",x:50,y:14,size:98,hue:"amber",
-   summary:"memory.py retrieves known risk lessons by tag+keyword before any file is touched. Lesson context is injected into the grading narrative so every run is smarter than the last.",
+  {id:"mem",    title:"② Check Past Lessons",x:50,y:14,size:98,hue:"amber",
+   summary:"Looks up known issues and risk patterns from past failures before any file is touched. That context is injected into the grading run so each submission benefits from historical knowledge.",
    manages:"memory.py · tag+keyword recall · lesson context · risk awareness injection"},
-  {id:"fp",     title:"Steps 3-4 · file_processor",x:80,y:22,size:98,hue:"cyan",
-   summary:"airtable_client downloads attachment to temp/. file_processor.py normalizes all headers to lowercase_underscored. ProjectID is ALWAYS overwritten from Airtable Site Number — vendor-supplied IDs are never trusted.",
+  {id:"fp",     title:"③④ Normalize File",x:80,y:22,size:98,hue:"cyan",
+   summary:"Downloads the vendor's file from Airtable and standardizes all column headers to a canonical format. The site number from Airtable always overrides whatever the vendor wrote — vendor-supplied IDs are never trusted.",
    manages:"file_processor.py · header normalisation · ProjectID authority override · pandas transform"},
-  {id:"rd",     title:"Step 5 · reference_data+sql",x:84,y:50,size:98,hue:"violet",
-   summary:"reference_data.py fetches site-scoped reference rows from SQL Server via sql.py. Read-only. sql.py is the single database interaction point — nothing else touches the DB. Reference cache pre-warmed on startup.",
+  {id:"rd",     title:"⑤ Fetch Site Data",x:84,y:50,size:98,hue:"violet",
+   summary:"Pulls the reference equipment list for this specific site from the database. Read-only — nothing is written here. Only one module ever touches the database; everything else uses the data it returns.",
    manages:"reference_data.py · sql.py · site-scoped fetch · read-only · prewarm cache"},
-  {id:"gr",     title:"Steps 6-7 · python_grader",x:78,y:76,size:102,hue:"pink",
-   summary:"grade_submission_in_python() runs Python-first site-scoped grading. status_from_score() is the SINGLE PASS/FAIL decision — never duplicated. validate_grading_consistency() guards against score/status mismatch.",
+  {id:"gr",     title:"⑥⑦ Grade Submission",x:78,y:76,size:102,hue:"pink",
+   summary:"Compares the vendor's submission against the reference list for this site. One function decides PASS or FAIL — it's never called from anywhere else. Score integrity is validated before any results leave this step. Click to drill in.",
    manages:"python_grader.py · 0-100 scoring · status_from_score() · GradingInconsistencyError",realmTarget:"grader"},
-  {id:"out",    title:"Steps 8-9 · Output",    x:50,y:84,size:100,hue:"emerald",
-   summary:"emailer.py sends PASS/FAIL/ERROR templated email to vendor. airtable_client patches ALL result fields: status, true_score, score_pct, fail_summary, notes. Every field always written — ghost data prevention is a hard rule.",
+  {id:"out",    title:"⑧⑨ Notify & Record",    x:50,y:84,size:100,hue:"emerald",
+   summary:"Sends the vendor a PASS, FAIL, or ERROR email and saves all result fields back to Airtable in one write. Every field is always overwritten — no stale values from previous submissions can leak through. Click to drill in.",
    manages:"emailer.py · SMTP · Airtable PATCH · all-fields-always rule · ghost data prevention",realmTarget:"output"},
-  {id:"arch",   title:"Steps 10-15 · Archive+Learn",x:22,y:76,size:100,hue:"blue",
-   summary:"Raw submission file archived (Step 10). reviewer.py runs internal audit (Step 11). Execution JSON archived (Step 12). Lesson extracted from failures (Step 13). Step 15: post-pass correction if score ≥ 95.",
+  {id:"arch",   title:"⑩⑮ Archive & Learn",x:22,y:76,size:100,hue:"blue",
+   summary:"Stores the raw vendor file, runs an internal quality audit, saves execution metadata, extracts a reusable lesson from any failure, and triggers automatic correction if the submission passed. Click to drill in.",
    manages:"archive.py · reviewer.py · extract_lesson_from_failure · post_pass_correction",realmTarget:"datastore"}
 ],edges:[
   {id:"p1",from:"proc",to:"sv",  strength:0.88},{id:"p2",from:"sv",to:"mem",   strength:0.80},
@@ -158,26 +158,26 @@ pipeline:{id:"pipeline",name:"Record Pipeline (14 Steps)",nodes:[
   {id:"p7",from:"out",to:"arch", strength:0.82},{id:"p8",from:"arch",to:"mem", strength:0.52}
 ]},
 
-grader:{id:"grader",name:"python_grader.py · Scoring Engine",nodes:[
-  {id:"gcore", title:"grade_submission_in_python()",x:50,y:48,size:132,hue:"core",
+grader:{id:"grader",name:"Scoring Engine",nodes:[
+  {id:"gcore", title:"Scoring Engine",x:50,y:48,size:132,hue:"core",
    summary:"Entry point for all grading. Site Number scopes the reference dataset. Only COMPARABLE_COLUMNS (from config.VENDOR_GRADE_COLUMNS) are used. Submission and reference rows normalized + sorted deterministically before comparison.",
    manages:"python_grader.py · site-scoped dataset · deterministic comparison · memory context injection"},
-  {id:"cfp",   title:"Column Fingerprinter",     x:20,y:22,size:96,hue:"blue",
+  {id:"cfp",   title:"Column Matcher",     x:20,y:22,size:96,hue:"blue",
    summary:"Intersects vendor headers with COMPARABLE_COLUMNS to find matchable columns. Uses lowercase_underscored normalization. Columns not in the canonical set are ignored — no phantom scoring.",
    manages:"COMPARABLE_COLUMNS · header intersection · canonical normalisation · missing column detection"},
-  {id:"idc",   title:"IDENTITY_COLUMNS",          x:54,y:16,size:96,hue:"cyan",
+  {id:"idc",   title:"Device ID Keys",          x:54,y:16,size:96,hue:"cyan",
    summary:"MAC Address + IP Address are the row identity keys for pairing submission rows to reference rows within the site-scoped dataset. Stable unique key enables row-parallel comparison.",
    manages:"MAC Address · IP Address · row pairing logic · subset grading identity"},
   {id:"wsc",   title:"Weighted Scorer",           x:82,y:32,size:98,hue:"violet",
    summary:"Row-parallel comparison within the site-scoped dataset. Per-column weights sum to produce true_score (raw numeric, 0–100). score_percent derived from true_score / total_columns × 100.",
    manages:"per-column weights · row-parallel diff · true_score · score_pct · fail_summary generation"},
-  {id:"sfs",   title:"status_from_score()",       x:82,y:66,size:102,hue:"emerald",
+  {id:"sfs",   title:"Pass / Fail Decision",       x:82,y:66,size:102,hue:"emerald",
    summary:"SINGLE SOURCE OF TRUTH for PASS/FAIL. Uses Decimal(str(...)) internally for float stability — 95.0000000001 and 95.00 both reliably PASS. Never call anything else to determine status.",
    manages:"PASS_THRESHOLD · Decimal comparison · ProcessingStatus enum · canonical decision"},
-  {id:"vgc",   title:"validate_grading_consistency()",x:54,y:82,size:96,hue:"amber",
+  {id:"vgc",   title:"Score Integrity Check",x:54,y:82,size:96,hue:"amber",
    summary:"Assert that status is consistent with true_score. Raises GradingInconsistencyError if score=95.6 but status=FAIL (data integrity violation, not a display bug). Every instance is a pipeline bug to be fixed immediately.",
    manages:"GradingInconsistencyError · integrity guard · score/status assertion"},
-  {id:"sres",  title:"SubmissionResult",          x:20,y:70,size:96,hue:"pink",
+  {id:"sres",  title:"Grading Result",          x:20,y:70,size:96,hue:"pink",
    summary:"Dataclass bundling all grading outputs: true_score, score_pct, status (ProcessingStatus), fail_summary, notes_internal, matched_columns. Passed downstream to emailer and Airtable PATCH.",
    manages:"models.py · SubmissionResult · fail_summary · matched_columns · output contract"}
 ],edges:[
@@ -187,29 +187,29 @@ grader:{id:"grader",name:"python_grader.py · Scoring Engine",nodes:[
   {id:"g7",from:"gcore",to:"wsc",  strength:0.72}
 ]},
 
-async_workers:{id:"async_workers",name:"MetricsRefreshWorker · Async Layer",nodes:[
-  {id:"mwcore",title:"MetricsRefreshWorker",     x:50,y:48,size:128,hue:"core",
+async_workers:{id:"async_workers",name:"Background Workers",nodes:[
+  {id:"mwcore",title:"Refresh Controller",     x:50,y:48,size:128,hue:"core",
    summary:"metrics_worker.py. Single-owner daemon thread. ALL output file writes happen here — no other thread touches CSVs or HTML. Dirty-flag pattern: workers call mark_dirty(), this thread batches them. 60s backstop prevents stale dashboards.",
    manages:"metrics_worker.py · single-writer guarantee · threading.Event dirty flag · 60s backstop"},
-  {id:"mdf",   title:"mark_dirty()",              x:20,y:22,size:96,hue:"blue",
+  {id:"mdf",   title:"Refresh Signal",              x:20,y:22,size:96,hue:"blue",
    summary:"Thread-safe signal from SubmissionWorker. Returns immediately — never blocks grading. The next refresh iteration picks up any completions that arrived DURING a refresh (flag cleared at refresh START, not END).",
    manages:"threading.Event · non-blocking signal · batching semantics"},
-  {id:"mpy",   title:"metrics.py",                x:54,y:14,size:98,hue:"cyan",
+  {id:"mpy",   title:"Stats Generator",                x:54,y:14,size:98,hue:"cyan",
    summary:"refresh_all_metrics() computes and writes 3 CSVs: submission_history.csv, vendor_metrics.csv, processing_summary.csv. Reads from Archive — no live DB calls. Pure computation from archived data.",
    manages:"metrics.py · submission_history.csv · vendor_metrics.csv · processing_summary.csv"},
-  {id:"rtm",   title:"realtime_metrics.py",       x:82,y:28,size:96,hue:"violet",
+  {id:"rtm",   title:"Live Counters",       x:82,y:28,size:96,hue:"violet",
    summary:"refresh_realtime_metrics() pulls live counts from Airtable API (current queue depth, today's submissions, processing status). Writes realtime_snapshot.json for the dashboard live counter strip.",
    manages:"realtime_metrics.py · Airtable live query · realtime_snapshot.json · queue depth"},
-  {id:"tdd",   title:"team_dashboard_data.py",    x:84,y:56,size:96,hue:"amber",
+  {id:"tdd",   title:"Team Data Feed",    x:84,y:56,size:96,hue:"amber",
    summary:"refresh_team_dashboard_data() aggregates team-scoped metrics from Airtable. Produces team_dashboard_data.json used by the Scout and Performance sections of the executive dashboard.",
    manages:"team_dashboard_data.py · team aggregation · team_dashboard_data.json · Scout data"},
-  {id:"whl",   title:"weekly_highlights.py",      x:68,y:82,size:98,hue:"pink",
+  {id:"whl",   title:"Weekly Report Builder",      x:68,y:82,size:98,hue:"pink",
    summary:"27.4 KB executive summary generator. Detects pass/fail trends, top vendors, site performance patterns, and formats the Weekly Summary section of the dashboard. Triggered by MetricsRefreshWorker.",
    manages:"weekly_highlights.py · trend detection · executive narrative · weekly section HTML"},
-  {id:"dshpy", title:"dashboard.py → dashboard_exec.py",x:32,y:80,size:102,hue:"emerald",
+  {id:"dshpy", title:"Dashboard Builder",x:32,y:80,size:102,hue:"emerald",
    summary:"dashboard.py (1.5 KB) calls refresh_dashboards() which invokes dashboard_exec.py (101.2 KB). The exec module injects all metric data into the ui/ template and writes to output/executive_dashboard.html.",
    manages:"dashboard.py · dashboard_exec.py · template injection · output/executive_dashboard.html"},
-  {id:"ldsrv", title:"local_dashboard_server.py", x:16,y:52,size:96,hue:"blue",
+  {id:"ldsrv", title:"Dashboard Web Server", x:16,y:52,size:96,hue:"blue",
    summary:"Tiny localhost HTTP server. Tries port 8765 first; if taken, OS assigns any free port. Chosen port written to output/dashboard.port (ASCII, no BOM). Serves output/ with no-cache headers. Desktop Launcher reads this file to open the correct URL.",
    manages:"local_dashboard_server.py · port 8765 preferred · OS free-port fallback · output/dashboard.port · no-cache headers"}
 ],edges:[
@@ -219,26 +219,26 @@ async_workers:{id:"async_workers",name:"MetricsRefreshWorker · Async Layer",nod
   {id:"a7",from:"dshpy",to:"ldsrv",  strength:0.72},{id:"a8",from:"mwcore",to:"dshpy",strength:0.62}
 ]},
 
-datastore:{id:"datastore",name:"Archive · Memory · Review",nodes:[
-  {id:"arc",   title:"archive.py",               x:50,y:48,size:128,hue:"core",
+datastore:{id:"datastore",name:"Audit & Memory Store",nodes:[
+  {id:"arc",   title:"Audit Archive",               x:50,y:48,size:128,hue:"core",
    summary:"Append-only structured archive (12.3 KB). 6 subdirectories. NOTHING is deleted or overwritten. Every pipeline run has a full audit trail including ERROR runs. Supplies all raw data for metrics computation.",
    manages:"6 archive subdirs · append-only guarantee · ExecutionRecord · SubmissionArchiveRecord · Lesson"},
-  {id:"aexe",  title:"archive/executions/",       x:22,y:22,size:96,hue:"blue",
+  {id:"aexe",  title:"Run History",       x:22,y:22,size:96,hue:"blue",
    summary:"One ExecutionRecord JSON per pipeline run. Records: execution_id, site_number, vendor_email, true_score, status, timing, rows_loaded, error_message, output_report_path. Loaded by metrics.py.",
    manages:"ExecutionRecord · execution_id · timing · score history · full run audit"},
-  {id:"asub",  title:"archive/submissions/YYYY/MM/DD/",x:54,y:14,size:96,hue:"cyan",
+  {id:"asub",  title:"Submission Files",x:54,y:14,size:96,hue:"cyan",
    summary:"Raw vendor files + metadata JSON partitioned by date. find_archived_file_by_record_id() scans newest-first for fast correction lookups. Preserves vendor submissions independently of temp/ cleanup.",
    manages:"SubmissionArchiveRecord · raw files · date-partitioned · correction lookup · metadata JSON"},
-  {id:"arev",  title:"archive/reviews/",          x:82,y:30,size:96,hue:"violet",
+  {id:"arev",  title:"Review Reports",          x:82,y:30,size:96,hue:"violet",
    summary:"One ReviewResult JSON per pipeline run from reviewer.py. Issues classified CRITICAL/HIGH/LOW. Pure observer — never mutates pipeline state. Used for internal audit and quality trending.",
    manages:"ReviewResult · CRITICAL/HIGH/LOW · reviewer.py output · audit trail"},
-  {id:"ales",  title:"archive/lessons/",          x:82,y:66,size:98,hue:"amber",
+  {id:"ales",  title:"Lessons Learned",          x:82,y:66,size:98,hue:"amber",
    summary:"Extracted lessons from failures. Each Lesson has: lesson_id, task_category, failed_pattern, root_cause, fix_pattern, generalized_rule, tags[], confidence (0-1). Written by extract_lesson_from_failure().",
    manages:"Lesson model · confidence 0-1 · tags · generalized_rule · failure knowledge base"},
-  {id:"mempy", title:"memory.py",                 x:52,y:82,size:100,hue:"pink",
+  {id:"mempy", title:"Memory Engine",                 x:52,y:82,size:100,hue:"pink",
    summary:"Searches archive/lessons/ by tag+keyword for each submission. Injects ranked lessons as context into the grading narrative. Makes each run smarter. Also tracks execution_count() and failure_rate() for startup diagnostics.",
    manages:"memory.py · tag+keyword search · lesson ranking · context injection · failure_rate()"},
-  {id:"revpy", title:"reviewer.py",               x:20,y:68,size:96,hue:"emerald",
+  {id:"revpy", title:"Quality Auditor",               x:20,y:68,size:96,hue:"emerald",
    summary:"Internal static audit (16 KB). Runs after grading on every pipeline run. Classifies issues as CRITICAL/HIGH/LOW based on score, status, error patterns, and consistency checks. NEVER mutates state.",
    manages:"reviewer.py · review_pipeline_run() · issue classification · CRITICAL/HIGH/LOW · pure observer"}
 ],edges:[
@@ -248,29 +248,29 @@ datastore:{id:"datastore",name:"Archive · Memory · Review",nodes:[
   {id:"d7",from:"mempy",to:"arc",  strength:0.50}
 ]},
 
-airtable:{id:"airtable",name:"airtable_client.py · API Layer",nodes:[
-  {id:"atcore",title:"AirtableClient",            x:50,y:48,size:128,hue:"core",
+airtable:{id:"airtable",name:"Airtable Integration",nodes:[
+  {id:"atcore",title:"Airtable Gateway",            x:50,y:48,size:128,hue:"core",
    summary:"airtable_client.py (33.9 KB). The ONLY module that talks to Airtable. All other modules receive typed objects (AirtableRecord) or call methods on this client. No other module makes raw API calls.",
    manages:"airtable_client.py · single Airtable interface · typed AirtableRecord · all REST calls"},
-  {id:"gpr",   title:"get_pending_records()",     x:20,y:22,size:96,hue:"blue",
+  {id:"gpr",   title:"Fetch Pending Forms",     x:20,y:22,size:96,hue:"blue",
    summary:"Polls Airtable for records with UNPROCESSED statuses. Returns list[AirtableRecord]. QUEUED/PROCESSING excluded from query so in-flight records are never re-fetched. Dedup-set in SubmissionQueue is a secondary guard.",
    manages:"GET /records · UNPROCESSED filter · AirtableRecord typing · poll cycle input"},
-  {id:"grs",   title:"get_records_by_statuses()", x:56,y:14,size:96,hue:"cyan",
+  {id:"grs",   title:"Crash Recovery Scan", x:56,y:14,size:96,hue:"cyan",
    summary:"Used exclusively by crash recovery on startup to find QUEUED or PROCESSING records left by a previous hard crash. Resets them to empty so the next poll cycle can re-pick them up cleanly.",
    manages:"crash recovery query · STUCK_STATUSES · reset-to-empty · startup cleanup"},
   {id:"us",    title:"update_status()",           x:82,y:26,size:96,hue:"violet",
    summary:"Transitions a record through the status workflow: (empty) → QUEUED → PROCESSING → PASS/FAIL/ERROR. Called immediately when a record is enqueued (QUEUED) and after grading (final status). Thread-safe per-record.",
    manages:"PATCH status field · workflow transitions · QUEUED mark · final status write"},
-  {id:"da",    title:"download_attachment()",     x:84,y:56,size:98,hue:"amber",
+  {id:"da",    title:"Download File",     x:84,y:56,size:98,hue:"amber",
    summary:"Downloads vendor file from Airtable CDN URL to temp/. RISK-003: Airtable CDN URLs expire — mitigated by OneDrive mirror keyed by Site Number. Falls back to mirror on CDN failure.",
    manages:"HTTP download · temp/ storage · RISK-003 CDN expiry · OneDrive mirror fallback"},
-  {id:"pr",    title:"patch_results()",           x:66,y:80,size:100,hue:"emerald",
+  {id:"pr",    title:"Write Results Back",           x:66,y:80,size:100,hue:"emerald",
    summary:"PATCHes ALL result fields in one call: Processing Status, True Score, Score%, Fail Summary, Notes. ALWAYS writes every field — never leave any field blank. Hard rule prevents ghost data from prior runs appearing on resubmissions.",
    manages:"PATCH all fields · true_score · score_pct · fail_summary · notes · ghost data prevention"},
-  {id:"rl",    title:"Rate Limiter + Backoff",    x:32,y:80,size:96,hue:"pink",
+  {id:"rl",    title:"Rate Limiter",    x:32,y:80,size:96,hue:"pink",
    summary:"Every outbound API call goes through the rate limiter. Exponential backoff on 429/503 responses. Never hammers the Airtable API. Prevents the pipeline from causing rate-limit cascades during batch processing.",
    manages:"exponential backoff · 429 handling · retry logic · API call throttling"},
-  {id:"arm",   title:"AirtableRecord model",      x:16,y:52,size:96,hue:"blue",
+  {id:"arm",   title:"Form Record Schema",      x:16,y:52,size:96,hue:"blue",
    summary:"models.py typed dataclass. Fields: record_id, site_number (ProjectID authority), site_name, submission_id, vendor_email, attachment_url, attachment_filename, raw_fields. Site Number overrides any vendor-supplied ProjectID.",
    manages:"models.py · AirtableRecord · site_number authority · typed field access · attachment_url"}
 ],edges:[
@@ -280,26 +280,26 @@ airtable:{id:"airtable",name:"airtable_client.py · API Layer",nodes:[
   {id:"at7",from:"rl",to:"gpr",       strength:0.54},{id:"at8",from:"arm",to:"atcore",   strength:0.60}
 ]},
 
-correction:{id:"correction",name:"CorrectionWorker · Post-Pass Correction",nodes:[
-  {id:"cwcore",title:"CorrectionWorker",          x:50,y:48,size:128,hue:"core",
+correction:{id:"correction",name:"Auto-Correction System",nodes:[
+  {id:"cwcore",title:"Auto-Correction Worker",          x:50,y:48,size:128,hue:"core",
    summary:"correction_worker.py. Independent daemon thread — completely separate from the grading pipeline. Polls Airtable every N secs for PASS records with True Score ≥ 95. Provides autonomous correction for historical records and acts as a safety net for inline Step 15.",
    manages:"correction_worker.py · autonomous poll · score≥95 filter · CorrectionStateDB guard"},
-  {id:"csdb",  title:"CorrectionStateDB",         x:20,y:22,size:98,hue:"blue",
+  {id:"csdb",  title:"Already-Fixed Tracker",         x:20,y:22,size:98,hue:"blue",
    summary:"correction_state.py. SQLite-backed deduplication database. Shared between CorrectionWorker (background) and inline Step 15 (pipeline). Ensures no record is ever corrected twice regardless of which path triggers first.",
    manages:"correction_state.py · SQLite dedup · corrected_count() · is_corrected() · shared state"},
-  {id:"s15",   title:"Inline Step 15 (pipeline)", x:54,y:14,size:96,hue:"cyan",
+  {id:"s15",   title:"Inline Safety Net", x:54,y:14,size:96,hue:"cyan",
    summary:"Safety net for records that complete during the main 14-step pipeline run. If score ≥ 95, calls run_post_pass_correction() before the pipeline returns. CorrectionStateDB prevents double-processing if CorrectionWorker also picks it up.",
    manages:"poll_airtable.py Step 15 · inline trigger · score≥95 gate · state_db check"},
-  {id:"ppc",   title:"post_pass_correction.py",   x:82,y:30,size:102,hue:"violet",
+  {id:"ppc",   title:"Correction Processor",   x:82,y:30,size:102,hue:"violet",
    summary:"30.3 KB isolated correction sub-pipeline. Generates corrected RAW, CSV, and LOG files. NEVER re-grades (score is final). NEVER touches Airtable (output only). Completely isolated — a bug here cannot affect the main pipeline status.",
    manages:"post_pass_correction.py · corrected RAW/CSV/LOG · isolation guarantee · no re-grading"},
-  {id:"couts", title:"Correction Outputs",         x:82,y:68,size:96,hue:"amber",
+  {id:"couts", title:"Corrected Files",         x:82,y:68,size:96,hue:"amber",
    summary:"Corrected RAW file, normalised CSV, correction LOG. Stored in output/corrections/. These are advisory artifacts for vendors and internal review — they do not change Airtable status or trigger re-grading.",
    manages:"corrected RAW · correction CSV · correction LOG · output/corrections/ · advisory artifacts"},
-  {id:"afl",   title:"archive.find_archived_file()",x:50,y:82,size:96,hue:"emerald",
+  {id:"afl",   title:"Find Original File",x:50,y:82,size:96,hue:"emerald",
    summary:"Before re-downloading from Airtable (RISK-003 CDN expiry), CorrectionWorker uses archive.find_archived_file_by_record_id() to locate the previously archived vendor file. Scans newest date folder first. Falls back to network download if not found.",
    manages:"archive lookup · local-first file resolution · RISK-003 mitigation · newest-first scan"},
-  {id:"csp",   title:"correction_state.py",        x:18,y:66,size:96,hue:"pink",
+  {id:"csp",   title:"Fix State Database",        x:18,y:66,size:96,hue:"pink",
    summary:"Persistence layer for CorrectionStateDB. Stores corrected record IDs in a SQLite file in corrections/. state_file_path() and corrected_count() exposed for startup logging. Survives process restarts.",
    manages:"correction_state.py · SQLite persistence · corrected_count() · state_file_path() · restart survival"}
 ],edges:[
@@ -309,20 +309,20 @@ correction:{id:"correction",name:"CorrectionWorker · Post-Pass Correction",node
   {id:"c7",from:"ppc",to:"afl",      strength:0.70}
 ]},
 
-output:{id:"output",name:"Output Layer · Email + Airtable Writeback",nodes:[
-  {id:"eml",   title:"emailer.py",                x:50,y:44,size:124,hue:"core",
+output:{id:"output",name:"Notifications & Results",nodes:[
+  {id:"eml",   title:"Email Sender",                x:50,y:44,size:124,hue:"core",
    summary:"emailer.py (6.5 KB). Sends PASS/FAIL/ERROR templated emails to vendors. When SMTP_ENABLED=false, email is bypassed and Airtable automation handles vendor notification — the pipeline still writes all result fields.",
    manages:"emailer.py · SMTP delivery · SMTP_ENABLED flag · template selection · error alerting"},
-  {id:"pe",    title:"send_pass_email()",          x:20,y:22,size:96,hue:"emerald",
+  {id:"pe",    title:"Send Pass Email",          x:20,y:22,size:96,hue:"emerald",
    summary:"PASS template. Includes: True Score, Score%, confirmation message, archive reference. Sent only when status=PASS AND SMTP_ENABLED. Subject line and body configurable via AppConfig.",
    manages:"PASS template · score in email · vendor confirmation · SMTP send"},
-  {id:"fe",    title:"send_fail_email()",          x:54,y:14,size:96,hue:"pink",
+  {id:"fe",    title:"Send Fail Email",          x:54,y:14,size:96,hue:"pink",
    summary:"FAIL template. Includes: True Score, Score%, Fail Summary with column-level breakdown, corrective guidance, resubmission instructions. The fail_summary field drives the content — grader output goes directly to vendor.",
    manages:"FAIL template · fail_summary injection · column-level feedback · corrective guidance"},
-  {id:"ee",    title:"send_error_email()",         x:80,y:26,size:96,hue:"amber",
+  {id:"ee",    title:"Send Error Alert",         x:80,y:26,size:96,hue:"amber",
    summary:"ERROR template. Sent to configured admin addresses (not vendor). Includes execution_id, record_id, error_message for debugging. Allows errors to surface without exposing internals to vendors.",
    manages:"ERROR template · admin alert · execution_id · internal error visibility"},
-  {id:"apatch",title:"Airtable PATCH (all fields)",x:80,y:66,size:104,hue:"blue",
+  {id:"apatch",title:"Save to Airtable",x:80,y:66,size:104,hue:"blue",
    summary:"patch_results() via AirtableClient. Writes Processing Status, True Score, Score%, Fail Summary, Notes in a single PATCH. HARD RULE: all fields always written, never blank. Prevents stale values from prior submissions appearing on current record.",
    manages:"airtable_client.patch_results() · all 5 result fields · single PATCH call · atomic write"},
   {id:"gdp",   title:"Ghost Data Prevention",      x:26,y:72,size:96,hue:"violet",
@@ -448,9 +448,11 @@ function renderNodes(){
     Object.assign(o1.style,{position:"absolute",inset:"-8%",opacity:".4",borderRadius:"56% 44% 52% 48%/42% 58% 44% 56%",border:"1px solid rgba(255,255,255,0.06)"});
     const shape=document.createElement("div");
     shape.className="node-shape";Object.assign(shape.style,bshape(node.size,node.hue,node.x));
+    if(node.realmTarget){shape.style.outline="2px solid rgba(255,194,32,0.38)";shape.style.outlineOffset="3px";}
     shape.innerHTML=`<div style="position:absolute;inset:10%;border-radius:52% 48%/46% 54%;border:1px solid rgba(255,255,255,0.08)"></div><div style="position:absolute;left:18%;top:18%;width:12%;height:12%;border-radius:50%;background:rgba(255,255,255,0.16);filter:blur(2px)"></div><div style="position:absolute;left:54%;top:22%;width:8%;height:8%;border-radius:50%;background:rgba(255,255,255,0.12);filter:blur(2px)"></div>`;
     const label=document.createElement("div");
-    label.className="node-label";label.textContent=node.title;
+    label.className="node-label";
+    label.textContent=node.title+(node.realmTarget?" ⊕":"");
     el.addEventListener("click",()=>{selId=node.id;render()});
     el.addEventListener("dblclick",()=>enterRealm(node));
     el.addEventListener("mouseenter",evt=>showHover(node,evt));
@@ -468,7 +470,7 @@ function renderBottom(){
   bHint.textContent=cur().name+" · Selected";
   bTitle.textContent=node.title;
   bText.textContent=node.summary||"";
-  bDrill.textContent=node.realmTarget?"Double-click to drill into this module":"";
+  bDrill.textContent=node.realmTarget?"⊕  Double-click the orb to explore this component":"";
 }
 
 function renderCrumb(){

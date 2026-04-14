@@ -1,54 +1,114 @@
-# agents/ — SiteOwlQA Agent Registry
+# SiteOwlQA — Agent Registry
 
-> Every AI agent touching this project lives here.
-> Two categories: **Dev Agents** (Code Puppy sub-agents used by Maxim in dev sessions)
-> and **Runtime Agents** (pydantic-ai `Agent` instances running inside the application).
-
----
-
-## Quick Reference
-
-| Agent | Category | Invoked By | Primary Role |
-|---|---|---|---|
-| [code-puppy](code-puppy.md) | Dev | Maxim | Main coding assistant (current) |
-| [siteowlqa-dev](siteowlqa-dev.md) | Dev | Maxim | Project-scoped dev agent |
-| [chiefmaxim](chiefmaxim.md) | Dev | Maxim | Cross-project governance |
-| [airtable](airtable.md) | Dev | Maxim | Airtable API operations |
-| [share-puppy](share-puppy.md) | Dev | Maxim | Publish HTML reports |
-| [element-llm-gateway](element-llm-gateway.md) | Runtime | `weekly_highlights.py` | Weekly executive report generation |
+Complete catalogue of every agent, session role, and prompt-defined persona
+used in this project. Three categories, clearly separated.
 
 ---
 
-## Category Definitions
+## Category 1 — Code Puppy Sub-Agents (dev-time)
+Invoked during dev sessions via `/agent <name>`. No footprint in the app's source code.
 
-### Dev Agents
-Code Puppy sub-agents invoked interactively during development sessions.
-They have no footprint in the app's source code — they operate at the
-conversation / tooling layer and modify files, run tests, commit to git, etc.
-
-To invoke: `/agent <name>` in Code Puppy, or let `code-puppy` delegate automatically.
-
-### Runtime Agents
-pydantic-ai `Agent` instances instantiated inside the running SiteOwlQA application.
-They consume the Element LLM Gateway and run as part of the weekly highlights pipeline.
-They are NOT conversational — they run synchronously as a step in a function call.
+| Agent | File | What It Does |
+|---|---|---|
+| `code-puppy` | `code-puppy.md` | Main dev assistant — reads, writes, runs, commits |
+| `siteowlqa-dev` | `siteowlqa-dev.md` | Project-scoped dev agent, enforces module ownership + git discipline |
+| `chiefmaxim` | `chiefmaxim.md` | Cross-project governance, meta-level decisions above this project |
+| `airtable` | `airtable.md` | Airtable API operations — inspect base, patch records, debug field mapping |
+| `share-puppy` | `share-puppy.md` | Publishes HTML reports + dashboards to puppy.walmart.com/sharing |
 
 ---
 
-## Skills Index
-Skills are behavioral layers loaded by dev agents, not standalone processes.
-They live in `skills/` and are referenced here for discoverability.
+## Category 2 — Session Role Personas (dev-time)
+Code Puppy adopts these roles during dev sessions to enforce specific reasoning patterns.
+Each maps to a prompt file in `prompts/` and/or a deterministic runtime module.
 
-| Skill | Trigger |
+| Role | File | Prompt Source | Runtime Module | LLM? |
+|---|---|---|---|---|
+| Architect | `architect.md` | `prompts/architect_prompt.md` | _(none — session reasoning only)_ | ❌ |
+| Generator | `generator.md` | `prompts/generator_prompt.md` | _(none — session reasoning only)_ | ❌ |
+| Reviewer | `reviewer.md` | `prompts/reviewer_prompt.md` | `src/siteowlqa/reviewer.py` | ❌ |
+| Grading Authority | `grading-authority.md` | `prompts/grading_prompt.md` | `src/siteowlqa/python_grader.py` | ❌ |
+| Git Truth Guard | `git-truth-guard.md` | `prompts/git_truth_guard_prompt.md` | `tools/git_truth_guard.py` | ❌ |
+
+> **Note:** `reviewer.py` and `python_grader.py` are fully deterministic — no LLM calls.
+> The session role and the runtime module implement the same rule set.
+
+---
+
+## Category 3 — Runtime LLM Agents (app code + tools)
+pydantic-ai `Agent` instances that call the Element LLM Gateway at runtime.
+
+| Agent | File | Location | When It Runs | LLM? |
+|---|---|---|---|---|
+| Element LLM Gateway | `element-llm-gateway.md` | `src/siteowlqa/weekly_highlights.py` | Weekly executive report generation | ✅ |
+| Docker Platform Engineer | `docker-platform-engineer.md` | `tools/docker_platform_engineer.py` | On-demand: `python tools/docker_platform_engineer.py` | ✅ |
+| System Bottleneck Auditor | `system-bottleneck-auditor.md` | `tools/system_bottleneck_auditor.py` | On-demand: `python tools/system_bottleneck_auditor.py` | ✅ |
+
+---
+
+## Orchestration Contract
+When multiple session roles are active in one task, they must operate in this order:
+
+```
+1. Architect    → defines scope, constraints, module boundaries
+2. Generator    → implements the change
+3. Reviewer     → checks code quality and business rules
+4. Git Truth Guard → verifies commit + push receipts
+                    ← task is only COMPLETE after this step
+```
+
+---
+
+## LLM Gateway — Shared Configuration
+All three runtime LLM agents read from `AppConfig` (via `config.py`):
+
+| Config Key | Purpose |
 |---|---|
-| `SKILL_RELENTLESS_MEMORY` | Session with ≥3 files or ≥2 decisions — take notes |
-| `SKILL_GIT_TRUTH_GUARD` | Verify git push with receipts |
-| `SKILL_GIT_FOCUSED_COMMIT` | Any git commit operation |
-| `SKILL_FLAT_HTML_REPORT` | Build a dashboard or chart report |
-| `SKILL_ORCHESTRATION_MAP` | Visualise pipeline / show the flow |
-| `SKILL_GOVERNANCE_SETUP` | New project or governance bootstrap |
-| `SKILL_SKILL_EXTRACTION` | End of every task — extract repeatable patterns |
-| `memory-and-token-optimization-engineer` | Memory/token audit on any LLM app |
+| `element_llm_gateway_url` | Direct URL override (takes priority) |
+| `element_llm_gateway_project_id` | Auto-builds URL if no direct URL |
+| `element_llm_gateway_api_key` | API key sent as `X-Api-Key` header |
+| `element_llm_gateway_model` | Model name — default: `element:gpt-4o` |
+| `wmt_ca_path` | Walmart CA cert path for TLS |
 
-Full skill specs: [`skills/INDEX.md`](../skills/INDEX.md)
-Memory-token audit report: [`docs/memory_token_optimization_report.md`](../docs/memory_token_optimization_report.md)
+Gateway URL pattern:
+```
+https://ml.prod.walmart.com:31999/element/genai/project/{project_id}/openai/v1
+```
+Reference: https://wmlink.wal-mart.com/genai-access
+
+All three agents degrade gracefully — they have static fallbacks when the
+gateway is unavailable or unconfigured.
+
+---
+
+## Key Invariant
+> **The grading pipeline has zero LLM calls.**
+> PASS / FAIL / ERROR is always 100% deterministic.
+> LLM is used only for reporting (weekly highlights) and tooling (infra design, bottleneck audit).
+
+---
+
+## File Count
+```
+agents/
+├── README.md                      ← this file
+│
+├── [Category 1 — Code Puppy Sub-Agents]
+├── code-puppy.md
+├── siteowlqa-dev.md
+├── chiefmaxim.md
+├── airtable.md
+├── share-puppy.md
+│
+├── [Category 2 — Session Role Personas]
+├── architect.md
+├── generator.md
+├── reviewer.md
+├── grading-authority.md
+├── git-truth-guard.md
+│
+└── [Category 3 — Runtime LLM Agents]
+    ├── element-llm-gateway.md
+    ├── docker-platform-engineer.md
+    └── system-bottleneck-auditor.md
+```

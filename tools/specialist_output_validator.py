@@ -325,12 +325,21 @@ def _static_validate_bottleneck(ev: AgentEvidence) -> ValidationResult:
             "root cause identification, or revised architecture. Configure Element LLM Gateway "
             "and re-run for a full audit."
         )
-        r.missing += [
-            "severity ranking (requires LLM run)",
-            "business impact per bottleneck (requires LLM run)",
-            "technical root cause (requires LLM run)",
-            "revised architecture proposal (requires LLM run)",
+        # Annotate already-missing items as LLM-gated; add any not already caught
+        existing = {m.split(" (")[0] for m in r.missing}
+        llm_gated = [
+            "severity ranking",
+            "business impact per bottleneck",
+            "technical root cause",
+            "revised architecture proposal",
         ]
+        for item in llm_gated:
+            tagged = f"{item} (requires LLM run)"
+            if item in existing:
+                # replace plain entry with the annotated version
+                r.missing = [m if m != item else tagged for m in r.missing]
+            else:
+                r.missing.append(tagged)
 
     if r.missing:
         r.verdict = "FAIL"

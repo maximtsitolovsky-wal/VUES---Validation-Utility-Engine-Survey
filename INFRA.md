@@ -1,19 +1,27 @@
 # 🏗️ SiteOwlQA — System & Build Infrastructure
 
-> Auto-generated: 2026-04-14 | Code Puppy `code-puppy-e05be7`
+> Last updated: 2026-04-14 (session 2) | Code Puppy `code-puppy-e05be7`
 
 ---
 
 ## 🖥️ Host Machine
 
-| Property         | Value                                      |
-|------------------|--------------------------------------------|
-| OS               | Microsoft Windows 11 Enterprise            |
-| OS Build         | 10.0.26100 (Build 26100)                   |
-| Architecture     | x64-based PC                               |
-| RAM              | ~32 GB                                     |
-| BIOS             | Lenovo N48ET31W (1.18), Oct 29 2025        |
-| Working Dir      | `C:\SiteOwlQA_App`                         |
+| Property         | Value                                              |
+|------------------|----------------------------------------------------|
+| Hostname         | `LEUS42514512037`                                  |
+| Machine Model    | Lenovo ThinkPad `21KWS28G00`                       |
+| OS               | Microsoft Windows 11 Enterprise                    |
+| OS Build         | 10.0.26100 (Build 26100)                           |
+| Architecture     | x64-based PC                                       |
+| CPU              | Intel Core Ultra (Family 6 / Model 170) @ ~2300 MHz |
+| RAM              | 32 GB physical (4.8 GB free at capture time)       |
+| BIOS             | Lenovo N48ET31W (1.18), Oct 29 2025                |
+| Last Boot        | 2026-04-13 08:03 CST                               |
+| Domain           | `homeoffice.Wal-Mart.com`                          |
+| Network          | Intel Wi-Fi 7 BE200 — IP `10.97.13.146` (DHCP)     |
+| VBS / Security   | Credential Guard ✅  HVCI ✅  Secure Launch ✅      |
+| App Control      | Enforced (Windows Defender Application Control)    |
+| Working Dir      | `C:\SiteOwlQA_App`                                 |
 
 ---
 
@@ -27,7 +35,73 @@
 | Node.js    | v24.11.1        | Used for front-end tooling / UI            |
 | npm        | 11.6.2          | Node package manager                       |
 | Git        | 2.47.1.windows.2| Source control                             |
-| Docker     | 29.4.0 (Desktop 4.69) | Hyper-V backend; dev hot-reload via Compose Watch |
+| Docker CLI | 29.4.0 (bundled)      | Via Rancher Desktop — see Container Runtime below  |
+| .NET SDK   | Not installed         | Not required by this project                       |
+
+---
+
+## 🐳 Container Runtime
+
+> **Status as of 2026-04-14:** Container engine was broken all session.
+> Root cause found and fixed — one reboot required to complete setup.
+
+### Installed Runtimes
+
+| Runtime           | Version   | Status                                              |
+|-------------------|-----------|-----------------------------------------------------|
+| Docker Desktop    | 4.69.0    | ⚠️ Engine broken — VM never boots (see below)       |
+| Rancher Desktop   | 1.22.0    | ⚠️ Installed today — needs reboot to activate WSL2  |
+| WSL2              | 2.6.3.0   | ⚠️ Installed today — **VirtualMachinePlatform pending reboot** |
+
+### Root Cause Summary
+
+| Layer                     | Finding                                                       |
+|---------------------------|---------------------------------------------------------------|
+| VirtualMachinePlatform    | Enabled today via `wsl --install`; **active after reboot**    |
+| WSL2 kernel               | Installed (v2.6.3); reports "not supported" until rebooted    |
+| Docker Desktop engine     | Returns HTTP 500 on `/_ping` — VM never created               |
+| Rancher Desktop VM        | `wsl --import` fails — same pending-reboot root cause         |
+| Machine type              | **Physical Lenovo ThinkPad** (not VDI) — nested virt not an issue |
+
+### ✅ Fix: Reboot
+
+A single reboot activates VirtualMachinePlatform. After that:
+- Rancher Desktop imports its `rancher-desktop` WSL2 distro automatically
+- Docker CLI (moby engine) becomes available via Rancher Desktop
+- `docker compose watch` works for hot-reload dev workflow
+
+### Post-Reboot Verification
+
+```powershell
+# Run these in a new terminal after reboot
+docker ps                          # Should return empty table, not error
+docker compose up --build          # Full build test
+```
+
+### Rancher Desktop Config (pre-written)
+
+| Setting              | Value                                         |
+|----------------------|-----------------------------------------------|
+| Container engine     | `moby` (dockerd — full Docker CLI compat)     |
+| Kubernetes           | Disabled (saves ~1 GB RAM)                    |
+| Admin access         | Disabled (per-user install, no UAC needed)    |
+| Telemetry            | Disabled                                      |
+| Auto-update          | Disabled                                      |
+| Config file          | `%APPDATA%\rancher-desktop\settings.json`     |
+| Docker socket        | `\\.\pipe\docker_engine` (standard)           |
+
+### Docker Compose Dev Workflow
+
+```powershell
+# Hot-reload (watches src/ for changes)
+docker compose watch
+
+# One-shot build & run
+docker compose up --build
+
+# Rebuild image only
+docker compose build --no-cache
+```
 
 ---
 

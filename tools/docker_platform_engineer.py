@@ -19,6 +19,7 @@ import argparse
 import html as _html
 import os
 import re
+import subprocess
 import sys
 import webbrowser
 from datetime import datetime
@@ -89,6 +90,8 @@ def _scan_stack() -> dict:
         if k.startswith("CORRECTION_") and v and "OneDrive" in v
     }
 
+    docker_ok, docker_ver = _check_docker()
+
     return {
         "modules": modules,
         "workers": workers,
@@ -105,7 +108,8 @@ def _scan_stack() -> dict:
         "correction_db": "SQLite (CorrectionStateDB) — naturally volume-mountable",
         "worker_model": f"{len(workers)} named worker threads + main poll thread (no separate processes)",
         "python_req": ">=3.11",
-        "docker_installed": False,
+        "docker_installed": docker_ok,
+        "docker_version": docker_ver,
         "os": "Windows 11",
     }
 
@@ -132,6 +136,77 @@ def _format_evidence(stack: dict) -> str:
     for k, v in stack["env_vars"].items():
         ev.append(f"  {k}={v}")
     return "\n".join(ev)
+
+
+# ---------------------------------------------------------------------------
+# Docker availability + build
+# ---------------------------------------------------------------------------
+
+def _check_docker() -> tuple[bool, str]:
+    """Return (available, version_string). Never raises."""
+    try:
+        r = subprocess.run(
+            ["docker", "compose", "version"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode == 0:
+            return True, r.stdout.strip().splitlines()[0]
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        pass
+    # Try legacy 'docker-compose' as fallback
+    try:
+        r = subprocess.run(
+            ["docker-compose", "version"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode == 0:
+            return True, r.stdout.strip().splitlines()[0] + " (legacy)"
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        pass
+    return False, "Docker not found"
+
+
+def _docker_build(target: str = "dev") -> tuple[bool, str]:
+    """Run 'docker compose build' from the repo root.
+
+    Streams output to stdout in real-time and returns (success, combined_output).
+    """
+    cmd = ["docker", "compose", "build", "--progress=plain"]
+    print(f"[BUILD] Running: {' '.join(cmd)} (cwd={_REPO})")
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(_REPO),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        lines: list[str] = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            stripped = line.rstrip()
+            print(f"  {stripped}")
+            lines.append(stripped)
+        proc.wait(timeout=600)  # 10 min max for a build
+        success = proc.returncode == 0
+        status = "SUCCESS" if success else f"FAILED (exit {proc.returncode})"
+        print(f"[BUILD] {status}")
+        return success, "\n".join(lines)
+    except FileNotFoundError:
+        msg = "[BUILD] docker not found on PATH — install Docker Desktop first."
+        print(msg)
+        return False, msg
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        msg = "[BUILD] Timed out after 10 minutes."
+        print(msg)
+        return False, msg
+    except Exception as exc:  # noqa: BLE001
+        msg = f"[BUILD] Unexpected error: {exc}"
+        print(msg)
+        return False, msg
 
 
 # ---------------------------------------------------------------------------
@@ -818,7 +893,12 @@ def _write_artifacts(artifacts: dict[str, str]) -> list[Path]:
 # HTML report
 # ---------------------------------------------------------------------------
 
-def _report_html(stack: dict, written: list[Path], stamp: str) -> str:
+def _report_html(
+    stack: dict,
+    written: list[Path],
+    stamp: str,
+    build_result: tuple[bool, str] | None = None,
+) -> str:
     file_rows = "".join(
         f"<tr><td><code>{_html.escape(str(p.relative_to(_REPO)))}</code></td>"
         f"<td>{p.stat().st_size:,} bytes</td></tr>"
@@ -843,15 +923,42 @@ def _report_html(stack: dict, written: list[Path], stamp: str) -> str:
            ".banner{background:#0053e2;color:#fff;padding:1.25rem 1.5rem;border-radius:10px;margin-bottom:1.75rem}"
            ".banner h1{color:#fff;margin:0;font-size:1.45rem;border:none}"
            ".banner p{margin:.25rem 0 0;opacity:.8;font-size:.87rem}")
+    # Build result section
+    if build_result is None:
+        build_section = (
+            "<div class='warn'>&#9888; <strong>Docker build skipped</strong> — "
+            "pass <code>--no-build</code> was set or Docker not available. "
+            "Run <code>docker compose build</code> manually from the repo root.</div>"
+        )
+    elif build_result[0]:
+        build_section = (
+            "<div class='ok'>&#10003; <strong>Docker build succeeded!</strong> "
+            "The repo is now built into a Docker image and ready to run.</div>"
+            f"<details><summary>Build output</summary><pre style='background:#f8f8f8;padding:1rem;"
+            f"overflow:auto;font-size:.78rem;border-radius:6px'>{_html.escape(build_result[1])}</pre></details>"
+        )
+    else:
+        build_section = (
+            "<div style='background:#fff0f0;border-left:4px solid #ea1100;padding:.75rem 1rem;"
+            "border-radius:0 6px 6px 0;margin:1rem 0'>&#10060; <strong>Docker build FAILED.</strong> "
+            "Check the output below and resolve before running the app.</div>"
+            f"<details open><summary>Build output (errors)</summary><pre style='background:#fff8f8;"
+            f"padding:1rem;overflow:auto;font-size:.78rem;border-radius:6px;color:#ea1100'>"
+            f"{_html.escape(build_result[1])}</pre></details>"
+        )
+
+    docker_ver = _html.escape(stack.get("docker_version", "unknown"))
+
     return (
         f"<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>"
         f"<title>Docker Platform Design — SiteOwlQA</title><style>{css}</style></head><body>"
         f"<div class='banner'><h1>&#128679; Docker &amp; Multi-User Platform Engineer</h1>"
-        f"<p>Generated: {_html.escape(stamp)} &nbsp;|&nbsp; SiteOwlQA Pipeline</p></div>"
+        f"<p>Generated: {_html.escape(stamp)} &nbsp;|&nbsp; SiteOwlQA Pipeline "
+        f"&nbsp;|&nbsp; Docker: {docker_ver}</p></div>"
         f"<div class='warn'>&#9888; <strong>SQL Server Windows Auth is not usable in Linux containers.</strong>"
         f" See <code>infra/README.md</code> for the SQL auth migration and the one-property fix in config.py.</div>"
-        f"<div class='ok'>&#10003; <strong>{len(written)} artifact(s) written to <code>infra/</code>.</strong>"
-        f" Run <code>cd infra &amp;&amp; docker compose up --build</code> after completing the SQL auth step.</div>"
+        f"<div class='ok'>&#10003; <strong>{len(written)} artifact(s) written to <code>infra/</code>.</strong></div>"
+        f"{build_section}"
         f"<h2>Generated Files</h2><table><tr><th>Path</th><th>Size</th></tr>{file_rows}</table>"
         f"<h2>External Services (not containerized)</h2>"
         f"<table><tr><th>Service</th></tr>{ext_rows}</table>"
@@ -860,8 +967,8 @@ def _report_html(stack: dict, written: list[Path], stamp: str) -> str:
         f"<li>Apply the SQL auth change to <code>src/siteowlqa/config.py</code> — see <code>infra/README.md</code></li>"
         f"<li>Create a SQL Server login for the service account</li>"
         f"<li>Copy <code>infra/.env.example</code> → <code>infra/.env</code> and fill in secrets</li>"
-        f"<li><code>cd infra &amp;&amp; docker compose -f docker-compose.yml -f docker-compose.override.yml up --build</code></li>"
-        f"<li>Install Docker: <code>winget install Docker.DockerDesktop</code></li>"
+        f"<li><code>docker compose up</code> — image already built, just start it</li>"
+        f"<li>If Docker not installed: <code>winget install Docker.DockerDesktop</code> then re-run this tool</li>"
         f"</ol></body></html>"
     )
 
@@ -874,6 +981,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--no-llm", action="store_true", help="Skip LLM call, write static artifacts only")
     parser.add_argument("--no-browser", action="store_true", help="Don't open browser when done")
+    parser.add_argument("--no-build", action="store_true", help="Skip docker compose build step")
     args = parser.parse_args()
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -910,9 +1018,28 @@ def main() -> None:
     print(f"[INFO] Writing {len(artifacts)} file(s) to infra/ ...")
     written = _write_artifacts(artifacts)
 
+    # ── Docker build ─────────────────────────────────────────────────────────
+    build_result: tuple[bool, str] | None = None
+    if args.no_build:
+        print("[INFO] Skipping docker build (--no-build).")
+    elif not stack["docker_installed"]:
+        print(f"[WARN] {stack['docker_version']} — skipping build step.")
+        print("[WARN] Install Docker Desktop: winget install Docker.DockerDesktop")
+    else:
+        print(f"[INFO] Docker detected: {stack['docker_version']}")
+        print("[INFO] Building repo in Docker (docker compose build) ...")
+        build_result = _docker_build()
+        if build_result[0]:
+            print("[OK] Docker image built successfully! 🐳")
+        else:
+            print("[ERROR] Docker build failed — see report for details.")
+
     _OUTPUT.mkdir(parents=True, exist_ok=True)
     report_path = _OUTPUT / f"docker_platform_{stamp}.html"
-    report_path.write_text(_report_html(stack, written, stamp), encoding="utf-8")
+    report_path.write_text(
+        _report_html(stack, written, stamp, build_result=build_result),
+        encoding="utf-8",
+    )
     print(f"[OK] Report: {report_path}")
 
     if not args.no_browser:

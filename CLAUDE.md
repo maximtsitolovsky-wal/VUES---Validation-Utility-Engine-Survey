@@ -16,6 +16,10 @@ READ → PROVE → CHECK SKILLS → EXECUTE → REMEMBER → EXTRACT
 
 Before touching **anything** — open `MEMORY.md` and scan the QUICK REF block.
 
+> **If this is a continuation:** Load `docs/memory-agent/store/handoff_index.md` FIRST.
+> Pick up the last entry. Load that full handoff if the objective is complex or multi-file.
+> Then read MEMORY.md. Then state the MEMORY CHECK. In that order.
+
 **You must explicitly state (out loud, in your response) before any action:**
 
 > 🧠 MEMORY CHECK
@@ -77,8 +81,8 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 | | |
 |---|---|
 | **App** | SiteOwlQA — automated vendor QA pipeline |
-| **Stack** | Python · SQL Server · Airtable API · SMTP |
-| **Platform** | Windows · single-process · no Docker · no cloud deps |
+| **Stack** | Python · SQL Server · Airtable API (email via Airtable automations — no SMTP) |
+| **Platform** | Windows · single-process · Docker available (dev only, port 8765) · no cloud deps |
 | **Roadmap** | `development.md` |
 | **Settled decisions** | `MEMORY.md` |
 | **Architecture** | `prompts/architect_prompt.md` |

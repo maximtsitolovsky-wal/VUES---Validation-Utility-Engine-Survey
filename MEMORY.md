@@ -1,5 +1,5 @@
 # MEMORY.md — SiteOwlQA Settled Decisions & Context
-# Last updated: 2026-04-13
+# Last updated: 2026-04-15
 
 > This is the authoritative decision log for the SiteOwlQA project.
 > Code Puppy reads this at the start of every session.
@@ -58,9 +58,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-15** — RISK-003 CDN fix: `v5.airtableusercontent.com` is DNS-blocked for Python `requests` on Walmart network. Use `subprocess` + PowerShell `Invoke-WebRequest` (WinINet/browser stack) for image downloads. Confirmed 1.3MB image downloaded successfully via this path. `scripts/scout_downloader.py` rebuilt to use this method.
-2. **2026-04-14** — Relentless Memory Agent built: 5 spec docs in `docs/memory-agent/`, file backend (MEMORY.md + durable.jsonl), session notes, handoff system. Registered as `SKILL_RELENTLESS_MEMORY`. Memory store seeded with 3 bootstrap records.
-3. **2026-04-13** — Architecture rebuilt: 59 real nodes across 8 drill-down realms (root/pipeline/grader/async_workers/datastore/airtable/correction/output), mapped directly from source code. `served_dashboard/` synced from `output/` via `tools/publish_served_dashboard.py`.
+1. **2026-04-15** — Memory audit: stale data fixed in CLAUDE.md + MEMORY.md (SMTP removed, Docker added). Memory protocol run E2E: session note + durable.jsonl + handoff written. CLAUDE.md Step 1 now requires handoff_index.md check when continuing.
+2. **2026-04-15** — RISK-003 CDN fix: `v5.airtableusercontent.com` is DNS-blocked for Python `requests` on Walmart network. Use `subprocess` + PowerShell `Invoke-WebRequest` (WinINet/browser stack) for image downloads. Confirmed 1.3MB image downloaded successfully via this path. `scripts/scout_downloader.py` rebuilt to use this method.
+3. **2026-04-14** — Relentless Memory Agent built: 5 spec docs in `docs/memory-agent/`, file backend (MEMORY.md + durable.jsonl), session notes, handoff system. Registered as `SKILL_RELENTLESS_MEMORY`. Memory store seeded with 3 bootstrap records.
 
 ---
 

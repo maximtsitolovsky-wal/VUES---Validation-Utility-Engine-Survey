@@ -105,6 +105,7 @@
 | `utils.py`         | Logging setup, ID gen, safe file ops      |
 | `metrics.py`       | Compute metrics, export CSVs              |
 | `dashboard.py`     | Generate HTML dashboards from CSVs        |
+| `scout_sync_worker.py` | Scout image downloader daemon thread   |
 
 - **Closed:** Yes.
 

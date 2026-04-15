@@ -1,3 +1,12 @@
+### 2026-04-15 — Scout Image Sync Integrated Into Main Pipeline
+- **Decision:** Scout image downloader now runs as `ScoutSyncWorker` daemon thread inside `main.py` alongside `CorrectionWorker` and `MetricsRefreshWorker`. 60s startup delay, then every 6h while pipeline is running. Uses PowerShell `Invoke-WebRequest` (WinINet/browser stack) for CDN downloads — only path that reaches `v5.airtableusercontent.com` on Walmart network (DNS blocked at WinSock level, see RISK-003). Standalone `scripts/scout_downloader.py` + scheduled tasks (Mon-Fri 10AM/3PM) remain registered as redundancy layer.
+- **Impact:** `src/siteowlqa/scout_sync_worker.py` (new), `src/siteowlqa/main.py`, `MEMORY.md`.
+- **Closed:** Yes.
+
+### 2026-04-15 — RISK-003 CDN fix: `v5.airtableusercontent.com` is DNS-blocked for Python `requests` on Walmart network. Use `subprocess` + PowerShell `Invoke-WebRequest` (WinINet/browser stack) for image downloads. Confirmed 1.3MB image downloaded successfully via this path. `scripts/scout_downloader.py` rebuilt to use this method.
+- **Decision:** Python `requests` library CANNOT reach `v5.airtableusercontent.com` — DNS blocked at WinSock level. PowerShell `Invoke-WebRequest` uses WinINet (same as browsers) which accesses PAC/auto-proxy and CAN reach CDN. All image downloads now go through PowerShell subprocess. API record fetching stays in `requests` (works fine for `api.airtable.com`).
+- **Impact:** `scripts/scout_downloader.py`, `ops/windows/run_scout_downloader.bat`, `ops/windows/ScoutDownloader_Task.xml`, `ops/windows/register_scout_task.ps1`, `MEMORY.md`.
+- **Closed:** Yes.
 # MEMORY.md — SiteOwlQA Settled Decisions & Context
 # Last updated: 2026-04-15
 

@@ -26,10 +26,17 @@ This sync runs in **TWO WAYS** for redundancy:
 
 ## Files
 
-- **`scripts/scout_completion_sync_com.py`** - Main sync script (COM automation - SAFE for data models)
+**Main App Integration:**
+- **`src/siteowlqa/scout_completion_sync_worker.py`** - Worker thread (runs in main.py)
+- **`src/siteowlqa/main.py`** - Starts the worker on app startup
+
+**Standalone/Backup:**
+- **`scripts/scout_completion_sync_com.py`** - Standalone script (COM automation)
+- **`ops/windows/ScoutCompletionSync_Task.xml`** - Task Scheduler definition
+- **`ops/windows/run_scout_completion_sync.bat`** - Manual test runner
+
+**Deprecated:**
 - **`scripts/scout_completion_sync.py`** - ⚠️ DEPRECATED (openpyxl breaks data models)
-- **`ops/windows/ScoutCompletionSync_Task.xml`** - Task definition  
-- **`ops/windows/run_scout_completion_sync.bat`** - Manual test run
 
 ## Setup
 
@@ -48,7 +55,7 @@ ScoutCompletionSyncWorker started. Will sync completion status 60s after startup
 
 ### Method 2: Standalone Scheduled Task (Optional Backup)
 
-### 1. Install (One-Time)
+### Method 2: Standalone Scheduled Task (Optional Backup)
 
 Run as **Administrator**:
 
@@ -56,10 +63,11 @@ Run as **Administrator**:
 schtasks /Create /XML "ops\windows\ScoutCompletionSync_Task.xml" /TN "ScoutCompletionSync" /F
 ```
 
-This creates a Windows scheduled task that runs:
+This creates a Windows scheduled task that runs independently:
 - **Monday-Friday** at **10:00 AM** and **3:00 PM**
+- Runs even if main app is stopped
 
-### 2. Verify Installation
+### Method 3: Verify Installation
 
 ```powershell
 Get-ScheduledTask -TaskName "ScoutCompletionSync"

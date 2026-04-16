@@ -68,6 +68,25 @@ switch ($startResult) {
     default           { Write-Warning "Unexpected launcher result: $startResult" }
 }
 
+# Start git autopush (if not already running)
+$autopushScript = Join-Path $workdir 'scripts\git_autopush.py'
+if (Test-Path $autopushScript) {
+    $autopushRunning = Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -match '^python(\.exe)?$' -and $_.CommandLine -like '*git_autopush.py*'
+    }
+    
+    if (-not $autopushRunning) {
+        Write-Host 'Starting git autopush...'
+        Start-Process -FilePath $python `
+            -ArgumentList '-u', $autopushScript `
+            -WorkingDirectory $workdir `
+            -WindowStyle Normal
+        Write-Host '[OK] Git autopush started (auto-commits changes).'
+    } else {
+        Write-Host '[OK] Git autopush already running.'
+    }
+}
+
 # Rebuild dashboard
 if (Test-Path $rebuildScript) {
     Write-Host 'Rebuilding dashboard...'

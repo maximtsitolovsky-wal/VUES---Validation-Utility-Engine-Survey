@@ -335,7 +335,7 @@ def run_forever() -> None:
 
     scout_completion_sync = ScoutCompletionSyncWorker()
     scout_completion_sync.start()
-    log.info("ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then 10 AM & 3 PM Mon-Fri.")
+    log.info("ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then every 6h.")
 
     log.info(
         "Startup: executions_archived=%d failure_rate=%.1f%%",

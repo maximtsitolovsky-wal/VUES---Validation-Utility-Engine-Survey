@@ -9,7 +9,7 @@ This sync runs in **TWO WAYS** for redundancy:
 1. **Integrated into Main App** (Recommended)
    - Runs automatically when you start `python main.py`
    - Syncs 60 seconds after startup
-   - Then syncs at 10 AM & 3 PM Monday-Friday
+   - Then syncs **every 6 hours** continuously
    - Stops gracefully when you stop the main app
 
 2. **Standalone Scheduled Task** (Backup)
@@ -50,7 +50,7 @@ python main.py
 
 The sync worker starts automatically! Look for:
 ```
-ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then 10 AM & 3 PM Mon-Fri.
+ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then every 6h.
 ```
 
 ### Method 2: Standalone Scheduled Task (Optional Backup)

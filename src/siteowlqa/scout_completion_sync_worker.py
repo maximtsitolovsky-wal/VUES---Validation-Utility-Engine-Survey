@@ -13,7 +13,7 @@ import logging
 import re
 import threading
 import time
-from datetime import datetime, time as dt_time
+from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -45,8 +45,7 @@ _AIRTABLE_URL = f"https://api.airtable.com/v0/{_BASE_ID}/{_TABLE_ID}"
 _AIRTABLE_HDR = {"Authorization": f"Bearer {_API_KEY}"}
 
 STARTUP_DELAY_SECONDS = 60          # wait for pipeline to warm up first
-SYNC_TIMES = [dt_time(10, 0), dt_time(15, 0)]  # 10 AM and 3 PM
-CHECK_INTERVAL_SECONDS = 300        # check every 5 minutes if it's time to sync
+SYNC_INTERVAL_HOURS   = 6          # re-sync every 6 hours while running
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -298,29 +297,6 @@ def _run_sync() -> tuple[int, int, int]:
                 pass
 
 
-def _should_sync_now(last_sync: datetime | None) -> bool:
-    """Check if we should sync now based on time-of-day schedule."""
-    now = datetime.now()
-    current_time = now.time()
-    
-    # Skip weekends
-    if now.weekday() >= 5:  # Saturday=5, Sunday=6
-        return False
-    
-    # Check if we're within 5 minutes of a scheduled time
-    for sync_time in SYNC_TIMES:
-        # Create datetime objects for comparison
-        sync_dt = now.replace(hour=sync_time.hour, minute=sync_time.minute, second=0, microsecond=0)
-        time_diff = abs((now - sync_dt).total_seconds())
-        
-        # If within 5 minutes of scheduled time and haven't synced in the last hour
-        if time_diff < CHECK_INTERVAL_SECONDS:
-            if last_sync is None or (now - last_sync).total_seconds() > 3600:
-                return True
-    
-    return False
-
-
 # ── Worker thread ─────────────────────────────────────────────────────────────
 class ScoutCompletionSyncWorker(threading.Thread):
     """Daemon thread that syncs Scout completion status from Airtable to Excel.
@@ -335,7 +311,6 @@ class ScoutCompletionSyncWorker(threading.Thread):
     def __init__(self) -> None:
         super().__init__(daemon=True, name="scout-completion-sync")
         self._stop = threading.Event()
-        self._last_sync: datetime | None = None
 
     def request_shutdown(self) -> None:
         log.info("ScoutCompletionSyncWorker: shutdown requested.")
@@ -343,40 +318,27 @@ class ScoutCompletionSyncWorker(threading.Thread):
 
     def run(self) -> None:
         log.info(
-            "ScoutCompletionSyncWorker started. Initial delay %ds, then 10 AM & 3 PM Mon-Fri.",
+            "ScoutCompletionSyncWorker started. Initial delay %ds, then every %dh.",
             STARTUP_DELAY_SECONDS,
+            SYNC_INTERVAL_HOURS,
         )
 
         # Wait for the pipeline to warm up before first sync
         if self._stop.wait(STARTUP_DELAY_SECONDS):
-            return  # shutdown before first run
+            return  # shutdown before first run — exit cleanly
 
-        # Run first sync immediately after startup delay
-        try:
-            updated, skipped, errors = _run_sync()
-            self._last_sync = datetime.now()
-            log.info(
-                "ScoutCompletionSyncWorker: initial sync complete — Updated=%d Skipped=%d Errors=%d",
-                updated, skipped, errors,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.exception("ScoutCompletionSyncWorker: initial sync failed: %s", exc)
-
-        # Main loop - check periodically if it's time to sync
-        while not self._stop.is_set():
+        while True:
+            log.info("ScoutCompletionSyncWorker: starting sync at %s", datetime.now().isoformat())
             try:
-                if _should_sync_now(self._last_sync):
-                    log.info("ScoutCompletionSyncWorker: scheduled sync time reached")
-                    updated, skipped, errors = _run_sync()
-                    self._last_sync = datetime.now()
-                    log.info(
-                        "ScoutCompletionSyncWorker: sync complete — Updated=%d Skipped=%d Errors=%d",
-                        updated, skipped, errors,
-                    )
+                updated, skipped, errors = _run_sync()
+                log.info(
+                    "ScoutCompletionSyncWorker: sync complete — Updated=%d Skipped=%d Errors=%d",
+                    updated, skipped, errors,
+                )
             except Exception as exc:  # noqa: BLE001
                 log.exception("ScoutCompletionSyncWorker: sync failed (non-fatal): %s", exc)
 
-            if self._stop.wait(CHECK_INTERVAL_SECONDS):
+            if self._stop.wait(SYNC_INTERVAL_HOURS * 3600):
                 break  # shutdown event fired during sleep
 
         log.info("ScoutCompletionSyncWorker: stopped cleanly.")

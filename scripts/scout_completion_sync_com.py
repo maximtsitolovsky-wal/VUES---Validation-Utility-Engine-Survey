@@ -94,12 +94,20 @@ def is_complete(complete_value) -> bool:
 
 
 def find_column_index(worksheet, header_row_idx: int, column_name: str, max_cols: int = 100) -> int:
-    """Find column index by header name. Returns 0 if not found."""
+    """Find column index by header name. Returns 0 if not found.
+    Handles newlines and extra whitespace in headers.
+    """
+    # Normalize search term
+    search_normalized = " ".join(column_name.split())
+    
     for col_idx in range(1, max_cols + 1):
         try:
             cell_val = worksheet.Cells(header_row_idx, col_idx).Value
-            if cell_val and str(cell_val).strip() == column_name:
-                return col_idx
+            if cell_val:
+                # Normalize cell value (replace newlines with spaces, strip extra whitespace)
+                cell_normalized = " ".join(str(cell_val).split())
+                if cell_normalized == search_normalized:
+                    return col_idx
         except:
             break
     return 0

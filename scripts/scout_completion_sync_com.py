@@ -186,6 +186,17 @@ def sync_completion_status() -> tuple[int, int, int]:
         
         # Find header row and columns in Scout Map Data
         header_row_idx = 1
+        
+        # Debug: Show first 30 column headers
+        log("[DEBUG] First 30 column headers:")
+        for i in range(1, 31):
+            try:
+                val = ws.Cells(header_row_idx, i).Value
+                if val:
+                    log(f"  Col {i}: '{val}'")
+            except:
+                break
+        
         store_col_idx = find_column_index(ws, header_row_idx, EXCEL_STORE_COL)
         completed_col_idx = find_column_index(ws, header_row_idx, EXCEL_COMPLETED_COL)
         confirmed_by_col_idx = find_column_index(ws, header_row_idx, EXCEL_CONFIRMED_BY_COL)

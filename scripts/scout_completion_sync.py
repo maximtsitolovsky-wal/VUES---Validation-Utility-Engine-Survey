@@ -222,6 +222,7 @@ def sync_completion_status() -> tuple[int, int, int]:
     # Process data rows
     updated = 0
     skipped = 0
+    already_complete = 0
     errors = 0
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -260,6 +261,9 @@ def sync_completion_status() -> tuple[int, int, int]:
             
             log(f"   [UPDATE] Store {store_num}: Completed Scout -> True")
             updated += 1
+        elif airtable_complete and current_complete:
+            # Already complete - track separately
+            already_complete += 1
         else:
             skipped += 1
     
@@ -283,6 +287,17 @@ def sync_completion_status() -> tuple[int, int, int]:
                 log(f"   [OUTLIER] Added site {outlier['site_number']} to Outlier Scout")
                 next_row += 1
                 outliers_added += 1
+        
+        if outliers_added > 0:
+            log(f"[*] Added {outliers_added} new outliers to '{EXCEL_OUTLIER_SHEET_NAME}'")
+    
+    # Summary of all 210 submissions
+    total_processed = updated + already_complete + len(outliers)
+    log(f"\n[SUMMARY] All {len(completion_map)} Airtable submissions accounted for:")
+    log(f"  - {updated} stores UPDATED (False -> True)")
+    log(f"  - {already_complete} stores ALREADY COMPLETE (no change needed)")
+    log(f"  - {len(outliers)} stores are OUTLIERS (not in Scout Map Data)")
+    log(f"  - Total: {updated} + {already_complete} + {len(outliers)} = {total_processed}")
 
     # Save workbook if changes were made
     if updated > 0 or outliers_added > 0:

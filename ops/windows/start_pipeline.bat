@@ -37,6 +37,7 @@ set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
 set AUDIT_LOG=%LOGDIR%\bottleneck_audit.log
 set DOCKER_LOG=%LOGDIR%\docker_platform.log
 set VALIDATOR_LOG=%LOGDIR%\specialist_validator.log
+set AUTOPUSH_LOG=%LOGDIR%\git_autopush.log
 
 if not exist "%LOGDIR%"          mkdir "%LOGDIR%"
 if not exist "%WORKDIR%\output"  mkdir "%WORKDIR%\output"
@@ -65,6 +66,17 @@ if exist "%WORKDIR%\tools\system_bottleneck_auditor.py" (
     ""%PYTHON%" -u "%WORKDIR%\tools\system_bottleneck_auditor.py" --no-browser >> "%AUDIT_LOG%" 2>&1"
 ) else (
   echo [SKIP]  system_bottleneck_auditor.py not found
+)
+
+REM =========================================================================
+REM  1.5. Git Autopush — watches for changes and auto-commits (optional)
+REM =========================================================================
+if exist "%WORKDIR%\scripts\git_autopush.py" (
+  echo [START] Git Autopush (auto-commit watcher) ...
+  start "git-autopush" cmd /c ^
+    ""%PYTHON%" -u "%WORKDIR%\scripts\git_autopush.py" >> "%AUTOPUSH_LOG%" 2>&1"
+) else (
+  echo [SKIP]  git_autopush.py not found
 )
 
 REM =========================================================================
@@ -102,6 +114,7 @@ echo         Pipeline  : %STDOUT_LOG%
 echo         Audit     : %AUDIT_LOG%
 echo         Docker    : %DOCKER_LOG%
 echo         Validator : %VALIDATOR_LOG% (starts after 90s)
+echo         Autopush  : %AUTOPUSH_LOG%
 echo.
 
 REM =========================================================================

@@ -36,7 +36,11 @@ This will:
 **Purpose:** User-friendly launcher for daily operation
 
 **What it does:**
-- Starts the pipeline in background
+- Starts System Bottleneck Auditor (background)
+- Starts Git Autopush (visible window - auto-commits changes)
+- Starts Docker Platform Engineer (background)
+- Starts Specialist Output Validator (background, 90s delay)
+- Starts the SiteOwlQA pipeline in background
 - Waits for dashboard to be generated
 - Opens the dashboard in your default browser
 - Shows log file location

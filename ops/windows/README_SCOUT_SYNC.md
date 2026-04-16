@@ -11,9 +11,9 @@ Automatically syncs completion status from Scout Airtable to the Excel tracker.
 
 ## Files
 
-- **`scripts/scout_completion_sync.py`** - Main sync script
-- **`ops/windows/register_scout_completion_sync_task.ps1`** - Task Scheduler registration (PowerShell)
-- **`ops/windows/register_scout_completion_sync.bat`** - Task Scheduler registration (Batch wrapper)
+- **`scripts/scout_completion_sync_com.py`** - Main sync script (COM automation - SAFE for data models)
+- **`scripts/scout_completion_sync.py`** - ⚠️ DEPRECATED (openpyxl breaks data models)
+- **`ops/windows/ScoutCompletionSync_Task.xml`** - Task definition  
 - **`ops/windows/run_scout_completion_sync.bat`** - Manual test run
 
 ## Setup
@@ -23,7 +23,7 @@ Automatically syncs completion status from Scout Airtable to the Excel tracker.
 Run as **Administrator**:
 
 ```batch
-ops\windows\register_scout_completion_sync.bat
+schtasks /Create /XML "ops\windows\ScoutCompletionSync_Task.xml" /TN "ScoutCompletionSync" /F
 ```
 
 This creates a Windows scheduled task that runs:
@@ -46,7 +46,7 @@ ops\windows\run_scout_completion_sync.bat
 Or directly:
 
 ```batch
-python scripts\scout_completion_sync.py
+python scripts\scout_completion_sync_com.py
 ```
 
 ## Logs
@@ -104,7 +104,9 @@ Unregister-ScheduledTask -TaskName "ScoutCompletionSync" -Confirm:$false
 ## Technical Details
 
 - **Language**: Python 3.11+
-- **Dependencies**: requests, openpyxl (already in requirements.txt)
+- **Dependencies**: requests, pywin32
+- **Automation**: Windows COM (Excel.Application) - preserves data models/VBA/formulas
 - **Scheduler**: Windows Task Scheduler (native)
-- **Excel Format**: .xlsm (macro-enabled, preserves VBA)
+- **Excel Format**: .xlsm (macro-enabled, fully preserved)
 - **Airtable Pagination**: Handles unlimited records via offset
+- **Smart Normalization**: Vendor-proof ("0038" = "38" = "Store 38")

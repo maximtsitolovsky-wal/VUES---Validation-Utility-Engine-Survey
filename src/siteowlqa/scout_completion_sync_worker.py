@@ -3,7 +3,7 @@ scout_completion_sync_worker.py — Syncs Scout completion status as a daemon th
 
 Runs as a daemon thread inside the main SiteOwlQA process.
 On startup: syncs immediately (60s delay so the pipeline warms up first).
-Then: re-syncs at 10 AM and 3 PM weekdays, or every SYNC_INTERVAL_HOURS.
+Then: re-syncs every SYNC_INTERVAL_HOURS (6 hours) continuously.
 
 Uses Windows COM automation to safely update Excel files with data models.
 """
@@ -301,10 +301,11 @@ def _run_sync() -> tuple[int, int, int]:
 class ScoutCompletionSyncWorker(threading.Thread):
     """Daemon thread that syncs Scout completion status from Airtable to Excel.
     
-    Lifecycle:
+    Lifecycle mirrors ScoutSyncWorker:
       - start() called in run_forever() alongside other workers
       - Waits STARTUP_DELAY_SECONDS on first run
-      - Then syncs at 10 AM and 3 PM on weekdays
+      - Syncs immediately after delay
+      - Then syncs every SYNC_INTERVAL_HOURS continuously
       - request_shutdown() + join() called in Ctrl-C handler
     """
 

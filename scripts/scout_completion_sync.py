@@ -258,7 +258,7 @@ def sync_completion_status() -> tuple[int, int, int]:
                 confirmed_by_cell = ws.cell(row_idx, confirmed_by_col_idx)
                 confirmed_by_cell.value = f"code puppy ({now_str})"
             
-            log(f"   [UPDATE] Store {store_num}: Completed Scout → True")
+            log(f"   [UPDATE] Store {store_num}: Completed Scout -> True")
             updated += 1
         else:
             skipped += 1

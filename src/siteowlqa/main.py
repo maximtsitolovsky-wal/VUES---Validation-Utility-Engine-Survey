@@ -54,6 +54,7 @@ from siteowlqa.correction_state import CorrectionStateDB
 from siteowlqa.correction_worker import CorrectionWorker
 from siteowlqa.memory import Memory
 from siteowlqa.scout_sync_worker import ScoutSyncWorker
+from siteowlqa.scout_completion_sync_worker import ScoutCompletionSyncWorker
 from siteowlqa.metrics_worker import MetricsRefreshWorker
 from siteowlqa.queue_worker import SubmissionWorker
 from siteowlqa.reference_data import prewarm_reference_cache
@@ -332,6 +333,10 @@ def run_forever() -> None:
     scout_sync.start()
     log.info("ScoutSyncWorker started. Will sync Scout images 60s after startup, then every 6h.")
 
+    scout_completion_sync = ScoutCompletionSyncWorker()
+    scout_completion_sync.start()
+    log.info("ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then 10 AM & 3 PM Mon-Fri.")
+
     log.info(
         "Startup: executions_archived=%d failure_rate=%.1f%%",
         memory.execution_count(),
@@ -370,6 +375,8 @@ def run_forever() -> None:
             correction_worker.join(timeout=30.0)
             scout_sync.request_shutdown()
             scout_sync.join(timeout=10.0)
+            scout_completion_sync.request_shutdown()
+            scout_completion_sync.join(timeout=10.0)
             log.info("Exiting cleanly.")
             sys.exit(0)
 

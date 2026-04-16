@@ -552,7 +552,8 @@ def _exec_metrics_tabs_section_html(
       const surveyLiveRows = surveyPayload && Array.isArray(surveyPayload.records)
         ? surveyPayload.records.map(normalizeSurveyRecord).filter(r => ['PASS', 'FAIL', 'ERROR'].includes(r.status))
         : [];
-      const surveyPerformanceRows = Array.isArray(raw) && raw.length ? raw : surveyLiveRows;
+      // Prefer live Survey data over archive when archive is empty/minimal
+      const surveyPerformanceRows = surveyLiveRows.length > 0 ? surveyLiveRows : (Array.isArray(raw) ? raw : []);
 
       function parseIso(s) {{
         // processed_at is ISO with timezone. Date.parse handles it.

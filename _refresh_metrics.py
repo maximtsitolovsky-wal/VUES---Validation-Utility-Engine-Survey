@@ -4,7 +4,7 @@ from pathlib import Path
 
 from siteowlqa.archive import Archive
 from siteowlqa.config import load_config
-from siteowlqa.metrics import export_metrics_csvs
+from siteowlqa.metrics import refresh_all_metrics
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,12 +20,8 @@ archive = Archive(Path("archive"))
 output_dir = Path("output")
 output_dir.mkdir(exist_ok=True)
 
-# Load all submissions from archive
-submissions = archive.load_all_submission_records()
-log.info(f"Loaded {len(submissions)} submissions from archive")
-
-# Export metrics CSVs
-export_metrics_csvs(submissions, output_dir)
+# Refresh all metrics
+refresh_all_metrics(archive, output_dir)
 
 log.info("Metrics refresh complete!")
 log.info("Check output/ directory for updated CSVs")

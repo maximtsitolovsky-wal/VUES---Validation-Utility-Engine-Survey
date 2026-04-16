@@ -114,7 +114,27 @@ def sync_completion_status() -> tuple[int, int, int]:
         return 0, 0, 1
 
     log(f"[*] Opening Excel: {EXCEL_PATH.name}...")
-    wb = openpyxl.load_workbook(EXCEL_PATH, keep_vba=True)
+    
+    # Try to open with retry logic (file might be locked by Excel/OneDrive)
+    wb = None
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            wb = openpyxl.load_workbook(EXCEL_PATH, keep_vba=True)
+            break
+        except PermissionError as e:
+            if attempt < max_retries:
+                log(f"[WARN] File locked (attempt {attempt}/{max_retries}). Retrying in 2s...")
+                log(f"       Please close Excel if {EXCEL_PATH.name} is open.")
+                time.sleep(2)
+            else:
+                log(f"[ERROR] File locked after {max_retries} attempts.")
+                log(f"        Please close {EXCEL_PATH.name} in Excel and try again.")
+                raise e
+    
+    if wb is None:
+        log("[ERROR] Failed to open Excel workbook")
+        return 0, 0, 1
     
     # Try to find the right sheet (usually first sheet or "Sheet1")
     if len(wb.sheetnames) == 0:
@@ -199,8 +219,28 @@ def sync_completion_status() -> tuple[int, int, int]:
     # Save workbook if changes were made
     if updated > 0:
         log(f"[*] Saving changes to Excel...")
-        wb.save(EXCEL_PATH)
-        log(f"[OK] Saved {updated} updates to {EXCEL_PATH.name}")
+        
+        # Try to save with retry logic (OneDrive might be syncing)
+        save_retries = 3
+        saved = False
+        for attempt in range(1, save_retries + 1):
+            try:
+                wb.save(EXCEL_PATH)
+                saved = True
+                log(f"[OK] Saved {updated} updates to {EXCEL_PATH.name}")
+                break
+            except PermissionError:
+                if attempt < save_retries:
+                    log(f"[WARN] Save blocked (attempt {attempt}/{save_retries}). Retrying in 2s...")
+                    time.sleep(2)
+                else:
+                    log(f"[ERROR] Failed to save after {save_retries} attempts.")
+                    log(f"        OneDrive or Excel may have locked the file.")
+                    raise
+        
+        if not saved:
+            wb.close()
+            return 0, skipped, 1
     else:
         log("[*] No updates needed - Excel already in sync")
 

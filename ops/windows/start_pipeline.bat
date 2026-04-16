@@ -5,6 +5,7 @@ REM =========================================================================
 REM  SiteOwlQA — Master Launcher
 REM  Starts every component of the platform as a standalone process:
 REM    1. System Bottleneck Auditor  (background, no browser)
+REM    1.5. Git Autopush             (visible window, auto-commits changes)
 REM    2. Docker Platform Engineer   (background, no browser)
 REM    3. Specialist Output Validator (background, 90s delayed start)
 REM    4. SiteOwlQA Pipeline         (background, logs to logs/)

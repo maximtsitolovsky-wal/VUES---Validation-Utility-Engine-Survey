@@ -93,12 +93,15 @@ def is_complete(complete_value) -> bool:
     return bool(complete_value)
 
 
-def find_column_index(header_row, column_name: str) -> int:
+def find_column_index(worksheet, header_row_idx: int, column_name: str, max_cols: int = 100) -> int:
     """Find column index by header name. Returns 0 if not found."""
-    for col_idx in range(1, header_row.Columns.Count + 1):
-        cell_val = header_row.Cells(1, col_idx).Value
-        if cell_val and str(cell_val).strip() == column_name:
-            return col_idx
+    for col_idx in range(1, max_cols + 1):
+        try:
+            cell_val = worksheet.Cells(header_row_idx, col_idx).Value
+            if cell_val and str(cell_val).strip() == column_name:
+                return col_idx
+        except:
+            break
     return 0
 
 
@@ -183,9 +186,9 @@ def sync_completion_status() -> tuple[int, int, int]:
         
         # Find header row and columns in Scout Map Data
         header_row_idx = 1
-        store_col_idx = find_column_index(ws.Rows(header_row_idx), EXCEL_STORE_COL)
-        completed_col_idx = find_column_index(ws.Rows(header_row_idx), EXCEL_COMPLETED_COL)
-        confirmed_by_col_idx = find_column_index(ws.Rows(header_row_idx), EXCEL_CONFIRMED_BY_COL)
+        store_col_idx = find_column_index(ws, header_row_idx, EXCEL_STORE_COL)
+        completed_col_idx = find_column_index(ws, header_row_idx, EXCEL_COMPLETED_COL)
+        confirmed_by_col_idx = find_column_index(ws, header_row_idx, EXCEL_CONFIRMED_BY_COL)
         
         if not all([store_col_idx, completed_col_idx]):
             log(f"[ERROR] Required columns not found. Store={store_col_idx}, Completed={completed_col_idx}")

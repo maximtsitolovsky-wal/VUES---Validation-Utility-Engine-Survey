@@ -2,6 +2,21 @@
 
 Automatically syncs completion status from Scout Airtable to the Excel tracker.
 
+## How It Runs
+
+This sync runs in **TWO WAYS** for redundancy:
+
+1. **Integrated into Main App** (Recommended)
+   - Runs automatically when you start `python main.py`
+   - Syncs 60 seconds after startup
+   - Then syncs at 10 AM & 3 PM Monday-Friday
+   - Stops gracefully when you stop the main app
+
+2. **Standalone Scheduled Task** (Backup)
+   - Windows Task Scheduler runs it independently
+   - Also at 10 AM & 3 PM Monday-Friday
+   - Runs even if main app is stopped
+
 ## What It Does
 
 - Fetches all records from Scout Airtable (appAwgaX89x0JxG3Z/tblC4o9AvVulyxFMk)
@@ -17,6 +32,21 @@ Automatically syncs completion status from Scout Airtable to the Excel tracker.
 - **`ops/windows/run_scout_completion_sync.bat`** - Manual test run
 
 ## Setup
+
+### Method 1: Use Main App (Easiest)
+
+Just start the main SiteOwlQA app:
+
+```bash
+python main.py
+```
+
+The sync worker starts automatically! Look for:
+```
+ScoutCompletionSyncWorker started. Will sync completion status 60s after startup, then 10 AM & 3 PM Mon-Fri.
+```
+
+### Method 2: Standalone Scheduled Task (Optional Backup)
 
 ### 1. Install (One-Time)
 

@@ -76,10 +76,33 @@ def fetch_airtable_records() -> list[dict]:
 
 
 def parse_site_number(value) -> str:
-    """Normalize site/store number to string for matching."""
+    """Normalize site/store number to string for matching.
+    
+    Handles vendor inconsistencies:
+      - "0038" -> "38"
+      - "Store 38" -> "38"
+      - "38" -> "38"
+      - "  0038  " -> "38"
+    
+    Strips leading zeros and extracts numeric core.
+    """
     if value is None:
         return ""
-    return str(value).strip()
+    
+    # Convert to string and strip whitespace
+    s = str(value).strip()
+    
+    # Extract just the numeric part (handles "Store 38", "#38", etc.)
+    import re
+    match = re.search(r'\d+', s)
+    if match:
+        # Get the number and strip leading zeros
+        num_str = match.group(0).lstrip('0')
+        # Handle edge case of "0000" -> should be "0"
+        return num_str if num_str else "0"
+    
+    # If no numbers found, return original stripped value
+    return s
 
 
 def is_complete(complete_value) -> bool:
@@ -141,6 +164,10 @@ def sync_completion_status() -> tuple[int, int, int]:
 
     log(f"[*] Built completion map with {len(completion_map)} sites")
     log(f"[*] Sites marked complete: {sum(1 for v in completion_map.values() if v['complete'])}")
+    
+    # Debug: Show first 10 normalized site numbers from Airtable
+    sample_sites = list(completion_map.keys())[:10]
+    log(f"[DEBUG] Sample Airtable site numbers (normalized): {', '.join(sample_sites)}")
 
     # Open Excel via COM
     if not EXCEL_PATH.exists():
@@ -195,16 +222,6 @@ def sync_completion_status() -> tuple[int, int, int]:
         # Find header row and columns in Scout Map Data
         header_row_idx = 1
         
-        # Debug: Show first 30 column headers
-        log("[DEBUG] First 30 column headers:")
-        for i in range(1, 31):
-            try:
-                val = ws.Cells(header_row_idx, i).Value
-                if val:
-                    log(f"  Col {i}: '{val}'")
-            except:
-                break
-        
         store_col_idx = find_column_index(ws, header_row_idx, EXCEL_STORE_COL)
         completed_col_idx = find_column_index(ws, header_row_idx, EXCEL_COMPLETED_COL)
         confirmed_by_col_idx = find_column_index(ws, header_row_idx, EXCEL_CONFIRMED_BY_COL)
@@ -227,6 +244,10 @@ def sync_completion_status() -> tuple[int, int, int]:
         
         log(f"[*] Found {len(existing_stores)} existing stores in '{EXCEL_SHEET_NAME}'")
         
+        # Debug: Show first 10 store numbers from Excel
+        sample_excel = list(existing_stores)[:10]
+        log(f"[DEBUG] Sample Excel store numbers (normalized): {', '.join(sample_excel)}")
+        
         # Track outliers
         outliers = []
         for site_num, data in completion_map.items():
@@ -239,6 +260,12 @@ def sync_completion_status() -> tuple[int, int, int]:
         
         if outliers:
             log(f"[*] Found {len(outliers)} outlier site(s) not in Scout Map Data")
+        
+        # Debug: Show match statistics
+        matches = [s for s in completion_map.keys() if s in existing_stores]
+        log(f"[DEBUG] Matched {len(matches)} of {len(completion_map)} Airtable sites to Excel stores")
+        if matches:
+            log(f"[DEBUG] Sample matches: {', '.join(matches[:10])}")
         
         # Process data rows
         updated = 0

@@ -7,7 +7,9 @@ $ErrorActionPreference = "Stop"
 Write-Host "=== Scout Completion Sync Task Scheduler Registration ===" -ForegroundColor Cyan
 
 # Paths
-$scriptPath = Join-Path $PSScriptRoot "..\scripts\scout_completion_sync.py"
+$scriptDir = Split-Path -Parent $PSCommandPath
+$projectRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
+$scriptPath = Join-Path $projectRoot "scripts\scout_completion_sync.py"
 $pythonExe = (Get-Command python).Path
 $taskName = "ScoutCompletionSync"
 

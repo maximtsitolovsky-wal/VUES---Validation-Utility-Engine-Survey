@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 
-from siteowlqa.dashboard_exec import generate_executive_dashboard
+from siteowlqa.dashboard import refresh_dashboards
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,13 +13,9 @@ log = logging.getLogger(__name__)
 
 log.info("Regenerating executive dashboard...")
 
-ui_dir = Path("ui")
 output_dir = Path("output")
 
-generate_executive_dashboard(
-    ui_dir=ui_dir,
-    output_dir=output_dir,
-)
+refresh_dashboards(output_dir)
 
 log.info("Dashboard regenerated!")
 log.info(f"Open: {output_dir / 'executive_dashboard.html'}")

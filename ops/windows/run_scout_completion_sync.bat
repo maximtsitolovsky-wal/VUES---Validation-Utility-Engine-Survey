@@ -15,7 +15,7 @@ cd /d "%~dp0..\.."
 echo [*] Running sync script...
 echo.
 
-python scripts\scout_completion_sync.py
+python scripts\scout_completion_sync_com.py
 
 echo.
 echo.

@@ -27,8 +27,12 @@ TABLE_ID  = "tblC4o9AvVulyxFMk"
 
 AIRTABLE_SITE_COL = "Site Number"
 AIRTABLE_COMPLETE_COL = "Complete?"
+AIRTABLE_VENDOR_COL = "Vendor Parent Company"
+AIRTABLE_SURVEYOR_COL = "Surveyor Name"
 
 EXCEL_PATH = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\ScoutSurveyLab.xlsm")
+EXCEL_SHEET_NAME = "Scout Map Data"
+EXCEL_OUTLIER_SHEET_NAME = "Outlier Scout"
 EXCEL_STORE_COL = "Store Number"
 EXCEL_COMPLETED_COL = "Completed Scout"
 EXCEL_CONFIRMED_BY_COL = "Confirmed by"
@@ -96,17 +100,23 @@ def sync_completion_status() -> tuple[int, int, int]:
     airtable_records = fetch_airtable_records()
     log(f"[OK] Fetched {len(airtable_records)} records from Airtable")
 
-    # Build completion map: site_number -> is_complete
+    # Build completion map: site_number -> {is_complete, vendor, surveyor}
     completion_map = {}
     for rec in airtable_records:
         fields = rec.get("fields", {})
         site_num = parse_site_number(fields.get(AIRTABLE_SITE_COL))
         complete = is_complete(fields.get(AIRTABLE_COMPLETE_COL))
+        vendor = fields.get(AIRTABLE_VENDOR_COL, "")
+        surveyor = fields.get(AIRTABLE_SURVEYOR_COL, "")
         if site_num:
-            completion_map[site_num] = complete
+            completion_map[site_num] = {
+                "complete": complete,
+                "vendor": vendor,
+                "surveyor": surveyor
+            }
 
     log(f"[*] Built completion map with {len(completion_map)} sites")
-    log(f"[*] Sites marked complete: {sum(1 for v in completion_map.values() if v)}")
+    log(f"[*] Sites marked complete: {sum(1 for v in completion_map.values() if v['complete'])}")
 
     # Open Excel workbook
     if not EXCEL_PATH.exists():
@@ -136,14 +146,27 @@ def sync_completion_status() -> tuple[int, int, int]:
         log("[ERROR] Failed to open Excel workbook")
         return 0, 0, 1
     
-    # Try to find the right sheet (usually first sheet or "Sheet1")
-    if len(wb.sheetnames) == 0:
-        log("[ERROR] No sheets found in workbook")
+    # Get the Scout Map Data sheet
+    if EXCEL_SHEET_NAME not in wb.sheetnames:
+        log(f"[ERROR] Sheet '{EXCEL_SHEET_NAME}' not found in workbook")
+        log(f"        Available sheets: {', '.join(wb.sheetnames)}")
         wb.close()
         return 0, 0, 1
     
-    ws = wb.active
+    ws = wb[EXCEL_SHEET_NAME]
     log(f"[*] Using sheet: {ws.title}")
+    
+    # Get or create Outlier Scout sheet
+    if EXCEL_OUTLIER_SHEET_NAME not in wb.sheetnames:
+        log(f"[*] Creating new sheet: {EXCEL_OUTLIER_SHEET_NAME}")
+        outlier_ws = wb.create_sheet(EXCEL_OUTLIER_SHEET_NAME)
+        # Add headers
+        outlier_ws.cell(1, 1, "Site Number")
+        outlier_ws.cell(1, 2, "Vendor Parent Company")
+        outlier_ws.cell(1, 3, "Surveyor Name")
+    else:
+        outlier_ws = wb[EXCEL_OUTLIER_SHEET_NAME]
+        log(f"[*] Found existing sheet: {EXCEL_OUTLIER_SHEET_NAME}")
 
     # Find header row and column indices
     header_row = None
@@ -173,6 +196,29 @@ def sync_completion_status() -> tuple[int, int, int]:
 
     log(f"[OK] Found headers at row {header_row}: Store col={store_col_idx}, Completed col={completed_col_idx}, Confirmed by col={confirmed_by_col_idx}")
 
+    # Build set of existing store numbers in Scout Map Data
+    existing_stores = set()
+    for row_idx in range(header_row + 1, ws.max_row + 1):
+        store_num_cell = ws.cell(row_idx, store_col_idx)
+        store_num = parse_site_number(store_num_cell.value)
+        if store_num:
+            existing_stores.add(store_num)
+    
+    log(f"[*] Found {len(existing_stores)} existing stores in '{EXCEL_SHEET_NAME}'")
+
+    # Track outliers (sites in Airtable but not in Scout Map Data)
+    outliers = []
+    for site_num, data in completion_map.items():
+        if site_num not in existing_stores:
+            outliers.append({
+                "site_number": site_num,
+                "vendor": data["vendor"],
+                "surveyor": data["surveyor"]
+            })
+    
+    if outliers:
+        log(f"[*] Found {len(outliers)} outlier site(s) not in Scout Map Data")
+    
     # Process data rows
     updated = 0
     skipped = 0
@@ -191,7 +237,8 @@ def sync_completion_status() -> tuple[int, int, int]:
             skipped += 1
             continue
 
-        airtable_complete = completion_map[store_num]
+        site_data = completion_map[store_num]
+        airtable_complete = site_data["complete"]
         completed_cell = ws.cell(row_idx, completed_col_idx)
         current_value = completed_cell.value
 
@@ -215,9 +262,30 @@ def sync_completion_status() -> tuple[int, int, int]:
             updated += 1
         else:
             skipped += 1
+    
+    # Write outliers to Outlier Scout sheet
+    outliers_added = 0
+    if outliers:
+        # Get existing outliers to avoid duplicates
+        existing_outliers = set()
+        for row_idx in range(2, outlier_ws.max_row + 1):
+            site = parse_site_number(outlier_ws.cell(row_idx, 1).value)
+            if site:
+                existing_outliers.add(site)
+        
+        # Add new outliers
+        next_row = outlier_ws.max_row + 1
+        for outlier in outliers:
+            if outlier["site_number"] not in existing_outliers:
+                outlier_ws.cell(next_row, 1, outlier["site_number"])
+                outlier_ws.cell(next_row, 2, outlier["vendor"])
+                outlier_ws.cell(next_row, 3, outlier["surveyor"])
+                log(f"   [OUTLIER] Added site {outlier['site_number']} to Outlier Scout")
+                next_row += 1
+                outliers_added += 1
 
     # Save workbook if changes were made
-    if updated > 0:
+    if updated > 0 or outliers_added > 0:
         log(f"[*] Saving changes to Excel...")
         
         # Try to save with retry logic (OneDrive might be syncing)
@@ -227,7 +295,7 @@ def sync_completion_status() -> tuple[int, int, int]:
             try:
                 wb.save(EXCEL_PATH)
                 saved = True
-                log(f"[OK] Saved {updated} updates to {EXCEL_PATH.name}")
+                log(f"[OK] Saved {updated} updates + {outliers_added} outliers to {EXCEL_PATH.name}")
                 break
             except PermissionError:
                 if attempt < save_retries:

@@ -88,7 +88,10 @@ def _build_team_payload(
         }
 
     try:
-        records = airtable.list_dashboard_records(source, max_records=250)
+        # LIVE HOT RELOAD: Fetch ALL records, no artificial limits.
+        # The pagination loop in list_dashboard_records will handle large datasets.
+        # Memory impact is minimal (~1KB per record) — dashboard freshness is critical.
+        records = airtable.list_dashboard_records(source, max_records=10000)
         raw_headers: list[str] = []
         for record in records:
             for key in record.raw_fields.keys():

@@ -72,9 +72,10 @@ class VendorAssignmentTracker:
     def load_assignments(self, sheet_name: str = "Sheet1") -> bool:
         """
         Load vendor assignments from Excel file.
+        NOW LOADS ALL SHEETS to capture all vendors!
         
         Args:
-            sheet_name: Name of the sheet containing assignments
+            sheet_name: Ignored - we load all sheets
             
         Returns:
             True if loaded successfully, False otherwise
@@ -87,13 +88,17 @@ class VendorAssignmentTracker:
             logger.info(f"Loading vendor assignments from {self.assignment_file.name}...")
             wb = openpyxl.load_workbook(self.assignment_file, data_only=True)
             
-            # Try to find the correct sheet
-            if sheet_name not in wb.sheetnames:
-                # Try first sheet
-                sheet_name = wb.sheetnames[0]
-                logger.warning(f"Sheet not found, using first sheet: {sheet_name}")
+            total_assignments_loaded = 0
             
-            ws = wb[sheet_name]
+            # Load ALL sheets in the workbook
+            for sheet_name in wb.sheetnames:
+                logger.info(f"Processing sheet: {sheet_name}")
+                ws = wb[sheet_name]
+                
+                # Skip if sheet is empty
+                if ws.max_row < 2:
+                    logger.info(f"Skipping empty sheet: {sheet_name}")
+                    continue
             
             # Find header row (look for "Site Number" or "Store Number" and "Vendor")
             header_row = None

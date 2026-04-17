@@ -25,9 +25,9 @@ import requests
 import win32com.client
 
 # ── Config ────────────────────────────────────────────────────────────────────
-API_KEY   = "patPR0WWxXCE0loRO.d18126548ad25b8aaf9fd43e2ac69479b1378e46d7f8c6efbdd88f7197a4d495"
-BASE_ID   = "appAwgaX89x0JxG3Z"
-TABLE_ID  = "tblC4o9AvVulyxFMk"
+API_KEY   = os.getenv("SCOUT_AIRTABLE_API_KEY", "")
+BASE_ID   = os.getenv("SCOUT_AIRTABLE_BASE_ID", "appAwgaX89x0JxG3Z")
+TABLE_ID  = os.getenv("SCOUT_AIRTABLE_TABLE_ID", "tblC4o9AvVulyxFMk")
 
 AIRTABLE_SITE_COL = "Site Number"
 AIRTABLE_COMPLETE_COL = "Complete?"

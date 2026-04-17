@@ -22,9 +22,9 @@ import win32com.client
 log = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
-_API_KEY   = "patPR0WWxXCE0loRO.d18126548ad25b8aaf9fd43e2ac69479b1378e46d7f8c6efbdd88f7197a4d495"
-_BASE_ID   = "appAwgaX89x0JxG3Z"
-_TABLE_ID  = "tblC4o9AvVulyxFMk"
+_API_KEY   = os.getenv("SCOUT_AIRTABLE_API_KEY", "")
+_BASE_ID   = os.getenv("SCOUT_AIRTABLE_BASE_ID", "appAwgaX89x0JxG3Z")
+_TABLE_ID  = os.getenv("SCOUT_AIRTABLE_TABLE_ID", "tblC4o9AvVulyxFMk")
 
 _AIRTABLE_SITE_COL = "Site Number"
 _AIRTABLE_COMPLETE_COL = "Complete?"

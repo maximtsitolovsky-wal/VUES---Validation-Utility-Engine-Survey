@@ -334,6 +334,27 @@ def _build_context(*, history_rows: list[dict[str, Any]], team_dashboard_data: d
         f"Average completion time is {_fmt_seconds(current_avg_completion)} versus {_fmt_seconds(previous_avg_completion)} last week, a change of {_pct_change(current_avg_completion, previous_avg_completion)}.",
     ]
 
+    # Add vendor assignment insights if available
+    vendor_assignments = team_dashboard_data.get("vendor_assignments", {}) if isinstance(team_dashboard_data, dict) else {}
+    if vendor_assignments.get("configured") and vendor_assignments.get("vendors"):
+        total_remaining = vendor_assignments.get("total_remaining", 0)
+        total_completed = vendor_assignments.get("total_completed", 0)
+        total_assigned = vendor_assignments.get("total_assigned", 0)
+        
+        if total_assigned > 0:
+            completion_pct = (total_completed / total_assigned) * 100
+            insights.append(
+                f"Scout vendor assignments: {total_remaining} sites remaining out of {total_assigned} total ({_fmt_pct(completion_pct)} complete)."
+            )
+            
+            # Add top performer insight
+            vendors = vendor_assignments.get("vendors", [])
+            if vendors:
+                top_vendor = max(vendors, key=lambda v: v.get("completion_rate", 0))
+                insights.append(
+                    f"Top Scout performer: {top_vendor['vendor_name']} with {_fmt_pct(top_vendor['completion_rate'])} completion rate ({top_vendor['completed']}/{top_vendor['total_assigned']})."
+                )
+
     context = {
         "title": "SiteOwl Survey Program Weekly Executive Operations Report",
         "reporting_period": f"{current_start.date().isoformat()} to {(current_end - timedelta(days=1)).date().isoformat()}",

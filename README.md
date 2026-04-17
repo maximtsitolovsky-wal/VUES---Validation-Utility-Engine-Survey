@@ -1,4 +1,4 @@
-# SiteOwlQA Automation Pipeline
+# VUES - Validation Utility Engine Survey
 
 > Automated vendor QA pipeline: Airtable → Python → SQL-backed reference lookup → grading results.
 > Runs 24/7 on a Windows machine with zero cloud dependencies.

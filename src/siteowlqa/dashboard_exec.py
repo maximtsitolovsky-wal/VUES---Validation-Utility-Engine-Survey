@@ -1391,16 +1391,12 @@ def _exec_metrics_tabs_section_html(
         wrapper.style.display = 'block';
         container.innerHTML = '';
 
-        // Known vendor order for consistency
-        const vendorOrder = ['Wachter', 'Techwise', 'SAS', 'Everon', 'CEI'];
-        const vendorMap = {};
-        vendors.forEach(v => {
-          vendorMap[v.vendor_name] = v;
-        });
+        // Sort vendors alphabetically for consistency, showing ALL vendors
+        const sortedVendors = [...vendors].sort((a, b) => 
+          a.vendor_name.localeCompare(b.vendor_name)
+        );
 
-        vendorOrder.forEach(vendorName => {
-          const stats = vendorMap[vendorName];
-          if (!stats) return;
+        sortedVendors.forEach(stats => {
 
           const pill = document.createElement('div');
           const completionPct = stats.completion_rate || 0;
@@ -1438,7 +1434,7 @@ def _exec_metrics_tabs_section_html(
 
           const nameDiv = document.createElement('div');
           nameDiv.style.cssText = 'font-size:0.85rem;color:var(--muted);font-weight:600';
-          nameDiv.textContent = vendorName;
+          nameDiv.textContent = stats.vendor_name;
 
           const statsDiv = document.createElement('div');
           statsDiv.style.cssText = `font-size:1.25rem;color:${textColor};font-weight:700`;

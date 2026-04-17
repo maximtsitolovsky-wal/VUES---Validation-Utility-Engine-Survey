@@ -140,15 +140,18 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
     Returns:
         Dictionary containing vendor assignment stats
     """
+    log.info("[VENDOR_ASSIGN] Starting vendor assignment tracking...")
     # Path to vendor assignment file (from environment or default)
     assignment_file = os.getenv(
         "VENDOR_ASSIGNMENT_FILE",
         r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\Excel\Vendor ASSIGN. 4.2.26.xlsx"
     )
     
+    log.info("[VENDOR_ASSIGN] Assignment file path: %s", assignment_file)
+    
     # Check if configured and file exists
     if not assignment_file or not Path(assignment_file).exists():
-        log.info("Vendor assignment file not found or not configured: %s", assignment_file)
+        log.warning("[VENDOR_ASSIGN] Vendor assignment file not found or not configured: %s", assignment_file)
         return {
             "configured": False,
             "vendors": [],

@@ -1,0 +1,34 @@
+{
+  "folders": [
+    {
+      "name": "SiteOwlQA_App",
+      "path": "."
+    },
+    {
+      "name": "VUED",
+      "path": "..\\VUED"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/node_modules": true,
+      "**/.venv": true,
+      "**/venv": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/__pycache__": true,
+      "**/venv": true,
+      "**/.venv": true
+    },
+    "diffEditor.codeLens": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance"
+    ]
+  }
+}

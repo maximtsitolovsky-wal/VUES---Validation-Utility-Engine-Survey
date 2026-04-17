@@ -176,14 +176,22 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         completed_submissions = []
         if scout_payload.get("configured") and scout_payload.get("records"):
             for record in scout_payload["records"]:
-                # Only include completed/submitted records
-                status = str(record.get("processing_status", "")).strip().upper()
-                if status in ("COMPLETE", "COMPLETED", "PASS", "SUBMITTED", "APPROVED"):
-                    completed_submissions.append({
-                        "site_number": str(record.get("site_number", "")).strip(),
-                        "vendor_name": str(record.get("vendor_name", "")).strip(),
-                        "submitted_at": record.get("submitted_at", ""),
-                    })
+                # Scout uses raw_fields['Complete?'] = 1 to indicate completion
+                raw_fields = record.get("raw_fields", {})
+                is_complete = raw_fields.get("Complete?") == 1
+                
+                if is_complete:
+                    # Get vendor from 'Surveyor Parent Company' in raw_fields
+                    vendor = raw_fields.get("Surveyor Parent Company", "").strip()
+                    site = raw_fields.get("Site Number", "").strip()
+                    scout_date = raw_fields.get("Scout Date", "")
+                    
+                    if site and vendor:
+                        completed_submissions.append({
+                            "site_number": site,
+                            "vendor_name": vendor,
+                            "submitted_at": scout_date,
+                        })
         
         log.info("[VENDOR_ASSIGN] Found %d completed submissions from Scout", len(completed_submissions))
         

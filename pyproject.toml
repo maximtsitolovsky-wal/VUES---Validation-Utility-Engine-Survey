@@ -3,9 +3,9 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "siteowlqa"
-version = "1.2.0"
-description = "SiteOwlQA automation pipeline"
+name = "vues"
+version = "7.0.0"
+description = "VUES - Validation Utility Engine Survey"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

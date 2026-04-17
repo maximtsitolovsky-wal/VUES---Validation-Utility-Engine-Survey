@@ -65,11 +65,11 @@ from siteowlqa.submission_queue import SubmissionQueue
 # Banner
 # ---------------------------------------------------------------------------
 
-def _build_banner(version: str = "1.2.0") -> str:
+def _build_banner(version: str = "7.0.0") -> str:
     return (
         "\n"
         "=========================================\n"
-        "  SiteOwlQA Pipeline Service             \n"
+        "  VUES - Validation Utility Engine Survey \n"
         f"  Version : {version}                   \n"
         "  Mode    : Full Parallel Python Grading  \n"
         "  Stage   : 1 (Core) + 2 (Governance)   \n"

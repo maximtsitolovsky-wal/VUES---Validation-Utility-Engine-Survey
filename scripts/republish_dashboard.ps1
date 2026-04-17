@@ -7,13 +7,13 @@ $exportScript = Join-Path $workdir 'tools\export_share_dashboard.py'
 $shareFile = Join-Path $workdir 'share\executive_dashboard_live_share.html'
 $logDir = Join-Path $workdir 'logs'
 $logFile = Join-Path $logDir 'republish-dashboard.log'
-$shareUrl = 'https://puppy.walmart.com/sharing/vn59j7j/executive-dashboard-clean-working'
+$shareUrl = 'https://puppy.walmart.com/sharing/vn59j7j/vues-validation-utility-engine-survey'
 $publishPrompt = @"
 Update the EXISTING Puppy Share page using versioning from this local file: '$shareFile'.
 Target the exact existing page at: $shareUrl
 Use:
 - business: 'vn59j7j'
-- name: 'executive-dashboard-clean-working'
+- name: 'vues-validation-utility-engine-survey'
 - access_level: 'business'
 
 Requirements:

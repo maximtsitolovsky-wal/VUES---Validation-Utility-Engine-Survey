@@ -11,7 +11,7 @@ REM   SCOUT_AIRTABLE_BASE_ID=appAwgaX89x0JxG3Z
 REM   SCOUT_AIRTABLE_TABLE_ID=tblC4o9AvVulyxFMk
 
 if exist .env.local (
-    for /f "usebackq tokens=1,* delims==" %%a in (".env.local") do (
+    for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env.local") do (
         if not "%%b"=="" set %%a=%%b
     )
 )

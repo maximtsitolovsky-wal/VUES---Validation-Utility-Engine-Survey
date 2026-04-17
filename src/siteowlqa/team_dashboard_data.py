@@ -160,13 +160,17 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
     
     try:
         # Initialize tracker and load assignments
+        log.info("[VENDOR_ASSIGN] Initializing VendorAssignmentTracker...")
         tracker = VendorAssignmentTracker(assignment_file)
         if not tracker.load_assignments():
+            log.warning("[VENDOR_ASSIGN] Failed to load vendor assignments from Excel file.")
             return {
                 "configured": False,
                 "vendors": [],
                 "error": "Failed to load vendor assignments from Excel file."
             }
+        
+        log.info("[VENDOR_ASSIGN] Loaded %d assignments from Excel", len(tracker.assignments))
         
         # Extract completed submissions from Scout payload
         completed_submissions = []
@@ -181,8 +185,11 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
                         "submitted_at": record.get("submitted_at", ""),
                     })
         
+        log.info("[VENDOR_ASSIGN] Found %d completed submissions from Scout", len(completed_submissions))
+        
         # Calculate vendor stats
         vendor_stats = tracker.calculate_vendor_stats(completed_submissions)
+        log.info("[VENDOR_ASSIGN] Calculated stats for %d vendors", len(vendor_stats))
         
         # Convert to list for JSON serialization
         vendors_list = [
@@ -193,7 +200,7 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         # Sort by remaining assignments (descending) to show vendors with most work first
         vendors_list.sort(key=lambda x: x["remaining"], reverse=True)
         
-        return {
+        result = {
             "configured": True,
             "vendors": vendors_list,
             "error": "",
@@ -202,8 +209,13 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
             "total_remaining": sum(v["remaining"] for v in vendors_list),
         }
         
+        log.info("[VENDOR_ASSIGN] Total: %d assigned, %d completed, %d remaining", 
+                 result["total_assignments"], result["total_completed"], result["total_remaining"])
+        
+        return result
+        
     except Exception as exc:  # noqa: BLE001
-        log.error("Error building vendor assignments payload: %s", exc)
+        log.error("[VENDOR_ASSIGN] Error building vendor assignments payload: %s", exc, exc_info=True)
         return {
             "configured": False,
             "vendors": [],

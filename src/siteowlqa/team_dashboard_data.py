@@ -4,6 +4,7 @@ Purpose:
 - Pull lightweight live records for Survey Team and Scout Team.
 - Keep executive dashboard tabs connected to the freshest Airtable data.
 - Gracefully handle missing Scout credentials or schema differences.
+- Track vendor assignment progress and completion velocity.
 
 This does NOT change the existing Survey processing pipeline.
 It only provides live dashboard data for the consolidated executive page.
@@ -13,12 +14,14 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from siteowlqa.airtable_client import AirtableClient, TeamSourceConfig
 from siteowlqa.config import AppConfig
+from siteowlqa.vendor_assignment_tracker import VendorAssignmentTracker
 
 log = logging.getLogger(__name__)
 

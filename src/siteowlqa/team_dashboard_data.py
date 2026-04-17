@@ -125,3 +125,84 @@ def _build_team_payload(
             "raw_headers": [],
             "error": str(exc),
         }
+
+
+def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Build vendor assignment tracking payload.
+    
+    Reads vendor assignments from Excel and compares with Scout completions
+    to calculate remaining assignments and completion velocity.
+    
+    Args:
+        scout_payload: Scout team payload containing completed submissions
+    
+    Returns:
+        Dictionary containing vendor assignment stats
+    """
+    # Path to vendor assignment file (from environment or default)
+    assignment_file = os.getenv(
+        "VENDOR_ASSIGNMENT_FILE",
+        r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\Excel\Vendor ASSIGN. 4.2.26.xlsx"
+    )
+    
+    # Check if configured and file exists
+    if not assignment_file or not Path(assignment_file).exists():
+        log.info("Vendor assignment file not found or not configured: %s", assignment_file)
+        return {
+            "configured": False,
+            "vendors": [],
+            "error": "Vendor assignment file not found or not configured."
+        }
+    
+    try:
+        # Initialize tracker and load assignments
+        tracker = VendorAssignmentTracker(assignment_file)
+        if not tracker.load_assignments():
+            return {
+                "configured": False,
+                "vendors": [],
+                "error": "Failed to load vendor assignments from Excel file."
+            }
+        
+        # Extract completed submissions from Scout payload
+        completed_submissions = []
+        if scout_payload.get("configured") and scout_payload.get("records"):
+            for record in scout_payload["records"]:
+                # Only include completed/submitted records
+                status = str(record.get("processing_status", "")).strip().upper()
+                if status in ("COMPLETE", "COMPLETED", "PASS", "SUBMITTED", "APPROVED"):
+                    completed_submissions.append({
+                        "site_number": str(record.get("site_number", "")).strip(),
+                        "vendor_name": str(record.get("vendor_name", "")).strip(),
+                        "submitted_at": record.get("submitted_at", ""),
+                    })
+        
+        # Calculate vendor stats
+        vendor_stats = tracker.calculate_vendor_stats(completed_submissions)
+        
+        # Convert to list for JSON serialization
+        vendors_list = [
+            stats.to_dict()
+            for stats in vendor_stats.values()
+        ]
+        
+        # Sort by remaining assignments (descending) to show vendors with most work first
+        vendors_list.sort(key=lambda x: x["remaining"], reverse=True)
+        
+        return {
+            "configured": True,
+            "vendors": vendors_list,
+            "error": "",
+            "total_assignments": sum(v["total_assigned"] for v in vendors_list),
+            "total_completed": sum(v["completed"] for v in vendors_list),
+            "total_remaining": sum(v["remaining"] for v in vendors_list),
+        }
+        
+    except Exception as exc:  # noqa: BLE001
+        log.error("Error building vendor assignments payload: %s", exc)
+        return {
+            "configured": False,
+            "vendors": [],
+            "error": f"Error loading vendor assignments: {exc}"
+        }

@@ -670,7 +670,7 @@ class AirtableClient:
         self,
         source: TeamSourceConfig,
         *,
-        max_records: int = 200,
+        max_records: int = 10000,  # LIVE HOT RELOAD: default to all records
     ) -> list[TeamDashboardRecord]:
         """Return lightweight live records for executive dashboard snapshots.
 

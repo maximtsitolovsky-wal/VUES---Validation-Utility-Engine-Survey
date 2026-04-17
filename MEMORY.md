@@ -1,3 +1,9 @@
+### 2026-04-17 — Vendor Assignment Tracker Built & Shipped
+- **Decision:** Built complete vendor assignment tracking system. Reads vendor assignments from Excel file (`Vendor ASSIGN. 4.2.26.xlsx`, one sheet per vendor), compares against Scout Airtable completions, calculates remaining assignments + completion rates + velocity. Dashboard displays color-coded pills (green ≥80%, yellow ≥50%, red <50%). All 5 vendors tracked: Wachter, Techwise, SAS, Everon, CEI. Multi-sheet Excel loader reads ALL sheets automatically, uses sheet name as vendor name. Data integrated into `team_dashboard_data.json`, rendered in Scout section of executive dashboard.
+- **Impact:** `src/siteowlqa/vendor_assignment_tracker.py` (new, 350 lines), `src/siteowlqa/team_dashboard_data.py` (vendor payload builder), `src/siteowlqa/dashboard_exec.py` (renderVendorAssignmentPills() + UI pills), `test_vendor_tracking.py` (new), `docs/vendor-assignment-tracking.md` (created earlier).
+- **Test Results:** 758 total assignments loaded from 5 sheets, 263 completed submissions matched, 495 remaining. CEI leading with 234 completions (68%), SAS nearly done (7/8).
+- **Closed:** Yes.
+
 ### 2026-04-15 — Scout Image Sync Integrated Into Main Pipeline
 - **Decision:** Scout image downloader now runs as `ScoutSyncWorker` daemon thread inside `main.py` alongside `CorrectionWorker` and `MetricsRefreshWorker`. 60s startup delay, then every 6h while pipeline is running. Uses PowerShell `Invoke-WebRequest` (WinINet/browser stack) for CDN downloads — only path that reaches `v5.airtableusercontent.com` on Walmart network (DNS blocked at WinSock level, see RISK-003). Standalone `scripts/scout_downloader.py` + scheduled tasks (Mon-Fri 10AM/3PM) remain registered as redundancy layer.
 - **Impact:** `src/siteowlqa/scout_sync_worker.py` (new), `src/siteowlqa/main.py`, `MEMORY.md`.
@@ -115,6 +121,7 @@
 | `metrics.py`       | Compute metrics, export CSVs              |
 | `dashboard.py`     | Generate HTML dashboards from CSVs        |
 | `scout_sync_worker.py` | Scout image downloader daemon thread   |
+| `vendor_assignment_tracker.py` | Vendor assignment tracking vs Scout completions |
 
 - **Closed:** Yes.
 

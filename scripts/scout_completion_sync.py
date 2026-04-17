@@ -13,6 +13,7 @@ Schedule: Mon-Fri 10:00 AM and 3:00 PM via Windows Task Scheduler.
 Register:  ops/windows/register_scout_completion_sync_task.ps1
 """
 import sys
+import os
 import time
 from datetime import datetime
 from pathlib import Path

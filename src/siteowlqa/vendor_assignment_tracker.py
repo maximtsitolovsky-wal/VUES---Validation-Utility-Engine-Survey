@@ -90,7 +90,7 @@ class VendorAssignmentTracker:
             
             total_assignments_loaded = 0
             
-            # Load ALL sheets in the workbook
+            # Load ALL sheets in the workbook - each sheet = one vendor
             for sheet_name in wb.sheetnames:
                 logger.info(f"Processing sheet: {sheet_name}")
                 ws = wb[sheet_name]
@@ -99,72 +99,73 @@ class VendorAssignmentTracker:
                 if ws.max_row < 2:
                     logger.info(f"Skipping empty sheet: {sheet_name}")
                     continue
+                
+                # Use sheet name as the vendor name
+                vendor_name = self._normalize_vendor_name(sheet_name)
+                logger.info(f"Using vendor name from sheet: {vendor_name}")
             
-            # Find header row (look for "Site Number" or "Store Number" and "Vendor")
-            header_row = None
-            site_col_idx = None
-            vendor_col_idx = None
-            date_col_idx = None
-            
-            for row_idx in range(1, min(21, ws.max_row + 1)):
-                for col_idx in range(1, min(21, ws.max_column + 1)):
-                    cell_value = ws.cell(row_idx, col_idx).value
-                    if cell_value:
-                        cell_str = str(cell_value).strip().lower()
+                # Find header row (look for "Site Number" or "Store Number")
+                header_row = None
+                site_col_idx = None
+                date_col_idx = None
+                
+                for row_idx in range(1, min(21, ws.max_row + 1)):
+                    for col_idx in range(1, min(21, ws.max_column + 1)):
+                        cell_value = ws.cell(row_idx, col_idx).value
+                        if cell_value:
+                            cell_str = str(cell_value).strip().lower()
+                            
+                            if "site" in cell_str or "store" in cell_str:
+                                if "number" in cell_str:
+                                    header_row = row_idx
+                                    site_col_idx = col_idx
+                            elif "date" in cell_str or "assigned" in cell_str:
+                                date_col_idx = col_idx
+                    
+                    if header_row and site_col_idx:
+                        break
+                
+                if not (header_row and site_col_idx):
+                    logger.warning(f"Sheet '{sheet_name}': Could not find Site Number column, skipping")
+                    continue
+                
+                logger.info(f"Sheet '{sheet_name}': Found headers at row {header_row}, Site col={site_col_idx}")
+                
+                # Load assignments from this sheet
+                sheet_assignments_loaded = 0
+                for row_idx in range(header_row + 1, ws.max_row + 1):
+                    site_num = ws.cell(row_idx, site_col_idx).value
+                    assigned_date = ws.cell(row_idx, date_col_idx).value if date_col_idx else None
+                    
+                    if site_num:
+                        site_num_str = str(site_num).strip()
                         
-                        if "site" in cell_str or "store" in cell_str:
-                            if "number" in cell_str:
-                                header_row = row_idx
-                                site_col_idx = col_idx
-                        elif "vendor" in cell_str or "company" in cell_str:
-                            vendor_col_idx = col_idx
-                        elif "date" in cell_str or "assigned" in cell_str:
-                            date_col_idx = col_idx
-                
-                if header_row and site_col_idx and vendor_col_idx:
-                    break
-            
-            if not (header_row and site_col_idx and vendor_col_idx):
-                logger.error(f"Could not find required columns. Site={site_col_idx}, Vendor={vendor_col_idx}")
-                wb.close()
-                return False
-            
-            logger.info(f"Found headers at row {header_row}: Site col={site_col_idx}, Vendor col={vendor_col_idx}")
-            
-            # Load assignments
-            assignments_loaded = 0
-            for row_idx in range(header_row + 1, ws.max_row + 1):
-                site_num = ws.cell(row_idx, site_col_idx).value
-                vendor = ws.cell(row_idx, vendor_col_idx).value
-                assigned_date = ws.cell(row_idx, date_col_idx).value if date_col_idx else None
-                
-                if site_num and vendor:
-                    site_num_str = str(site_num).strip()
-                    vendor_str = self._normalize_vendor_name(str(vendor).strip())
-                    
-                    # Parse date if available
-                    date_obj = None
-                    if assigned_date:
-                        if isinstance(assigned_date, datetime):
-                            date_obj = assigned_date
-                        elif isinstance(assigned_date, str):
-                            try:
-                                date_obj = datetime.strptime(assigned_date, "%Y-%m-%d")
-                            except ValueError:
+                        # Parse date if available
+                        date_obj = None
+                        if assigned_date:
+                            if isinstance(assigned_date, datetime):
+                                date_obj = assigned_date
+                            elif isinstance(assigned_date, str):
                                 try:
-                                    date_obj = datetime.strptime(assigned_date, "%m/%d/%Y")
+                                    date_obj = datetime.strptime(assigned_date, "%Y-%m-%d")
                                 except ValueError:
-                                    pass
-                    
-                    self.assignments.append(VendorAssignment(
-                        site_number=site_num_str,
-                        vendor_name=vendor_str,
-                        assigned_date=date_obj
-                    ))
-                    assignments_loaded += 1
+                                    try:
+                                        date_obj = datetime.strptime(assigned_date, "%m/%d/%Y")
+                                    except ValueError:
+                                        pass
+                        
+                        self.assignments.append(VendorAssignment(
+                            site_number=site_num_str,
+                            vendor_name=vendor_name,  # Use sheet name as vendor
+                            assigned_date=date_obj
+                        ))
+                        sheet_assignments_loaded += 1
+                
+                logger.info(f"Sheet '{sheet_name}': Loaded {sheet_assignments_loaded} assignments for vendor '{vendor_name}'")
+                total_assignments_loaded += sheet_assignments_loaded
             
             wb.close()
-            logger.info(f"Loaded {assignments_loaded} vendor assignments")
+            logger.info(f"Loaded {total_assignments_loaded} total vendor assignments from {len(wb.sheetnames)} sheets")
             self._loaded = True
             return True
             

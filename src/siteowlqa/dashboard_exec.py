@@ -2153,7 +2153,8 @@ def _exec_metrics_tabs_section_html(
       // Hosted dashboards should keep themselves fresh automatically.
       // The metrics writer can regenerate the HTML every ~60s, so refresh often
       // enough to track that output without forcing users to mash F5 like cavemen.
-      const HOSTED_REFRESH_INTERVAL_MS = 60 * 1000;
+      // LIVE HOT RELOAD: 15-second frontend refresh for near-realtime updates
+const HOSTED_REFRESH_INTERVAL_MS = 15 * 1000;
 
       if (!isLocalFileDashboard()) {{
         window.setInterval(safeRefreshDashboard, HOSTED_REFRESH_INTERVAL_MS);

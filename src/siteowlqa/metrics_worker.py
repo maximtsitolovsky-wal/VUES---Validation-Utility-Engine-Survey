@@ -40,7 +40,8 @@ log = logging.getLogger(__name__)
 # Maximum time to wait between refreshes even if no submissions have finished.
 # Acts as a heartbeat: keeps the dashboard current if the dirty-flag somehow
 # gets missed (e.g. hard restart mid-flight).
-_BACKSTOP_INTERVAL_SECONDS: float = 60.0
+# LIVE HOT RELOAD: 15-second backstop ensures near-realtime dashboard updates.
+_BACKSTOP_INTERVAL_SECONDS: float = 15.0
 
 
 class MetricsRefreshWorker(threading.Thread):

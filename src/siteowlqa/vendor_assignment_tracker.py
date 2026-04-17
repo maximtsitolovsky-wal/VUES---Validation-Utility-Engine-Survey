@@ -138,7 +138,7 @@ class VendorAssignmentTracker:
                     assigned_date = ws.cell(row_idx, date_col_idx).value if date_col_idx else None
                     
                     if site_num:
-                        site_num_str = str(site_num).strip()
+                        site_num_str = self._normalize_site_number(str(site_num).strip())
                         
                         # Parse date if available
                         date_obj = None
@@ -183,6 +183,15 @@ class VendorAssignmentTracker:
         
         return vendor  # Return as-is if not recognized
     
+    def _normalize_site_number(self, site_num: str) -> str:
+        """Normalize site number by removing leading zeros for consistent matching."""
+        try:
+            # Convert to int and back to str to remove leading zeros
+            return str(int(site_num))
+        except (ValueError, TypeError):
+            # If conversion fails, return as-is
+            return str(site_num).strip()
+    
     def calculate_vendor_stats(
         self, 
         completed_submissions: List[dict]
@@ -201,10 +210,10 @@ class VendorAssignmentTracker:
             logger.warning("Assignments not loaded yet")
             return {}
         
-        # Build completion map by site number
+        # Build completion map by site number (normalized)
         completion_map = {}
         for sub in completed_submissions:
-            site_num = str(sub.get("site_number", "")).strip()
+            site_num = self._normalize_site_number(str(sub.get("site_number", "")).strip())
             vendor = self._normalize_vendor_name(str(sub.get("vendor_name", "")).strip())
             submitted_at = sub.get("submitted_at")
             

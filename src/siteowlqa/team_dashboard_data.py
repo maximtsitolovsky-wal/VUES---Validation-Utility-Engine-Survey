@@ -46,7 +46,7 @@ def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, out
     )
 
     # Note: Scout may require a separate API token/base/table.
-    # The linked Airtable view is represented by scout_airtable_view_id when configured.
+    # The linked Airtable view is represented by scoairtable_view_id when configured.
     scout_source = TeamSourceConfig(
         team_key="scout",
         token=cfg.scout_airtable_token or cfg.airtable_token,
@@ -61,9 +61,15 @@ def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, out
         submission_id_field=cfg.scout_submission_id_field,
     )
 
+    scout_payload = _build_team_payload(airtable, scout_source, label="Scout Team")
+    
+    # Load vendor assignment tracking (if configured)
+    vendor_assignments_payload = _build_vendor_assignments_payload(scout_payload)
+    
     payload: dict[str, Any] = {
         "survey": _build_team_payload(airtable, survey_source, label="Survey Team"),
-        "scout": _build_team_payload(airtable, scout_source, label="Scout Team"),
+        "scout": scout_payload,
+        "vendor_assignments": vendor_assignments_payload,
     }
 
     (output_dir / _TEAM_DASHBOARD_DATA).write_text(

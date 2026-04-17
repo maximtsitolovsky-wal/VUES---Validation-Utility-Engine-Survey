@@ -21,8 +21,10 @@ data = json.loads((output_dir / "team_dashboard_data.json").read_text())
 print(f"Keys in output: {list(data.keys())}")
 
 if "vendor_assignments" in data:
-    print("\n✓ vendor_assignments found!")
+    print("\nVendor assignments found!")
     print(f"  Configured: {data['vendor_assignments'].get('configured')}")
     print(f"  Vendors: {len(data['vendor_assignments'].get('vendors', []))}")
+    for v in data['vendor_assignments'].get('vendors', []):
+        print(f"    - {v['vendor_name']}: {v['remaining']} remaining, {v['completed']} done")
 else:
-    print("\n✗ vendor_assignments NOT found!")
+    print("\nVendor assignments NOT found!")

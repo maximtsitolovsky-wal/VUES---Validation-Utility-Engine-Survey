@@ -449,6 +449,13 @@ def _exec_metrics_tabs_section_html(
           <h3>Scout weekly production</h3>
           <span>Submissions per Surveyor Parent Company by week</span>
         </div>
+        
+        <!-- Vendor Assignment Pills -->
+        <div id=\"vendorAssignmentPillsContainer\" style=\"margin-bottom:18px;display:none\">
+          <div style=\"margin-bottom:10px;color:var(--muted);font-size:0.88rem;font-weight:600\">Vendor Assignment Progress</div>
+          <div id=\"vendorAssignmentPills\" style=\"display:flex;flex-wrap:wrap;gap:10px\"></div>
+        </div>
+        
         <div id=\"scoutWeeklyMessage\" style=\"margin-bottom:16px;color:var(--muted);line-height:1.7\"></div>
         <div style=\"border-radius:22px;border:1px solid rgba(255,255,255,0.06);background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));overflow:hidden\">
           <div id=\"scoutWeeklyScroll\" style=\"max-height:420px;overflow:auto\" aria-label=\"Scout weekly production table\">

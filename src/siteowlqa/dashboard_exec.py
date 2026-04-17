@@ -1375,6 +1375,94 @@ def _exec_metrics_tabs_section_html(
         body.appendChild(frag);
       }
 
+      function renderVendorAssignmentPills() {
+        const container = document.getElementById('vendorAssignmentPills');
+        const wrapper = document.getElementById('vendorAssignmentPillsContainer');
+        if (!container || !wrapper) return;
+
+        const vendorData = (teamDashboardData && teamDashboardData.vendor_assignments) || {};
+        const vendors = vendorData.vendors || [];
+
+        if (!vendorData.configured || vendors.length === 0) {
+          wrapper.style.display = 'none';
+          return;
+        }
+
+        wrapper.style.display = 'block';
+        container.innerHTML = '';
+
+        // Known vendor order for consistency
+        const vendorOrder = ['Wachter', 'Techwise', 'SAS', 'Everon', 'CEI'];
+        const vendorMap = {};
+        vendors.forEach(v => {
+          vendorMap[v.vendor_name] = v;
+        });
+
+        vendorOrder.forEach(vendorName => {
+          const stats = vendorMap[vendorName];
+          if (!stats) return;
+
+          const pill = document.createElement('div');
+          const completionPct = stats.completion_rate || 0;
+          
+          // Color coding based on completion rate
+          let bgColor, borderColor, textColor;
+          if (completionPct >= 80) {
+            // Green - on track
+            bgColor = 'rgba(42,135,3,0.16)';
+            borderColor = 'rgba(42,135,3,0.45)';
+            textColor = '#8fdb76';
+          } else if (completionPct >= 50) {
+            // Yellow - moderate progress
+            bgColor = 'rgba(255,194,32,0.14)';
+            borderColor = 'rgba(255,194,32,0.45)';
+            textColor = '#ffd86b';
+          } else {
+            // Red - needs attention
+            bgColor = 'rgba(234,17,0,0.14)';
+            borderColor = 'rgba(234,17,0,0.45)';
+            textColor = '#ff8f85';
+          }
+
+          pill.style.cssText = `
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            padding:12px 16px;
+            border-radius:12px;
+            border:1px solid ${borderColor};
+            background:${bgColor};
+            min-width:140px;
+            flex:1;
+          `;
+
+          const nameDiv = document.createElement('div');
+          nameDiv.style.cssText = 'font-size:0.85rem;color:var(--muted);font-weight:600';
+          nameDiv.textContent = vendorName;
+
+          const statsDiv = document.createElement('div');
+          statsDiv.style.cssText = `font-size:1.25rem;color:${textColor};font-weight:700`;
+          statsDiv.textContent = `${stats.remaining} left`;
+
+          const detailDiv = document.createElement('div');
+          detailDiv.style.cssText = 'font-size:0.75rem;color:var(--muted)';
+          detailDiv.textContent = `${stats.completed}/${stats.total_assigned} done (${Math.round(completionPct)}%)`;
+
+          pill.appendChild(nameDiv);
+          pill.appendChild(statsDiv);
+          pill.appendChild(detailDiv);
+          
+          if (stats.avg_completion_days !== null && stats.avg_completion_days !== undefined) {
+            const velocityDiv = document.createElement('div');
+            velocityDiv.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:4px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)';
+            velocityDiv.textContent = `~${stats.avg_completion_days.toFixed(1)} days avg`;
+            pill.appendChild(velocityDiv);
+          }
+
+          container.appendChild(pill);
+        });
+      }
+
       function escapeHtml(value) {
         return String(value ?? '')
           .replace(/&/g, '&amp;')

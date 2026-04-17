@@ -1814,6 +1814,7 @@ def _exec_metrics_tabs_section_html(
         setText('scoutUniqueSites', String(uniqueSites));
         renderScoutTopPerformer(records, configured);
         renderScoutWeeklyProduction(records, configured);
+        renderVendorAssignmentPills();
 
         if (payload && payload.error) {
           msg.textContent = payload.error;

@@ -16,13 +16,22 @@ This creates your user configuration file at:
 ```
 
 The wizard will ask you for:
-- SQL Server connection details
 - Airtable API tokens and base info
-- (Optional) SMTP server for email
 - (Optional) LLM Gateway credentials
 - (Optional) Reference data Excel file path
 
-### 2. Run the Pipeline
+### 2. Configure BigQuery (Required)
+
+Set these in your `.env` file:
+
+```env
+REFERENCE_SOURCE=bigquery
+SITEOWLQA_GCP_PROJECT=wmt-ww-ess-gsoc-prod
+SITEOWLQA_BIGQUERY_DATASET=ww_ess_gsoc_siteowl_dl_secure
+GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/your-service-account.json
+```
+
+### 3. Run the Pipeline
 
 ```bash
 python main.py
@@ -42,20 +51,13 @@ start_pipeline.bat
 **Location:** Your user home directory, NOT in git
 
 **Contains:**
-- SQL Server credentials
 - Airtable API tokens
-- SMTP passwords
 - LLM API keys
 - File paths
-
-**Permissions:** Read-only by your user (mode 0600 on Unix, restricted on Windows)
 
 **Example structure:**
 ```json
 {
-  "sql_server": "localhost\\SITEOWL",
-  "sql_database": "SiteOwlQA",
-  "sql_driver": "ODBC Driver 17 for SQL Server",
   "airtable_token": "pat_XXXXXXXXXXXXXXXXXXXXX",
   "airtable_base_id": "appXXXXXXXXXXXXXX",
   "airtable_table_name": "Survey Submissions",
@@ -79,13 +81,20 @@ start_pipeline.bat
 - Worker thread count
 - Folder paths
 - Reference data source
-- Feature flags
+- BigQuery project/dataset
 
 **Example:**
-```
+```env
 POLL_INTERVAL_SECONDS=60
 WORKER_THREADS=3
-REFERENCE_SOURCE=sql
+REFERENCE_SOURCE=bigquery
+
+# BigQuery
+SITEOWLQA_GCP_PROJECT=wmt-ww-ess-gsoc-prod
+SITEOWLQA_BIGQUERY_DATASET=ww_ess_gsoc_siteowl_dl_secure
+GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/service-account.json
+
+# Directories
 TEMP_DIR=C:/SiteOwlQA_App/temp
 OUTPUT_DIR=C:/SiteOwlQA_App/output
 LOG_DIR=C:/SiteOwlQA_App/logs
@@ -97,17 +106,20 @@ SUBMISSIONS_DIR=C:/SiteOwlQA_App/archive/submissions
 
 ## Setup Details
 
-### SQL Server
+### BigQuery (Required)
 
-Example:
-```
-SQL Server: localhost\SITEOWL
-Database: SiteOwlQA
-Driver: ODBC Driver 17 for SQL Server
+The pipeline fetches reference data from `device_survey_task_details` in BigQuery.
+
+**Configuration:**
+```env
+REFERENCE_SOURCE=bigquery
+SITEOWLQA_GCP_PROJECT=wmt-ww-ess-gsoc-prod
+SITEOWLQA_BIGQUERY_DATASET=ww_ess_gsoc_siteowl_dl_secure
 ```
 
-**Note:** The pipeline uses Windows Integrated Authentication (Trusted Connection).
-No username/password needed if your Windows account has SQL access.
+**Credentials:**
+- Set `GOOGLE_APPLICATION_CREDENTIALS` to your service account JSON key file
+- Or use Application Default Credentials (gcloud auth)
 
 ### Airtable
 
@@ -128,19 +140,13 @@ No username/password needed if your Windows account has SQL access.
 - Exact name of your submissions table (case-sensitive)
 - Example: "Survey Submissions"
 
-### SMTP (Optional)
+### Email Notifications
 
-If you want the pipeline to send emails directly:
+**Email is handled entirely by Airtable automations.**
 
-**Office 365:**
-```
-Server: smtp.office365.com
-Port: 587
-Username: your.email@company.com
-Password: your-app-password
-```
+The pipeline writes PASS/FAIL/ERROR to the `Processing Status` field. An Airtable automation rule watches that field and sends vendor emails independently.
 
-**Other providers:** Check with your IT team
+There is no SMTP code in this codebase.
 
 ### Element LLM Gateway (Optional)
 
@@ -153,27 +159,26 @@ For advanced AI-powered weekly highlights:
 
 If not configured, the system uses deterministic summaries.
 
-### Reference Data (Optional)
+### Reference Data Sources
 
-**Option 1: SQL Server (Default)**
+**Option 1: BigQuery (Default)**
+```env
+REFERENCE_SOURCE=bigquery
 ```
-REFERENCE_SOURCE=sql
-```
-The pipeline fetches reference data from `dbo.vw_ReferenceExport` view.
+The pipeline fetches reference data from `device_survey_task_details` (GSOC production table).
 
 **Option 2: Excel Workbook**
-```
+```env
 REFERENCE_SOURCE=excel
 ```
-Provide path to Excel file with schema:
-- First column: Site ID
-- Other columns: Reference values
-
-**Option 3: Auto (Preferred)**
+Provide path to Excel file in your user config:
+```json
+{
+  "reference_workbook_path": "C:/path/to/workbook.xlsx",
+  "reference_workbook_sheet": "Sheet1",
+  "reference_workbook_site_id_column": "SelectedSiteID"
+}
 ```
-REFERENCE_SOURCE=auto
-```
-Uses Excel if configured, falls back to SQL.
 
 ---
 
@@ -229,17 +234,17 @@ rm ~/.siteowlqa/config.json
 python -m siteowlqa.setup_config
 ```
 
-### "SQL Server connection failed"
+### "BigQuery connection failed"
 
 **Check:**
-1. SQL Server name is correct
-2. Database name is correct
-3. Windows account has database access
-4. SQL Server allows Windows auth
+1. GCP project ID is correct
+2. Dataset name is correct
+3. Service account has BigQuery Data Viewer role
+4. `GOOGLE_APPLICATION_CREDENTIALS` points to valid JSON key
 
 **Test connection:**
 ```bash
-python -c "from siteowlqa.config import load_config; c=load_config(); print(c.sql_connection_string)"
+python -c "from siteowlqa.config import load_config; from siteowlqa.reference_data import fetch_reference_rows; cfg=load_config(); print(fetch_reference_rows(cfg, '3654'))"
 ```
 
 ### "Airtable authentication failed"
@@ -290,40 +295,6 @@ Repository Root
     ├── user_config.py     ← User config handler
     └── setup_config.py    ← Setup wizard
 ```
-
----
-
-## Advanced: Manual JSON Editing
-
-If you must edit `~/.siteowlqa/config.json` by hand:
-
-1. **Backup first:**
-   ```bash
-   cp ~/.siteowlqa/config.json ~/.siteowlqa/config.json.bak
-   ```
-
-2. **Edit:**
-   ```bash
-   # Windows
-   notepad %USERPROFILE%/.siteowlqa/config.json
-   
-   # Mac/Linux
-   nano ~/.siteowlqa/config.json
-   ```
-
-3. **Validate JSON syntax** (paste into https://jsonlint.com/)
-
-4. **Test configuration:**
-   ```bash
-   python -m siteowlqa.setup_config
-   ```
-   Choose "no" when asked to save. This validates without overwriting.
-
-5. **Restart pipeline:**
-   ```bash
-   stop_pipeline.bat
-   start_pipeline.bat
-   ```
 
 ---
 

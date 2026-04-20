@@ -81,7 +81,7 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 | | |
 |---|---|
 | **App** | SiteOwlQA — automated vendor QA pipeline |
-| **Stack** | Python · SQL Server · Airtable API (email via Airtable automations — no SMTP) |
+| **Stack** | Python · BigQuery · Airtable API (email via Airtable automations — no SMTP) |
 | **Platform** | Windows · single-process · Docker available (dev only, port 8765) · no cloud deps |
 | **Roadmap** | `development.md` |
 | **Settled decisions** | `MEMORY.md` |
@@ -95,7 +95,7 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 - DRY · YAGNI · SOLID · Zen of Python — always.
 - Files ≤ 600 lines. Split on cohesion, not line count.
 - `config.py` is the only module that calls `os.getenv`. No exceptions.
-- SQL lives in `sql.py`. Types live in `models.py`. Not scattered.
+- BigQuery queries live in `bigquery_provider.py`. Types live in `models.py`. Not scattered.
 - Archive is **append-only**. Never delete lessons or execution records.
 - Main poll loop **never crashes**. Catch at the record level.
 - Commit after every completed change. Small, scoped, clear message.

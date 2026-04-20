@@ -1,7 +1,7 @@
 # VUES - Validation Utility Engine Survey
 
-> Automated vendor QA pipeline: Airtable → Python → SQL-backed reference lookup → grading results.
-> Runs 24/7 on a Windows machine with zero cloud dependencies.
+> Automated vendor QA pipeline: Airtable → Python → BigQuery reference lookup → grading results.
+> Runs 24/7 on a Windows machine with minimal cloud dependencies (BigQuery for reference data).
 
 > Active roadmap, delivery notes, and commit workflow live in [`development.md`](./development.md).
 >
@@ -18,11 +18,11 @@
  Python Polling Service  (poll every 60 seconds)
       ↓  download attachment
       ↓  normalize columns, overwrite Project ID ← Airtable Site Number
-      ↓  fetch site-scoped reference rows from SQL Server
+      ↓  fetch site-scoped reference rows from BigQuery
       ↓  compare canonical headers in Python
       ↓  derive PASS / FAIL / ERROR + score in Python
-      ↓  send email (SMTP, Office 365)
       ↓  PATCH Airtable Processing Status (PASS / FAIL / ERROR)
+      ↓  Airtable automation sends vendor email (no SMTP in pipeline)
       ↓  archive raw file → archive/submissions/YYYY/MM/DD/
       ↓  save execution + review JSON
       ↓  refresh vendor_metrics.csv + submission_history.csv
@@ -41,7 +41,7 @@
 | `src/siteowlqa/utils.py` | Logging setup, ID generation, safe file delete |
 | `src/siteowlqa/airtable_client.py` | Airtable REST API (fetch, download, status update) |
 | `src/siteowlqa/file_processor.py` | XLSX/CSV load, header normalization, ProjectID overwrite |
-| `src/siteowlqa/sql.py` | SQL connection + site-scoped reference fetch |
+| `src/siteowlqa/bigquery_provider.py` | BigQuery connection + site-scoped reference fetch |
 | `src/siteowlqa/python_grader.py` | Python-side grading engine (canonical header comparison) |
 | `src/siteowlqa/reference_data.py` | Reference data loader with warm cache |
 | `src/siteowlqa/reviewer.py` | Internal static code reviewer |
@@ -533,10 +533,7 @@ DELETE FROM dbo.SubmissionRaw WHERE SubmissionID = @SubmissionID;
 
 | Risk | Severity | Notes |
 |---|---|---|
-| TRUNCATE is global | HIGH | See above. Sequential loop mitigates in MVP. |
-| Email fails silently | MEDIUM | Error is logged, Airtable is updated. Vendor does not get email if SMTP fails. |
 | Airtable token in .env | LOW | Never commit .env. Use Windows ACL to restrict file access. |
-| No retry on transient SQL errors | LOW | pyodbc raises immediately on SQL failure. Airtable is marked ERROR. |
 | No retry on Airtable 429 (rate limit) | LOW | Rare in practice at 60s poll intervals with low volume. |
 
 ---
@@ -545,14 +542,10 @@ DELETE FROM dbo.SubmissionRaw WHERE SubmissionID = @SubmissionID;
 
 For active prioritization and status tracking of these upgrades, use [`development.md`](./development.md) as the source of truth.
 
-1. **SubmissionID-isolated staging** — DELETE by SubmissionID instead of TRUNCATE. Allows safe concurrent processing.
-2. **Multi-threaded processing** — after #1 is done, use `concurrent.futures.ThreadPoolExecutor` to process multiple submissions in parallel.
-3. **Retry logic** — add exponential backoff for transient SQL and SMTP failures.
-4. **Streamlit dashboard** (optional) — a `streamlit run dashboard_app.py` app reading the CSVs live. Label clearly as optional.
-5. **SQL metrics tables** — INSERT metrics into a `dbo.VendorMetrics` SQL table instead of only CSV files. Enables SSMS reporting.
-6. **Windows Service** — use `pywin32` to register as a proper Windows Service instead of Task Scheduler. Cleaner restart behavior.
-7. **Alerting on repeated vendor failures** — if a vendor has 3+ consecutive FAILs, send an internal alert email.
-8. **Airtable webhook** (future) — replace polling with an Airtable webhook for sub-second response. Requires a reachable HTTP endpoint.
+1. **Streamlit dashboard** (optional) — a `streamlit run dashboard_app.py` app reading the CSVs live. Label clearly as optional.
+2. **Windows Service** — use `pywin32` to register as a proper Windows Service instead of Task Scheduler. Cleaner restart behavior.
+3. **Alerting on repeated vendor failures** — if a vendor has 3+ consecutive FAILs, send an internal alert email.
+4. **Airtable webhook** (future) — replace polling with an Airtable webhook for sub-second response. Requires a reachable HTTP endpoint.
 
 ---
 
@@ -561,17 +554,14 @@ For active prioritization and status tracking of these upgrades, use [`developme
 ### “EnvironmentError: Required environment variable X is missing”
 → Open `.env` and fill in the missing value.
 
-### “Connection to SQL Server failed”
-→ Check that SQL Server is running. Check `SQL_SERVER` value in `.env`. Make sure your Windows user has access.
+### “Connection to BigQuery failed”
+→ Check that `GOOGLE_APPLICATION_CREDENTIALS` points to a valid service account JSON. Check that the service account has BigQuery Data Viewer role on the dataset.
 
 ### “Record recXXX has no attachment in field SiteOwl Export File”
 → The Airtable field name in your base doesn't match `AIRTABLE_FIELDS.attachment` in `config.py`. Update `config.py` or rename the Airtable field.
 
 ### “Vendor file missing required column: Project ID”
 → The vendor file uses different column names. `file_processor.py` does case-insensitive matching and strips whitespace. If still failing, check the actual column name in the vendor file.
-
-### “SMTP authentication failed”
-→ Check `SMTP_USER`, `SMTP_PASS`, and `SMTP_SERVER` in `.env`. For Office 365, app passwords may be required if MFA is enabled.
 
 ### “Processing Status not updating in Airtable”
 → Check that your Airtable token has `data.records:write` scope.

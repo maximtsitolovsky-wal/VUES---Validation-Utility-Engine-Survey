@@ -21,9 +21,8 @@ You are getting:
 ### Required
 - Windows machine
 - Python 3.11+
-- SQL Server ODBC driver (17+)
 - Access to Airtable base
-- Access to SQL Server DB used by SiteOwlQA
+- GCP service account with BigQuery access to `wmt-ww-ess-gsoc-prod`
 
 ### Recommended
 - Git
@@ -57,17 +56,24 @@ This creates:
 `%USERPROFILE%\.siteowlqa\config.json`
 
 Includes:
-- SQL server/database/driver
 - Airtable token/base/table
 - Optional LLM Gateway
 - Optional reference workbook settings
 
-### 4.2 Runtime non-secret settings (.env) — optional
+### 4.2 BigQuery configuration (.env) — required
 
-The defaults work for most setups. Only needed if your paths or intervals differ:
+Copy the example and configure BigQuery:
 
 ```bat
 copy .env.example .env
+```
+
+Edit `.env` with your BigQuery settings:
+```env
+REFERENCE_SOURCE=bigquery
+SITEOWLQA_GCP_PROJECT=wmt-ww-ess-gsoc-prod
+SITEOWLQA_BIGQUERY_DATASET=ww_ess_gsoc_siteowl_dl_secure
+GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/your-service-account.json
 ```
 
 ---
@@ -105,7 +111,7 @@ ops\windows\setup_scheduler.bat
 
 ---
 
-## 6) Pipeline phases (what “all phases” means)
+## 6) Pipeline phases (what "all phases" means)
 
 ### Phase 1 — Intake and grading
 1. Poll Airtable for unprocessed submissions
@@ -113,7 +119,7 @@ ops\windows\setup_scheduler.bat
 3. Worker picks up record, marks `PROCESSING`
 4. Download vendor file
 5. Normalize schema + apply Site Number overwrite rule
-6. Load reference data
+6. Load reference data from BigQuery
 7. Grade rows/fields
 8. Build PASS/FAIL/ERROR payloads
 9. Update Airtable status + score fields
@@ -148,6 +154,12 @@ ops\windows\setup_scheduler.bat
 
 ## 8) Smoke test checklist
 
+Run the smoke test first:
+```bat
+.venv\Scripts\python scripts\smoke_test.py
+```
+
+Then:
 1. Start app in foreground (`run_siteowlqa.bat`)
 2. Confirm log line: config loaded from `%USERPROFILE%\.siteowlqa\config.json`
 3. Submit one known-good file in Airtable
@@ -163,7 +175,7 @@ ops\windows\setup_scheduler.bat
 
 - **User config missing**: run `python -m siteowlqa.setup_config`
 - **Airtable auth error**: bad token/base/table in user config
-- **SQL connection error**: bad server/db/ODBC or missing DB access
+- **BigQuery connection error**: check GCP credentials and project access
 - **No dashboard update**: check `logs/` and metrics worker startup messages
 
 ---
@@ -173,6 +185,7 @@ ops\windows\setup_scheduler.bat
 Never commit:
 - `.env`
 - `%USERPROFILE%\.siteowlqa\config.json`
+- GCP service account JSON files
 - output archives/logs with production data
 
 Always run from repo root or use provided launch scripts.

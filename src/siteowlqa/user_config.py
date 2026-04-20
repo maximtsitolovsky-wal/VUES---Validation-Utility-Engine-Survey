@@ -143,26 +143,19 @@ def create_user_config_interactive() -> UserConfig:
     print("="*70)
     print("\nThis wizard will create your user configuration file at:")
     print(f"  {get_user_config_path()}")
-    print("\nYour sensitive data (tokens, passwords, credentials) will be stored")
+    print("\nYour sensitive data (tokens, API keys) will be stored")
     print("in your user home directory, NOT in the git repository.")
+    print("\nNote: BigQuery settings go in .env (see docs/configuration.md)")
     print("\n" + "-"*70)
     
-    # SQL Server
-    print("\n[1/7] SQL Server Configuration")
-    sql_server = input("  SQL Server (e.g., localhost\\SITEOWL): ").strip()
-    sql_database = input("  SQL Database name (e.g., SiteOwlQA): ").strip()
-    sql_driver = input("  SQL Driver [default: ODBC Driver 17 for SQL Server]: ").strip()
-    if not sql_driver:
-        sql_driver = "ODBC Driver 17 for SQL Server"
-    
     # Airtable
-    print("\n[2/7] Airtable Configuration")
+    print("\n[1/5] Airtable Configuration")
     airtable_token = input("  Airtable API Token (from https://airtable.com/create/tokens): ").strip()
     airtable_base_id = input("  Airtable Base ID (from URL airtable.com/app<BASE_ID>/...): ").strip()
     airtable_table_name = input("  Airtable Table Name (exact name, case-sensitive): ").strip()
     
     # Element LLM Gateway
-    print("\n[3/6] Element LLM Gateway (optional - leave blank to skip)")
+    print("\n[2/5] Element LLM Gateway (optional - leave blank to skip)")
     element_llm_gateway_url = input("  LLM Gateway URL: ").strip()
     element_llm_gateway_api_key = ""
     element_llm_gateway_project_id = ""
@@ -174,21 +167,19 @@ def create_user_config_interactive() -> UserConfig:
         wmt_ca_path = input("  Walmart CA Certificate Path: ").strip()
     
     # Reference Workbook
-    print("\n[4/6] Reference Data Workbook (optional)")
-    reference_workbook_path = input("  Excel file path (leave blank to use SQL Server): ").strip()
+    print("\n[3/5] Reference Data Workbook (optional - only if using Excel instead of BigQuery)")
+    reference_workbook_path = input("  Excel file path (leave blank to use BigQuery): ").strip()
     reference_workbook_sheet = ""
     reference_workbook_site_id_column = "SelectedSiteID"
 
     if reference_workbook_path:
-        reference_workbook_sheet = input("  Sheet name [default: SQL DB MASTER]: ").strip()
-        if not reference_workbook_sheet:
-            reference_workbook_sheet = "SQL DB MASTER"
+        reference_workbook_sheet = input("  Sheet name [default: first sheet]: ").strip()
         reference_workbook_site_id_column = input("  Site ID column [default: SelectedSiteID]: ").strip()
         if not reference_workbook_site_id_column:
             reference_workbook_site_id_column = "SelectedSiteID"
 
     # Scout Airtable
-    print("\n[5/6] Scout Airtable Source (for Scout dashboard tab)")
+    print("\n[4/5] Scout Airtable Source (for Scout dashboard tab)")
     print("  Leave base ID + table blank to disable the Scout tab.")
     scout_airtable_base_id = input("  Scout Base ID (app...): ").strip()
     scout_airtable_table_name = ""
@@ -202,9 +193,8 @@ def create_user_config_interactive() -> UserConfig:
 
     # Confirm
     print("\n" + "-"*70)
-    print("[6/6] Review Configuration")
+    print("[5/5] Review Configuration")
     print("-"*70)
-    print(f"  SQL Server:        {sql_server} / {sql_database}")
     print(f"  Survey Airtable:   {airtable_base_id} / {airtable_table_name}")
     if scout_airtable_base_id:
         print(f"  Scout Airtable:    {scout_airtable_base_id} / {scout_airtable_table_name}")
@@ -214,6 +204,8 @@ def create_user_config_interactive() -> UserConfig:
         print(f"  LLM Gateway:       Configured")
     if reference_workbook_path:
         print(f"  Reference:         {reference_workbook_path}")
+    else:
+        print(f"  Reference:         BigQuery (configure in .env)")
 
     confirm = input("\nSave configuration? (y/n): ").strip().lower()
     if confirm != 'y':
@@ -221,9 +213,6 @@ def create_user_config_interactive() -> UserConfig:
         sys.exit(0)
 
     config = UserConfig(
-        sql_server=sql_server,
-        sql_database=sql_database,
-        sql_driver=sql_driver,
         airtable_token=airtable_token,
         airtable_base_id=airtable_base_id,
         airtable_table_name=airtable_table_name,
@@ -241,5 +230,6 @@ def create_user_config_interactive() -> UserConfig:
     )
     
     save_user_config(config)
-    print(f"\n✓ Configuration saved to: {get_user_config_path()}")
+    print(f"\nConfiguration saved to: {get_user_config_path()}")
+    print("\nNext step: Configure BigQuery in .env if not already done.")
     return config

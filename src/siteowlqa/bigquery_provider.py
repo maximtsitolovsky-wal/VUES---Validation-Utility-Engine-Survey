@@ -143,11 +143,9 @@ def fetch_reference_rows_from_bigquery(
             bigquery.ScalarQueryParameter("project_id", "STRING", site_id),
         ],
     )
-    if bq_cfg.location:
-        job_config.location = bq_cfg.location
 
     log.debug("BigQuery: fetching reference rows for site=%s", site_id)
-    df = client.query(query, job_config=job_config).to_dataframe()
+    df = client.query(query, job_config=job_config, location=bq_cfg.location or None).to_dataframe()
 
     # Normalize to the exact same output contract as sql.py.
     df = df.rename(columns=_BQ_TO_VENDOR)

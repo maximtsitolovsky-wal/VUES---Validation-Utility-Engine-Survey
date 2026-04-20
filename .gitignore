@@ -1,12 +1,28 @@
+# =============================================================================
+# SiteOwlQA .gitignore — Enterprise Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Environment & Credentials (NEVER commit)
+# -----------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
 
-# GCP service account credentials — NEVER commit these
+# GCP service account credentials
 .secrets/
-*.json
-!pyproject.toml
+*-credentials.json
+*-service-account.json
 
+# User config (contains tokens)
+.siteowlqa/
+
+# Instance lock file
+siteowlqa.lock
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *.pyo
@@ -14,9 +30,17 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
+*.egg-info/
+build/
+dist/
 
+# -----------------------------------------------------------------------------
+# Runtime directories (generated data)
+# -----------------------------------------------------------------------------
 temp/
 logs/
 output/
@@ -28,6 +52,9 @@ share/
 !docs/memory-agent/store/archive/
 !docs/memory-agent/store/archive/**
 
+# -----------------------------------------------------------------------------
+# Data files (may contain PII)
+# -----------------------------------------------------------------------------
 *.sqlite
 *.db
 *.csv
@@ -35,18 +62,29 @@ share/
 *.xls
 *.log
 
+# -----------------------------------------------------------------------------
+# OS generated
+# -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Build and distribution
-build/
-dist/
-*.egg-info/
+# -----------------------------------------------------------------------------
+# IDE
+# -----------------------------------------------------------------------------
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+*.code-workspace
 
-# Helper scripts (temporary refactoring tools)
+# -----------------------------------------------------------------------------
+# Temporary files
+# -----------------------------------------------------------------------------
+*.tmp
+*.bak
+*.swp
+*~
 move_files.py
 fix_imports.py
-
-# Temporary script outputs and test files
 scripts/*_output.txt
 scripts/_*.txt

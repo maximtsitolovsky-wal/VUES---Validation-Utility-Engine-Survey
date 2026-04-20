@@ -1,0 +1,62 @@
+{
+  "project_name": "SiteOwlQA",
+  "full_name": "Site Owl QA - Validation Utility Engine Survey",
+  "repository": "https://gecgithub01.walmart.com/vn59j7j/SiteOwlQA_App",
+  "project_root": "C:\\SiteOwlQA_App",
+  
+  "architecture": {
+    "type": "single-process-polling",
+    "stack": "Python + SQL Server + Airtable",
+    "deployment": "Windows Task Scheduler → Docker (planned)",
+    "database": "SQL Server (reference data only)",
+    "data_source": "Airtable (source of truth)"
+  },
+  
+  "conventions": {
+    "max_file_lines": 600,
+    "module_boundaries": "strict",
+    "config_centralization": true,
+    "git_discipline": "required",
+    "archive_policy": "append-only"
+  },
+  
+  "directories": {
+    "source": "src/siteowlqa",
+    "tests": "tests",
+    "agents": "agents",
+    "skills": "skills",
+    "docs": "docs",
+    "infra": "infra",
+    "logs": "logs",
+    "output": "output",
+    "temp": "temp",
+    "archive": "archive",
+    "prompts": "prompts"
+  },
+  
+  "module_ownership": {
+    "main.py": "Entry point, poll loop, dependency wiring",
+    "poll_airtable.py": "Per-record orchestration",
+    "airtable_client.py": "All Airtable API calls",
+    "file_processor.py": "XLSX/CSV load and normalisation",
+    "sql.py": "SQL connection + reference row access",
+    "reviewer.py": "Internal code/run review (deterministic)",
+    "archive.py": "Append-only JSON archive",
+    "memory.py": "Lesson retrieval",
+    "config.py": "All environment variable access",
+    "models.py": "All shared data types",
+    "utils.py": "Logging setup, ID gen, file utilities"
+  },
+  
+  "core_mandates": [
+    "One Python process — no message queues, no Docker dependencies in production code",
+    "Polling over webhooks (Airtable webhooks not available)",
+    "Python is the grading source of truth; SQL Server supplies site-scoped reference rows only",
+    "Main loop never crashes — catch at record level, not loop level",
+    "Prefer the smallest stable change — never rewrite working code"
+  ],
+  
+  "roadmap_file": "development.md",
+  "memory_file": "MEMORY.md",
+  "architecture_context": "CLAUDE.md"
+}

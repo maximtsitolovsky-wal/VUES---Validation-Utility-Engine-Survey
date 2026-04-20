@@ -1,11 +1,54 @@
 # VUES - Validation Utility Engine Survey
 
-> Automated vendor QA pipeline: Airtable → Python → BigQuery reference lookup → grading results.
-> Runs 24/7 on a Windows machine with minimal cloud dependencies (BigQuery for reference data).
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
+![Platform Windows](https://img.shields.io/badge/platform-Windows-lightgrey)
+![License MIT](https://img.shields.io/badge/license-MIT-green)
+![BigQuery](https://img.shields.io/badge/data-BigQuery-orange)
 
-> Active roadmap, delivery notes, and commit workflow live in [`development.md`](./development.md).
+> **Enterprise-grade vendor QA pipeline** for automated submission validation.
 >
-> **Project Layout**: Modern Python monorepo with `src/siteowlqa/` package, `scripts/` for utilities, `docs/` for documentation, and `ops/windows/` for Windows automation.
+> Airtable → Python (parallel workers) → BigQuery reference lookup → Grading results
+
+## ✨ Features
+
+- **Parallel Processing** — Multiple worker threads process submissions concurrently
+- **BigQuery Integration** — Reference data from GSOC production tables
+- **Single-Instance Lock** — Prevents duplicate polling when cloning the repo  
+- **Auto-Recovery** — Stuck records are recovered on startup
+- **Real-time Dashboard** — HTML dashboards with vendor metrics
+- **Autonomous Correction** — Post-pass correction for high-scoring submissions
+
+## 🚀 Quick Start
+
+```bash
+# Clone and setup
+git clone <repo-url>
+cd SiteOwlQA_App
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+# Configure (interactive wizard)
+python -m siteowlqa.setup_config
+
+# Verify setup
+python scripts/smoke_test.py
+
+# Run
+python main.py
+```
+
+> ⚠️ **Single Instance**: Only one pipeline should poll a given Airtable base.
+> The application uses a lock file to prevent duplicate instances.
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Configuration Guide](docs/configuration.md) | Detailed setup instructions |
+| [Clone and Run](docs/clone-and-run.md) | Onboarding for new team members |
+| [Contributing](CONTRIBUTING.md) | Development workflow |
+| [Architecture](prompts/architect_prompt.md) | System design decisions |
 
 ---
 

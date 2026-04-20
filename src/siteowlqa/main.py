@@ -52,6 +52,7 @@ from siteowlqa.config import (
 )
 from siteowlqa.correction_state import CorrectionStateDB
 from siteowlqa.correction_worker import CorrectionWorker
+from siteowlqa.instance_lock import check_single_instance, generate_instance_id
 from siteowlqa.memory import Memory
 from siteowlqa.scout_sync_worker import ScoutSyncWorker
 from siteowlqa.scout_completion_sync_worker import ScoutCompletionSyncWorker
@@ -274,6 +275,36 @@ def run_forever() -> None:
     log.info(_build_banner())
 
     cfg = load_config()
+    
+    # Single-instance lock — prevents duplicate polling
+    # If another instance is running, this will print an error and exit.
+    import os
+    force_lock = os.getenv("SITEOWLQA_FORCE_LOCK", "").strip().lower() in ("1", "true")
+    if force_lock:
+        log.warning("SITEOWLQA_FORCE_LOCK=1 — forcing lock acquisition (dangerous!)")
+    
+    from siteowlqa.instance_lock import InstanceLock
+    lock = InstanceLock(cfg.log_dir)
+    if not lock.acquire(force=force_lock):
+        owner = lock.owner_info()
+        log.error(
+            "Another instance is running! instance=%s pid=%s started=%s",
+            owner.get("instance_id") if owner else "unknown",
+            owner.get("pid") if owner else "unknown",
+            owner.get("started_at") if owner else "unknown",
+        )
+        print(
+            f"\n\u274c Another SiteOwlQA instance is already running!\n"
+            f"   Instance: {owner.get('instance_id') if owner else 'unknown'}\n"
+            f"   PID:      {owner.get('pid') if owner else 'unknown'}\n"
+            f"   Lock:     {lock.lock_file}\n\n"
+            f"   To force: set SITEOWLQA_FORCE_LOCK=1\n"
+        )
+        import sys
+        sys.exit(1)
+    
+    log.info("Instance ID: %s", lock.instance_id)
+    
     airtable = AirtableClient(cfg)
     archive = Archive(cfg.archive_dir)
     memory = Memory(archive)

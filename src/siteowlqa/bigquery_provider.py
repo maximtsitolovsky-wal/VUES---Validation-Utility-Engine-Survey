@@ -124,19 +124,20 @@ def fetch_reference_rows_from_bigquery(
 
     # Parameterized query — same field set as dbo.vw_ReferenceNormalized in sql.py.
     # BigQuery source: device_survey_task_details (GSOC table)
+    # Column mapping: BQ uses underscores/different names → alias to match SQL Server schema
     query = f"""
         SELECT
-            ProjectID,
+            Project_ID AS ProjectID,
             Name,
-            AbbreviatedName,
-            PartNumber,
+            Abreviated_ AS AbbreviatedName,
+            Part_Number AS PartNumber,
             Manufacturer,
-            IPAddress,
+            IP_Address AS IPAddress,
             MACAddress,
-            IPAnalog,
+            IP___Analog AS IPAnalog,
             Description
         FROM `{bq_cfg.project_id}.{bq_cfg.dataset}.device_survey_task_details`
-        WHERE ProjectID = @project_id
+        WHERE Project_ID = @project_id
     """
     job_config = bigquery.QueryJobConfig(
         query_parameters=[

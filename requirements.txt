@@ -9,8 +9,10 @@ pandas>=2.2.0
 openpyxl>=3.1.2      # XLSX read/write
 pywin32>=306         # Windows COM automation (Excel)
 
-# SQL Server
-pyodbc>=5.1.0
+# BigQuery
+google-cloud-bigquery>=3.11.0
+google-auth>=2.28.0
+db-dtypes>=1.2.0     # required by bigquery.to_dataframe()
 
 # HTTP
 requests>=2.31.0

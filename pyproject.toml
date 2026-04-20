@@ -12,7 +12,9 @@ dependencies = [
   "pyairtable>=2.3.3",
   "pandas>=2.2.0",
   "openpyxl>=3.1.2",
-  "pyodbc>=5.1.0",
+  "google-cloud-bigquery>=3.11.0",
+  "google-auth>=2.28.0",
+  "db-dtypes>=1.2.0",
   "requests>=2.31.0",
   "httpx>=0.27.0",
   "pydantic-ai>=0.0.24",
@@ -21,10 +23,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-bigquery = [
-  "google-cloud-bigquery>=3.11.0",
-  "google-auth>=2.28.0",
-  "db-dtypes>=1.2.0",  # required by bigquery.to_dataframe()
+dev = [
+  "pytest>=7.0.0",
 ]
 
 [tool.setuptools]

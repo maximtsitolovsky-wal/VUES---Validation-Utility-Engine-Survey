@@ -347,7 +347,7 @@ print("=" * 55)
 if _failed:
     print(f"RESULT: {len(_failed)} FAILURE(S) — fix before running main.py:")
     for f in _failed:
-        print(f"  ✗ {f}")
+        print(f"  X {f}")
     if _warned:
         print(f"\n  + {len(_warned)} warning(s) (non-fatal):")
         for w in _warned:

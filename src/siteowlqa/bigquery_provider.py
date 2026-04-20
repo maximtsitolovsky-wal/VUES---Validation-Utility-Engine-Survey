@@ -123,7 +123,7 @@ def fetch_reference_rows_from_bigquery(
     site_id = canon_site_id(site_number)
 
     # Parameterized query — same field set as dbo.vw_ReferenceNormalized in sql.py.
-    # BigQuery source: device_survey_task_details_copy (GSOC table)
+    # BigQuery source: device_survey_task_details (GSOC table)
     query = f"""
         SELECT
             ProjectID,
@@ -135,7 +135,7 @@ def fetch_reference_rows_from_bigquery(
             MACAddress,
             IPAnalog,
             Description
-        FROM `{bq_cfg.project_id}.{bq_cfg.dataset}.device_survey_task_details_copy`
+        FROM `{bq_cfg.project_id}.{bq_cfg.dataset}.device_survey_task_details`
         WHERE ProjectID = @project_id
     """
     job_config = bigquery.QueryJobConfig(

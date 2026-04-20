@@ -7,8 +7,7 @@ Covers:
   - Python version
   - Package imports (siteowlqa.* — current package structure)
   - Config load (user profile + .env)
-  - ODBC driver availability
-  - SQL Server connection + dbo.vw_ReferenceNormalized (current schema)
+  - BigQuery connection + device_survey_task_details
   - Airtable API reachability
   - Element LLM Gateway HTTP ping (if configured)
   - Required directories exist and are writable
@@ -116,14 +115,14 @@ try:
     cfg = load_config()
 
     required = {
-        "sql_server":          cfg.sql_server,
-        "sql_database":        cfg.sql_database,
         "airtable_base_id":    cfg.airtable_base_id,
         "airtable_table_name": cfg.airtable_table_name,
         "airtable_token":      cfg.airtable_token,
     }
     info = {
         "reference_source":      cfg.reference_source,
+        "gcp_project":           cfg.gcp_project,
+        "bigquery_dataset":      cfg.bigquery_dataset,
         "poll_interval_seconds": cfg.poll_interval_seconds,
         "worker_threads":        cfg.worker_threads,
         "temp_dir":              cfg.temp_dir,

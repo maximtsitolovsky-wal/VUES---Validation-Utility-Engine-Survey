@@ -1,5 +1,5 @@
 # =============================================================================
-# SiteOwlQA — Dockerfile
+# VUES — Dockerfile
 #
 # Stages:
 #   base  — system deps + Python packages (cached; busts only on pyproject.toml)

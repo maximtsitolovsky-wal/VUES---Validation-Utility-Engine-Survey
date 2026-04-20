@@ -10,7 +10,7 @@ Code Puppy sub-agent with full access to the Airtable API — reads, writes,
 searches, and manages Airtable bases, tables, and records.
 
 ## Role in This Project
-Airtable is the **primary intake layer** of SiteOwlQA. Every vendor submission
+Airtable is the **primary intake layer** of VUES. Every vendor submission
 arrives via Airtable. The entire poll loop exists to process Airtable records.
 
 Use this agent when you need to:

@@ -1,5 +1,5 @@
 # =============================================================================
-# SiteOwlQA — Docker Compose (Dev, Hot-reload via Compose Watch)
+# VUES — Docker Compose (Dev, Hot-reload via Compose Watch)
 #
 # Usage:
 #   docker compose watch            ← starts + watches (preferred for dev)

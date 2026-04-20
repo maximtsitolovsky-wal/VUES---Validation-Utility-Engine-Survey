@@ -1,4 +1,4 @@
-"""instance_lock.py — Single-instance coordination for SiteOwlQA.
+"""instance_lock.py — Single-instance coordination for VUES.
 
 Prevents duplicate polling when multiple instances try to run against
 the same Airtable base. Uses a lock file with heartbeat mechanism.
@@ -60,7 +60,7 @@ class InstanceLock:
     heartbeat timeout (default: 2 minutes).
     """
     
-    LOCK_FILE = "siteowlqa.lock"
+    LOCK_FILE = "vues.lock"
     HEARTBEAT_INTERVAL = 30  # seconds
     HEARTBEAT_TIMEOUT = 120  # seconds — lock is stale after this
     
@@ -207,12 +207,12 @@ def check_single_instance(lock_dir: Path | str) -> InstanceLock:
     if not lock.acquire():
         owner = lock.owner_info()
         print(
-            f"\n❌ Another SiteOwlQA instance is already running!\n"
+            f"\n❌ Another VUES instance is already running!\n"
             f"   Instance: {owner.get('instance_id') if owner else 'unknown'}\n"
             f"   PID:      {owner.get('pid') if owner else 'unknown'}\n"
             f"   Started:  {owner.get('started_at') if owner else 'unknown'}\n"
             f"\n"
-            f"   To force takeover (dangerous): set SITEOWLQA_FORCE_LOCK=1\n"
+            f"   To force takeover (dangerous): set VUES_FORCE_LOCK=1\n"
             f"   Lock file: {lock.lock_file}\n"
         )
         import sys

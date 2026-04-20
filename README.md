@@ -23,7 +23,7 @@
 ```bash
 # Clone and setup
 git clone <repo-url>
-cd SiteOwlQA_App
+cd VUES
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
@@ -136,7 +136,7 @@ python main.py
 ## Project Structure
 
 ```
-SiteOwlQA_App/
+VUES/
 ├── main.py                        # entry point (delegates to src/siteowlqa/main.py)
 ├── pyproject.toml                 # project metadata and build config
 ├── requirements.txt               # pip-compatible dependency list
@@ -231,7 +231,7 @@ Prompts you for:
 
 **Recommended — double-click the Desktop shortcut:**
 ```
-SiteOwlQA Launcher  (Desktop shortcut)
+VUES Launcher  (Desktop shortcut)
 ```
 This starts the grading pipeline, builds the dashboard, and opens it in your browser automatically.
 
@@ -268,7 +268,7 @@ ops\windows\run_siteowlqa.bat
 
 | What | How |
 |---|---|
-| **Start everything** (recommended) | Double-click **SiteOwlQA Launcher** on the Desktop |
+| **Start everything** (recommended) | Double-click **VUES Launcher** on the Desktop |
 | Start via terminal | `powershell -ExecutionPolicy Bypass -File ops\windows\launch_siteowlqa_dashboard.ps1` |
 | Start pipeline only (no browser) | `powershell -ExecutionPolicy Bypass -File ops\windows\start_siteowlqa_background.ps1` |
 | Stop the pipeline | `powershell -ExecutionPolicy Bypass -File ops\windows\stop_siteowlqa_background.ps1` |
@@ -296,12 +296,12 @@ After setup, the pipeline runs automatically whenever Windows starts, even when 
 
 Logs are written to:
 ```
-C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
+C:\VUES\logs\vues.stdout.log
 ```
 
 You should see output like:
 ```
-2025-05-01 09:00:00 | INFO | main | SiteOwlQA pipeline starting...
+2025-05-01 09:00:00 | INFO | main | VUES pipeline starting...
 2025-05-01 09:00:00 | INFO | config | Config loaded from ~/.siteowlqa/config.json
 2025-05-01 09:00:00 | INFO | main | Polling Airtable every 60 seconds...
 2025-05-01 09:00:01 | INFO | airtable_client | Found 0 pending submission(s).
@@ -316,20 +316,20 @@ If you see config errors:
 
 ## Where Logs Are Written
 
-Log files are saved to: `C:\SiteOwlQA_App\logs\siteowl_qa.log`
+Log files are saved to: `C:\VUES\logs\vues.log`
 
 The log file rotates automatically at 10MB. Up to 5 old log files are kept.
 
 To view the latest log:
 ```cmd
-type C:\SiteOwlQA_App\logs\siteowl_qa.log
+type C:\VUES\logs\vues.log
 ```
 
 Or open it in Notepad.
 
 Each log line looks like:
 ```
-2025-05-01 09:00:00,123 | INFO     | main            | SiteOwlQA pipeline starting...
+2025-05-01 09:00:00,123 | INFO     | main            | VUES pipeline starting...
 2025-05-01 09:01:43,456 | INFO     | poll_airtable   | === START execution=EX_20250501_090143 record=recABC123 ...
 2025-05-01 09:01:44,789 | INFO     | sql             | Inserted 42 rows into SubmissionRaw
 2025-05-01 09:01:45,111 | INFO     | sql             | Stored proc dbo.usp_LoadSubmissionFromRaw completed
@@ -481,7 +481,7 @@ Open it in Excel at any time. It accumulates across all runs permanently.
   "vendor_name": "Acme Security",
   "site_number": "SITE-42",
   "attachment_filename": "acme_export_2025.xlsx",
-  "archived_file_path": "C:/SiteOwlQA_App/archive/submissions/2025/05/01/recABC123456_acme_export_2025.xlsx",
+  "archived_file_path": "C:/VUES/archive/submissions/2025/05/01/recABC123456_acme_export_2025.xlsx",
   "submitted_at": "2025-05-01T08:30:00+00:00",
   "processed_at": "2025-05-01T09:01:49+00:00",
   "status": "PASS",
@@ -621,7 +621,7 @@ For active prioritization and status tracking of these upgrades, use [`developme
 
 After rebooting the machine, confirm:
 
-- [ ] Task Scheduler shows `SiteOwlQA Pipeline` with Status = `Running`
+- [ ] Task Scheduler shows `VUES Pipeline` with Status = `Running`
 - [ ] `logs/siteowl_qa.log` has fresh log entries
 - [ ] Log shows `Found 0 pending submission(s)` appearing every 60 seconds
 - [ ] Submit a test record in Airtable and confirm it processes within 60 seconds

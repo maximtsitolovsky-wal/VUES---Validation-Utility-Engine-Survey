@@ -1,14 +1,14 @@
-# register_task.ps1 — registers SiteOwlQA as a Windows Scheduled Task
+# register_task.ps1 — registers VUES as a Windows Scheduled Task
 # Requires admin. Launched automatically by INSTALL_TASK.bat via UAC elevation.
 $ErrorActionPreference = 'Stop'
 
-$taskName    = 'SiteOwlQA Pipeline'
+$taskName    = 'VUES Pipeline'
 $taskUser    = 'HOMEOFFICE\vn59j7j'
-$batPath     = 'C:\SiteOwlQA_App\ops\windows\run_siteowlqa.bat'
+$batPath     = 'C:\VUES\ops\windows\run_vues.bat'
 
 Write-Host ''
 Write-Host '================================================'
-Write-Host '  SiteOwlQA - Task Scheduler Setup'
+Write-Host '  VUES - Task Scheduler Setup'
 Write-Host '================================================'
 Write-Host ''
 Write-Host "User:    $taskUser"
@@ -19,7 +19,7 @@ Write-Host ''
 $action = New-ScheduledTaskAction `
     -Execute 'C:\Windows\System32\cmd.exe' `
     -Argument "/c $batPath" `
-    -WorkingDirectory 'C:\SiteOwlQA_App'
+    -WorkingDirectory 'C:\VUES'
 
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $taskUser
 $trigger.Delay = 'PT1M30S'
@@ -48,7 +48,7 @@ $task = Register-ScheduledTask `
     -Trigger $trigger `
     -Settings $settings `
     -Principal $principal `
-    -Description 'SiteOwlQA: auto-grades vendor submissions. Polls every 5s. Starts 90s after logon.'
+    -Description 'VUES: auto-grades vendor submissions. Polls every 5s. Starts 90s after logon.'
 
 Write-Host ''
 Write-Host "SUCCESS: Task '$($task.TaskName)' registered!"

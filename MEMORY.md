@@ -13,10 +13,10 @@
 - **Decision:** Python `requests` library CANNOT reach `v5.airtableusercontent.com` — DNS blocked at WinSock level. PowerShell `Invoke-WebRequest` uses WinINet (same as browsers) which accesses PAC/auto-proxy and CAN reach CDN. All image downloads now go through PowerShell subprocess. API record fetching stays in `requests` (works fine for `api.airtable.com`).
 - **Impact:** `scripts/scout_downloader.py`, `ops/windows/run_scout_downloader.bat`, `ops/windows/ScoutDownloader_Task.xml`, `ops/windows/register_scout_task.ps1`, `MEMORY.md`.
 - **Closed:** Yes.
-# MEMORY.md — SiteOwlQA Settled Decisions & Context
+# MEMORY.md — VUES Settled Decisions & Context
 # Last updated: 2026-04-15
 
-> This is the authoritative decision log for the SiteOwlQA project.
+> This is the authoritative decision log for the VUES project.
 > Code Puppy reads this at the start of every session.
 > Code Puppy appends to this at the end of every session that contains a decision.
 > Do not re-open closed decisions unless explicitly instructed.

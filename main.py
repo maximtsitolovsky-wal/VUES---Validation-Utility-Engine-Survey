@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Root entry point wrapper for SiteOwlQA.
+"""Root entry point wrapper for VUES.
 
 This file provides backward compatibility for users expecting to run:
     python main.py

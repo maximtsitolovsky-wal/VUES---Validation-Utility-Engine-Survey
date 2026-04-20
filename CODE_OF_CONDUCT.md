@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We are committed to providing a welcoming and inclusive environment for everyone contributing to or using VUES (SiteOwlQA).
+We are committed to providing a welcoming and inclusive environment for everyone contributing to or using VUES (Validation Utility Engine Survey).
 
 ## Our Standards
 

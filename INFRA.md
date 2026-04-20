@@ -1,4 +1,4 @@
-# 🏗️ SiteOwlQA — System & Build Infrastructure
+# 🏗️ VUES — System & Build Infrastructure
 
 > Last updated: 2026-04-14 (session 2) | Code Puppy `code-puppy-e05be7`
 
@@ -21,7 +21,7 @@
 | Network          | Intel Wi-Fi 7 BE200 — IP `10.97.13.146` (DHCP)     |
 | VBS / Security   | Credential Guard ✅  HVCI ✅  Secure Launch ✅      |
 | App Control      | Enforced (Windows Defender Application Control)    |
-| Working Dir      | `C:\SiteOwlQA_App`                                 |
+| Working Dir      | `C:\VUES`                                 |
 
 ---
 
@@ -111,13 +111,13 @@ docker compose build --no-cache
 |------------------|--------------------------------------------|
 | Package Name     | `siteowlqa`                                |
 | Version          | `0.1.0`                                    |
-| Description      | SiteOwlQA automation pipeline              |
+| Description      | VUES automation pipeline              |
 | Python Req.      | `>=3.11`                                   |
 | Build System     | `setuptools >= 69` + `wheel`               |
 | Build Backend    | `setuptools.build_meta`                    |
 | Source Layout    | `src/` layout (`src/siteowlqa/`)           |
 | Entry Point      | `main.py` → `siteowlqa.main.run_forever()` |
-| Compiled Binary  | `SiteOwlQA.exe` (17.4 MB)                  |
+| Compiled Binary  | `VUES.exe` (17.4 MB)                  |
 
 ---
 
@@ -142,9 +142,9 @@ docker compose build --no-cache
 ## 🗂️ Project Directory Structure
 
 ```
-C:\SiteOwlQA_App\
+C:\VUES\
 ├── main.py                   # Root entry point (sys.path shim → src/)
-├── SiteOwlQA.exe             # Compiled Windows binary (17.4 MB)
+├── VUES.exe             # Compiled Windows binary (17.4 MB)
 ├── pyproject.toml            # Build config & dependency declarations
 ├── requirements.txt          # Pip-compat dependency list
 ├── .env                      # Secrets/config (gitignored)
@@ -163,7 +163,7 @@ C:\SiteOwlQA_App\
 ├── ui/                       # Front-end assets
 ├── ops/                      # Ops / deployment scripts
 │   └── windows/
-│       └── run_siteowlqa.bat # Task Scheduler launch script
+│       └── run_vues.bat # Task Scheduler launch script
 ├── tools/                    # Developer tooling
 ├── prompts/                  # LLM prompt templates
 ├── skills/                   # Agent skill definitions
@@ -186,11 +186,11 @@ The pipeline runs as a **persistent Windows Scheduled Task**, auto-starting at u
 
 | Property             | Value                                                |
 |----------------------|------------------------------------------------------|
-| Task Name            | `SiteOwlQA Pipeline`                                 |
+| Task Name            | `VUES Pipeline`                                 |
 | Run As               | `HOMEOFFICE\vn59j7j`                                 |
 | Trigger              | At logon + **90s delay** (OneDrive sync time)        |
-| Executable           | `C:\Windows\System32\cmd.exe /c run_siteowlqa.bat`   |
-| Working Dir          | `C:\SiteOwlQA_App`                                   |
+| Executable           | `C:\Windows\System32\cmd.exe /c run_vues.bat`   |
+| Working Dir          | `C:\VUES`                                   |
 | Multiple Instances   | `IgnoreNew` (no double-runs)                         |
 | Restart on Fail      | Up to **10 times**, every **1 minute**               |
 | Execution Time Limit | **None** (runs indefinitely)                         |
@@ -207,7 +207,7 @@ The pipeline runs as a **persistent Windows Scheduled Task**, auto-starting at u
 |------------------|----------------------------------------------------------------------------|
 | Active Branch    | `main`                                                                     |
 | Remote: `origin` | `https://github.com/maximtsitolovsky-wal/VUES---Validation-Utility-Engine-Survey.git` |
-| Remote: `walmart-origin` | `https://gecgithub01.walmart.com/vn59j7j/siteowlqa_app`         |
+| Remote: `walmart-origin` | `https://gecgithub01.walmart.com/vn59j7j/vues`         |
 
 ### Recent Commits (last 10)
 

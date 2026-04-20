@@ -59,7 +59,7 @@ def section(title: str) -> None:
 # ---------------------------------------------------------------------------
 # 1. Python version
 # ---------------------------------------------------------------------------
-print("=== SiteOwlQA Smoke Test ===")
+print("=== VUES Smoke Test ===")
 print(f"Python : {sys.version}")
 print(f"Project: {_PROJECT_ROOT}")
 

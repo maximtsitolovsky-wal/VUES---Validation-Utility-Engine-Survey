@@ -1,5 +1,5 @@
 # CLAUDE.md — Code Puppy Governance Constitution
-# SiteOwlQA_App
+# VUES - Validation Utility Engine Survey
 
 > Auto-loaded every session. This is law. Not a suggestion.
 > Violation = re-deriving settled work = wasting Maxim's time. Don't.
@@ -80,7 +80,7 @@ Used a skill and found a better way? Update the file. Bump `Times Used`. Commit 
 
 | | |
 |---|---|
-| **App** | SiteOwlQA — automated vendor QA pipeline |
+| **App** | VUES — Validation Utility Engine Survey |
 | **Stack** | Python · BigQuery · Airtable API (email via Airtable automations — no SMTP) |
 | **Platform** | Windows · single-process · Docker available (dev only, port 8765) · no cloud deps |
 | **Roadmap** | `development.md` |

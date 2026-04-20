@@ -1,4 +1,4 @@
-# SiteOwlQA_App — Python 3.11 dependencies
+# VUES — Python 3.11 dependencies
 # Install with: pip install -r requirements.txt
 
 # Airtable API

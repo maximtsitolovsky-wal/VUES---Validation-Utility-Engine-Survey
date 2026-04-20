@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>SiteOwlQA · Architecture</title>
+  <title>VUES · Architecture</title>
   <style>
     :root{--bg:#04070d;--text:#e8f1ff;--muted:rgba(232,241,255,0.5);--border:rgba(255,255,255,0.09);--glass:rgba(10,12,18,0.62);--glass2:rgba(10,12,18,0.78)}
     *{box-sizing:border-box}
@@ -67,7 +67,7 @@
       <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></div>
       <span>Back</span>
     </button>
-    <div id="breadcrumb" class="lux-pill">SiteOwlQA · System Architecture</div>
+    <div id="breadcrumb" class="lux-pill">VUES · System Architecture</div>
   </div>
   <div class="statsbar">
     <div class="stat-blk"><div class="stat-n" id="sN">8</div><div class="stat-l">Components</div></div>
@@ -77,7 +77,7 @@
   <svg id="network"></svg>
   <div id="nodes"></div>
   <div id="hoverCard" class="hover-card">
-    <div class="hover-kicker">SiteOwlQA · Module</div>
+    <div class="hover-kicker">VUES · Module</div>
     <div id="hT" class="hover-title"></div>
     <div class="hover-section"><div class="hover-lbl">What it does</div><div id="hD" class="hover-copy"></div></div>
     <div class="hover-section"><div class="hover-lbl">Manages</div><div id="hM" class="hover-copy"></div></div>
@@ -93,7 +93,7 @@
 <script>
 // ── Architecture data ────────────────────────────────────────────────────────
 const R={
-root:{id:"root",name:"SiteOwlQA · Full System",nodes:[
+root:{id:"root",name:"VUES · Full System",nodes:[
   {id:"main",   title:"System Heartbeat",              x:50,y:48,size:148,hue:"core",
    summary:"Wakes up every N seconds, checks Airtable for new form submissions, and sends them to workers for processing. Manages startup, shutdown, crash recovery, and auto-opens the live dashboard.",
    manages:"Poll loop · SubmissionQueue · worker lifecycle · crash recovery · dashboard auto-open · graceful Ctrl+C shutdown",realmTarget:null},
@@ -119,8 +119,8 @@ root:{id:"root",name:"SiteOwlQA · Full System",nodes:[
    summary:"Stores every run's output files, submission originals, review reports, and lessons learned. The memory layer searches past lessons before each new grading run so the system gets smarter over time. Click to drill in.",
    manages:"archive.py · memory.py · reviewer.py · 6 archive subdirs · lesson recall",realmTarget:"datastore"},
   {id:"launcher",title:"Desktop Launcher",       x:50,y:86,size:96,hue:"amber",
-   summary:"SiteOwlQA Launcher.lnk (desktop shortcut) → cmd.exe /c start_pipeline.bat. On click: WMIC checks if main.py is already running. If yes, reads output/dashboard.port and opens browser at the live URL in under 1 second. If no, starts main.py in background, polls for the port file up to 25s, then opens browser automatically. Port 8765 preferred; OS assigns a free port if taken.",
-   manages:"SiteOwlQA Launcher.lnk · start_pipeline.bat · WMIC process check · output/dashboard.port · browser open · port fallback"}
+   summary:"VUES Launcher.lnk (desktop shortcut) → cmd.exe /c start_pipeline.bat. On click: WMIC checks if main.py is already running. If yes, reads output/dashboard.port and opens browser at the live URL in under 1 second. If no, starts main.py in background, polls for the port file up to 25s, then opens browser automatically. Port 8765 preferred; OS assigns a free port if taken.",
+   manages:"VUES Launcher.lnk · start_pipeline.bat · WMIC process check · output/dashboard.port · browser open · port fallback"}
 ],edges:[
   {id:"e1",from:"main",to:"queue",       strength:0.86},{id:"e2",from:"main",to:"worker",    strength:0.86},
   {id:"e3",from:"main",to:"mworker",     strength:0.80},{id:"e4",from:"main",to:"corrwkr",   strength:0.72},

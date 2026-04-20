@@ -1,5 +1,5 @@
 @echo off
-REM INSTALL_TASK.bat — One-time setup: registers SiteOwlQA in Task Scheduler
+REM INSTALL_TASK.bat — One-time setup: registers VUES in Task Scheduler
 REM Just double-click this and click Yes on the UAC prompt.
 
 :: Check if already running as admin
@@ -12,4 +12,4 @@ powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
 exit /b 0
 
 :ELEVATED
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\SiteOwlQA_App\register_task.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\VUES\register_task.ps1"

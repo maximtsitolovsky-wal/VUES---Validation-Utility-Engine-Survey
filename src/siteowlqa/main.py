@@ -279,9 +279,9 @@ def run_forever() -> None:
     # Single-instance lock — prevents duplicate polling
     # If another instance is running, this will print an error and exit.
     import os
-    force_lock = os.getenv("SITEOWLQA_FORCE_LOCK", "").strip().lower() in ("1", "true")
+    force_lock = os.getenv("VUES_FORCE_LOCK", "").strip().lower() in ("1", "true")
     if force_lock:
-        log.warning("SITEOWLQA_FORCE_LOCK=1 — forcing lock acquisition (dangerous!)")
+        log.warning("VUES_FORCE_LOCK=1 — forcing lock acquisition (dangerous!)")
     
     from siteowlqa.instance_lock import InstanceLock
     lock = InstanceLock(cfg.log_dir)
@@ -294,7 +294,7 @@ def run_forever() -> None:
             owner.get("started_at") if owner else "unknown",
         )
         print(
-            f"\n\u274c Another SiteOwlQA instance is already running!\n"
+            f"\n\u274c Another VUES instance is already running!\n"
             f"   Instance: {owner.get('instance_id') if owner else 'unknown'}\n"
             f"   PID:      {owner.get('pid') if owner else 'unknown'}\n"
             f"   Lock:     {lock.lock_file}\n\n"

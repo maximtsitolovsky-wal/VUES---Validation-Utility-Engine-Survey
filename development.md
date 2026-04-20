@@ -1,6 +1,6 @@
 # Development Roadmap
 
-This file is the canonical development tracker for `SiteOwlQA_App`.
+This file is the canonical development tracker for `VUES`.
 
 Use it to track roadmap items, active work, decisions, and commit discipline.
 If any other markdown file is updated with project status, next steps, implementation notes, or process guidance, it must reference this file.
@@ -107,7 +107,7 @@ For Windows users, batch launcher scripts are available in `ops/windows/`:
 ### Quick Start
 - **Daily use:** Double-click `start_pipeline.bat`
 - **24/7 automatic:** Run `setup_scheduler.bat` as admin (once)
-- **Testing:** Use `run_siteowlqa.bat` for foreground/console output
+- **Testing:** Use `run_vues.bat` for foreground/console output
 - **Stop:** Run `stop_pipeline.bat`
 
 See `ops/windows/README.md` for full documentation.

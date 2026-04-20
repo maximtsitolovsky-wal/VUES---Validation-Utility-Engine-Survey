@@ -1,4 +1,4 @@
-# Contributing to VUES (SiteOwlQA)
+# Contributing to VUES
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to the VUES - Validation Utility Engine Survey project.
 
@@ -7,7 +7,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd SiteOwlQA_App
+cd VUES
 
 # Create virtual environment
 python -m venv .venv

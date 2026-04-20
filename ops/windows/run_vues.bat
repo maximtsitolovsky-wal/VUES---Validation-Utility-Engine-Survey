@@ -1,5 +1,5 @@
 @echo off
-REM SiteOwlQA Pipeline Launcher
+REM VUES Pipeline Launcher
 REM Runs the automated vendor QA pipeline in the background
 REM Can be scheduled via Windows Task Scheduler or run manually
 
@@ -21,9 +21,9 @@ if exist "%WORKDIR%\.venv\Scripts\python.exe" (
 )
 :python_found
 set LOGDIR=%WORKDIR%\logs
-set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
-set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
-set PIDFILE=%LOGDIR%\siteowlqa.pid
+set STDOUT_LOG=%LOGDIR%\vues.stdout.log
+set STDERR_LOG=%LOGDIR%\vues.stderr.log
+set PIDFILE=%LOGDIR%\vues.pid
 
 REM Validate Python installation
 if not exist "%PYTHON%" (
@@ -52,7 +52,7 @@ if !errorlevel! neq 0 (
 )
 
 REM Run the pipeline
-echo [INFO] Starting SiteOwlQA pipeline...
+echo [INFO] Starting VUES pipeline...
 echo [INFO] Workdir: %WORKDIR%
 echo [INFO] Log: %STDOUT_LOG%
 echo.
@@ -61,7 +61,7 @@ echo.
 set EXITCODE=!errorlevel!
 
 if not "!EXITCODE!"=="0" (
-  echo [ERROR] SiteOwlQA exited with code !EXITCODE!
+  echo [ERROR] VUES exited with code !EXITCODE!
   echo [ERROR] Check logs at:
   echo   - Stdout: %STDOUT_LOG%
   echo   - Stderr: %STDERR_LOG%

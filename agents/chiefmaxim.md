@@ -7,7 +7,7 @@
 
 ## What It Is
 Constrained cross-project governance and repository-discipline sub-agent.
-Operates across all of Maxim's projects — not scoped to SiteOwlQA alone.
+Operates across all of Maxim's projects — not scoped to VUES alone.
 
 ## Role in This Project
 - Cross-project governance decisions that affect SiteOwlQA

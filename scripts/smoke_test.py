@@ -153,106 +153,45 @@ except Exception as exc:
     import traceback; traceback.print_exc()
 
 # ---------------------------------------------------------------------------
-# 4. ODBC driver
+# 4. BigQuery connection
 # ---------------------------------------------------------------------------
-section("ODBC driver")
-try:
-    import pyodbc
-
-    drivers = pyodbc.drivers()
-    if cfg:
-        if cfg.sql_driver in drivers:
-            ok(f"driver present: {cfg.sql_driver}")
-        else:
-            fail(
-                "ODBC driver",
-                f"'{cfg.sql_driver}' not found. Available: {drivers}",
-            )
-    else:
-        ok(f"pyodbc importable — available drivers: {drivers}")
-except Exception as exc:
-    fail("pyodbc", str(exc))
-
-# ---------------------------------------------------------------------------
-# 5. SQL Server connection + schema
-# ---------------------------------------------------------------------------
-section("SQL Server")
-_sql_conn = None
-if cfg:
+section("BigQuery")
+if cfg and cfg.reference_source == "bigquery":
     try:
-        import pyodbc as _pyodbc
+        from google.cloud import bigquery
+        from google.oauth2 import service_account
 
-        _sql_conn = _pyodbc.connect(cfg.sql_connection_string, timeout=8)
-        cur = _sql_conn.cursor()
-        cur.execute("SELECT DB_NAME(), @@SERVERNAME")
-        row = cur.fetchone()
-        ok(f"connected — DB={row[0]}  Server={row[1]}")
+        if cfg.gcp_credentials_path:
+            creds = service_account.Credentials.from_service_account_file(
+                cfg.gcp_credentials_path,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+            client = bigquery.Client(project=cfg.gcp_project, credentials=creds)
+            ok(f"credentials loaded from {cfg.gcp_credentials_path}")
+        else:
+            client = bigquery.Client(project=cfg.gcp_project)
+            ok("using Application Default Credentials")
+
+        # Test query to verify table access
+        test_query = f"""
+            SELECT COUNT(*) as cnt
+            FROM `{cfg.gcp_project}.{cfg.bigquery_dataset}.device_survey_task_details`
+        """
+        result = client.query(test_query).result()
+        row_count = list(result)[0].cnt
+        ok(f"device_survey_task_details accessible — {row_count:,} rows")
+
+    except ImportError:
+        fail("BigQuery", "google-cloud-bigquery not installed")
     except Exception as exc:
-        fail("SQL connection", str(exc))
+        fail("BigQuery connection", str(exc))
+elif cfg and cfg.reference_source == "excel":
+    ok("reference_source=excel — BigQuery not required")
 else:
     print("  (skipped — config not loaded)")
 
-section("SQL schema")
-if _sql_conn:
-    try:
-        cur = _sql_conn.cursor()
-
-        # Primary reference view used by sql.py
-        cur.execute(
-            "SELECT COUNT(1) FROM INFORMATION_SCHEMA.VIEWS "
-            "WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME='vw_ReferenceNormalized'"
-        )
-        if cur.fetchone()[0]:
-            ok("dbo.vw_ReferenceNormalized view exists")
-        else:
-            fail("dbo.vw_ReferenceNormalized", "View missing — check SQL migrations")
-
-        # Verify view has data
-        try:
-            cur.execute("SELECT COUNT(*) FROM dbo.vw_ReferenceNormalized")
-            row_count = cur.fetchone()[0]
-            if row_count > 0:
-                ok(f"dbo.vw_ReferenceNormalized has {row_count:,} row(s)")
-            else:
-                warn("dbo.vw_ReferenceNormalized", "View exists but is empty — reference data not loaded")
-        except Exception as exc:
-            fail("dbo.vw_ReferenceNormalized row count", str(exc))
-
-        # Verify columns expected by sql.py are present in the view
-        _EXPECTED_COLS = {"ProjectID", "Name", "AbbreviatedName", "PartNumber",
-                          "Manufacturer", "IPAddress", "MACAddress", "IPAnalog", "Description"}
-        cur.execute(
-            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-            "WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME='vw_ReferenceNormalized'"
-        )
-        actual_cols = {r[0] for r in cur.fetchall()}
-        missing_cols = _EXPECTED_COLS - actual_cols
-        if missing_cols:
-            fail("vw_ReferenceNormalized columns", f"Missing: {sorted(missing_cols)}")
-        else:
-            ok("vw_ReferenceNormalized columns match sql.py expectations")
-
-        # ReferenceRaw backing table
-        cur.execute(
-            "SELECT COUNT(1) FROM INFORMATION_SCHEMA.TABLES "
-            "WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME='ReferenceRaw'"
-        )
-        if cur.fetchone()[0]:
-            ok("dbo.ReferenceRaw table exists")
-        else:
-            warn("dbo.ReferenceRaw", "Table not found — may be under a different name")
-
-        _sql_conn.close()
-        _sql_conn = None
-
-    except Exception as exc:
-        fail("SQL schema check", str(exc))
-        import traceback; traceback.print_exc()
-else:
-    print("  (skipped — no SQL connection)")
-
 # ---------------------------------------------------------------------------
-# 6. Airtable API
+# 5. Airtable API
 # ---------------------------------------------------------------------------
 section("Airtable API")
 if cfg and cfg.airtable_token and cfg.airtable_base_id:

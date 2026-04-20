@@ -123,11 +123,6 @@ class AppConfig:
     Non-sensitive values come from .env
     """
 
-    # Required: SQL (from user config)
-    sql_server: str
-    sql_database: str
-    sql_driver: str
-
     # Required: Airtable (from user config)
     airtable_token: str
     airtable_base_id: str
@@ -141,7 +136,7 @@ class AppConfig:
     submissions_dir: Path
 
     # Optional: Behavior (from .env)
-    reference_source: str = "sql"
+    reference_source: str = "bigquery"
     poll_interval_seconds: int = 60
     worker_threads: int = 3
 
@@ -186,18 +181,6 @@ class AppConfig:
     scout_status_field: str = "Processing Status"
     scout_submitted_at_field: str = "Date of Survey"
     scout_submission_id_field: str = "Submission ID"
-
-    @property
-    def sql_connection_string(self) -> str:
-        """Full pyodbc connection string using Windows trusted auth."""
-        return (
-            f"DRIVER={{{self.sql_driver}}};"
-            f"SERVER={self.sql_server};"
-            f"DATABASE={self.sql_database};"
-            "Trusted_Connection=yes;"
-            "Encrypt=yes;"
-            "TrustServerCertificate=yes;"
-        )
 
 
 def _ensure_path(name: str, default: str) -> Path:
@@ -272,7 +255,7 @@ def load_config() -> AppConfig:
             f"  python -m siteowlqa.setup_config\n"
             f"\n"
             f"This will interactively create your configuration file\n"
-            f"with your Airtable tokens and SQL credentials.\n"
+            f"with your Airtable tokens and BigQuery credentials.\n"
         )
 
     # Build config with user profile + .env values
@@ -285,9 +268,6 @@ def load_config() -> AppConfig:
 
     cfg = AppConfig(
         # From user config (sensitive)
-        sql_server=user_cfg.sql_server,
-        sql_database=user_cfg.sql_database,
-        sql_driver=user_cfg.sql_driver,
         airtable_token=user_cfg.airtable_token,
         airtable_base_id=user_cfg.airtable_base_id,
         airtable_table_name=user_cfg.airtable_table_name,
@@ -298,7 +278,7 @@ def load_config() -> AppConfig:
         archive_dir=_ensure_path("ARCHIVE_DIR", str(base / "archive")),
         submissions_dir=_ensure_path("SUBMISSIONS_DIR", str(base / "archive" / "submissions")),
         # Behavior (from .env)
-        reference_source=os.getenv("REFERENCE_SOURCE", "sql").strip().lower() or "sql",
+        reference_source=os.getenv("REFERENCE_SOURCE", "bigquery").strip().lower() or "bigquery",
         # BigQuery — non-sensitive project/dataset from .env;
         # credential path from GOOGLE_APPLICATION_CREDENTIALS (standard) or SITEOWLQA_GCP_CREDENTIALS.
         gcp_project=os.getenv("SITEOWLQA_GCP_PROJECT", "").strip(),
@@ -344,11 +324,10 @@ def load_config() -> AppConfig:
     _config_singleton = cfg
     _config_file_mtime = get_user_config_path().stat().st_mtime
     log.info(
-        "Config loaded from ~/.siteowlqa/config.json — server=%s db=%s table=%s poll=%ds workers=%d",
-        cfg.sql_server,
-        cfg.sql_database,
+        "Config loaded from ~/.siteowlqa/config.json — table=%s poll=%ds workers=%d ref_source=%s",
         cfg.airtable_table_name,
         cfg.poll_interval_seconds,
         cfg.worker_threads,
+        cfg.reference_source,
     )
     return cfg

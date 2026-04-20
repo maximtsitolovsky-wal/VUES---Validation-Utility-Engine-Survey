@@ -87,7 +87,6 @@ _MODULES = [
     "siteowlqa.dashboard",
     "siteowlqa.file_processor",
     "siteowlqa.airtable_client",
-    "siteowlqa.sql",
     "siteowlqa.python_grader",
     "siteowlqa.submission_queue",
     "siteowlqa.queue_worker",

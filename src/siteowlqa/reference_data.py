@@ -4,9 +4,8 @@ One module, one job: provide site-scoped reference rows and site profiles
 from the configured source of truth.
 
 Supported sources:
-- sql    -> dbo.vw_ReferenceNormalized via pyodbc
-- excel  -> cleaned workbook keyed by Site ID (preferred when SQL import is bad)
-- auto   -> workbook when configured/available, otherwise SQL
+- bigquery -> device_survey_task_details (GSOC table)
+- excel    -> cleaned workbook keyed by Site ID
 
 Because duplicating lookup logic in multiple modules is how bugs breed.
 """
@@ -21,7 +20,6 @@ from pathlib import Path
 import pandas as pd
 
 from siteowlqa.config import AppConfig, VENDOR_GRADE_COLUMNS, VENDOR_HEADER_ALIASES
-from siteowlqa.sql import fetch_reference_rows_from_sql
 from siteowlqa.bigquery_provider import fetch_reference_rows_from_bigquery
 from siteowlqa.utils import canon_site_id
 
@@ -51,9 +49,8 @@ def fetch_reference_rows(cfg: AppConfig, site_number: str) -> pd.DataFrame:
     if source == "excel":
         workbook_path = _require_workbook_path(cfg)
         return _fetch_reference_rows_from_excel(cfg, workbook_path, site_number)
-    if source == "bigquery":
-        return fetch_reference_rows_from_bigquery(cfg, site_number)
-    return fetch_reference_rows_from_sql(cfg, site_number)
+    # Default: bigquery
+    return fetch_reference_rows_from_bigquery(cfg, site_number)
 
 
 
@@ -98,14 +95,12 @@ def normalize_reference_dataframe(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _resolve_reference_source(cfg: AppConfig) -> str:
-    source = (cfg.reference_source or "sql").strip().lower()
-    if source not in {"sql", "excel", "auto", "bigquery"}:
+    source = (cfg.reference_source or "bigquery").strip().lower()
+    if source not in {"excel", "bigquery"}:
         raise ValueError(
             f"Unsupported REFERENCE_SOURCE='{cfg.reference_source}'. "
-            "Expected one of: sql, excel, auto, bigquery."
+            "Expected one of: bigquery, excel."
         )
-    if source == "auto":
-        return "excel" if cfg.reference_workbook_path else "sql"
     if source == "excel" and not cfg.reference_workbook_path:
         raise ValueError(
             "REFERENCE_SOURCE=excel requires REFERENCE_WORKBOOK_PATH or an auto-detected workbook."

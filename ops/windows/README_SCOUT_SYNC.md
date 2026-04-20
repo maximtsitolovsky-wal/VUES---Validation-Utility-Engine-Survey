@@ -27,8 +27,8 @@ This sync runs in **TWO WAYS** for redundancy:
 ## Files
 
 **Main App Integration:**
-- **`src/siteowlqa/scout_completion_sync_worker.py`** - Worker thread (runs in main.py)
-- **`src/siteowlqa/main.py`** - Starts the worker on app startup
+- **`src/vues/scout_completion_sync_worker.py`** - Worker thread (runs in main.py)
+- **`src/vues/main.py`** - Starts the worker on app startup
 
 **Standalone/Backup:**
 - **`scripts/scout_completion_sync_com.py`** - Standalone script (COM automation)
@@ -42,7 +42,7 @@ This sync runs in **TWO WAYS** for redundancy:
 
 ### Method 1: Use Main App (Easiest)
 
-Just start the main SiteOwlQA app:
+Just start the main vues app:
 
 ```bash
 python main.py

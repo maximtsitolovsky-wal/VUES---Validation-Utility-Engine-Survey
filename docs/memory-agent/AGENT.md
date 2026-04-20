@@ -7,7 +7,7 @@
 
 The Relentless Memory Agent is not a separate process.
 It is a **behavioral layer** that any agent (Code Puppy or otherwise) running
-inside `C:\SiteOwlQA_App` must embody.
+inside `C:\VUES` must embody.
 
 Its job: capture broadly, store selectively, compress aggressively, recall minimally.
 Its metric: token cost reduction over repeated sessions without losing continuity.
@@ -19,7 +19,7 @@ Its metric: token cost reduction over repeated sessions without losing continuit
 | Property              | Value                                              |
 |-----------------------|----------------------------------------------------|
 | OS                    | Windows 11 Enterprise — no WSL assumed             |
-| Working dir           | `C:\SiteOwlQA_App`                                 |
+| Working dir           | `C:\VUES`                                 |
 | Runtime               | Python 3.x, single-process, no Docker              |
 | Package layout        | `src/siteowlqa/` — imports use `siteowlqa.*`       |
 | Entry point           | `main.py` → `siteowlqa.main.run_forever()`         |

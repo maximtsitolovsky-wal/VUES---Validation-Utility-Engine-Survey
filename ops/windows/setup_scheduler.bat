@@ -1,5 +1,5 @@
 @echo off
-REM Setup SiteOwlQA Windows Task Scheduler
+REM Setup vues Windows Task Scheduler
 REM This script creates an automated task that runs the pipeline at system startup
 REM Must be run as Administrator
 
@@ -25,7 +25,7 @@ if exist "%WORKDIR%\.venv\Scripts\python.exe" (
   set PYTHON=
 )
 :python_found
-set TASK_NAME=SiteOwlQA Pipeline
+set TASK_NAME=vues Pipeline
 
 echo [INFO] Setting up Windows Task Scheduler...
 echo [INFO] Workdir: %WORKDIR%
@@ -100,7 +100,7 @@ if !errorlevel! equ 0 (
   echo   Double-click: start_pipeline.bat
   echo.
   echo To view logs:
-  echo   %WORKDIR%\logs\siteowlqa.stdout.log
+  echo   %WORKDIR%\logs\vues.stdout.log
   echo.
   echo.
 ) else (

@@ -77,8 +77,8 @@ Addresses RISK-003: Airtable CDN URLs expire; local copies prevent data loss.</D
   <Actions Context="Author">
     <Exec>
       <Command>C:\Windows\System32\cmd.exe</Command>
-      <Arguments>/c C:\SiteOwlQA_App\ops\windows\run_scout_downloader.bat</Arguments>
-      <WorkingDirectory>C:\SiteOwlQA_App</WorkingDirectory>
+      <Arguments>/c C:\VUES\ops\windows\run_scout_downloader.bat</Arguments>
+      <WorkingDirectory>C:\VUES</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>

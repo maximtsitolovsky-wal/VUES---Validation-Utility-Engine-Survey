@@ -18,7 +18,7 @@
 ## Directory Structure
 
 ```
-C:\SiteOwlQA_App\
+C:\VUES\
 └── docs\
     └── memory-agent\
         ├── AGENT.md               ← behavior spec
@@ -37,7 +37,7 @@ C:\SiteOwlQA_App\
                     └── archive_YYYY.jsonl     ← superseded/archived records
 ```
 
-All paths are relative to `C:\SiteOwlQA_App`.
+All paths are relative to `C:\VUES`.
 Use `pathlib.Path` for all file operations — never hardcode `\` separators in code.
 
 ---
@@ -79,7 +79,7 @@ One JSON object per line. UTF-8. No trailing commas.
 import json
 from pathlib import Path
 
-STORE = Path(r"C:\SiteOwlQA_App\docs\memory-agent\store")
+STORE = Path(r"C:\VUES\docs\memory-agent\store")
 
 def load_durable(tags=None, scope=None, status="active"):
     records = []

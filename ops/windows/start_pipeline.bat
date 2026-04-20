@@ -2,13 +2,13 @@
 setlocal enabledelayedexpansion
 
 REM =========================================================================
-REM  SiteOwlQA — Master Launcher
+REM  vues — Master Launcher
 REM  Starts every component of the platform as a standalone process:
 REM    1. System Bottleneck Auditor  (background, no browser)
 REM    1.5. Git Autopush             (visible window, auto-commits changes)
 REM    2. Docker Platform Engineer   (background, no browser)
 REM    3. Specialist Output Validator (background, 90s delayed start)
-REM    4. SiteOwlQA Pipeline         (background, logs to logs/)
+REM    4. vues Pipeline         (background, logs to logs/)
 REM    5. Opens dashboard in browser (waits for port file)
 REM =========================================================================
 
@@ -33,8 +33,8 @@ REM --- paths -----------------------------------------------------------------
 set LOGDIR=%WORKDIR%\logs
 set PORT_FILE=%WORKDIR%\output\dashboard.port
 set FALLBACK_PORT=8765
-set STDOUT_LOG=%LOGDIR%\siteowlqa.stdout.log
-set STDERR_LOG=%LOGDIR%\siteowlqa.stderr.log
+set STDOUT_LOG=%LOGDIR%\vues.stdout.log
+set STDERR_LOG=%LOGDIR%\vues.stderr.log
 set AUDIT_LOG=%LOGDIR%\bottleneck_audit.log
 set DOCKER_LOG=%LOGDIR%\docker_platform.log
 set VALIDATOR_LOG=%LOGDIR%\specialist_validator.log
@@ -47,7 +47,7 @@ set PYTHONIOENCODING=utf-8
 
 echo.
 echo  =========================================
-echo    SiteOwlQA Platform Launcher
+echo    vues Platform Launcher
 echo  =========================================
 echo.
 
@@ -63,7 +63,7 @@ REM  1. System Bottleneck Auditor — fire and forget, writes to logs/
 REM =========================================================================
 if exist "%WORKDIR%\tools\system_bottleneck_auditor.py" (
   echo [START] System Bottleneck Auditor ...
-  start "SiteOwlQA-BottleneckAudit" /b cmd /c ^
+  start "vues-BottleneckAudit" /b cmd /c ^
     ""%PYTHON%" -u "%WORKDIR%\tools\system_bottleneck_auditor.py" --no-browser >> "%AUDIT_LOG%" 2>&1"
 ) else (
   echo [SKIP]  system_bottleneck_auditor.py not found
@@ -85,7 +85,7 @@ REM  2. Docker Platform Engineer — fire and forget, writes to logs/
 REM =========================================================================
 if exist "%WORKDIR%\tools\docker_platform_engineer.py" (
   echo [START] Docker Platform Engineer ...
-  start "SiteOwlQA-DockerPlatform" /b cmd /c ^
+  start "vues-DockerPlatform" /b cmd /c ^
     ""%PYTHON%" -u "%WORKDIR%\tools\docker_platform_engineer.py" --no-browser >> "%DOCKER_LOG%" 2>&1"
 ) else (
   echo [SKIP]  docker_platform_engineer.py not found
@@ -96,17 +96,17 @@ REM  3. Specialist Output Validator — waits 90s so tools above finish first
 REM =========================================================================
 if exist "%WORKDIR%\tools\specialist_output_validator.py" (
   echo [START] Specialist Output Validator (90s delayed start) ...
-  start "SiteOwlQA-Validator" /b cmd /c ^
+  start "vues-Validator" /b cmd /c ^
     "timeout /t 90 /nobreak >nul && "%PYTHON%" -u "%WORKDIR%\tools\specialist_output_validator.py" --no-browser >> "%VALIDATOR_LOG%" 2>&1"
 ) else (
   echo [SKIP]  specialist_output_validator.py not found
 )
 
 REM =========================================================================
-REM  4. SiteOwlQA Pipeline — background, logs to logs/siteowlqa.*.log
+REM  4. vues Pipeline — background, logs to logs/vues.*.log
 REM =========================================================================
-echo [START] SiteOwlQA Pipeline ...
-start "SiteOwlQA" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
+echo [START] vues Pipeline ...
+start "vues" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
 
 echo.
 echo [INFO] All components started. Waiting for dashboard ...

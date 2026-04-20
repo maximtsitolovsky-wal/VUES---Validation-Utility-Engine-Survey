@@ -62,7 +62,7 @@ If "Comments" shouldn't be filled by the pipeline:
 
 1. **Check the logs** for submissions 46 and 47:
    ```
-   C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
+   C:\VUES\logs\siteowlqa.stdout.log
    ```
    
    Search for "submission 46" or "submission 47" or look for ERROR entries
@@ -99,7 +99,7 @@ Provide the following information:
 
 1. **Exact column names** in your Airtable (screenshot or list)
 2. **Log entries** for submissions 46 and 47 from:
-   `C:\SiteOwlQA_App\logs\siteowlqa.stdout.log`
+   `C:\VUES\logs\siteowlqa.stdout.log`
 3. **What you expect** in the "Comments" field
 
 Then we can fix it properly! 🐕

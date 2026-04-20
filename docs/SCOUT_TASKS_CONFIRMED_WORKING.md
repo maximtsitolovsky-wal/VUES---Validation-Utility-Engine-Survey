@@ -97,12 +97,12 @@ schtasks /query /tn "ScoutCompletionSync" /fo LIST /v | findstr "Status Last"
 
 ### View Recent Log:
 ```bat
-powershell -Command "Get-Content C:\SiteOwlQA_App\logs\scout_completion_sync.log -Tail 20"
+powershell -Command "Get-Content C:\VUES\logs\scout_completion_sync.log -Tail 20"
 ```
 
 ### Watch Log in Real-Time:
 ```bat
-powershell -Command "Get-Content -Wait C:\SiteOwlQA_App\logs\scout_completion_sync.log -Tail 20"
+powershell -Command "Get-Content -Wait C:\VUES\logs\scout_completion_sync.log -Tail 20"
 ```
 
 ---

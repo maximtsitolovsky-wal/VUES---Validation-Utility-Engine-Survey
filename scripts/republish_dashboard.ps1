@@ -1,6 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
-$workdir = 'C:\SiteOwlQA_App'
+# Dynamically resolve workdir from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$workdir = (Resolve-Path (Join-Path $scriptDir '..')).Path
 $python = 'python'
 $rebuildScript = Join-Path $workdir 'tools\rebuild_current_dashboard.py'
 $exportScript = Join-Path $workdir 'tools\export_share_dashboard.py'

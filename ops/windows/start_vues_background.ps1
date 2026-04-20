@@ -8,9 +8,9 @@ $pythonCmd  = Get-Command python -ErrorAction SilentlyContinue
 $python     = if (Test-Path $venvPython) { $venvPython } elseif ($pythonCmd) { $pythonCmd.Source } else { '' }
 
 $logsDir    = Join-Path $workdir 'logs'
-$stdoutLog  = Join-Path $logsDir 'siteowlqa.stdout.log'
-$stderrLog  = Join-Path $logsDir 'siteowlqa.stderr.log'
-$pidFile    = Join-Path $logsDir 'siteowlqa.pid'
+$stdoutLog  = Join-Path $logsDir 'vues.stdout.log'
+$stderrLog  = Join-Path $logsDir 'vues.stderr.log'
+$pidFile    = Join-Path $logsDir 'vues.pid'
 $mainScript = Join-Path $workdir 'main.py'
 
 if (-not $python) {
@@ -45,7 +45,7 @@ $process = Start-Process -FilePath $python `
 
 Start-Sleep -Milliseconds 800
 if ($process.HasExited) {
-    Write-Error "SiteOwlQA failed to start. ExitCode=$($process.ExitCode). Check logs: $stderrLog"
+    Write-Error "vues failed to start. ExitCode=$($process.ExitCode). Check logs: $stderrLog"
     exit 1
 }
 

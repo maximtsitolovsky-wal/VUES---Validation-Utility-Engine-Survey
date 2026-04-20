@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
-$workdir       = 'C:\SiteOwlQA_App'
+$workdir       = 'C:\VUES'
 $opsDir        = Join-Path $workdir 'ops\windows'
-$launcher      = Join-Path $opsDir  'start_siteowlqa_background.ps1'
+$launcher      = Join-Path $opsDir  'start_vues_background.ps1'
 $outputDir     = Join-Path $workdir 'output'
 $portFile      = Join-Path $outputDir 'dashboard.port'
 $dashboard     = Join-Path $outputDir 'executive_dashboard.html'

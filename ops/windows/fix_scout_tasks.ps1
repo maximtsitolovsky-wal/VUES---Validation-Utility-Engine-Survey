@@ -11,14 +11,18 @@
 
 $ErrorActionPreference = 'Stop'
 
+# Dynamically resolve workDir from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$workDir = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+
 Write-Host "=== Fixing Scout Scheduled Tasks ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Define tasks to fix
 $tasks = @(
     "ScoutCompletionSync"
-    "SiteOwlQA Scout Downloader 10AM"
-    "SiteOwlQA Scout Downloader 3PM"
+    "vues Scout Downloader 10AM"
+    "vues Scout Downloader 3PM"
 )
 
 # Get current user
@@ -31,8 +35,8 @@ $xml = [xml](schtasks /query /tn "ScoutCompletionSync" /xml)
 # Update the command
 $actionNode = $xml.Task.Actions.Exec
 $actionNode.Command = "cmd"
-$actionNode.Arguments = "/c C:\SiteOwlQA_App\ops\windows\run_scout_completion_sync_task.bat"
-$actionNode.WorkingDirectory = "C:\SiteOwlQA_App"
+$actionNode.Arguments = "/c `"$workDir\ops\windows\run_scout_completion_sync_task.bat`""
+$actionNode.WorkingDirectory = $workDir
 
 # Remove battery restrictions
 $settingsNode = $xml.Task.Settings

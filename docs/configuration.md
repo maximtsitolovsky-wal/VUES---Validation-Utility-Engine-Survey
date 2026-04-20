@@ -95,11 +95,11 @@ SITEOWLQA_BIGQUERY_DATASET=ww_ess_gsoc_siteowl_dl_secure
 GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/service-account.json
 
 # Directories
-TEMP_DIR=C:/SiteOwlQA_App/temp
-OUTPUT_DIR=C:/SiteOwlQA_App/output
-LOG_DIR=C:/SiteOwlQA_App/logs
-ARCHIVE_DIR=C:/SiteOwlQA_App/archive
-SUBMISSIONS_DIR=C:/SiteOwlQA_App/archive/submissions
+TEMP_DIR=C:/VUES/temp
+OUTPUT_DIR=C:/VUES/output
+LOG_DIR=C:/VUES/logs
+ARCHIVE_DIR=C:/VUES/archive
+SUBMISSIONS_DIR=C:/VUES/archive/submissions
 ```
 
 ---

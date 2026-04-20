@@ -8,7 +8,7 @@ Make Scout automation tasks run **100% reliably** on schedule, regardless of bat
 ## ⚡ QUICK FIX (2 Minutes)
 
 ### Option 1: Double-Click Fix (Easiest)
-1. Navigate to: `C:\SiteOwlQA_App\ops\windows\`
+1. Navigate to: `C:\VUES\ops\windows\`
 2. **Right-click** `FIX_SCOUT_TASKS.bat`
 3. Select **"Run as administrator"**
 4. Wait for completion (shows green checkmarks)
@@ -17,7 +17,7 @@ Make Scout automation tasks run **100% reliably** on schedule, regardless of bat
 ### Option 2: PowerShell Command
 ```powershell
 # Right-click PowerShell → Run as Administrator, then:
-cd C:\SiteOwlQA_App
+cd C:\VUES
 .\ops\windows\fix_scout_tasks_bulletproof.ps1
 ```
 
@@ -58,7 +58,7 @@ Want to test RIGHT NOW without waiting for the schedule?
 
 ### Test ScoutCompletionSync:
 ```bat
-cd C:\SiteOwlQA_App
+cd C:\VUES
 ops\windows\run_scout_completion_sync_task.bat
 ```
 
@@ -87,7 +87,7 @@ After running the fix script:
 For **ScoutCompletionSync**:
 - [ ] Status shows: `Ready`
 - [ ] Next Run Time shows: Today 3:00 PM (or tomorrow 10:00 AM)
-- [ ] Actions tab shows: `cmd /c C:\SiteOwlQA_App\ops\windows\run_scout_completion_sync_task.bat`
+- [ ] Actions tab shows: `cmd /c C:\VUES\ops\windows\run_scout_completion_sync_task.bat`
 - [ ] Settings → Power tab:
   - [ ] "Stop if computer switches to battery power" is **UNCHECKED** ✓
   - [ ] "Start task only if computer is on AC power" is **UNCHECKED** ✓
@@ -104,7 +104,7 @@ For **Scout Downloader** tasks (both 10AM & 3PM):
 
 ### Real-Time Log Monitoring
 ```bat
-powershell -Command "Get-Content -Wait C:\SiteOwlQA_App\logs\scout_completion_sync.log -Tail 20"
+powershell -Command "Get-Content -Wait C:\VUES\logs\scout_completion_sync.log -Tail 20"
 ```
 
 ### Check Last Run Status
@@ -125,7 +125,7 @@ schtasks /query /tn "ScoutCompletionSync" /fo LIST /v | findstr "Last Run Time" 
 #### Problem: "401 Unauthorized" in logs
 **Fix:** Check that `.env.local` contains your API key:
 ```bat
-type C:\SiteOwlQA_App\.env.local
+type C:\VUES\.env.local
 ```
 
 Should show:
@@ -144,7 +144,7 @@ SCOUT_AIRTABLE_TABLE_ID=tblC4o9AvVulyxFMk
 #### Problem: Tasks run but nothing happens
 **Fix:** Check log file for errors:
 ```bat
-notepad C:\SiteOwlQA_App\logs\scout_completion_sync.log
+notepad C:\VUES\logs\scout_completion_sync.log
 ```
 
 ---
@@ -170,7 +170,7 @@ You'll know everything is working when:
 
 **Quick health check:**
 ```bat
-cd C:\SiteOwlQA_App
+cd C:\VUES
 test_env_loader.bat
 ```
 

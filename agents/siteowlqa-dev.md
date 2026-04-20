@@ -6,7 +6,7 @@
 ---
 
 ## What It Is
-Project-specific coding assistant scoped entirely to `SiteOwlQA_App`.
+Project-specific coding assistant scoped entirely to `VUES`.
 Always reads `development.md` before acting, enforces git discipline,
 and keeps the roadmap up to date.
 

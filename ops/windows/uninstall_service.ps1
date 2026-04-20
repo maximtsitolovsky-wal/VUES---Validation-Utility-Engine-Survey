@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Stops and completely removes the SiteOwlQA Windows service.
+    Stops and completely removes the VUES Windows service.
 
 .NOTES
     Does NOT delete any app files, logs, or database records.
@@ -9,12 +9,15 @@
 
 #Requires -RunAsAdministrator
 
-$ServiceName = 'SiteOwlQA'
-$AppRoot     = 'C:\SiteOwlQA_App'
-$WinSW       = Join-Path $AppRoot 'SiteOwlQA.exe'
+# Dynamically resolve paths from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$AppRoot = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+
+$ServiceName = 'VUES'
+$WinSW       = Join-Path $AppRoot 'VUES.exe'
 
 Write-Host ''
-Write-Host '  Uninstalling SiteOwlQA service...' -ForegroundColor Yellow
+Write-Host '  Uninstalling VUES service...' -ForegroundColor Yellow
 
 $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if (-not $svc) {
@@ -30,5 +33,5 @@ if ($svc.Status -eq 'Running') {
 
 & $WinSW uninstall
 Write-Host "  Service '$ServiceName' removed." -ForegroundColor Green
-Write-Host '  Logs preserved at: C:\SiteOwlQA_App\logs\'
+Write-Host '  Logs preserved at:' (Join-Path $AppRoot 'logs')
 Write-Host ''

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>SiteOwlQA automated vendor QA pipeline - polls Airtable every 5 seconds and processes vendor device exports automatically. Auto-restarts on failure.</Description>
+    <Description>vues automated vendor QA pipeline - polls Airtable every 5 seconds and processes vendor device exports automatically. Auto-restarts on failure.</Description>
     <Author>homeoffice\vn59j7j</Author>
   </RegistrationInfo>
   <Triggers>
@@ -46,8 +46,8 @@
   <Actions Context="Author">
     <Exec>
       <Command>C:\Windows\System32\cmd.exe</Command>
-      <Arguments>/c C:\SiteOwlQA_App\ops\windows\run_siteowlqa.bat</Arguments>
-      <WorkingDirectory>C:\SiteOwlQA_App</WorkingDirectory>
+      <Arguments>/c C:\VUES\ops\windows\run_vues.bat</Arguments>
+      <WorkingDirectory>C:\VUES</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>

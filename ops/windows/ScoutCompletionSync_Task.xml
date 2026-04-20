@@ -67,7 +67,7 @@
     <Exec>
       <Command>python</Command>
       <Arguments>scripts\scout_completion_sync_com.py</Arguments>
-      <WorkingDirectory>C:\SiteOwlQA_App</WorkingDirectory>
+      <WorkingDirectory>C:\VUES</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>

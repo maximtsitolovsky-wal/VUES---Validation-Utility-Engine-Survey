@@ -8,9 +8,12 @@
 
 $ErrorActionPreference = 'Stop'
 
-$taskName = 'SiteOwlQA Scout Downloader'
+$taskName = 'vues Scout Downloader'
 $taskUser = 'HOMEOFFICE\vn59j7j'
-$batPath  = 'C:\SiteOwlQA_App\ops\windows\run_scout_downloader.bat'
+# Dynamically resolve paths from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$workDir = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+$batPath  = Join-Path $workDir 'ops\windows\run_scout_downloader.bat'
 
 Write-Host ''
 Write-Host '================================================'
@@ -25,7 +28,7 @@ Write-Host ''
 $action = New-ScheduledTaskAction `
     -Execute 'C:\Windows\System32\cmd.exe' `
     -Argument "/c $batPath" `
-    -WorkingDirectory 'C:\SiteOwlQA_App'
+    -WorkingDirectory $workDir
 
 # Two triggers: 10 AM and 3 PM, both Mon-Fri
 $trigger10am = New-ScheduledTaskTrigger `

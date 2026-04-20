@@ -49,8 +49,8 @@
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>-NoProfile -ExecutionPolicy Bypass -File "C:\SiteOwlQA_App\scripts\republish_dashboard.ps1"</Arguments>
-      <WorkingDirectory>C:\SiteOwlQA_App</WorkingDirectory>
+      <Arguments>-NoProfile -ExecutionPolicy Bypass -File "C:\VUES\scripts\republish_dashboard.ps1"</Arguments>
+      <WorkingDirectory>C:\VUES</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>

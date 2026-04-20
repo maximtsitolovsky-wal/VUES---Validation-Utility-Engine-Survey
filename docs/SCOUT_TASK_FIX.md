@@ -55,7 +55,7 @@ SCOUT_AIRTABLE_TABLE_ID=tblC4o9AvVulyxFMk
 2. Select **"Run as Administrator"**
 3. Run:
    ```powershell
-   cd C:\SiteOwlQA_App
+   cd C:\VUES
    .\ops\windows\fix_scout_tasks.ps1
    ```
 
@@ -74,7 +74,7 @@ SCOUT_AIRTABLE_TABLE_ID=tblC4o9AvVulyxFMk
 
 4. For `ScoutCompletionSync`, check **Actions** tab:
    - Command should be: `cmd`
-   - Arguments should be: `/c C:\SiteOwlQA_App\ops\windows\run_scout_completion_sync_task.bat`
+   - Arguments should be: `/c C:\VUES\ops\windows\run_scout_completion_sync_task.bat`
 
 ---
 
@@ -83,7 +83,7 @@ SCOUT_AIRTABLE_TABLE_ID=tblC4o9AvVulyxFMk
 Test the sync immediately:
 
 ```bat
-cd C:\SiteOwlQA_App
+cd C:\VUES
 ops\windows\run_scout_completion_sync.bat
 ```
 

@@ -1,16 +1,20 @@
-# update_shortcut.ps1 — rebuilds the SiteOwlQA desktop shortcut
+# update_shortcut.ps1 — rebuilds the VUES desktop shortcut
 # Run once: powershell -ExecutionPolicy Bypass -File ops\windows\update_shortcut.ps1
 #
-# Target: launch_siteowlqa_dashboard.ps1 (via PowerShell)
+# Target: launch_vues_dashboard.ps1 (via PowerShell)
 #   This script is the authoritative launcher: it starts the pipeline,
 #   rebuilds the dashboard, spins up run_dashboard_server.py on a free port,
 #   verifies the server is alive, then opens the browser.
 #   Do NOT point the shortcut at start_pipeline.bat — that bat never starts
 #   run_dashboard_server.py, so the browser would open to a dead port.
 
-$lnkPath  = Join-Path $env:USERPROFILE 'OneDrive - Walmart Inc\Desktop\SiteOwlQA Launcher.lnk'
-$ps1Path  = 'C:\SiteOwlQA_App\ops\windows\launch_siteowlqa_dashboard.ps1'
-$exePath  = 'C:\SiteOwlQA_App\SiteOwlQA.exe'
+# Dynamically resolve paths from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$workDir = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+
+$lnkPath  = Join-Path $env:USERPROFILE 'OneDrive - Walmart Inc\Desktop\vues Launcher.lnk'
+$ps1Path  = Join-Path $workDir 'ops\windows\launch_vues_dashboard.ps1'
+$exePath  = Join-Path $workDir 'VUES.exe'
 $psExe    = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
 $sh  = New-Object -ComObject WScript.Shell
@@ -18,8 +22,8 @@ $lnk = $sh.CreateShortcut($lnkPath)
 
 $lnk.TargetPath       = $psExe
 $lnk.Arguments        = "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ps1Path`""
-$lnk.WorkingDirectory = 'C:\SiteOwlQA_App'
-$lnk.Description      = 'SiteOwlQA - starts pipeline and opens dashboard'
+$lnk.WorkingDirectory = $workDir
+$lnk.Description      = 'VUES - starts pipeline and opens dashboard'
 $lnk.IconLocation     = "$exePath,0"
 $lnk.WindowStyle      = 1   # normal — PowerShell handles its own Hidden flag
 

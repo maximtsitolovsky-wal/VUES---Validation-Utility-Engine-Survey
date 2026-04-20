@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Installs SiteOwlQA as a Windows service using WinSW.
+    Installs VUES as a Windows service using WinSW.
 
 .DESCRIPTION
     - Must be run as Administrator (script self-elevates if needed).
@@ -11,11 +11,7 @@
     - Configures 3-tier crash recovery (10s / 1min / 5min restart).
 
 .NOTES
-    WinSW binary : C:\SiteOwlQA_App\SiteOwlQA.exe
-    Config XML   : C:\SiteOwlQA_App\SiteOwlQA.xml
-    Python       : C:\Python314\python.exe
-    App root     : C:\SiteOwlQA_App
-    Log output   : C:\SiteOwlQA_App\logs\SiteOwlQA.out.log
+    Paths resolved dynamically from script location.
 #>
 
 #Requires -RunAsAdministrator
@@ -23,14 +19,17 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$ServiceName  = 'SiteOwlQA'
-$AppRoot      = 'C:\SiteOwlQA_App'
-$WinSW        = Join-Path $AppRoot 'SiteOwlQA.exe'
+# Dynamically resolve paths from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$AppRoot = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+
+$ServiceName  = 'VUES'
+$WinSW        = Join-Path $AppRoot 'VUES.exe'
 $LogDir       = Join-Path $AppRoot 'logs'
 
 Write-Host ''
 Write-Host '=========================================' -ForegroundColor Cyan
-Write-Host '  SiteOwlQA Service Installer            ' -ForegroundColor Cyan
+Write-Host '  VUES Service Installer                 ' -ForegroundColor Cyan
 Write-Host '=========================================' -ForegroundColor Cyan
 Write-Host ''
 
@@ -38,7 +37,7 @@ Write-Host ''
 # 1. Pre-flight checks
 # ---------------------------------------------------------------------------
 if (-not (Test-Path $WinSW)) {
-    Write-Error "WinSW binary not found at: $WinSW`nRun this script from C:\SiteOwlQA_App."
+    Write-Error "WinSW binary not found at: $WinSW`nRun this script from the VUES directory."
     exit 1
 }
 
@@ -116,7 +115,7 @@ $plainPass = $null  # clear from memory immediately
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "sc.exe config failed (exit $LASTEXITCODE): $scResult"
     Write-Warning "Service will run as LocalSystem. NTLM proxy downloads may fail."
-    Write-Warning "Fix manually: Services.msc -> SiteOwlQA -> Log On tab."
+    Write-Warning "Fix manually: Services.msc -> VUES -> Log On tab."
 } else {
     Write-Host "  Logon account set to: $currentUser" -ForegroundColor Green
 }
@@ -143,14 +142,14 @@ if ($svc.Status -eq 'Running') {
     Write-Host '  =========================================' -ForegroundColor Green
 } else {
     Write-Warning "Service status: $($svc.Status). Check logs:"
-    Write-Warning "  $LogDir\SiteOwlQA.wrapper.log"
-    Write-Warning "  $LogDir\SiteOwlQA.out.log"
+    Write-Warning "  $LogDir\VUES.wrapper.log"
+    Write-Warning "  $LogDir\VUES.out.log"
 }
 
 Write-Host ''
 Write-Host '  Useful commands:' -ForegroundColor Cyan
-Write-Host '    Get-Service SiteOwlQA              -- check status'
-Write-Host '    Restart-Service SiteOwlQA          -- restart'
-Write-Host '    Stop-Service SiteOwlQA             -- stop'
-Write-Host "    Get-Content $LogDir\SiteOwlQA.out.log -Tail 50  -- live log"
+Write-Host '    Get-Service VUES              -- check status'
+Write-Host '    Restart-Service VUES          -- restart'
+Write-Host '    Stop-Service VUES             -- stop'
+Write-Host "    Get-Content $LogDir\VUES.out.log -Tail 50  -- live log"
 Write-Host ''

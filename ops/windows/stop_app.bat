@@ -1,20 +1,22 @@
 @echo off
 setlocal
 
-REM Stop the background SiteOwlQA pipeline process.
+REM Stop the background vues pipeline process.
 
-set WORKDIR=C:\SiteOwlQA_App
-set PIDFILE=%WORKDIR%\logs\siteowlqa.pid
+REM Dynamically resolve WORKDIR from script location
+cd /d "%~dp0..\.."
+set WORKDIR=%CD%
+set PIDFILE=%WORKDIR%\logs\vues.pid
 
 echo.
-echo Stopping SiteOwlQA background app...
+echo Stopping vues background app...
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%WORKDIR%\stop_siteowlqa_background.ps1" >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%WORKDIR%\stop_vues_background.ps1" >nul
 
 if errorlevel 1 (
   echo [WARN] Stop command completed with warnings.
 ) else (
-  echo [OK] SiteOwlQA stopped.
+  echo [OK] vues stopped.
 )
 
 timeout /t 2 /nobreak >nul

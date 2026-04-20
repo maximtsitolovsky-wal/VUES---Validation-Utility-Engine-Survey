@@ -1,12 +1,13 @@
 """startup_check.py - Verify main.py starts and loads config without crashing."""
 import subprocess, sys, time
+from pathlib import Path
 
 print('Starting main.py for 5 seconds to verify clean startup...')
 print()
 
 proc = subprocess.Popen(
     [sys.executable, '-u', 'main.py'],
-    cwd=r'C:\SiteOwlQA_App',
+    cwd=Path(__file__).resolve().parent.parent,
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True,

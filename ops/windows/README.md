@@ -1,6 +1,6 @@
 # Windows Operations Scripts
 
-These batch files and PowerShell scripts automate SiteOwlQA pipeline deployment and operation on Windows.
+These batch files and PowerShell scripts automate vues pipeline deployment and operation on Windows.
 
 ## Quick Start
 
@@ -40,7 +40,7 @@ This will:
 - Starts Git Autopush (visible window - auto-commits changes)
 - Starts Docker Platform Engineer (background)
 - Starts Specialist Output Validator (background, 90s delay)
-- Starts the SiteOwlQA pipeline in background
+- Starts the vues pipeline in background
 - Waits for dashboard to be generated
 - Opens the dashboard in your default browser
 - Shows log file location
@@ -91,11 +91,11 @@ stop_pipeline.bat
 **After Setup:**
 - Restart your computer to test
 - Pipeline should start automatically
-- Check logs at: `C:\SiteOwlQA_App\logs\siteowlqa.stdout.log`
+- Check logs at: `C:\VUES\logs\vues.stdout.log`
 
 ---
 
-### 🏃 run_siteowlqa.bat
+### 🏃 run_vues.bat
 **Purpose:** Foreground launcher (for testing/debugging)
 
 **What it does:**
@@ -105,7 +105,7 @@ stop_pipeline.bat
 
 **Usage:**
 ```bash
-run_siteowlqa.bat
+run_vues.bat
 ```
 
 **Use this for:**
@@ -119,17 +119,17 @@ run_siteowlqa.bat
 
 All logs are saved to:
 ```
-C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
+C:\VUES\logs\vues.stdout.log
 ```
 
 View in real-time:
 ```bash
-tail -f C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
+tail -f C:\VUES\logs\vues.stdout.log
 ```
 
 Or open in Notepad:
 ```bash
-C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
+C:\VUES\logs\vues.stdout.log
 ```
 
 ---
@@ -154,7 +154,7 @@ to match your actual installation path.
 
 ---
 
-### "Failed to change directory to C:\\SiteOwlQA_App"
+### "Failed to change directory to C:\\VUES"
 
 **Solution:** Update the `WORKDIR` variable to match your actual installation path.
 
@@ -164,13 +164,13 @@ to match your actual installation path.
 
 **Check logs:**
 ```
-C:\SiteOwlQA_App\logs\siteowlqa.stdout.log
-C:\SiteOwlQA_App\logs\siteowlqa.stderr.log
+C:\VUES\logs\vues.stdout.log
+C:\VUES\logs\vues.stderr.log
 ```
 
 **Test with foreground launcher:**
 ```bash
-run_siteowlqa.bat
+run_vues.bat
 ```
 
 This shows real-time errors.
@@ -188,7 +188,7 @@ This shows real-time errors.
 Or open CMD as admin first:
 ```bash
 Windows+R → cmd → Ctrl+Shift+Enter
-cd C:\SiteOwlQA_App\ops\windows
+cd C:\VUES\ops\windows
 setup_scheduler.bat
 ```
 
@@ -201,14 +201,14 @@ If `setup_scheduler.bat` doesn't work, you can create the task manually:
 1. Press `Windows+R`, type: `taskschd.msc`
 2. Click "Create Task"
 3. Set:
-   - **Name:** SiteOwlQA Pipeline
+   - **Name:** vues Pipeline
    - **Description:** Automated vendor QA pipeline
    - **Security:** Run with highest privileges
    - **Trigger:** At startup
    - **Action:**
      - Program: `C:\Python314\python.exe`
      - Arguments: `-u main.py`
-     - Start in: `C:\SiteOwlQA_App`
+     - Start in: `C:\VUES`
 
 ---
 
@@ -218,16 +218,16 @@ If `setup_scheduler.bat` doesn't work, you can create the task manually:
 |------|---------|--------|
 | `start_pipeline.bat` | Daily launcher + dashboard | Normal user |
 | `stop_pipeline.bat` | Stop the pipeline | Normal user |
-| `run_siteowlqa.bat` | Foreground test launcher | Normal user |
+| `run_vues.bat` | Foreground test launcher | Normal user |
 | `setup_scheduler.bat` | Auto-startup configuration | **Admin** |
-| `launch_siteowlqa_dashboard.ps1` | PowerShell dashboard launcher | Normal user |
-| `start_siteowlqa_background.ps1` | PowerShell background start | Normal user |
-| `SiteOwlQA.xml` | Task Scheduler XML (legacy) | Internal |
+| `launch_vues_dashboard.ps1` | PowerShell dashboard launcher | Normal user |
+| `start_vues_background.ps1` | PowerShell background start | Normal user |
+| `vues.xml` | Task Scheduler XML (legacy) | Internal |
 
 ---
 
 ## See Also
 
-- Main pipeline: `python main.py` (from `C:\SiteOwlQA_App`)
-- README: `C:\SiteOwlQA_App\README.md`
-- Development guide: `C:\SiteOwlQA_App\development.md`
+- Main pipeline: `python main.py` (from `C:\VUES`)
+- README: `C:\VUES\README.md`
+- Development guide: `C:\VUES\development.md`

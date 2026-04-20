@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  WinSW service descriptor for SiteOwlQA Pipeline Service.
+  WinSW service descriptor for vues Pipeline Service.
   Docs: https://github.com/winsw/winsw/blob/master/doc/xmlConfigFile.md
 
-  Logs written to: C:\SiteOwlQA_App\logs\n    SiteOwlQA.out.log  — stdout (main.py INFO/WARNING/ERROR output)
-    SiteOwlQA.err.log  — stderr
-    SiteOwlQA.wrapper.log — WinSW wrapper events (start/stop/crash)
+  Logs written to: C:\VUES\logs\n    VUES.out.log  — stdout (main.py INFO/WARNING/ERROR output)
+    vues.err.log  — stderr
+    vues.wrapper.log — WinSW wrapper events (start/stop/crash)
 
   Recovery:
     1st failure  → restart after 10s
@@ -16,8 +16,8 @@
 <configuration>
 
   <!-- Identity -->
-  <id>SiteOwlQA</id>
-  <name>SiteOwlQA Pipeline Service</name>
+  <id>vues</id>
+  <name>vues Pipeline Service</name>
   <description>
     Polls Airtable (base apptK6zNN0Hf3OuoJ / table Submissions) every 60s.
     Downloads vendor Excel files, grades them via SQL Server stored procs,
@@ -27,8 +27,8 @@
 
   <!-- What to run -->
   <executable>C:\Windows\System32\cmd.exe</executable>
-  <arguments>/c C:\SiteOwlQA_App\run_siteowlqa.bat</arguments>
-  <workingdirectory>C:\SiteOwlQA_App</workingdirectory>
+  <arguments>/c C:\VUES\ops\windows\run_vues.bat</arguments>
+  <workingdirectory>C:\VUES</workingdirectory>
 
   <!-- Startup -->
   <startmode>Automatic</startmode>
@@ -41,7 +41,7 @@
 
   <!-- Logging: rotate at 10 MB, keep 8 files -->
   <logmode>rotate</logmode>
-  <logpath>C:\SiteOwlQA_App\logs</logpath>
+  <logpath>C:\VUES\logs</logpath>
   <log mode="roll-by-size">
     <sizeThreshold>10240</sizeThreshold>
     <keepFiles>8</keepFiles>

@@ -10,7 +10,7 @@ The main Code Puppy coding assistant. General-purpose — writes, reads, edits, 
 shell commands, runs tests, commits to git. The agent you're talking to right now.
 
 ## Role in This Project
-- Primary development assistant for SiteOwlQA_App
+- Primary development assistant for VUES
 - Implements features, fixes bugs, runs the test suite
 - Applies skills from `skills/INDEX.md`
 - Reads `MEMORY.md` and `CLAUDE.md` at session start

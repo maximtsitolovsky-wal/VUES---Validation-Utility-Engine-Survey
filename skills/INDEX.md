@@ -1,5 +1,5 @@
 # skills/INDEX.md — Code Puppy Skill Library
-# SiteOwlQA_App
+# VUES
 
 > Code Puppy reads this BEFORE tackling any task.
 > If a skill matches the task pattern → use it. Do not re-derive.

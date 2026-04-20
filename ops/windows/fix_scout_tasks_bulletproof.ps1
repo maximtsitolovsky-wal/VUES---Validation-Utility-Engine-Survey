@@ -17,7 +17,9 @@
 #>
 
 $ErrorActionPreference = 'Stop'
-$workDir = "C:\SiteOwlQA_App"
+# Dynamically resolve workDir from script location
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$workDir = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
 
 function Write-Step($message, $color = 'Cyan') {
     Write-Host "`n$message" -ForegroundColor $color
@@ -138,8 +140,8 @@ try {
 Write-Step "🔧 FIXING SCOUT DOWNLOADER TASKS"
 
 $downloaderTasks = @(
-    "SiteOwlQA Scout Downloader 10AM"
-    "SiteOwlQA Scout Downloader 3PM"
+    "vues Scout Downloader 10AM"
+    "vues Scout Downloader 3PM"
 )
 
 foreach ($taskName in $downloaderTasks) {

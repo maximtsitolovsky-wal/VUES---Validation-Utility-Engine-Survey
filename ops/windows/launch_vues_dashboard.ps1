@@ -77,10 +77,9 @@ if (Test-Path $autopushScript) {
     
     if (-not $autopushRunning) {
         Write-Host 'Starting git autopush...'
-        Start-Process -FilePath $python `
-            -ArgumentList '-u', $autopushScript `
-            -WorkingDirectory $workdir `
-            -WindowStyle Normal
+        # Use cmd /k to force a visible console window that stays open
+        $cmdArgs = "/k title Git Autopush && cd /d `"$workdir`" && `"$python`" -u `"$autopushScript`""
+        Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs
         Write-Host '[OK] Git autopush started (auto-commits changes).'
     } else {
         Write-Host '[OK] Git autopush already running.'

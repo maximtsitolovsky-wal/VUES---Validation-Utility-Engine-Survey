@@ -1,6 +1,6 @@
 """User profile configuration loader for SiteOwlQA.
 
-Sensitive configuration (tokens, passwords, DB credentials) is stored
+Sensitive configuration (tokens, passwords, credentials) is stored
 in the user's home directory at ~/.siteowlqa/config.json rather than
 in the monorepo. This keeps secrets safe and out of version control.
 """
@@ -20,15 +20,15 @@ log = logging.getLogger(__name__)
 class UserConfig:
     """User profile configuration (sensitive values only)."""
     
-    # Required: SQL Server
-    sql_server: str
-    sql_database: str
+    # Required: Airtable
     airtable_token: str
     airtable_base_id: str
     airtable_table_name: str
     
-    # Optional: SQL Server (with default)
-    sql_driver: str = "ODBC Driver 17 for SQL Server"
+    # Legacy: SQL Server (no longer used - kept for backwards compatibility)
+    sql_server: str = ""
+    sql_database: str = ""
+    sql_driver: str = ""
     
     # Element LLM Gateway (optional)
     element_llm_gateway_url: str = ""

@@ -388,7 +388,7 @@ class DataWatchdog:
             import requests
             url = f"https://api.airtable.com/v0/{self.cfg.airtable_base_id}/{self.cfg.airtable_table_name}"
             
-            # Get recent records
+            # Get recent records (no filter, just sort by created)
             resp = requests.get(
                 url,
                 headers={"Authorization": f"Bearer {self.cfg.airtable_token}"},
@@ -396,6 +396,7 @@ class DataWatchdog:
                     "maxRecords": 100,
                     "sort[0][field]": "Created",
                     "sort[0][direction]": "desc",
+                    "fields[]": ["Processing Status", "Created"],
                 },
                 timeout=30,
             )

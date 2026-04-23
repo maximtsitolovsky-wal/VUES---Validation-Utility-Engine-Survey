@@ -164,6 +164,7 @@ def regrade_one(
                 submission_df=load_result.dataframe,
                 submission_id=record.submission_id,
                 site_number=record.site_number,
+                survey_type=record.survey_type,
             )
             result = grade_outcome.result
             error_df = grade_outcome.error_df

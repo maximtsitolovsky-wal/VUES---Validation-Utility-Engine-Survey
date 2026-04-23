@@ -229,14 +229,14 @@ def grade_submission_in_python(
         message=(
             ""
             if status == ProcessingStatus.PASS
-            else _build_fail_message(error_df, len(submission_norm), len(reference_norm))
+            else _build_fail_message(error_df, len(submission_filtered), len(reference_filtered))
         ),
     )
     return PythonGradeOutcome(
         result=result,
         error_df=None if status == ProcessingStatus.PASS else error_df,
-        reference_row_count=len(reference_norm),
-        submission_row_count=len(submission_norm),
+        reference_row_count=len(reference_filtered),
+        submission_row_count=len(submission_filtered),
         notes_internal=notes_internal,
         accuracy_pct=accuracy_pct,
         coverage_pct=coverage_pct,

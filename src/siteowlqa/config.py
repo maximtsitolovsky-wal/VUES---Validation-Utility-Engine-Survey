@@ -54,6 +54,7 @@ class AirtableFields:
     true_score: str = "True Score"
     fail_summary: str = "Fail Summary"
     notes_internal: str = "Notes for Internal"
+    survey_type: str = "Survey Type"
 
 
 ATAIRTABLE_FIELDS = AirtableFields()
@@ -66,6 +67,76 @@ STATUS_QUEUED = "QUEUED"
 STATUS_PROCESSING = "PROCESSING"
 UNPROCESSED_STATUSES = {"", "NEW", "Pending"}
 STUCK_STATUSES = {STATUS_QUEUED, STATUS_PROCESSING}
+
+
+# ---------------------------------------------------------------------------
+# Survey Type constants and grading column routing
+# ---------------------------------------------------------------------------
+
+# Airtable dropdown values for Survey Type
+SURVEY_TYPE_CCTV = "CCTV"
+SURVEY_TYPE_FA_INTRUSION = "FA/Intrusion"
+SURVEY_TYPE_BOTH = "BOTH"
+
+# Columns graded for each survey type
+GRADE_COLUMNS_CCTV: tuple[str, ...] = (
+    "Name",
+    "Part Number",
+    "Manufacturer",
+    "IP Address",
+    "MAC Address",
+    "IP / Analog",
+)
+
+GRADE_COLUMNS_FA_INTRUSION: tuple[str, ...] = (
+    # "Name" is conditional — only graded if Abbreviated Name has content
+    # This is handled in the grader, not here
+    "Abbreviated Name",
+    "Description",
+)
+
+# For FA/Intrusion: Name is only graded if this column has content
+FA_INTRUSION_NAME_CONDITION_COLUMN = "Abbreviated Name"
+
+GRADE_COLUMNS_BOTH: tuple[str, ...] = (
+    "Name",
+    "Abbreviated Name",
+    "Part Number",
+    "Manufacturer",
+    "IP Address",
+    "MAC Address",
+    "IP / Analog",
+    "Description",
+)
+
+
+def get_grade_columns_for_survey_type(survey_type: str | None) -> tuple[str, ...]:
+    """Return the grading columns for the given survey type.
+    
+    Args:
+        survey_type: One of SURVEY_TYPE_CCTV, SURVEY_TYPE_FA_INTRUSION, SURVEY_TYPE_BOTH.
+                     If None or unrecognized, defaults to BOTH for backward compatibility.
+    
+    Returns:
+        Tuple of column names to grade.
+    """
+    if survey_type == SURVEY_TYPE_CCTV:
+        return GRADE_COLUMNS_CCTV
+    elif survey_type == SURVEY_TYPE_FA_INTRUSION:
+        return GRADE_COLUMNS_FA_INTRUSION
+    elif survey_type == SURVEY_TYPE_BOTH:
+        return GRADE_COLUMNS_BOTH
+    else:
+        # Default to BOTH for backward compatibility with existing records
+        return GRADE_COLUMNS_BOTH
+
+
+def should_run_post_pass_correction(survey_type: str | None) -> bool:
+    """Return True if post-pass correction should run for this survey type.
+    
+    Post-pass correction only runs for BOTH surveys.
+    """
+    return survey_type == SURVEY_TYPE_BOTH
 
 
 # ---------------------------------------------------------------------------

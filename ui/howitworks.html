@@ -26,7 +26,7 @@
     /* Section */
     .section { margin-bottom: 32px; }
     .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
-    .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(90,228,255,0.3), transparent); }
+    .le::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(90,228,255,0.3), transparent); }
     
     /* Cards */
     .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 24px; margin-bottom: 16px; }
@@ -70,7 +70,100 @@
     .callout-title { font-weight: 700; color: var(--amber); margin-bottom: 6px; font-size: 14px; }
     .callout-text { font-size: 13px; color: var(--text-soft); }
     
-    @media (max-width: 768px) { .tab-grid, .glossary { grid-template-columns: 1fr; } .flow-step::after { display: none; } }
+    /* Survey type cards */
+    .survey-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+    .survey-type-card { padding: 20px; border-radius: 16px; text-align: center; }
+    .survey-type-card.cctv { background: linear-gradient(135deg, rgba(90,228,255,0.15), rgba(90,228,255,0.05)); border: 1px solid rgba(90,228,255,0.3); }
+    .survey-type-card.fa { background: linear-gradient(135deg, rgba(255,107,129,0.15), rgba(255,107,129,0.05)); border: 1px solid rgba(255,107,129,0.3); }
+    .survey-type-card.both { background: linear-gradient(135deg, rgba(155,124,255,0.15), rgba(155,124,255,0.05)); border: 1px solid rgba(155,124,255,0.3); }
+    .survey-type-icon { font-size: 32px; margin-bottom: 8px; }
+    .survey-type-name { font-size: 16px; font-weight: 800; }
+    .survey-type-name.cctv { color: var(--cyan); }
+    .survey-type-name.fa { color: var(--red); }
+    .survey-type-name.both { color: var(--purple); }
+    .survey-type-subtitle { font-size: 11px; color: var(--text-soft); margin-top: 6px; }
+    .survey-type-cols { font-size: 10px; margin-top: 8px; color: var(--text-soft); font-weight: 600; }
+
+    /* Info boxes */
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0; }
+    .info-box { padding: 12px; border-radius: 10px; }
+    .info-box.cyan { background: rgba(90,228,255,0.08); border: 1px solid rgba(90,228,255,0.2); }
+    .info-box.red { background: rgba(255,107,129,0.08); border: 1px solid rgba(255,107,129,0.2); }
+    .info-box.purple { background: rgba(155,124,255,0.08); border: 1px solid rgba(155,124,255,0.2); }
+    .info-box.green { background: rgba(69,230,165,0.08); border: 1px solid rgba(69,230,165,0.2); }
+    .info-label { font-weight: 700; font-size: 12px; margin-bottom: 8px; }
+    .info-label.cyan { color: var(--cyan); }
+    .info-label.red { color: var(--red); }
+    .info-label.purple { color: var(--purple); }
+    .info-label.green { color: var(--green); }
+    .info-text { font-size: 12px; color: var(--text-soft); }
+    
+    /* Column badges */
+    .col-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .col-badge { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+    .col-badge.cyan { background: rgba(90,228,255,0.12); border: 1px solid rgba(90,228,255,0.3); }
+    .col-badge.red { background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
+    .col-badge.purple { background: rgba(155,124,255,0.12); border: 1px solid rgba(155,124,255,0.3); }
+    .col-badge.green { background: rgba(69,230,165,0.12); border: 1px solid rgba(69,230,165,0.3); }
+    .col-badge.faded { opacity: 0.7; }
+    
+    /* Score boxes */
+    .score-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+    .score-box { padding: 20px; border-radius: 14px; text-align: center; }
+    .score-box.pass { background: rgba(69,230,165,0.08); border: 1px solid rgba(69,230,165,0.25); }
+    .score-box.fail { background: rgba(255,107,129,0.08); border: 1px solid rgba(255,107,129,0.25); }
+    .score-value { font-size: 36px; font-weight: 900; }
+    .score-value.pass { color: var(--green); }
+    .score-value.fail { color: var(--red); }
+    .score-label { font-size: 13px; font-weight: 700; margin-top: 6px; }
+    
+    /* Confidence bars */
+    .conf-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 8px; }
+    .conf-bar.green { background: rgba(69,230,165,0.1); border-left: 4px solid var(--green); }
+    .conf-bar.amber { background: rgba(255,200,87,0.1); border-left: 4px solid var(--amber); }
+    .conf-bar.blue { background: rgba(77,141,255,0.1); border-left: 4px solid var(--blue); }
+    .conf-bar.red { background: rgba(255,107,129,0.1); border-left: 4px solid var(--red); }
+    .conf-title { font-weight: 700; font-size: 13px; }
+    .conf-desc { font-size: 11px; color: var(--text-soft); }
+    .conf-action { font-size: 12px; font-weight: 600; }
+    .conf-action.green { color: var(--green); }
+    .conf-action.amber { color: var(--amber); }
+    .conf-action.blue { color: var(--blue); }
+    .conf-action.red { color: var(--red); }
+    
+    /* Priority steps */
+    .priority-step { display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 10px; margin-bottom: 10px; }
+    .priority-step.green { background: rgba(69,230,165,0.06); border: 1px solid rgba(69,230,165,0.2); }
+    .priority-step.cyan { background: rgba(90,228,255,0.06); border: 1px solid rgba(90,228,255,0.2); }
+    .priority-step.amber { background: rgba(255,200,87,0.06); border: 1px solid rgba(255,200,87,0.2); }
+    .priority-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #060914; }
+    .priority-num.green { background: var(--green); }
+    .priority-num.cyan { background: var(--cyan); }
+    .priority-num.amber { background: var(--amber); }
+    .priority-title { font-weight: 700; font-size: 14px; }
+    .priority-desc { font-size: 12px; color: var(--text-soft); }
+    
+    /* Output files */
+    .output-file { padding: 14px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .output-icon { font-size: 18px; }
+    .output-name { font-weight: 700; font-size: 13px; }
+    .output-name.cyan { color: var(--cyan); }
+    .output-name.amber { color: var(--amber); }
+    .output-name.purple { color: var(--purple); }
+    .output-desc { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    
+    /* Correctable fields grid */
+    .fields-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+    .fields-col { display: flex; flex-direction: column; gap: 6px; }
+    .fields-title { font-weight: 700; font-size: 12px; margin-bottom: 10px; }
+    .fields-title.green { color: var(--green); }
+    .fields-title.red { color: var(--red); }
+    .field-item { padding: 8px 12px; border-radius: 8px; font-size: 11px; }
+    .field-item.green { background: rgba(69,230,165,0.08); border: 1px solid rgba(69,230,165,0.2); }
+    .field-item.red { background: rgba(255,107,129,0.08); border: 1px solid rgba(255,107,129,0.2); }
+    .fields-note { font-size: 11px; color: var(--text-soft); margin-top: 12px; font-style: italic; }
+    
+    @media (max-width: 768px) { .tab-grid, .glossary, .survey-type-grid, .info-grid, .score-grid, .fields-grid { grid-template-columns: 1fr; } .flow-step::after { display: none; } }
   </style>
 </head>
 <body>
@@ -140,6 +233,310 @@
           <li><strong>Single Process:</strong> No Docker, no queues, no complexity — just Python</li>
           <li><strong>Local First:</strong> All data stays on-premises, nothing sent to external services</li>
         </ul>
+      </div>
+    </div>
+
+    <!-- Grading Architecture -->
+    <div class="section">
+      <div class="section-title">Grading Architecture</div>
+      
+      <div class="card">
+        <h3>🎯 Survey Type Routing</h3>
+        <p>The <code>Survey Type</code> column in Airtable determines which grading logic is applied. This prevents grading cameras by panel rules or vice versa.</p>
+        
+        <div class="survey-type-grid">
+          <div class="survey-type-card cctv">
+            <div class="survey-type-icon">📹</div>
+            <div class="survey-type-name cctv">CCTV</div>
+            <div class="survey-type-subtitle">Camera & video equipment</div>
+            <div class="survey-type-cols">6 Columns Graded</div>
+          </div>
+          <div class="survey-type-card fa">
+            <div class="survey-type-icon">🔥</div>
+            <div class="survey-type-name fa">FA/Intrusion</div>
+            <div class="survey-type-subtitle">Fire alarm & intrusion panels</div>
+            <div class="survey-type-cols">2-3 Columns Graded</div>
+          </div>
+          <div class="survey-type-card both">
+            <div class="survey-type-icon">⬡</div>
+            <div class="survey-type-name both">BOTH</div>
+            <div class="survey-type-subtitle">Full survey (default)</div>
+            <div class="survey-type-cols">8 Columns + Post-Pass</div>
+          </div>
+        </div>
+        
+        <div class="callout">
+          <div class="callout-title">💡 Default Behavior</div>
+          <div class="callout-text">If Survey Type is empty or unrecognized, the system defaults to <strong>BOTH</strong> for backward compatibility with older submissions.</div>
+        </div>
+      </div>
+
+      <!-- CCTV Grading -->
+      <div class="card">
+        <h3 style="color: var(--cyan);">📹 CCTV Grading Route</h3>
+        <p>For camera and video equipment surveys. Rows are filtered to exclude FA/Intrusion content.</p>
+        
+        <div class="info-grid">
+          <div class="info-box cyan">
+            <div class="info-label cyan">Row Filter</div>
+            <div class="info-text">Only rows where <code>Abbreviated Name</code> AND <code>Description</code> are <strong>empty</strong></div>
+          </div>
+          <div class="info-box cyan">
+            <div class="info-label cyan">Post-Pass Correction</div>
+            <div class="info-text" style="color: var(--red);">❌ Not available</div>
+          </div>
+        </div>
+        
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px;">Graded Columns:</div>
+        <div class="col-badges">
+          <span class="col-badge cyan">Name</span>
+          <span class="col-badge cyan">Part Number</span>
+          <span class="col-badge cyan">Manufacturer</span>
+          <span class="col-badge cyan">IP Address</span>
+          <span class="col-badge cyan">MAC Address</span>
+          <span class="col-badge cyan">IP / Analog</span>
+        </div>
+      </div>
+
+      <!-- FA/Intrusion Grading -->
+      <div class="card">
+        <h3 style="color: var(--red);">🔥 FA/Intrusion Grading Route</h3>
+        <p>For fire alarm and intrusion panel surveys. Rows are filtered to only include FA content.</p>
+        
+        <div class="info-grid">
+          <div class="info-box red">
+            <div class="info-label red">Row Filter</div>
+            <div class="info-text">Only rows where <code>Abbreviated Name</code> OR <code>Description</code> have <strong>content</strong></div>
+          </div>
+          <div class="info-box red">
+            <div class="info-label red">Post-Pass Correction</div>
+            <div class="info-text" style="color: var(--red);">❌ Not available</div>
+          </div>
+        </div>
+        
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px;">Graded Columns:</div>
+        <div class="col-badges">
+          <span class="col-badge red">Abbreviated Name</span>
+          <span class="col-badge red">Description</span>
+          <span class="col-badge red faded">Name*</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-soft); margin-top: 10px; font-style: italic;">*Name is only graded if Abbreviated Name has content in the submission</p>
+      </div>
+
+      <!-- BOTH Grading -->
+      <div class="card">
+        <h3 style="color: var(--purple);">⬡ BOTH Grading Route (Default)</h3>
+        <p>Full survey grading — combines CCTV + FA/Intrusion columns with no row filtering. This is the original grading logic and enables post-pass correction.</p>
+        
+        <div class="info-grid">
+          <div class="info-box purple">
+            <div class="info-label purple">Row Filter</div>
+            <div class="info-text">No filtering — <strong>all rows</strong> are graded</div>
+          </div>
+          <div class="info-box purple">
+            <div class="info-label purple">Post-Pass Correction</div>
+            <div class="info-text" style="color: var(--green);">✅ Available for passing submissions</div>
+          </div>
+        </div>
+        
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px;">Graded Columns (all 8):</div>
+        <div class="col-badges">
+          <span class="col-badge purple">Name</span>
+          <span class="col-badge purple">Abbreviated Name</span>
+          <span class="col-badge purple">Part Number</span>
+          <span class="col-badge purple">Manufacturer</span>
+          <span class="col-badge purple">IP Address</span>
+          <span class="col-badge purple">MAC Address</span>
+          <span class="col-badge purple">IP / Analog</span>
+          <span class="col-badge purple">Description</span>
+        </div>
+      </div>
+
+      <!-- Scoring Model -->
+      <div class="card">
+        <h3>📊 Scoring Model</h3>
+        <p>All survey types use the same pass/fail threshold and scoring calculation.</p>
+        
+        <div class="score-grid">
+          <div class="score-box pass">
+            <div class="score-value pass">≥95%</div>
+            <div class="score-label">PASS</div>
+          </div>
+          <div class="score-box fail">
+            <div class="score-value fail">&lt;95%</div>
+            <div class="score-label">FAIL</div>
+          </div>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-top: 12px; font-family: monospace;">
+          <div style="font-size: 12px; color: var(--text-soft); margin-bottom: 8px;">Score Formula:</div>
+          <div style="font-size: 14px; color: var(--cyan);">Score = (matched_rows / reference_rows) × 100</div>
+        </div>
+        
+        <p style="margin-top: 12px; font-size: 13px; color: var(--text-soft);">The score penalizes both <strong>inaccurate data</strong> (mismatched values reduce matched rows) and <strong>incomplete submissions</strong> (missing inventory reduces coverage).</p>
+      </div>
+    </div>
+
+    <!-- Post-Pass Correction -->
+    <div class="section">
+      <div class="section-title">Post-Pass Correction</div>
+      
+      <div class="card">
+        <h3>🔧 What is Post-Pass Correction?</h3>
+        <p>Post-pass correction is an <strong>optional downstream extension</strong> that runs ONLY after a submission has already passed (True Score ≥ 95%). It automatically corrects minor formatting differences between vendor data and reference data.</p>
+        
+        <div class="callout" style="background: rgba(69,230,165,0.08); border-color: rgba(69,230,165,0.25);">
+          <div class="callout-title" style="color: var(--green);">✅ Key Principle</div>
+          <div class="callout-text">Post-pass correction <strong>never changes the pass/fail decision</strong>. It never re-grades. It never updates Airtable. It only generates corrected output files for downstream consumption.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ When Does It Run?</h3>
+        
+        <div class="flow" style="margin: 20px 0;">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-label">Grading Complete</div><div class="flow-desc">True Score calculated</div></div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-label">Score Check</div><div class="flow-desc">Is True Score ≥ 95%?</div></div>
+          <div class="flow-step"><div class="flow-num">3</div><div class="flow-label">Survey Type</div><div class="flow-desc">Is type = BOTH?</div></div>
+          <div class="flow-step"><div class="flow-num">4</div><div class="flow-label">Correction</div><div class="flow-desc">Match & fix fields</div></div>
+          <div class="flow-step"><div class="flow-num">5</div><div class="flow-label">Output Files</div><div class="flow-desc">CSV + audit log</div></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px;">
+          <div class="info-box green" style="text-align: center; padding: 14px;">
+            <div style="font-size: 11px; color: var(--text-soft); margin-bottom: 4px;">Trigger</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--green);">True Score ≥ 95%</div>
+          </div>
+          <div class="info-box purple" style="text-align: center; padding: 14px;">
+            <div style="font-size: 11px; color: var(--text-soft); margin-bottom: 4px;">Survey Type</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--purple);">BOTH only</div>
+          </div>
+          <div style="padding: 14px; background: rgba(255,200,87,0.06); border: 1px solid rgba(255,200,87,0.2); border-radius: 10px; text-align: center;">
+            <div style="font-size: 11px; color: var(--text-soft); margin-bottom: 4px;">CCTV / FA</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--amber);">Skipped</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Row Matching Strategy</h3>
+        <p>Post-pass correction matches submission rows to reference rows using a priority-based identity system:</p>
+        
+        <div style="margin: 16px 0;">
+          <div class="priority-step green">
+            <div class="priority-num green">1</div>
+            <div style="flex: 1;">
+              <div class="priority-title">Exact MAC Address Match</div>
+              <div class="priority-desc">Confidence: 100% — auto-apply corrections</div>
+            </div>
+          </div>
+          <div class="priority-step cyan">
+            <div class="priority-num cyan">2</div>
+            <div style="flex: 1;">
+              <div class="priority-title">Exact IP Address Match</div>
+              <div class="priority-desc">Confidence: 99% — auto-apply with review flag</div>
+            </div>
+          </div>
+          <div class="priority-step amber">
+            <div class="priority-num amber">3</div>
+            <div style="flex: 1;">
+              <div class="priority-title">Fuzzy Name Match</div>
+              <div class="priority-desc">Confidence: varies (≥80% required) — logged for review only</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📋 Confidence Thresholds</h3>
+        <p>Each correction attempt is evaluated against confidence thresholds to determine if it should be applied, flagged for review, or just logged:</p>
+        
+        <div style="margin: 16px 0;">
+          <div class="conf-bar green">
+            <div>
+              <div class="conf-title">≥99% Confidence</div>
+              <div class="conf-desc">Auto-apply correction, no review needed</div>
+            </div>
+            <div class="conf-action green">APPLY</div>
+          </div>
+          <div class="conf-bar amber">
+            <div>
+              <div class="conf-title">93-99% Confidence</div>
+              <div class="conf-desc">Apply correction, flag for human review</div>
+            </div>
+            <div class="conf-action amber">APPLY + REVIEW</div>
+          </div>
+          <div class="conf-bar blue">
+            <div>
+              <div class="conf-title">80-93% Confidence</div>
+              <div class="conf-desc">Do NOT apply, log for review only</div>
+            </div>
+            <div class="conf-action blue">LOG ONLY</div>
+          </div>
+          <div class="conf-bar red">
+            <div>
+              <div class="conf-title">&lt;80% Confidence</div>
+              <div class="conf-desc">Rejected entirely — nothing logged</div>
+            </div>
+            <div class="conf-action red">REJECT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📁 Output Files</h3>
+        <p>Post-pass correction generates three output files for each qualifying submission:</p>
+        
+        <div style="margin: 16px 0;">
+          <div class="output-file">
+            <span class="output-icon">📄</span>
+            <div>
+              <div class="output-name cyan">{site}_{vendor}_corrected.csv</div>
+              <div class="output-desc">Vendor file with approved corrections applied — ready for downstream use</div>
+            </div>
+          </div>
+          <div class="output-file">
+            <span class="output-icon">📝</span>
+            <div>
+              <div class="output-name amber">{site}_{vendor}_correction_log.csv</div>
+              <div class="output-desc">Full audit trail — every correction attempt with confidence, reason, and applied status</div>
+            </div>
+          </div>
+          <div class="output-file">
+            <span class="output-icon">💾</span>
+            <div>
+              <div class="output-name purple">{site}_{vendor}_raw.{ext}</div>
+              <div class="output-desc">Untouched copy of the original vendor file — preserved for audit/rollback</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🛡️ Correctable Fields</h3>
+        <p>Only specific fields are eligible for correction. Identity columns (MAC/IP) are never modified — they're used for matching only.</p>
+        
+        <div class="fields-grid">
+          <div>
+            <div class="fields-title green">✅ Correctable</div>
+            <div class="fields-col">
+              <span class="field-item green">Name</span>
+              <span class="field-item green">Abbreviated Name</span>
+              <span class="field-item green">Manufacturer</span>
+              <span class="field-item green">Part Number</span>
+              <span class="field-item green">IP / Analog</span>
+              <span class="field-item green">Description</span>
+            </div>
+          </div>
+          <div>
+            <div class="fields-title red">❌ Never Corrected</div>
+            <div class="fields-col">
+              <span class="field-item red">MAC Address (identity)</span>
+              <span class="field-item red">IP Address (identity)</span>
+            </div>
+            <div class="fields-note">Identity columns are used for row matching — modifying them would break the audit trail.</div>
+          </div>
+        </div>
       </div>
     </div>
 

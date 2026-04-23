@@ -18,7 +18,7 @@ from siteowlqa.correction_state import CorrectionStateDB
 
 
 def find_and_regrade(submission_id: str) -> None:
-    print(f"🔍 Looking for Submission ID: {submission_id}")
+    print(f"[SEARCH] Looking for Submission ID: {submission_id}")
     
     cfg = load_config()
     airtable = AirtableClient(cfg)
@@ -31,17 +31,17 @@ def find_and_regrade(submission_id: str) -> None:
     records = airtable.fetch_records(formula=formula)
     
     if not records:
-        print(f"❌ No record found with Submission ID = {submission_id}")
+        print(f"[X] No record found with Submission ID = {submission_id}")
         print("   Trying as Site Number instead...")
         formula = f"{{Site Number}}='{submission_id}'"
         records = airtable.fetch_records(formula=formula)
         
         if not records:
-            print(f"❌ No record found with Site Number = {submission_id} either.")
+            print(f"[X] No record found with Site Number = {submission_id} either.")
             return
-        print(f"✅ Found {len(records)} record(s) for Site Number {submission_id}")
+        print(f"[OK] Found {len(records)} record(s) for Site Number {submission_id}")
     else:
-        print(f"✅ Found {len(records)} record(s) for Submission ID {submission_id}")
+        print(f"[OK] Found {len(records)} record(s) for Submission ID {submission_id}")
     
     for rec in records:
         record_id = rec.record_id
@@ -58,7 +58,7 @@ def find_and_regrade(submission_id: str) -> None:
         # Check for attachment
         attachments = fields.get('SiteOwl Export File', [])
         if not attachments:
-            print("⚠️  No attachment — skipping")
+            print("[WARN] No attachment -- skipping")
             continue
         
         att = attachments[0]
@@ -74,7 +74,7 @@ def find_and_regrade(submission_id: str) -> None:
             created_time=fields.get('Created', ''),
         )
         
-        print(f"\n🔄 Regrading...")
+        print(f"\n[REGRADE] Processing...")
         try:
             process_record(
                 record=record,
@@ -84,17 +84,17 @@ def find_and_regrade(submission_id: str) -> None:
                 memory=memory,
                 correction_state=correction_state,
             )
-            print("✅ Regrade complete!")
+            print("[OK] Regrade complete!")
         except Exception as e:
-            print(f"❌ Regrade failed: {e}")
+            print(f"[FAIL] Regrade failed: {e}")
             import traceback
             traceback.print_exc()
         
         # Show updated status
         updated = airtable.get_record_fields(record_id)
-        print(f"\n📊 Updated Status: {updated.get('Processing Status', 'N/A')}")
-        print(f"📊 Updated Score: {updated.get('Score', 'N/A')}")
-        print(f"📊 Updated True Score: {updated.get('True Score', 'N/A')}")
+        print(f"\n[RESULT] Updated Status: {updated.get('Processing Status', 'N/A')}")
+        print(f"[RESULT] Updated Score: {updated.get('Score', 'N/A')}")
+        print(f"[RESULT] Updated True Score: {updated.get('True Score', 'N/A')}")
 
 
 if __name__ == "__main__":

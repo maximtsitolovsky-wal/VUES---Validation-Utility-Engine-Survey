@@ -146,10 +146,15 @@ def grade_submission_in_python(
             reference_row_count=0,
         )
 
-    submission_norm = _normalize_for_compare(submission_df, site_number)
-    reference_norm = _normalize_for_compare(reference_df, site_number)
+    submission_norm = _normalize_for_compare(submission_df, site_number, grade_columns, survey_type)
+    reference_norm = _normalize_for_compare(reference_df, site_number, grade_columns, survey_type)
 
-    comparable_cols = _select_comparable_columns(reference_norm)
+    # Use survey-type-specific columns, filtered to those present in reference
+    comparable_cols = _select_comparable_columns(reference_norm, grade_columns)
+    
+    # FA/Intrusion special case: include "Name" only if Abbreviated Name has content
+    if survey_type == SURVEY_TYPE_FA_INTRUSION:
+        comparable_cols = _adjust_fa_intrusion_columns(comparable_cols, submission_df)
 
     if submission_norm.empty:
         # Business rule: no ERRORs. Treat as FAIL with score 0.

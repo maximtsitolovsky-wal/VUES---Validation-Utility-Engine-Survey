@@ -24,7 +24,10 @@ def find_and_regrade(submission_id: str) -> None:
     airtable = AirtableClient(cfg)
     archive = Archive(cfg.archive_dir)
     memory = Memory(archive)
-    correction_state = CorrectionStateDB(cfg.correction_state_db_path)
+    
+    # CorrectionStateDB lives in corrections subfolder of output_dir
+    corrections_dir = cfg.correction_log_dir or (cfg.output_dir / "corrections")
+    correction_state = CorrectionStateDB(corrections_dir)
     
     # Search for the submission
     formula = f"{{Submission ID}}='{submission_id}'"

@@ -149,12 +149,25 @@ def grade_submission_in_python(
     submission_norm = _normalize_for_compare(submission_df, site_number, grade_columns, survey_type)
     reference_norm = _normalize_for_compare(reference_df, site_number, grade_columns, survey_type)
 
+    # Filter rows based on survey type to avoid overlap:
+    # - CCTV: only rows where Abbreviated Name AND Description are empty (camera rows)
+    # - FA/Intrusion: only rows where Abbreviated Name OR Description have content (panel rows)
+    # - BOTH: all rows
+    submission_filtered = _filter_rows_by_survey_type(submission_norm, survey_type)
+    reference_filtered = _filter_rows_by_survey_type(reference_norm, survey_type)
+    
+    log.info(
+        "ROW_FILTER | survey_type=%s | submission: %d -> %d | reference: %d -> %d",
+        survey_type, len(submission_norm), len(submission_filtered),
+        len(reference_norm), len(reference_filtered),
+    )
+
     # Use survey-type-specific columns, filtered to those present in reference
-    comparable_cols = _select_comparable_columns(reference_norm, grade_columns)
+    comparable_cols = _select_comparable_columns(reference_filtered, grade_columns)
     
     # FA/Intrusion special case: include "Name" only if Abbreviated Name has content
     if survey_type == SURVEY_TYPE_FA_INTRUSION:
-        comparable_cols = _adjust_fa_intrusion_columns(comparable_cols, submission_df)
+        comparable_cols = _adjust_fa_intrusion_columns(comparable_cols, submission_filtered)
 
     if submission_norm.empty:
         # Business rule: no ERRORs. Treat as FAIL with score 0.

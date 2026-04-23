@@ -357,8 +357,10 @@ const C = { cyan: '#5AE4FF', purple: '#9B7CFF', green: '#45E6A5', red: '#FF6B81'
 
 // Vendor name mapping
 const vendorNames = {
-  'customelectronics.com': 'CEI', 'securitasinc.com': 'SAS', 'teaborinc.com': 'Techwise',
-  'wachter.com': 'Wachter', 'evaborinc.com': 'Everon', 'Wachter': 'Wachter', 'Everon': 'Everon'
+  'customelectronics.com': 'CEI', 'securitasinc.com': 'SAS', 'safeandsoundsecurity.com': 'SAS',
+  'teaborinc.com': 'Techwise', 'techwiseis.com': 'Techwise', 'wachter.com': 'Wachter',
+  'evaborinc.com': 'Everon', 'everon.com': 'Everon', 'Wachter': 'Wachter', 'Everon': 'Everon',
+  'CEI': 'CEI', 'SAS': 'SAS', 'Techwise': 'Techwise', 'Safe and Sound': 'SAS'
 };
 function getVendorName(n) { return vendorNames[n] || n.split('.')[0].slice(0,10); }
 

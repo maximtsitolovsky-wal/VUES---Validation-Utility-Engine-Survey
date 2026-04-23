@@ -25,7 +25,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from siteowlqa.airtable_client import AirtableClient
-from siteowlqa.config import STATUS_FAIL, STATUS_PASS, load_config
+from siteowlqa.config import STATUS_FAIL, STATUS_PASS, load_config, should_run_post_pass_correction
 from siteowlqa.correction_state import CorrectionStateDB
 from siteowlqa.file_processor import load_vendor_file_with_metadata
 from siteowlqa.models import AirtableRecord, ProcessingStatus, SubmissionResult
@@ -229,7 +229,8 @@ def regrade_one(
             )
 
         # Canonical workflow: run post-pass correction after successful PASS writeback.
-        if fresh_status == ProcessingStatus.PASS:
+        # Only run for BOTH survey type.
+        if fresh_status == ProcessingStatus.PASS and should_run_post_pass_correction(record.survey_type):
             already_corrected = correction_state.is_corrected(record.record_id)
             if already_corrected and not force_recorrect:
                 logging.getLogger(__name__).info(

@@ -228,19 +228,67 @@ def grade_submission_in_python(
     )
 
 
-def _normalize_for_compare(df: pd.DataFrame, site_number: str) -> pd.DataFrame:
+def _normalize_for_compare(
+    df: pd.DataFrame,
+    site_number: str,
+    grade_columns: tuple[str, ...] | None = None,
+    survey_type: str | None = None,
+) -> pd.DataFrame:
+    """Normalize a DataFrame for comparison.
+    
+    Args:
+        df: Input DataFrame.
+        site_number: Site number (for logging).
+        grade_columns: Columns to grade. Defaults to VENDOR_GRADE_COLUMNS.
+        survey_type: Survey type for special handling.
+    """
+    if grade_columns is None:
+        grade_columns = VENDOR_GRADE_COLUMNS
+    
+    # Always include all possible columns for normalization,
+    # but we'll only compare the grade_columns
+    all_cols = VENDOR_GRADE_COLUMNS
+    
     work = df.copy()
     # Only grade on the comparable columns. Ignore everything else.
-    for col in VENDOR_GRADE_COLUMNS:
+    for col in all_cols:
         if col not in work.columns:
             work[col] = ""
 
-    work = work[list(VENDOR_GRADE_COLUMNS)].fillna("").astype(str)
-    for col in VENDOR_GRADE_COLUMNS:
+    work = work[list(all_cols)].fillna("").astype(str)
+    for col in all_cols:
         work[col] = work[col].map(_canon)
 
     work = work.sort_values(list(SORT_COLUMNS), kind="mergesort").reset_index(drop=True)
     return work
+
+
+def _adjust_fa_intrusion_columns(
+    comparable_cols: tuple[str, ...],
+    submission_df: pd.DataFrame,
+) -> tuple[str, ...]:
+    """For FA/Intrusion surveys, only include 'Name' if 'Abbreviated Name' has content.
+    
+    Business rule: FA/Intrusion grades 'Name' only if there is content in the
+    Abbreviated Name field. Otherwise, 'Name' is excluded from grading.
+    """
+    # Check if Abbreviated Name column has any non-empty content
+    abbrev_col = FA_INTRUSION_NAME_CONDITION_COLUMN
+    has_abbreviated_content = False
+    
+    if abbrev_col in submission_df.columns:
+        # Check if any row has content in Abbreviated Name
+        abbrev_values = submission_df[abbrev_col].fillna("").astype(str)
+        has_abbreviated_content = abbrev_values.str.strip().ne("").any()
+    
+    if has_abbreviated_content:
+        # Include "Name" in grading
+        if "Name" not in comparable_cols:
+            return ("Name",) + comparable_cols
+        return comparable_cols
+    else:
+        # Exclude "Name" from grading
+        return tuple(col for col in comparable_cols if col != "Name")
 
 
 @dataclass(frozen=True)

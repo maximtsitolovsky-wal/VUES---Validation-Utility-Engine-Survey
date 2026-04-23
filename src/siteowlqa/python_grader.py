@@ -24,7 +24,9 @@ import pandas as pd
 from siteowlqa.config import (
     PASS_THRESHOLD,
     VENDOR_GRADE_COLUMNS,
+    SURVEY_TYPE_CCTV,
     SURVEY_TYPE_FA_INTRUSION,
+    SURVEY_TYPE_BOTH,
     FA_INTRUSION_NAME_CONDITION_COLUMN,
     get_grade_columns_for_survey_type,
 )

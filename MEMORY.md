@@ -1,3 +1,9 @@
+### 2026-04-23 — BigQuery-with-Fallback Reference Source Added
+- **Decision:** Added `bigquery_with_fallback` as a new reference source mode. When BQ is the bottleneck (slow, down, quota errors), the pipeline now auto-falls back to the local Excel workbook. Keeps grading running even when BQ is flaky. Excel workbook now serves as a local backup cache for reference data.
+- **Impact:** `src/siteowlqa/reference_data.py` (new `_fetch_with_bq_fallback()` function, updated `_resolve_reference_source()`), `.env.example` (documented new mode), `tests/test_reference_data.py` (added `BigQueryFallbackTests` class with 5 tests).
+- **Config:** Set `REFERENCE_SOURCE=bigquery_with_fallback` and ensure `REFERENCE_WORKBOOK_PATH` points to a valid Excel backup.
+- **Closed:** Yes.
+
 ### 2026-04-17 — Vendor Assignment Tracker Built & Shipped
 - **Decision:** Built complete vendor assignment tracking system. Reads vendor assignments from Excel file (`Vendor ASSIGN. 4.2.26.xlsx`, one sheet per vendor), compares against Scout Airtable completions, calculates remaining assignments + completion rates + velocity. Dashboard displays color-coded pills (green ≥80%, yellow ≥50%, red <50%). All 5 vendors tracked: Wachter, Techwise, SAS, Everon, CEI. Multi-sheet Excel loader reads ALL sheets automatically, uses sheet name as vendor name. Data integrated into `team_dashboard_data.json`, rendered in Scout section of executive dashboard.
 - **Impact:** `src/siteowlqa/vendor_assignment_tracker.py` (new, 350 lines), `src/siteowlqa/team_dashboard_data.py` (vendor payload builder), `src/siteowlqa/dashboard_exec.py` (renderVendorAssignmentPills() + UI pills), `test_vendor_tracking.py` (new), `docs/vendor-assignment-tracking.md` (created earlier).

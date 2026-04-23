@@ -172,9 +172,18 @@ class TestDataQuality(unittest.TestCase):
         cls.ref_df = fetch_reference_rows(cls.cfg, "686")
 
     def test_mac_addresses_are_valid_format(self):
-        """MAC addresses should be valid format (or empty)."""
+        """MAC addresses should be valid format (or empty).
+        
+        Known BQ format: no separators (e.g., '00075FCB966A')
+        This is valid for comparison purposes.
+        """
         import re
-        mac_pattern = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$|^$")
+        # BQ uses no-separator MACs, so accept both formats
+        mac_pattern = re.compile(
+            r"^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$|"  # Standard: 00:07:5F:CB:96:6A
+            r"^[0-9A-Fa-f]{12}$|"                        # BQ format: 00075FCB966A
+            r"^$"                                        # Empty
+        )
         
         invalid = []
         for idx, mac in enumerate(self.ref_df["MAC Address"].fillna("")):
@@ -182,17 +191,25 @@ class TestDataQuality(unittest.TestCase):
             if mac and not mac_pattern.match(mac):
                 invalid.append((idx, mac))
         
-        # Allow some invalid (BQ data may have quirks) but flag if > 10%
+        # Should have very few truly invalid MACs
         invalid_pct = len(invalid) / max(len(self.ref_df), 1) * 100
         self.assertLess(invalid_pct, 10, 
             f"{len(invalid)} invalid MACs ({invalid_pct:.1f}%): {invalid[:5]}")
 
     def test_ip_addresses_are_valid_format(self):
-        """IP addresses should be valid IPv4 format (or empty)."""
+        """IP addresses should be valid IPv4 format (or empty).
+        
+        Known BQ format: underscores instead of dots (e.g., '192_168_85_7')
+        This is valid for comparison purposes.
+        """
         import re
+        # BQ uses underscore-separated IPs, so accept both formats
         ip_pattern = re.compile(
-            r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
-            r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^$"
+            r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"  # Standard dots
+            r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|"         
+            r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)_){3}"   # BQ underscores
+            r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|"         
+            r"^$"                                               # Empty
         )
         
         invalid = []

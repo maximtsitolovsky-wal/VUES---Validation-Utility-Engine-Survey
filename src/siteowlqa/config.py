@@ -207,7 +207,7 @@ class AppConfig:
     submissions_dir: Path
 
     # Optional: Behavior (from .env)
-    reference_source: str = "bigquery"
+    reference_source: str = "bigquery_with_fallback"
     poll_interval_seconds: int = 60
     worker_threads: int = 3
 
@@ -349,7 +349,7 @@ def load_config() -> AppConfig:
         archive_dir=_ensure_path("ARCHIVE_DIR", str(base / "archive")),
         submissions_dir=_ensure_path("SUBMISSIONS_DIR", str(base / "archive" / "submissions")),
         # Behavior (from .env)
-        reference_source=os.getenv("REFERENCE_SOURCE", "bigquery").strip().lower() or "bigquery",
+        reference_source=os.getenv("REFERENCE_SOURCE", "bigquery_with_fallback").strip().lower() or "bigquery_with_fallback",
         # BigQuery — non-sensitive project/dataset from .env;
         # credential path from GOOGLE_APPLICATION_CREDENTIALS (standard) or SITEOWLQA_GCP_CREDENTIALS.
         gcp_project=os.getenv("SITEOWLQA_GCP_PROJECT", "").strip(),

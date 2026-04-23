@@ -46,7 +46,6 @@ record = AirtableRecord(
     attachment_url=att.get('url', ''),
     attachment_filename=att.get('filename', ''),
     processing_status=fields.get('Processing Status', ''),
-    created_time=fields.get('Created', ''),
 )
 
 print(f"\n[REGRADE] Processing...")

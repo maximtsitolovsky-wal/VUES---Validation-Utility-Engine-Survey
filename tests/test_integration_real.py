@@ -54,7 +54,8 @@ class TestBigQueryConnection(unittest.TestCase):
             self.assertIn(col, df.columns, f"Missing required column: {col}")
 
     def test_bq_data_is_not_all_empty(self):
-        """At least some columns should have actual data, not all blanks."        df = fetch_reference_rows(self.cfg, "686")
+        """At least some columns should have actual data, not all blanks."""
+        df = fetch_reference_rows(self.cfg, "686")
         
         # These columns MUST have data
         critical_cols = ["Name", "MAC Address"]
@@ -163,7 +164,7 @@ class TestGradingLogic(unittest.TestCase):
 
 
 class TestDataQuality(unittest.TestCase):
-    """Validate data quality — catch garbage before it causes problems."""
+    """Validate data quality - catch garbage before it causes problems."""
 
     @classmethod
     def setUpClass(cls):

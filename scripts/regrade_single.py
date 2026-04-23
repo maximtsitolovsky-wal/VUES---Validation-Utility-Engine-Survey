@@ -63,6 +63,7 @@ def find_and_regrade(submission_id: str) -> None:
         print(f"Current Status: {fields.get('Processing Status', 'N/A')}")
         print(f"Current Score: {fields.get('Score', 'N/A')}")
         print(f"Current True Score: {fields.get('True Score', 'N/A')}")
+        print(f"Survey Type: {fields.get('Survey Type', 'N/A')}")
         
         # Check for attachment (use the configured field name)
         attachments = fields.get(FIELDS.attachment, [])
@@ -80,7 +81,8 @@ def find_and_regrade(submission_id: str) -> None:
             attachment_url=att.get('url', ''),
             attachment_filename=att.get('filename', ''),
             processing_status=fields.get('Processing Status', ''),
-            created_time=fields.get('Created', ''),
+            submitted_at=fields.get('Date of Survey', ''),
+            survey_type=fields.get('Survey Type'),
         )
         
         print(f"\n[REGRADE] Processing...")

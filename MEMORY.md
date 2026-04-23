@@ -1,3 +1,12 @@
+### 2026-04-23 — Survey Type Validation Bug Fixed (recryYpfpuVlYKm1g)
+- **Bug:** `site_validation.py` used hardcoded CCTV columns (`Part Number`, `Manufacturer`, `IP Address`, `MAC Address`, `IP / Analog`) as critical for ALL submissions, regardless of `survey_type`. FA/Intrusion submissions were incorrectly failing validation with `MISSING_CRITICAL_COLUMNS` even though those columns are not required for FA/Intrusion.
+- **Fix:** Added `survey_type` parameter to `validate_submission_for_site()`. New helper functions `_get_critical_columns_for_survey_type()` and `_get_optional_columns_for_survey_type()` route column requirements correctly:
+  - **CCTV**: Name, Part Number, Manufacturer, IP Address, MAC Address, IP / Analog
+  - **FA/Intrusion**: Abbreviated Name, Description
+  - **BOTH / None**: All columns (union)
+- **Impact:** `src/siteowlqa/site_validation.py` (new routing logic), `src/siteowlqa/poll_airtable.py` (passes `record.survey_type`). `site_forensics.py` unchanged — uses default `None` (strictest check).
+- **Closed:** Yes.
+
 ### 2026-04-23 — BigQuery-with-Fallback Reference Source Added
 - **Decision:** Added `bigquery_with_fallback` as a new reference source mode. When BQ is the bottleneck (slow, down, quota errors), the pipeline now auto-falls back to the local Excel workbook. Keeps grading running even when BQ is flaky. Excel workbook now serves as a local backup cache for reference data.
 - **Impact:** `src/siteowlqa/reference_data.py` (new `_fetch_with_bq_fallback()` function, updated `_resolve_reference_source()`), `.env.example` (documented new mode), `tests/test_reference_data.py` (added `BigQueryFallbackTests` class with 5 tests).
@@ -79,9 +88,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails. Keeps grading pipeline running through BQ outages.
-2. **2026-04-17** — Vendor Assignment Tracker: Built complete vendor assignment tracking vs Scout completions. 5 vendors tracked with color-coded completion pills.
-3. **2026-04-15** — Scout Image Sync integrated into main pipeline as daemon thread. Uses PowerShell subprocess for CDN downloads (RISK-003 workaround).
+1. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
+2. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails.
+3. **2026-04-17** — Vendor Assignment Tracker: Built complete vendor assignment tracking vs Scout completions. 5 vendors tracked with color-coded completion pills.
 
 ---
 

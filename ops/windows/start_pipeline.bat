@@ -51,6 +51,16 @@ echo    vues Platform Launcher
 echo  =========================================
 echo.
 
+REM --- Pre-flight dependency check ------------------------------------------
+echo [CHECK] Running pre-flight validation...
+"%PYTHON%" -c "import sys; sys.path.insert(0,'src'); import pyairtable, pandas, openpyxl, google.cloud.bigquery, requests; from siteowlqa.config import load_config; from siteowlqa.airtable_client import AirtableClient; print('[OK] Dependencies verified')" 2>nul
+if errorlevel 1 (
+    echo [FAIL] Missing dependencies! Run:
+    echo        cd C:\VUES ^&^& .venv\Scripts\pip install -r requirements.txt
+    pause
+    exit /b 1
+)
+
 REM --- check if pipeline is already running ---------------------------------
 wmic process where "name='python.exe' and commandline like '%%main.py%%'" get ProcessId /value 2>nul | find "=" >nul
 if !errorlevel! equ 0 (

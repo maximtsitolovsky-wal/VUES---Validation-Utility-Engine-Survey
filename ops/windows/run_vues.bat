@@ -36,6 +36,15 @@ if not exist "%PYTHON%" (
 REM Create log directory if it doesn't exist
 if not exist "%LOGDIR%" mkdir "%LOGDIR%"
 
+REM --- Pre-flight dependency check -------------------------------------------
+echo [CHECK] Running pre-flight validation...
+"%PYTHON%" -c "import sys; sys.path.insert(0,'src'); import pyairtable, pandas, openpyxl, google.cloud.bigquery, requests; from siteowlqa.config import load_config; print('[OK] Dependencies verified')" 2>nul
+if errorlevel 1 (
+    echo [FAIL] Missing dependencies! Run:
+    echo        cd %WORKDIR% ^&^& .venv\Scripts\pip install -r requirements.txt
+    exit /b 1
+)
+
 REM Check if already running
 for /f "tokens=*" %%A in ('tasklist ^| findstr /i "python.exe"') do (
   REM Simple check: if python is running and main.py exists, assume we're running

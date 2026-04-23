@@ -79,9 +79,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-15** — Memory audit: stale data fixed in CLAUDE.md + MEMORY.md (SMTP removed, Docker added). Memory protocol run E2E: session note + durable.jsonl + handoff written. CLAUDE.md Step 1 now requires handoff_index.md check when continuing.
-2. **2026-04-15** — RISK-003 CDN fix: `v5.airtableusercontent.com` is DNS-blocked for Python `requests` on Walmart network. Use `subprocess` + PowerShell `Invoke-WebRequest` (WinINet/browser stack) for image downloads. Confirmed 1.3MB image downloaded successfully via this path. `scripts/scout_downloader.py` rebuilt to use this method.
-3. **2026-04-14** — Relentless Memory Agent built: 5 spec docs in `docs/memory-agent/`, file backend (MEMORY.md + durable.jsonl), session notes, handoff system. Registered as `SKILL_RELENTLESS_MEMORY`. Memory store seeded with 3 bootstrap records.
+1. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails. Keeps grading pipeline running through BQ outages.
+2. **2026-04-17** — Vendor Assignment Tracker: Built complete vendor assignment tracking vs Scout completions. 5 vendors tracked with color-coded completion pills.
+3. **2026-04-15** — Scout Image Sync integrated into main pipeline as daemon thread. Uses PowerShell subprocess for CDN downloads (RISK-003 workaround).
 
 ---
 

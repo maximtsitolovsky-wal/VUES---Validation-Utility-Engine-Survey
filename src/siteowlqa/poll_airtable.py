@@ -137,6 +137,7 @@ def process_record(
             cfg=cfg,
             site_number=record.site_number,
             load_result=load_result,
+            survey_type=record.survey_type,
         )
 
         error_df = None

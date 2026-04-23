@@ -19,6 +19,31 @@ if (-not (Test-Path $launcher))     { Write-Error "Launcher helper not found: $l
 if (-not (Test-Path $python))       { Write-Error "Python not found: $python"; exit 1 }
 if (-not (Test-Path $serverScript)) { Write-Error "Server script not found: $serverScript"; exit 1 }
 
+# Pre-flight dependency check
+Write-Host '[CHECK] Validating dependencies...'
+$checkCode = @"
+import sys
+sys.path.insert(0, 'src')
+try:
+    import pyairtable, pandas, openpyxl, google.cloud.bigquery, requests
+    from siteowlqa.config import load_config
+    from siteowlqa.airtable_client import AirtableClient
+    print('[OK] Dependencies verified')
+    sys.exit(0)
+except ImportError as e:
+    print(f'[FAIL] Missing: {e}')
+    sys.exit(1)
+"@
+Push-Location $workdir
+$depCheck = & $python -c $checkCode 2>&1
+Pop-Location
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Dependencies missing! Run: cd $workdir; .venv\Scripts\pip install -r requirements.txt"
+    Write-Host $depCheck
+    exit 1
+}
+Write-Host $depCheck
+
 # Find first available port starting from preferred
 function Find-FreePort([int]$Preferred = 8765) {
     $tcp = New-Object System.Net.Sockets.TcpClient

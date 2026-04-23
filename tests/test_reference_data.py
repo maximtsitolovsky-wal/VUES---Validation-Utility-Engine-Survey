@@ -181,3 +181,119 @@ class ReferenceDataTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BigQueryFallbackTests(unittest.TestCase):
+    """Tests for the bigquery_with_fallback reference source mode."""
+
+    def setUp(self) -> None:
+        self.temp_dir_ctx = TemporaryDirectory()
+        self.temp_dir = self.temp_dir_ctx.__enter__()
+        
+        # Create a minimal reference workbook for fallback tests
+        self.workbook_path = Path(self.temp_dir) / "reference.xlsx"
+        pd.DataFrame(
+            [
+                {
+                    "SelectedSiteID": "1234",
+                    "Name": "Excel Cam",
+                    "Part Number": "EXCEL-PN-1",
+                    "Manufacturer": "FallbackCorp",
+                    "IP Address": "10.0.0.1",
+                    "MAC Address": "EXCEL:MAC",
+                    "IP / Analog": "IP",
+                    "Description": "From Excel fallback",
+                },
+            ]
+        ).to_excel(self.workbook_path, index=False)
+        
+        self.fallback_cfg = SimpleNamespace(
+            reference_source="bigquery_with_fallback",
+            reference_workbook_path=self.workbook_path,
+            reference_workbook_sheet="",
+            reference_workbook_site_id_column="SelectedSiteID",
+            gcp_project="test-project",
+            bigquery_dataset="test_dataset",
+            bigquery_location="US",
+            gcp_credentials_path="",
+        )
+
+    def tearDown(self) -> None:
+        clear_reference_workbook_cache()
+        self.temp_dir_ctx.__exit__(None, None, None)
+
+    def test_resolve_reference_source_accepts_fallback_mode(self) -> None:
+        """bigquery_with_fallback should be a valid source option."""
+        source = _resolve_reference_source(self.fallback_cfg)
+        self.assertEqual(source, "bigquery_with_fallback")
+
+    def test_fallback_mode_requires_workbook_path(self) -> None:
+        """bigquery_with_fallback requires a workbook path for fallback."""
+        cfg = SimpleNamespace(
+            reference_source="bigquery_with_fallback",
+            reference_workbook_path=None,  # No fallback target!
+        )
+        with self.assertRaises(ValueError) as ctx:
+            _resolve_reference_source(cfg)
+        self.assertIn("bigquery_with_fallback requires REFERENCE_WORKBOOK_PATH", str(ctx.exception))
+
+    @patch("siteowlqa.reference_data.fetch_reference_rows_from_bigquery")
+    def test_fallback_uses_bq_when_bq_succeeds(self, mock_bq_fetch: MagicMock) -> None:
+        """When BQ succeeds, fallback mode should use BQ data, not Excel."""
+        # BQ returns different data than Excel workbook
+        bq_result = pd.DataFrame(
+            [
+                {
+                    "Name": "BQ Camera",
+                    "Abbreviated Name": "",
+                    "Part Number": "BQ-PN-1",
+                    "Manufacturer": "BigQueryCorp",
+                    "IP Address": "192.168.1.1",
+                    "MAC Address": "BQ:MAC:ADDR",
+                    "IP / Analog": "IP",
+                    "Description": "From BigQuery",
+                }
+            ]
+        )
+        mock_bq_fetch.return_value = bq_result
+
+        result = fetch_reference_rows(self.fallback_cfg, "1234")
+
+        mock_bq_fetch.assert_called_once()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result.iloc[0]["Name"], "BQ Camera")
+        self.assertEqual(result.iloc[0]["Manufacturer"], "BigQueryCorp")
+
+    @patch("siteowlqa.reference_data.fetch_reference_rows_from_bigquery")
+    def test_fallback_uses_excel_when_bq_fails(self, mock_bq_fetch: MagicMock) -> None:
+        """When BQ throws an exception, fallback mode should use Excel data."""
+        mock_bq_fetch.side_effect = RuntimeError("BQ quota exceeded — simulated failure")
+
+        result = fetch_reference_rows(self.fallback_cfg, "1234")
+
+        mock_bq_fetch.assert_called_once()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result.iloc[0]["Name"], "Excel Cam")
+        self.assertEqual(result.iloc[0]["Manufacturer"], "FallbackCorp")
+
+    @patch("siteowlqa.reference_data.fetch_reference_rows_from_bigquery")
+    def test_fallback_raises_when_both_fail(self, mock_bq_fetch: MagicMock) -> None:
+        """When BOTH BQ and Excel fail, we should get a clear RuntimeError."""
+        mock_bq_fetch.side_effect = RuntimeError("BQ is down")
+        
+        # Point to a non-existent workbook to make Excel fail too
+        cfg = SimpleNamespace(
+            reference_source="bigquery_with_fallback",
+            reference_workbook_path=Path("/nonexistent/path/workbook.xlsx"),
+            reference_workbook_sheet="",
+            reference_workbook_site_id_column="SelectedSiteID",
+            gcp_project="test-project",
+            bigquery_dataset="test_dataset",
+            bigquery_location="US",
+            gcp_credentials_path="",
+        )
+
+        with self.assertRaises(RuntimeError) as ctx:
+            fetch_reference_rows(cfg, "1234")
+        
+        self.assertIn("Both BigQuery AND Excel fallback failed", str(ctx.exception))

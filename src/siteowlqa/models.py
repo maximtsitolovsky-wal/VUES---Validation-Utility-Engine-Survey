@@ -64,6 +64,7 @@ class AirtableRecord:
     processing_status: str     # raw string from Airtable field
     submitted_at: str          # ISO string or empty
     team_key: str = "survey"
+    survey_type: str | None = None  # CCTV, FA/Intrusion, or BOTH
 
 
 @dataclass

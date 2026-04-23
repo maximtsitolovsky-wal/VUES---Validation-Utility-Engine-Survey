@@ -64,10 +64,10 @@ def find_and_regrade(submission_id: str) -> None:
         print(f"Current Score: {fields.get('Score', 'N/A')}")
         print(f"Current True Score: {fields.get('True Score', 'N/A')}")
         
-        # Check for attachment
-        attachments = fields.get('SiteOwl Export File', [])
+        # Check for attachment (use the configured field name)
+        attachments = fields.get(FIELDS.attachment, [])
         if not attachments:
-            print("[WARN] No attachment -- skipping")
+            print(f"[WARN] No attachment in '{FIELDS.attachment}' -- skipping")
             continue
         
         att = attachments[0]

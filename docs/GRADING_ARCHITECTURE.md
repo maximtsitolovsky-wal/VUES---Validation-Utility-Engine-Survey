@@ -20,10 +20,29 @@ The `Survey Type` column in Airtable determines which grading logic is applied t
            │                 │                 │
            ▼                 ▼                 ▼
     ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │ Filter: rows │  │ Filter: rows │  │ No filtering │
+    │ WITHOUT      │  │ WITH         │  │ All rows     │
+    │ Abbrev/Desc  │  │ Abbrev/Desc  │  │              │
+    └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+           │                 │                 │
+           ▼                 ▼                 ▼
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
     │ 6 Columns    │  │ 2-3 Columns  │  │ 8 Columns    │
     │ No Post-Pass │  │ No Post-Pass │  │ + Post-Pass  │
     └──────────────┘  └──────────────┘  └──────────────┘
 ```
+
+---
+
+## Row Filtering by Survey Type
+
+A single submission may contain both CCTV devices (cameras) and FA/Intrusion devices (panels). To avoid overlap, rows are filtered before grading:
+
+| Survey Type | Row Filter | Rows Included |
+|-------------|------------|---------------|
+| **CCTV** | Abbreviated Name AND Description are empty | Camera/video equipment only |
+| **FA/Intrusion** | Abbreviated Name OR Description have content | Fire alarm/intrusion panels only |
+| **BOTH** | No filter | All rows |
 
 ---
 

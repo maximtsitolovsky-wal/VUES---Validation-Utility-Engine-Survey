@@ -51,11 +51,12 @@ try:
     
     # Update Airtable
     final_status = status_from_score(outcome.result.score or 0)
+    true_score = float(outcome.result.score or 0)
     client.update_result(
         record_id=record.record_id,
         status=final_status.value,
-        score=str(round(outcome.result.score or 0, 2)),
-        true_score=float(outcome.result.score or 0),
+        score=true_score,
+        true_score=true_score,
         fail_summary=outcome.result.message[:1000] if outcome.result.message else "",
         notes_internal=outcome.notes_internal[:2000] if outcome.notes_internal else "",
     )

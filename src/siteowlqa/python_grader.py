@@ -484,28 +484,45 @@ def _full_fingerprint(row: pd.Series) -> tuple[str, ...]:
     return tuple(str(row[col]) for col in COMPARABLE_COLUMNS)
 
 
-def _select_comparable_columns(reference_df: pd.DataFrame) -> tuple[str, ...]:
-    """Pick which columns to compare based on reference content.
+def _select_comparable_columns(
+    reference_df: pd.DataFrame,
+    grade_columns: tuple[str, ...] | None = None,
+) -> tuple[str, ...]:
+    """Pick which columns to compare based on survey type and reference content.
 
+    Args:
+        reference_df: Reference DataFrame.
+        grade_columns: Columns to grade for this survey type. If None, uses default.
+    
     Optional fields (Abbreviated Name, Description) are only compared if the
     reference has them populated for this site.
     """
-    base = [
-        "Name",
-        "Part Number",
-        "Manufacturer",
-        "IP Address",
-        "MAC Address",
-        "IP / Analog",
-    ]
+    if grade_columns is None:
+        # Default behavior for backward compatibility
+        base = [
+            "Name",
+            "Part Number",
+            "Manufacturer",
+            "IP Address",
+            "MAC Address",
+            "IP / Analog",
+        ]
+    else:
+        # Use survey-type-specific columns as base
+        base = list(grade_columns)
 
+    # For optional columns, only include if reference has content
     optional = []
-    if "Abbreviated Name" in reference_df.columns:
-        if reference_df["Abbreviated Name"].astype(str).str.strip().replace("0", "").ne("").any():
-            optional.append("Abbreviated Name")
-    if "Description" in reference_df.columns:
-        if reference_df["Description"].astype(str).str.strip().replace("0", "").ne("").any():
-            optional.append("Description")
+    optional_cols = ["Abbreviated Name", "Description"]
+    
+    for opt_col in optional_cols:
+        # Only add optional columns if they're in our grade_columns AND have content
+        if grade_columns is not None and opt_col not in grade_columns:
+            continue
+        if opt_col in reference_df.columns:
+            if reference_df[opt_col].astype(str).str.strip().replace("0", "").ne("").any():
+                if opt_col not in base:
+                    optional.append(opt_col)
 
     # Preserve canonical order
     ordered = [c for c in COMPARABLE_COLUMNS if c in (base + optional)]

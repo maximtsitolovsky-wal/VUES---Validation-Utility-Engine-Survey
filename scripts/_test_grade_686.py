@@ -43,9 +43,14 @@ if not ref_rows:
     sys.exit(1)
 
 # Run grader
-from siteowlqa.python_grader import grade_submission
-print("\nRunning grader...")
-result = grade_submission(df, ref_rows, site_number, 'Test', cfg)
+from siteowlqa.python_grader import grade_submission_in_python
+print("Running grader...")
+result = grade_submission_in_python(
+    raw_df=df,
+    site_number=site_number,
+    vendor_name='Test',
+    cfg=cfg,
+)
 
 print(f"\n{'='*40}")
 print(f"=== GRADING RESULT ===")

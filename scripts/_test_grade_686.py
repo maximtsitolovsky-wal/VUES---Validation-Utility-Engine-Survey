@@ -56,17 +56,20 @@ result = grade_submission_in_python(
 print(f"\n{'='*40}")
 print(f"=== GRADING RESULT ===")
 print(f"{'='*40}")
-print(f"Score:      {result.score:.1f}%")
-print(f"True Score: {result.true_score:.1f}%")
-print(f"Matched:    {result.matched_count}")
-print(f"Missing:    {result.missing_count}")
-print(f"Extra:      {result.extra_count}")
-print(f"Errors:     {len(result.errors)}")
+print(f"Status:     {result.result.status.value}")
+print(f"Score:      {result.result.score}%" if result.result.score else "Score:      N/A")
+print(f"Accuracy:   {result.accuracy_pct:.1f}%" if result.accuracy_pct else "Accuracy:   N/A")
+print(f"Coverage:   {result.coverage_pct:.1f}%" if result.coverage_pct else "Coverage:   N/A")
+print(f"Submitted:  {result.submission_row_count} rows")
+print(f"Reference:  {result.reference_row_count} rows")
+print(f"Message:    {result.result.message[:200]}..." if len(result.result.message) > 200 else f"Message:    {result.result.message}")
 
-if result.errors:
-    print("\nFirst 10 errors:")
-    for i, e in enumerate(result.errors[:10]):
-        print(f"  {i+1}. {e}")
+if result.error_df is not None and not result.error_df.empty:
+    print(f"\nError rows ({len(result.error_df)}):")
+    print(result.error_df.head(10).to_string())
+
+if result.notes_internal:
+    print(f"\nInternal notes: {result.notes_internal[:500]}..." if len(result.notes_internal) > 500 else f"\nInternal notes: {result.notes_internal}")
 
 print(f"\n{'='*40}")
 print("DONE!")

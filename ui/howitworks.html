@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUES · How It Works</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #060914; --panel: rgba(9, 16, 31, 0.86); --panel-border: rgba(120, 160, 255, 0.22); --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF; --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.7; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(90,228,255,0.10), transparent 25%), radial-gradient(circle at 70% 80%, rgba(155,124,255,0.10), transparent 25%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.03) 1px, transparent 1px); background-size: 50px 50px; mask-image: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1)); pointer-events: none; z-index: -1; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle 3s ease-in-out infinite; }
+    @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; transition: all 0.18s; }
+    .back-link:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-1px); }
+    
+    .header { margin-bottom: 32px; }
+    .header h1 { font-size: 36px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .header p { color: var(--text-soft); font-size: 16px; max-width: 700px; }
+    
+    /* Section */
+    .section { margin-bottom: 32px; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(90,228,255,0.3), transparent); }
+    
+    /* Cards */
+    .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 24px; margin-bottom: 16px; }
+    .card h3 { font-size: 20px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .card p { color: var(--text-soft); font-size: 14px; margin-bottom: 12px; }
+    .card p:last-child { margin-bottom: 0; }
+    .card ul { margin: 12px 0; padding-left: 20px; color: var(--text-soft); font-size: 14px; }
+    .card li { margin-bottom: 8px; }
+    .card li strong { color: var(--text); }
+    
+    /* Flow diagram */
+    .flow { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+    .flow-step { flex: 1; min-width: 140px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); text-align: center; position: relative; }
+    .flow-step::after { content: '→'; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--cyan); font-weight: 700; }
+    .flow-step:last-child::after { display: none; }
+    .flow-num { width: 28px; height: 28px; border-radius: 50%; background: var(--cyan); color: #060914; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+    .flow-label { font-size: 12px; font-weight: 700; color: var(--text); }
+    .flow-desc { font-size: 10px; color: var(--text-soft); margin-top: 4px; }
+    
+    /* Tab cards */
+    .tab-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .tab-card { padding: 20px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+    .tab-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .tab-icon { font-size: 24px; }
+    .tab-name { font-size: 16px; font-weight: 800; }
+    .tab-desc { font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+    
+    /* Glossary */
+    .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .glossary-item { padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+    .glossary-term { font-weight: 700; color: var(--amber); font-size: 13px; margin-bottom: 4px; }
+    .glossary-def { font-size: 12px; color: var(--text-soft); }
+    
+    /* Tech stack */
+    .tech-stack { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .tech-badge { padding: 8px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    .tech-badge.primary { background: rgba(90,228,255,0.12); border-color: rgba(90,228,255,0.3); color: var(--cyan); }
+    
+    /* Callout */
+    .callout { padding: 16px 20px; border-radius: 14px; background: rgba(255,200,87,0.08); border: 1px solid rgba(255,200,87,0.25); margin: 16px 0; }
+    .callout-title { font-weight: 700; color: var(--amber); margin-bottom: 6px; font-size: 14px; }
+    .callout-text { font-size: 13px; color: var(--text-soft); }
+    
+    @media (max-width: 768px) { .tab-grid, .glossary { grid-template-columns: 1fr; } .flow-step::after { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="container">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to Command Center
+    </a>
+    
+    <div class="header">
+      <h1>📚 How It Works</h1>
+      <p>Everything you need to understand how VUES operates, what each component does, and why it was built this way.</p>
+    </div>
+
+    <!-- What is VUES -->
+    <div class="section">
+      <div class="section-title">What is VUES?</div>
+      <div class="card">
+        <h3>🎯 The Mission</h3>
+        <p><strong>VUES (Vendor Upload Evaluation System)</strong> is an automated quality assurance platform for the SiteOwl Survey Program. It grades vendor-submitted survey data against reference baselines, tracks Scout site completion, and provides executive visibility into program health.</p>
+        <p>The system was built to eliminate manual grading, reduce human error, and provide real-time insights into vendor performance across hundreds of retail locations.</p>
+        
+        <div class="callout">
+          <div class="callout-title">💡 The Problem It Solves</div>
+          <div class="callout-text">Before VUES, survey submissions were manually reviewed — a process that was slow, inconsistent, and couldn't scale. VUES automates this entirely, grading submissions in seconds with 100% deterministic accuracy.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="section">
+      <div class="section-title">How Does It Work?</div>
+      <div class="card">
+        <h3>⚙️ The Pipeline</h3>
+        <p>VUES runs as a continuous background service that polls Airtable for new submissions, grades them automatically, and updates results in real-time.</p>
+        
+        <div class="flow">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-label">Vendor Uploads</div><div class="flow-desc">Excel file to Airtable</div></div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-label">VUES Detects</div><div class="flow-desc">Polls every 30 seconds</div></div>
+          <div class="flow-step"><div class="flow-num">3</div><div class="flow-label">File Downloaded</div><div class="flow-desc">Parsed & normalized</div></div>
+          <div class="flow-step"><div class="flow-num">4</div><div class="flow-label">Grading</div><div class="flow-desc">Compared to reference</div></div>
+          <div class="flow-step"><div class="flow-num">5</div><div class="flow-label">Result Posted</div><div class="flow-desc">PASS/FAIL to Airtable</div></div>
+        </div>
+        
+        <p><strong>Grading Logic:</strong> Each submission is compared row-by-row against the SQL Server reference database. If ≥95% of rows match correctly, the submission passes. Below 95% = FAIL with detailed mismatch report.</p>
+      </div>
+      
+      <div class="card">
+        <h3>🏗️ Architecture</h3>
+        <p>VUES is built as a single-process Python application with no external dependencies like Docker, message queues, or cloud services. Everything runs locally on a Windows machine.</p>
+        
+        <div class="tech-stack">
+          <span class="tech-badge primary">Python 3.11+</span>
+          <span class="tech-badge primary">Airtable API</span>
+          <span class="tech-badge primary">SQL Server</span>
+          <span class="tech-badge">FastAPI</span>
+          <span class="tech-badge">Chart.js</span>
+          <span class="tech-badge">Tailwind CSS</span>
+          <span class="tech-badge">Windows Task Scheduler</span>
+        </div>
+        
+        <p style="margin-top:16px;"><strong>Key Design Principles:</strong></p>
+        <ul>
+          <li><strong>Deterministic Grading:</strong> No AI/LLM in the grading path — results are 100% reproducible</li>
+          <li><strong>Polling over Webhooks:</strong> Airtable doesn't support webhooks, so we poll reliably</li>
+          <li><strong>Single Process:</strong> No Docker, no queues, no complexity — just Python</li>
+          <li><strong>Local First:</strong> All data stays on-premises, nothing sent to external services</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="section">
+      <div class="section-title">Use Cases</div>
+      <div class="card">
+        <h3>👥 Who Uses VUES?</h3>
+        <ul>
+          <li><strong>Survey Vendors:</strong> Submit their site surveys via Airtable form, receive instant PASS/FAIL feedback via email</li>
+          <li><strong>Program Managers:</strong> Monitor vendor performance, identify quality issues, track completion rates</li>
+          <li><strong>Executives:</strong> View high-level program health, projected savings, and weekly summaries</li>
+          <li><strong>Operations Team:</strong> Manage vendor assignments, track Scout site visits, clear backlogs</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tab Explanations -->
+    <div class="section">
+      <div class="section-title">What Each Tab Does</div>
+      <div class="tab-grid">
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">📋</span><span class="tab-name">Survey Program</span></div>
+          <div class="tab-desc">Shows all vendor survey submissions with their grading results. Track pass/fail rates, identify struggling vendors, and see submission trends over time. Data pulled live from Airtable.</div>
+        </div>
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">🔭</span><span class="tab-name">Scout Program</span></div>
+          <div class="tab-desc">Tracks field Scout visits to retail sites. Shows vendor assignments, completion rates, and remaining work. Helps identify which vendors are on track vs. falling behind.</div>
+        </div>
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">📊</span><span class="tab-name">Analytics Hub</span></div>
+          <div class="tab-desc">Deep-dive tools: Cost Calculator for project budgeting, Equation Engine for metrics formulas, Agent Registry showing all AI agents, and Skill Registry for reusable automations.</div>
+        </div>
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">⬡</span><span class="tab-name">Architecture</span></div>
+          <div class="tab-desc">Interactive visualization of the entire system — 59 nodes showing how data flows from vendor upload through grading to dashboard display. Click nodes to explore.</div>
+        </div>
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">📝</span><span class="tab-name">Executive Summary</span></div>
+          <div class="tab-desc">High-level KPIs for leadership: overall pass rate, Scout progress, key insights, and action items. Auto-generated recommendations based on current data.</div>
+        </div>
+        <div class="tab-card">
+          <div class="tab-card-header"><span class="tab-icon">📚</span><span class="tab-name">How It Works</span></div>
+          <div class="tab-desc">You're here! Documentation explaining the system's purpose, architecture, and how to interpret the data shown in each tab.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Glossary -->
+    <div class="section">
+      <div class="section-title">Key Terms & Metrics</div>
+      <div class="glossary">
+        <div class="glossary-item">
+          <div class="glossary-term">Pass Rate</div>
+          <div class="glossary-def">Percentage of submissions that score ≥95% accuracy against the reference database.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Risk Score</div>
+          <div class="glossary-def">Inverse of pass rate (100 - pass%). Higher = more attention needed. >55 = High Risk.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Scout Visit</div>
+          <div class="glossary-def">Physical site visit by a field technician to gather baseline data before survey.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Reference Database</div>
+          <div class="glossary-def">SQL Server containing the "ground truth" device inventory for each site.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Vendor Assignment</div>
+          <div class="glossary-def">Sites allocated to each vendor for surveying. Tracked for completion monitoring.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Blended Cost</div>
+          <div class="glossary-def">Weighted average cost per site based on survey type mix (Fire, CCTV, Combined).</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Agent</div>
+          <div class="glossary-def">Specialized AI assistant (like Code Puppy) that handles specific tasks in the system.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Skill</div>
+          <div class="glossary-def">Reusable automation pattern that agents can invoke for common tasks.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="section">
+      <div class="section-title">Data Sources</div>
+      <div class="card">
+        <h3>📡 Where Does the Data Come From?</h3>
+        <ul>
+          <li><strong>Survey Submissions:</strong> Airtable base <code>apptK6zNN0Hf3OuoJ</code> — vendors upload here</li>
+          <li><strong>Scout Records:</strong> Airtable base <code>appAwgaX89x0JxG3Z</code> — field visit tracking</li>
+          <li><strong>Reference Data:</strong> SQL Server <code>ReferenceExport</code> view — ground truth per site</li>
+          <li><strong>Dashboard Data:</strong> <code>team_dashboard_data.json</code> — aggregated every refresh cycle</li>
+        </ul>
+        <p style="margin-top:12px;">All data refreshes automatically when the pipeline runs. The dashboard reads from <code>team_dashboard_data.json</code> which is updated every time a submission is processed.</p>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="section">
+      <div class="section-title">Frequently Asked Questions</div>
+      <div class="card">
+        <h3>❓ Common Questions</h3>
+        <ul>
+          <li><strong>How often does data refresh?</strong> — The pipeline polls Airtable every 30 seconds. Dashboard data updates after each submission is processed.</li>
+          <li><strong>What happens when a submission fails?</strong> — The vendor receives an email with the score and a CSV showing which rows didn't match.</li>
+          <li><strong>Can I re-grade a submission?</strong> — Yes, change the Processing Status in Airtable back to blank and VUES will re-process it.</li>
+          <li><strong>Why is my pass rate low?</strong> — Common causes: wrong site number, missing columns, outdated reference data, or incorrect device naming.</li>
+          <li><strong>How do I add a new vendor?</strong> — Vendors are auto-detected from submissions. For Scout assignments, update the Vendor Assignments table in Airtable.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Built With -->
+    <div class="section">
+      <div class="section-title">Built With 🐶</div>
+      <div class="card">
+        <h3>🛠️ Development Story</h3>
+        <p>VUES was built iteratively using <strong>Code Puppy</strong>, an AI coding assistant. The entire system — from grading logic to this dashboard — was developed through conversational programming.</p>
+        <p>Key milestones:</p>
+        <ul>
+          <li><strong>March 2026:</strong> Initial grading pipeline deployed</li>
+          <li><strong>April 2026:</strong> Scout tracking integration added</li>
+          <li><strong>April 2026:</strong> Executive dashboard redesigned with space theme</li>
+          <li><strong>April 2026:</strong> Command Center navigation system launched</li>
+        </ul>
+        <p style="margin-top:12px;">The codebase follows the <strong>Zen of Python</strong>: simple is better than complex, explicit is better than implicit, and there should be one obvious way to do it.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Stars
+const stars = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('span');
+  s.className = 'star';
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;opacity:${0.2+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
+  stars.appendChild(s);
+}
+</script>
+</body>
+</html>

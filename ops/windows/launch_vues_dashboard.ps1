@@ -5,7 +5,7 @@ $opsDir        = Join-Path $workdir 'ops\windows'
 $launcher      = Join-Path $opsDir  'start_vues_background.ps1'
 $outputDir     = Join-Path $workdir 'output'
 $portFile      = Join-Path $outputDir 'dashboard.port'
-$dashboard     = Join-Path $outputDir 'executive_dashboard.html'
+$dashboard     = Join-Path $outputDir 'index.html'
 $serverScript  = Join-Path $workdir  'tools\run_dashboard_server.py'
 $rebuildScript = Join-Path $workdir  'tools\rebuild_current_dashboard.py'
 $maxWaitSeconds = 30
@@ -72,7 +72,7 @@ $serverReady = $false
 $activePort  = $null
 
 if ($existingPort) {
-    $checkUrl = "http://127.0.0.1:$existingPort/executive_dashboard.html"
+    $checkUrl = "http://127.0.0.1:$existingPort/index.html"
     try {
         $resp = Invoke-WebRequest -Uri $checkUrl -UseBasicParsing -Method Head -TimeoutSec 2
         if ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 400) {
@@ -121,12 +121,11 @@ if (Test-Path $rebuildScript) {
 Write-Host 'Waiting for dashboard data...'
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 while ($sw.Elapsed.TotalSeconds -lt $maxWaitSeconds) {
-    if (Test-Path $dashboard) {
-        $item = Get-Item $dashboard
-        if ($item.LastWriteTimeUtc -ge $launchStartUtc -and
-            (Select-String -Path $dashboard -SimpleMatch 'const teamDashboardData' -Quiet)) {
-            break
-        }
+    # Check that index.html exists and data JSON is present
+    $dataFile = Join-Path $outputDir 'team_dashboard_data.json'
+    if ((Test-Path $dashboard) -and (Test-Path $dataFile)) {
+        Write-Host '[OK] Dashboard ready'
+        break
     }
     Start-Sleep -Milliseconds 500
 }
@@ -142,7 +141,7 @@ if (-not $serverReady) {
         -WorkingDirectory $workdir `
         -WindowStyle Hidden
 
-    $dashUrl = "http://127.0.0.1:$activePort/executive_dashboard.html"
+    $dashUrl = "http://127.0.0.1:$activePort/index.html"
     $sw2 = [System.Diagnostics.Stopwatch]::StartNew()
     while ($sw2.Elapsed.TotalSeconds -lt 10) {
         try {
@@ -158,7 +157,7 @@ if (-not $serverReady) {
     exit 1
 }
 
-$dashboardUrl = "http://127.0.0.1:$activePort/executive_dashboard.html"
+$dashboardUrl = "http://127.0.0.1:$activePort/index.html"
 Write-Host "Opening: $dashboardUrl"
 Start-Process -FilePath $dashboardUrl | Out-Null
 

@@ -1,65 +1,76 @@
-"""dashboard.py — Single-page executive dashboard generation for SiteOwlQA.
+"""dashboard.py — UI file deployment for VUES Command Center.
 
-This module intentionally generates ONE final HTML artifact only:
-    output/executive_dashboard.html
+This module copies the UI pages from ui/ to output/ and handles any
+data file updates needed for the dashboard to display current metrics.
 
-Legacy split dashboards were removed in favor of a consolidated executive page.
+UI Structure:
+    - index.html          (Landing page / Command Center)
+    - survey.html         (Survey Program)
+    - scout.html          (Scout Program)
+    - analytics.html      (Analytics Hub)
+    - summary.html        (Executive Summary)
+    - orchestration_map.html (Architecture)
+
+All pages read live data from team_dashboard_data.json in output/.
 """
 
 from __future__ import annotations
 
-import csv
 import logging
+import shutil
 from pathlib import Path
-from typing import Any
-
-from siteowlqa.dashboard_exec import generate_executive_dashboard
 
 log = logging.getLogger(__name__)
 
-_EXEC_HTML = "executive_dashboard.html"
-_EXEC_TEMPLATE = "ui/executive_dashboard.html"
+_UI_DIR = "ui"
+_UI_PAGES = [
+    "index.html",
+    "survey.html",
+    "scout.html",
+    "analytics.html",
+    "summary.html",
+    "orchestration_map.html",
+    "howitworks.html",
+]
 _UI_ASSETS_DIR = "ui/assets"
 _OUTPUT_ASSETS_DIR = "assets"
-_SUBMISSION_HISTORY_CSV = "submission_history.csv"
-_ARCH_MAP_SRC = "orchestration_map.html"  # in repo root
 
 
 def refresh_dashboards(output_dir: Path) -> None:
-    """Re-generate the single executive dashboard from current data."""
-    _generate_executive_dashboard(output_dir)
-    _copy_architecture_map(output_dir)
+    """Copy UI pages from ui/ to output/ for serving."""
+    _copy_ui_pages(output_dir)
+    _copy_assets(output_dir)
 
 
-def _copy_architecture_map(output_dir: Path) -> None:
-    """Copy orchestration_map.html from repo root into output/ so the local
-    HTTP server can serve it alongside the dashboard.
-    """
-    import shutil
-    root = Path(__file__).resolve().parents[2]  # repo root (src/siteowlqa/dashboard.py → ../../)
-    src = root / _ARCH_MAP_SRC
-    if not src.exists():
-        log.warning("orchestration_map.html not found at %s — skipping copy", src)
+def _copy_ui_pages(output_dir: Path) -> None:
+    """Copy all UI HTML pages to output directory."""
+    root = Path(__file__).resolve().parents[2]  # repo root
+    ui_dir = root / _UI_DIR
+    
+    for page in _UI_PAGES:
+        src = ui_dir / page
+        if not src.exists():
+            log.warning("UI page not found: %s", src)
+            continue
+        dst = output_dir / page
+        shutil.copy2(src, dst)
+        log.debug("Copied %s to %s", page, dst)
+    
+    log.info("UI pages refreshed in %s", output_dir)
+
+
+def _copy_assets(output_dir: Path) -> None:
+    """Copy UI assets (images, etc.) to output directory."""
+    root = Path(__file__).resolve().parents[2]
+    src_assets = root / _UI_ASSETS_DIR
+    dst_assets = output_dir / _OUTPUT_ASSETS_DIR
+    
+    if not src_assets.exists():
+        log.debug("No UI assets directory found at %s", src_assets)
         return
-    dst = output_dir / _ARCH_MAP_SRC
-    shutil.copy2(src, dst)
-    log.debug("Architecture map copied to %s", dst)
-
-
-def _generate_executive_dashboard(output_dir: Path) -> None:
-    history_rows = _read_csv(output_dir / _SUBMISSION_HISTORY_CSV)
-    generate_executive_dashboard(
-        output_dir=output_dir,
-        template_rel_path=_EXEC_TEMPLATE,
-        ui_assets_rel_dir=_UI_ASSETS_DIR,
-        output_assets_rel_dir=_OUTPUT_ASSETS_DIR,
-        out_name=_EXEC_HTML,
-        history_rows=history_rows,
-    )
-
-
-def _read_csv(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        return []
-    with open(path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+    
+    if dst_assets.exists():
+        shutil.rmtree(dst_assets)
+    
+    shutil.copytree(src_assets, dst_assets)
+    log.debug("Assets copied to %s", dst_assets)

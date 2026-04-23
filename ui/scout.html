@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUES · Scout Program</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #060914; --panel: rgba(9, 16, 31, 0.86); --panel-border: rgba(120, 160, 255, 0.22); --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF; --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(90,228,255,0.12), transparent 25%), radial-gradient(circle at 70% 80%, rgba(155,124,255,0.10), transparent 25%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.03) 1px, transparent 1px); background-size: 50px 50px; mask-image: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1)); pointer-events: none; z-index: -1; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle 3s ease-in-out infinite; }
+    @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 16px; transition: all 0.18s; }
+    .back-link:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-1px); }
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .header-left h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .header-left p { color: var(--text-soft); font-size: 14px; }
+    .pill { padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .pill-cyan { background: rgba(90,228,255,0.12); border: 1px solid rgba(90,228,255,0.35); color: #D9FBFF; }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { padding: 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--panel-border); }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); }
+    .stat-value { font-size: 28px; font-weight: 800; margin-top: 6px; }
+    .stat-cyan { color: var(--cyan); }
+    .stat-green { color: var(--green); }
+    .stat-amber { color: var(--amber); }
+    .stat-purple { color: var(--purple); }
+    
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; overflow: hidden; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .panel-body { padding: 16px; }
+    .chart-container { height: 200px; position: relative; }
+    
+    .progress-bar { height: 12px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 16px; }
+    .progress-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: width 0.5s; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-soft); margin-top: 8px; }
+    
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table th { padding: 10px 8px; color: var(--text-soft); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .data-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    
+    .scroll-area { max-height: 280px; overflow-y: auto; }
+    .scroll-area::-webkit-scrollbar { width: 4px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    
+    .vendor-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .vendor-bar-fill { height: 100%; border-radius: 4px; background: var(--cyan); }
+    
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 768px) { .main-grid, .stats-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="container">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to Command Center
+    </a>
+    
+    <div class="header">
+      <div class="header-left">
+        <h1>🔭 Scout Program</h1>
+        <p>Site completion tracking and field operations</p>
+      </div>
+      <span class="pill pill-cyan" id="headerPill">Loading...</span>
+    </div>
+    
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total Sites</div><div class="stat-value stat-cyan" id="statTotal">—</div></div>
+      <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value stat-green" id="statComplete">—</div></div>
+      <div class="stat-card"><div class="stat-label">Remaining</div><div class="stat-value stat-amber" id="statRemaining">—</div></div>
+      <div class="stat-card"><div class="stat-label">Vendors</div><div class="stat-value stat-purple" id="statVendors">—</div></div>
+      <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value stat-cyan" id="statRate">—</div></div>
+    </div>
+    
+    <div class="main-grid">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📊 Overall Progress</div></div>
+        <div class="panel-body">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <div class="progress-label"><span id="progressPct">0%</span><span>Target: 100%</span></div>
+          <div style="margin-top:20px;font-size:13px;color:var(--text-soft);line-height:1.8;" id="progressNote">Loading vendor data...</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📈 Vendor Completion</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="vendorChart"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🗺️ Assigned vs Completed</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="assignedChart"></canvas></div></div>
+      </div>
+      <div class="panel" style="grid-column: span 3;">
+        <div class="panel-header"><div class="panel-title">🏢 Vendor Assignments</div></div>
+        <div class="panel-body">
+          <div class="scroll-area">
+            <table class="data-table">
+              <thead><tr><th>Vendor</th><th>Assigned</th><th>Completed</th><th>Remaining</th><th>Completion</th><th>Progress</th></tr></thead>
+              <tbody id="vendorBody"><tr><td colspan="6" style="text-align:center;padding:30px;">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Stars
+const stars = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('span');
+  s.className = 'star';
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;opacity:${0.2+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
+  stars.appendChild(s);
+}
+
+// Colors
+const C = { cyan:'#5AE4FF', green:'#45E6A5', amber:'#FFC857', purple:'#9B7CFF', text:'rgba(255,255,255,0.6)', grid:'rgba(255,255,255,0.06)' };
+Chart.defaults.color = C.text;
+Chart.defaults.borderColor = C.grid;
+
+// Load real data
+async function loadData() {
+  try {
+    const r = await fetch('team_dashboard_data.json');
+    if (!r.ok) return;
+    const data = await r.json();
+    renderAll(data);
+  } catch(e) { console.log('Error loading data:', e); }
+}
+
+function renderAll(data) {
+  const va = data.vendor_assignments || {};
+  const vendors = va.vendors || [];
+  const scout = data.scout?.records || [];
+  
+  // Calculate totals from vendor assignments
+  let totalAssigned = 0, totalCompleted = 0;
+  vendors.forEach(v => {
+    totalAssigned += v.total_assigned || 0;
+    totalCompleted += v.completed || 0;
+  });
+  const totalRemaining = totalAssigned - totalCompleted;
+  const rate = totalAssigned ? Math.round(totalCompleted / totalAssigned * 100 * 10) / 10 : 0;
+  
+  // Update stats
+  document.getElementById('statTotal').textContent = totalAssigned;
+  document.getElementById('statComplete').textContent = totalCompleted;
+  document.getElementById('statRemaining').textContent = totalRemaining;
+  document.getElementById('statVendors').textContent = vendors.length;
+  document.getElementById('statRate').textContent = rate + '%';
+  document.getElementById('headerPill').textContent = `📍 ${totalAssigned} Sites`;
+  
+  // Progress bar
+  document.getElementById('progressFill').style.width = rate + '%';
+  document.getElementById('progressPct').textContent = rate + '%';
+  document.getElementById('progressNote').innerHTML = `
+    <strong>${totalCompleted}</strong> sites completed of <strong>${totalAssigned}</strong> assigned.<br>
+    <strong>${totalRemaining}</strong> sites remaining across <strong>${vendors.length}</strong> vendors.
+  `;
+  
+  // Vendor completion chart
+  const sortedByCompletion = [...vendors].sort((a,b) => b.completion_rate - a.completion_rate).slice(0, 8);
+  new Chart(document.getElementById('vendorChart'), {
+    type: 'bar',
+    data: {
+      labels: sortedByCompletion.map(v => v.vendor_name.slice(0, 10)),
+      datasets: [{ label: 'Completion %', data: sortedByCompletion.map(v => v.completion_rate || 0), backgroundColor: C.cyan, borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { grid: { color: C.grid }, max: 100 }, y: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+  });
+  
+  // Assigned vs Completed chart
+  const sortedByAssigned = [...vendors].sort((a,b) => b.total_assigned - a.total_assigned).slice(0, 6);
+  new Chart(document.getElementById('assignedChart'), {
+    type: 'bar',
+    data: {
+      labels: sortedByAssigned.map(v => v.vendor_name.slice(0, 8)),
+      datasets: [
+        { label: 'Assigned', data: sortedByAssigned.map(v => v.total_assigned), backgroundColor: C.purple, borderRadius: 4 },
+        { label: 'Completed', data: sortedByAssigned.map(v => v.completed), backgroundColor: C.green, borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: C.grid } } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+  });
+  
+  // Vendor table
+  const sortedVendors = [...vendors].sort((a,b) => b.total_assigned - a.total_assigned);
+  document.getElementById('vendorBody').innerHTML = sortedVendors.map(v => {
+    const pct = v.completion_rate || 0;
+    return `<tr>
+      <td><strong>${v.vendor_name}</strong></td>
+      <td>${v.total_assigned}</td>
+      <td>${v.completed}</td>
+      <td>${v.remaining}</td>
+      <td>${pct.toFixed(1)}%</td>
+      <td style="width:120px;"><div class="vendor-bar"><div class="vendor-bar-fill" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>

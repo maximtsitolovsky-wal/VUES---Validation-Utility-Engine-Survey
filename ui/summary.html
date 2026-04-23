@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUES · Executive Summary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #060914; --panel: rgba(9, 16, 31, 0.86); --panel-border: rgba(120, 160, 255, 0.22); --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF; --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(155,124,255,0.12), transparent 25%), radial-gradient(circle at 70% 80%, rgba(90,228,255,0.10), transparent 25%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.03) 1px, transparent 1px); background-size: 50px 50px; mask-image: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1)); pointer-events: none; z-index: -1; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle 3s ease-in-out infinite; }
+    @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 16px; transition: all 0.18s; }
+    .back-link:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-1px); }
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .header-left h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .header-left p { color: var(--text-soft); font-size: 14px; }
+    .pill { padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .pill-purple { background: rgba(155,124,255,0.12); border: 1px solid rgba(155,124,255,0.35); color: #E8DFFF; }
+    
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; overflow: hidden; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .panel-body { padding: 16px; }
+    
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { padding: 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--panel-border); text-align: center; }
+    .kpi-value { font-size: 32px; font-weight: 900; margin-bottom: 6px; }
+    .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); }
+    .kpi-cyan { color: var(--cyan); }
+    .kpi-green { color: var(--green); }
+    .kpi-amber { color: var(--amber); }
+    .kpi-red { color: var(--red); }
+    .kpi-purple { color: var(--purple); }
+    
+    .insight-card { padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); margin-bottom: 12px; }
+    .insight-card:last-child { margin-bottom: 0; }
+    .insight-title { font-weight: 700; margin-bottom: 6px; }
+    .insight-text { color: var(--text-soft); font-size: 13px; line-height: 1.6; }
+    .insight-positive { border-color: var(--green); }
+    .insight-warning { border-color: var(--amber); }
+    .insight-negative { border-color: var(--red); }
+    .insight-action { border-color: var(--purple); }
+    
+    .report-content { line-height: 1.8; font-size: 14px; color: var(--text-soft); }
+    .report-content h3 { color: var(--text); font-size: 16px; margin: 20px 0 10px; }
+    .report-content h3:first-child { margin-top: 0; }
+    .report-content ul { margin: 10px 0; padding-left: 20px; }
+    .report-content li { margin-bottom: 6px; }
+    .report-content strong { color: var(--text); }
+    
+    .scroll-area { max-height: 320px; overflow-y: auto; }
+    .scroll-area::-webkit-scrollbar { width: 4px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    
+    @media (max-width: 900px) { .main-grid, .kpi-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="container">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to Command Center
+    </a>
+    
+    <div class="header">
+      <div class="header-left">
+        <h1>📊 Executive Summary</h1>
+        <p>Program overview and leadership reporting</p>
+      </div>
+      <span class="pill pill-purple" id="dateLabel">Loading...</span>
+    </div>
+    
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-value kpi-cyan" id="kpiSurveyTotal">—</div><div class="kpi-label">Survey Submissions</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiPassRate" style="color:var(--red)">—</div><div class="kpi-label">Survey Pass Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value kpi-purple" id="kpiScoutSites">—</div><div class="kpi-label">Scout Sites Assigned</div></div>
+      <div class="kpi-card"><div class="kpi-value kpi-amber" id="kpiScoutRate">—</div><div class="kpi-label">Scout Completion</div></div>
+    </div>
+    
+    <div class="main-grid">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🎯 Key Insights</div></div>
+        <div class="panel-body">
+          <div class="scroll-area" id="insightsArea">
+            <div class="insight-card"><div class="insight-title">Loading...</div><div class="insight-text">Fetching data...</div></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🏆 Top Performers</div></div>
+        <div class="panel-body">
+          <div class="scroll-area" id="performersArea">
+            <div class="insight-card"><div class="insight-title">Loading...</div><div class="insight-text">Fetching data...</div></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel" style="grid-column: span 2;">
+        <div class="panel-header"><div class="panel-title">📝 Program Report</div></div>
+        <div class="panel-body">
+          <div class="scroll-area">
+            <div class="report-content" id="reportContent">Loading report...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Stars
+const stars = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('span');
+  s.className = 'star';
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;opacity:${0.2+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
+  stars.appendChild(s);
+}
+
+// Load real data
+async function loadData() {
+  try {
+    const r = await fetch('team_dashboard_data.json');
+    if (!r.ok) return;
+    const data = await r.json();
+    renderAll(data);
+  } catch(e) { console.log('Error loading data:', e); }
+}
+
+function renderAll(data) {
+  const survey = data.survey?.records || [];
+  const scout = data.scout?.records || [];
+  const va = data.vendor_assignments || {};
+  const vendors = va.vendors || [];
+  
+  // Survey stats
+  const surveyTotal = survey.length;
+  const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
+  const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
+  const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
+  
+  // Scout stats
+  let scoutAssigned = 0, scoutCompleted = 0;
+  vendors.forEach(v => {
+    scoutAssigned += v.total_assigned || 0;
+    scoutCompleted += v.completed || 0;
+  });
+  const scoutRate = scoutAssigned ? Math.round(scoutCompleted / scoutAssigned * 100 * 10) / 10 : 0;
+  
+  // Update KPIs
+  document.getElementById('kpiSurveyTotal').textContent = surveyTotal;
+  const rateEl = document.getElementById('kpiPassRate');
+  rateEl.textContent = surveyRate + '%';
+  rateEl.style.color = surveyRate >= 80 ? 'var(--green)' : surveyRate >= 50 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('kpiScoutSites').textContent = scoutAssigned;
+  document.getElementById('kpiScoutRate').textContent = scoutRate + '%';
+  
+  // Date
+  const today = new Date();
+  document.getElementById('dateLabel').textContent = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  
+  // Insights
+  const insights = [];
+  
+  // Survey insights
+  if (surveyRate < 50) {
+    insights.push({ type: 'negative', title: '⚠️ Survey Pass Rate Critical', text: `Only ${surveyRate}% pass rate (${surveyPass}/${surveyTotal}). ${surveyFail} submissions failed. Review vendor training and submission quality.` });
+  } else if (surveyRate < 80) {
+    insights.push({ type: 'warning', title: '📊 Survey Pass Rate Needs Attention', text: `${surveyRate}% pass rate. ${surveyFail} submissions failed out of ${surveyTotal}. Consider vendor coaching.` });
+  } else {
+    insights.push({ type: 'positive', title: '✅ Survey Performance Strong', text: `${surveyRate}% pass rate with ${surveyPass} passed submissions.` });
+  }
+  
+  // Scout insights
+  if (scoutRate < 10) {
+    insights.push({ type: 'warning', title: '🔭 Scout Program Early Stage', text: `${scoutCompleted} of ${scoutAssigned} sites completed (${scoutRate}%). ${scoutAssigned - scoutCompleted} sites remaining.` });
+  } else {
+    insights.push({ type: 'positive', title: '🔭 Scout Progress', text: `${scoutCompleted} sites completed of ${scoutAssigned} assigned (${scoutRate}%).` });
+  }
+  
+  // Vendor insights
+  const lowPerformers = vendors.filter(v => v.completion_rate < 5 && v.total_assigned > 50);
+  if (lowPerformers.length > 0) {
+    insights.push({ type: 'action', title: '🎯 Action: Vendor Follow-up', text: `${lowPerformers.length} vendor(s) with <5% completion rate: ${lowPerformers.map(v => v.vendor_name).join(', ')}. Schedule status calls.` });
+  }
+  
+  document.getElementById('insightsArea').innerHTML = insights.map(i => `
+    <div class="insight-card insight-${i.type}">
+      <div class="insight-title">${i.title}</div>
+      <div class="insight-text">${i.text}</div>
+    </div>
+  `).join('');
+  
+  // Top performers
+  const topVendors = [...vendors].sort((a,b) => b.completion_rate - a.completion_rate).slice(0, 5);
+  document.getElementById('performersArea').innerHTML = topVendors.map((v, i) => `
+    <div class="insight-card${i === 0 ? ' insight-positive' : ''}">
+      <div class="insight-title">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '📊'} ${v.vendor_name}</div>
+      <div class="insight-text">${v.completed} of ${v.total_assigned} sites (${v.completion_rate?.toFixed(1) || 0}%)</div>
+    </div>
+  `).join('');
+  
+  // Report
+  document.getElementById('reportContent').innerHTML = `
+    <h3>Program Overview</h3>
+    <p>The VUES Program encompasses <strong>${scoutAssigned}</strong> sites across <strong>${vendors.length}</strong> vendors with active survey and scout operations.</p>
+    
+    <h3>Survey Program</h3>
+    <ul>
+      <li><strong>Total Submissions:</strong> ${surveyTotal}</li>
+      <li><strong>Passed:</strong> ${surveyPass} (${surveyRate}%)</li>
+      <li><strong>Failed:</strong> ${surveyFail} (${100 - surveyRate}%)</li>
+      <li><strong>Status:</strong> ${surveyRate >= 80 ? 'On Track' : surveyRate >= 50 ? 'Needs Attention' : 'Critical - Action Required'}</li>
+    </ul>
+    
+    <h3>Scout Program</h3>
+    <ul>
+      <li><strong>Sites Assigned:</strong> ${scoutAssigned}</li>
+      <li><strong>Sites Completed:</strong> ${scoutCompleted}</li>
+      <li><strong>Sites Remaining:</strong> ${scoutAssigned - scoutCompleted}</li>
+      <li><strong>Completion Rate:</strong> ${scoutRate}%</li>
+    </ul>
+    
+    <h3>Vendor Distribution</h3>
+    <ul>
+      ${vendors.slice(0, 5).map(v => `<li><strong>${v.vendor_name}:</strong> ${v.total_assigned} assigned, ${v.completed} completed (${v.completion_rate?.toFixed(1) || 0}%)</li>`).join('')}
+    </ul>
+    
+    <h3>Recommendations</h3>
+    <ul>
+      ${surveyRate < 50 ? '<li>Schedule vendor quality review meetings</li>' : ''}
+      ${surveyRate < 80 ? '<li>Implement additional vendor training</li>' : ''}
+      ${lowPerformers.length > 0 ? `<li>Follow up with underperforming vendors: ${lowPerformers.map(v => v.vendor_name).join(', ')}</li>` : ''}
+      <li>Continue monitoring daily submission quality</li>
+    </ul>
+  `;
+}
+
+loadData();
+</script>
+</body>
+</html>

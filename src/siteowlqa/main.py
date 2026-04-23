@@ -118,7 +118,7 @@ def _open_dashboards(output_dir: Path, initial_delay: float = 2.0, timeout: floa
     - hosted dashboards can refresh safely without browser file-origin weirdness
     - one canonical URL gives us a single source of truth
     """
-    dashboard_name = "executive_dashboard.html"
+    dashboard_name = "index.html"
 
     def _open() -> None:
         startup_time = time.time()

@@ -23,7 +23,7 @@ from urllib.request import urlopen
 _HOST = "127.0.0.1"
 _PREFERRED_PORT = 8765
 _PORT_FILE_NAME = "dashboard.port"
-_HEALTH_PATH = "/executive_dashboard.html"
+_HEALTH_PATH = "/index.html"
 _STARTUP_WAIT_SECONDS = 8.0
 
 
@@ -66,7 +66,7 @@ def read_dashboard_port(output_dir: Path) -> int | None:
 def get_dashboard_url(output_dir: Path) -> str:
     """Return the full dashboard URL using the port file, falling back to the preferred port."""
     port = read_dashboard_port(Path(output_dir)) or _PREFERRED_PORT
-    return f"http://{_HOST}:{port}/executive_dashboard.html"
+    return f"http://{_HOST}:{port}/index.html"
 
 
 # ---------------------------------------------------------------------------

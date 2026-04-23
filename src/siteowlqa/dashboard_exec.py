@@ -138,6 +138,16 @@ def generate_executive_dashboard(
         out_assets_dir=output_dir / output_assets_rel_dir,
     )
 
+    # Copy analytics.html to output if it exists
+    analytics_src = output_dir.parent / "ui" / "analytics.html"
+    if analytics_src.exists():
+        analytics_dest = output_dir / "analytics.html"
+        try:
+            analytics_dest.write_text(analytics_src.read_text(encoding="utf-8"), encoding="utf-8")
+            log.info("analytics.html copied to output directory")
+        except OSError as exc:
+            log.warning("Could not copy analytics.html: %s", exc)
+
     out = output_dir / out_name
     out.write_text(html, encoding="utf-8")
     log.info("%s generated: %s", out_name, out)

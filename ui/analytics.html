@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUES · Analytics Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060914; --panel: rgba(9, 16, 31, 0.86); --panel-border: rgba(120, 160, 255, 0.22);
+      --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF;
+      --purple: #9B7CFF; --amber: #FFC857; --amber-soft: #FFE9B1; --green: #45E6A5; --red: #FF6B81;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; position: relative; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at top left, rgba(77,141,255,0.16), transparent 22%), radial-gradient(circle at top right, rgba(155,124,255,0.12), transparent 18%), radial-gradient(circle at bottom center, rgba(90,228,255,0.10), transparent 22%), linear-gradient(180deg, #04070F 0%, #070C18 45%, #050914 100%); z-index: -2; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.04) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.15)); pointer-events: none; z-index: -1; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    .star { position: absolute; border-radius: 50%; background: white; box-shadow: 0 0 8px rgba(255,255,255,0.65); animation: twinkle 3s ease-in-out infinite; }
+    @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    .container { max-width: 1500px; margin: 0 auto; padding: 26px 22px 40px; position: relative; z-index: 2; }
+    
+    /* Hero */
+    .hero { margin-bottom: 22px; border-radius: 28px; overflow: hidden; border: 1px solid var(--panel-border); background: linear-gradient(135deg, rgba(9,16,31,0.94), rgba(13,22,42,0.92), rgba(14,34,58,0.88)); box-shadow: 0 16px 50px rgba(0,0,0,0.35); position: relative; }
+    .hero-glow-1 { position: absolute; width: 320px; height: 320px; border-radius: 50%; right: -70px; top: -100px; background: radial-gradient(circle, rgba(255,200,87,0.35), transparent 65%); filter: blur(18px); }
+    .hero-glow-2 { position: absolute; width: 260px; height: 260px; border-radius: 50%; left: -30px; bottom: -120px; background: radial-gradient(circle, rgba(90,228,255,0.22), transparent 65%); filter: blur(15px); }
+    .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.35fr 0.95fr; gap: 20px; padding: 28px; }
+    .hero h1 { margin: 0; font-size: 36px; line-height: 1.08; font-weight: 900; letter-spacing: -0.03em; }
+    .hero p { margin-top: 16px; color: var(--text-soft); font-size: 15px; line-height: 1.8; }
+    
+    /* Pills & Buttons */
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .pill-amber { background: rgba(255,200,87,0.12); border: 1px solid rgba(255,200,87,0.35); color: #FFEAB8; }
+    .pill-cyan { background: rgba(90,228,255,0.12); border: 1px solid rgba(90,228,255,0.35); color: #D9FBFF; }
+    .pill-purple { background: rgba(155,124,255,0.12); border: 1px solid rgba(155,124,255,0.35); color: #E8DFFF; }
+    .pill-blue { background: rgba(77,141,255,0.12); border: 1px solid rgba(77,141,255,0.35); color: #DCE8FF; }
+    .pill-green { background: rgba(69,230,165,0.12); border: 1px solid rgba(69,230,165,0.35); color: #CCFFE9; }
+    .pill-red { background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.35); color: #FFD6DE; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .btn { border-radius: 14px; padding: 12px 16px; font-weight: 800; font-size: 14px; cursor: pointer; border: none; transition: transform 0.15s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, #5AE4FF, #4D8DFF); color: #06101F; box-shadow: 0 8px 24px rgba(90,228,255,0.18); }
+    .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.10); }
+    
+    /* KPI Dials */
+    .kpi-grid { border-radius: 24px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); padding: 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .kpi-dial { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 22px; padding: 16px; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; }
+    .kpi-dial[onclick]:hover { background: rgba(255,255,255,0.06); border-color: rgba(90,228,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .kpi-header { display: flex; justify-content: space-between; gap: 10px; }
+    .kpi-title { color: var(--text); font-weight: 700; font-size: 14px; }
+    .kpi-subtitle { color: var(--text-soft); font-size: 10px; margin-top: 4px; }
+    .kpi-ring-wrapper { display: flex; justify-content: center; margin-top: 10px; }
+    .kpi-ring { width: 100px; height: 100px; border-radius: 50%; padding: 8px; }
+    .kpi-ring-inner { width: 100%; height: 100%; border-radius: 50%; background: #08101F; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-direction: column; box-shadow: inset 0 0 20px rgba(0,0,0,0.45); }
+    .kpi-value { color: var(--text); font-size: 22px; font-weight: 800; }
+    .kpi-label { color: var(--text-soft); font-size: 9px; margin-top: 2px; }
+    
+    /* Panels */
+    .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); backdrop-filter: blur(12px); overflow: hidden; margin-bottom: 18px; }
+    .panel-header { padding: 18px 20px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .panel-title { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 18px; }
+    .panel-subtitle { margin-top: 6px; color: var(--text-soft); font-size: 13px; }
+    .panel-body { padding: 20px; }
+    
+    /* Grids */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    
+    /* Charts */
+    .chart-container { position: relative; height: 280px; }
+    .chart-container-sm { position: relative; height: 220px; margin-bottom: 16px; }
+    
+    /* Tables */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { padding: 12px 10px; color: var(--text-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; }
+    .data-table td { padding: 12px 10px; color: var(--text); font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .data-table td:first-child { font-weight: 700; }
+    
+    /* Risk badges */
+    .risk-badge { padding: 5px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; display: inline-block; }
+    .risk-low { background: rgba(69,230,165,0.12); border: 1px solid #45E6A5; color: #CCFFE9; }
+    .risk-med { background: rgba(255,200,87,0.12); border: 1px solid #FFC857; color: #FFEAB8; }
+    .risk-high { background: rgba(255,107,129,0.12); border: 1px solid #FF6B81; color: #FFD6DE; }
+    
+    /* Stat cards */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .stat-card { padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .stat-label { color: var(--text-soft); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .stat-value { color: var(--text); font-size: 26px; font-weight: 800; margin-top: 8px; }
+    .stat-note { font-size: 11px; margin-top: 6px; }
+    .stat-cyan .stat-note { color: var(--cyan); }
+    .stat-amber .stat-note { color: var(--amber); }
+    .stat-green .stat-note { color: var(--green); }
+    .stat-red .stat-note { color: var(--red); }
+    
+    /* Cost Calculator */
+    .cost-input { width: 100%; height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); color: var(--text); padding: 0 12px; font-size: 14px; outline: none; }
+    .cost-input:focus { border-color: var(--cyan); }
+    .input-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-soft); margin-bottom: 6px; font-weight: 700; }
+    .input-group { margin-bottom: 12px; }
+    
+    /* Agent/Skill Cards */
+    .registry-card { border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+    .registry-card:hover { border-color: rgba(255,255,255,0.15); }
+    .registry-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .registry-card-title { font-size: 16px; font-weight: 800; }
+    .registry-card-desc { color: var(--text-soft); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+    .registry-card-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+    
+    /* Equation Engine */
+    .equation-btn { text-align: left; border-radius: 14px; padding: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); width: 100%; margin-bottom: 8px; transition: all 0.2s; }
+    .equation-btn:hover, .equation-btn.active { border-color: rgba(90,228,255,0.42); background: rgba(90,228,255,0.10); }
+    .equation-btn-title { font-weight: 700; color: var(--text); font-size: 14px; }
+    .equation-btn-cat { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+    .equation-display { border-radius: 16px; padding: 14px; background: #050B17; border: 1px solid rgba(255,255,255,0.08); font-family: ui-monospace, monospace; color: var(--amber-soft); font-size: 12px; line-height: 1.8; margin: 14px 0; }
+    
+    /* Search */
+    .search-box { display: flex; align-items: center; gap: 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 10px 14px; margin-bottom: 14px; }
+    .search-input { width: 100%; border: none; outline: none; background: transparent; color: var(--text); font-size: 14px; }
+    
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; transition: all 0.18s; }
+    .back-link:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-1px); }
+    
+    /* Section heading */
+    .section-heading { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-soft); margin-bottom: 14px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .section-heading::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    
+    /* Scrollable */
+    .scroll-area { max-height: 400px; overflow-y: auto; padding-right: 8px; }
+    .scroll-area::-webkit-scrollbar { width: 6px; }
+    .scroll-area::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 3px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    
+    /* Responsive */
+    @media (max-width: 1200px) { .hero-inner, .grid-2 { grid-template-columns: 1fr; } .stat-grid, .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .hero h1 { font-size: 26px; } .kpi-grid, .stat-grid { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="container">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to Command Center
+    </a>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-glow-1"></div>
+      <div class="hero-glow-2"></div>
+      <div class="hero-inner">
+        <div>
+          <div class="pill-row">
+            <span class="pill pill-amber">🛰️ Adaptive Program Intelligence</span>
+            <span class="pill pill-cyan">Space-Themed Analog UI</span>
+            <span class="pill pill-purple">Agent + Analytics Hub</span>
+          </div>
+          <h1>Agent Hub, Vendor Analytics, Cost Console & Equation Engine</h1>
+          <p>One operating page for analytics health, vendor visibility, agent registry, skill library, equations, and project cost forecasting.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="scrollToSection('vendors')">Vendor Analytics</button>
+            <button class="btn btn-secondary" onclick="scrollToSection('scout-study')">Scout Time Study</button>
+            <button class="btn btn-secondary" onclick="scrollToSection('cost')">Cost Console</button>
+            <button class="btn btn-secondary" onclick="scrollToSection('agents')">Agent Registry</button>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-dial" onclick="scrollTo('vendors')" style="cursor:pointer;" title="Click to view Survey details">
+            <div class="kpi-header"><div><div class="kpi-title">📋 Survey Pass Rate</div><div class="kpi-subtitle">Submissions approved</div></div></div>
+            <div class="kpi-ring-wrapper"><div class="kpi-ring" id="kpiRing1"><div class="kpi-ring-inner"><div class="kpi-value" id="kpiPassRate">—</div><div class="kpi-label">%</div></div></div></div>
+          </div>
+          <div class="kpi-dial" onclick="scrollTo('scout-study')" style="cursor:pointer;" title="Click to view Scout details">
+            <div class="kpi-header"><div><div class="kpi-title">🔭 Scout Completion</div><div class="kpi-subtitle">Sites visited</div></div></div>
+            <div class="kpi-ring-wrapper"><div class="kpi-ring" id="kpiRing2"><div class="kpi-ring-inner"><div class="kpi-value" id="kpiScoutPct">—</div><div class="kpi-label">%</div></div></div></div>
+          </div>
+          <div class="kpi-dial">
+            <div class="kpi-header"><div><div class="kpi-title">📊 Survey Total</div><div class="kpi-subtitle">Submissions received</div></div></div>
+            <div class="kpi-ring-wrapper"><div class="kpi-ring" id="kpiRing3"><div class="kpi-ring-inner"><div class="kpi-value" id="kpiSurveyCount">—</div><div class="kpi-label">subs</div></div></div></div>
+          </div>
+          <div class="kpi-dial">
+            <div class="kpi-header"><div><div class="kpi-title">🏢 Scout Sites</div><div class="kpi-subtitle">Total assigned</div></div></div>
+            <div class="kpi-ring-wrapper"><div class="kpi-ring" id="kpiRing4"><div class="kpi-ring-inner"><div class="kpi-value" id="kpiScoutCount">—</div><div class="kpi-label">sites</div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid">
+      <div class="stat-card stat-cyan"><div class="stat-label">Total Submissions</div><div class="stat-value" id="statTotal">—</div><div class="stat-note">all time</div></div>
+      <div class="stat-card stat-green"><div class="stat-label">Passed</div><div class="stat-value" id="statPassed">—</div><div class="stat-note">approved</div></div>
+      <div class="stat-card stat-red"><div class="stat-label">Failed</div><div class="stat-value" id="statFailed">—</div><div class="stat-note">revision needed</div></div>
+      <div class="stat-card stat-amber"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">—</div><div class="stat-note">in queue</div></div>
+    </div>
+
+    <!-- Vendor Analytics -->
+    <div class="grid-2" id="vendors">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">📊 Vendor Performance</div><div class="panel-subtitle">Pass/fail breakdown by vendor</div></div></div>
+        <div class="panel-body">
+          <div class="chart-container"><canvas id="vendorChart"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">📈 Trend Analysis</div><div class="panel-subtitle">Submissions over time</div></div></div>
+        <div class="panel-body">
+          <div class="chart-container"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Table -->
+    <div class="panel">
+      <div class="panel-header"><div><div class="panel-title">🏢 Granular Vendor Analytics</div><div class="panel-subtitle">Detailed performance metrics</div></div></div>
+      <div class="panel-body" style="overflow-x:auto;">
+        <table class="data-table" id="vendorTable">
+          <thead><tr><th>Vendor</th><th>Submissions</th><th>Passed</th><th>Failed</th><th>Pass Rate</th><th>Risk</th></tr></thead>
+          <tbody id="vendorTableBody"><tr><td colspan="6" style="text-align:center;padding:40px;">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Scout Time Study -->
+    <div class="section-heading" id="scout-study" style="margin: 24px 0 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-soft); font-weight: 700; display: flex; align-items: center; gap: 12px;">🔭 Scout Time Study<span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span></div>
+    
+    <div class="stat-grid" style="margin-bottom:18px;">
+      <div class="stat-card stat-cyan"><div class="stat-label">Total Scout Sites</div><div class="stat-value" id="scoutTotal">—</div><div class="stat-note">assigned</div></div>
+      <div class="stat-card stat-green"><div class="stat-label">Completed</div><div class="stat-value" id="scoutDone">—</div><div class="stat-note">visits done</div></div>
+      <div class="stat-card stat-amber"><div class="stat-label">This Week</div><div class="stat-value" id="scoutWeek">—</div><div class="stat-note">completions</div></div>
+      <div class="stat-card stat-purple"><div class="stat-label">Avg/Week</div><div class="stat-value" id="scoutAvgWeek">—</div><div class="stat-note">velocity</div></div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">📅 Weekly Completion Trend</div><div class="panel-subtitle">Sites completed per week</div></div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="scoutWeeklyChart"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">🏃 Vendor Velocity</div><div class="panel-subtitle">Sites per week by vendor</div></div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="vendorVelocityChart"></canvas></div></div>
+      </div>
+    </div>
+    
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">👷 Surveyor Leaderboard</div><div class="panel-subtitle">Top performers by completions</div></div></div>
+        <div class="panel-body">
+          <div class="scroll-area" style="max-height:240px;">
+            <table class="data-table" id="surveyorTable">
+              <thead><tr><th>Surveyor</th><th>Sites</th><th>Avg Days</th><th>This Week</th></tr></thead>
+              <tbody id="surveyorTableBody"><tr><td colspan="4" style="text-align:center;padding:30px;">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">⏱️ Projected Weeks to Finish</div><div class="panel-subtitle">At current velocity, how long to complete remaining sites</div></div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="timeToCompleteChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Cost Console + Equations -->
+    <div class="grid-2" id="cost" style="margin-top:24px;">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">🧮 Project Cost Console</div><div class="panel-subtitle">Estimate costs, return-trip exposure, and savings</div></div><span class="pill pill-amber">Live calculator</span></div>
+        <div class="panel-body">
+          <div class="grid-2">
+            <div>
+              <div class="section-heading">Input Variables</div>
+              <div class="grid-2">
+                <div class="input-group"><div class="input-label">Total Sites</div><input type="number" class="cost-input" id="totalSites" value="626"></div>
+                <div class="input-group"><div class="input-label">Scout Cost/Site</div><input type="number" class="cost-input" id="scoutCost" value="511"></div>
+                <div class="input-group"><div class="input-label">Fire-Only Survey</div><input type="number" class="cost-input" id="fireCost" value="2200"></div>
+                <div class="input-group"><div class="input-label">CCTV-Only Survey</div><input type="number" class="cost-input" id="cctvCost" value="2800"></div>
+                <div class="input-group"><div class="input-label">Combined Survey</div><input type="number" class="cost-input" id="combinedCost" value="3190"></div>
+                <div class="input-group"><div class="input-label">Legacy Full Cost</div><input type="number" class="cost-input" id="legacyCost" value="3190"></div>
+                <div class="input-group"><div class="input-label">Fire-Only %</div><input type="number" class="cost-input" id="firePct" value="25"></div>
+                <div class="input-group"><div class="input-label">CCTV-Only %</div><input type="number" class="cost-input" id="cctvPct" value="35"></div>
+                <div class="input-group"><div class="input-label">Combined %</div><input type="number" class="cost-input" id="combinedPct" value="40"></div>
+                <div class="input-group"><div class="input-label">Return Trip %</div><input type="number" class="cost-input" id="returnPct" value="8"></div>
+                <div class="input-group"><div class="input-label">Return Trip Cost</div><input type="number" class="cost-input" id="returnCost" value="450"></div>
+                <div class="input-group"><div class="input-label">Contingency %</div><input type="number" class="cost-input" id="contingencyPct" value="7"></div>
+              </div>
+            </div>
+            <div>
+              <div class="section-heading">Calculated Output</div>
+              <div class="grid-2">
+                <div class="stat-card stat-cyan"><div class="stat-label">Fire-Only Sites</div><div class="stat-value" id="outFire">—</div><div class="stat-note">distribution</div></div>
+                <div class="stat-card stat-cyan"><div class="stat-label">CCTV-Only Sites</div><div class="stat-value" id="outCctv">—</div><div class="stat-note">distribution</div></div>
+                <div class="stat-card stat-cyan"><div class="stat-label">Combined Sites</div><div class="stat-value" id="outCombined">—</div><div class="stat-note">distribution</div></div>
+                <div class="stat-card stat-amber"><div class="stat-label">Blended/Site</div><div class="stat-value" id="outBlended">—</div><div class="stat-note">optimized</div></div>
+              </div>
+              <div style="margin-top:12px;">
+                <div class="stat-card stat-cyan" style="margin-bottom:8px;"><div class="stat-label">Total Scout Cost</div><div class="stat-value" id="outScout">—</div></div>
+                <div class="stat-card stat-cyan" style="margin-bottom:8px;"><div class="stat-label">Total Survey Cost</div><div class="stat-value" id="outSurvey">—</div></div>
+                <div class="stat-card stat-red" style="margin-bottom:8px;"><div class="stat-label">Return Trip Exposure</div><div class="stat-value" id="outReturn">—</div></div>
+                <div class="stat-card stat-green"><div class="stat-label">Projected Savings</div><div class="stat-value" id="outSavings">—</div><div class="stat-note">legacy minus optimized</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="equations">
+        <div class="panel-header"><div><div class="panel-title">∑ Equation Engine</div><div class="panel-subtitle">Pre-set formulas for agent binding</div></div></div>
+        <div class="panel-body">
+          <div class="grid-2">
+            <div class="scroll-area" id="equationList"></div>
+            <div>
+              <div style="font-weight:800;font-size:18px;margin-bottom:10px;" id="eqName">Select an equation</div>
+              <div style="color:var(--text-soft);font-size:13px;line-height:1.7;margin-bottom:14px;" id="eqDesc">Click an equation to see details.</div>
+              <div class="equation-display" id="eqFormula">—</div>
+              <div class="section-heading">Inputs</div>
+              <div id="eqInputs" class="pill-row"></div>
+              <div class="section-heading" style="margin-top:14px;">Outputs</div>
+              <div id="eqOutputs" class="pill-row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent & Skill Registry -->
+    <div class="grid-2" id="agents">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">🤖 Agent Registry</div><div class="panel-subtitle">14 agents available</div></div><span class="pill pill-green" id="agentCount">14 agents</span></div>
+        <div class="panel-body">
+          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" placeholder="Search agents..." id="agentSearch"></div>
+          <div class="scroll-area" id="agentList"></div>
+        </div>
+      </div>
+      <div class="panel" id="skills">
+        <div class="panel-header"><div><div class="panel-title">⚡ Skill Registry</div><div class="panel-subtitle">7 skills available</div></div><span class="pill pill-purple" id="skillCount">7 skills</span></div>
+        <div class="panel-body">
+          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" placeholder="Search skills..." id="skillSearch"></div>
+          <div class="scroll-area" id="skillList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ── Stars ───────────────────────────────────────────────────────────────────
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 100; i++) {
+  const s = document.createElement('span');
+  s.className = 'star';
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;opacity:${0.3+Math.random()*0.7};animation-delay:${Math.random()*5}s;`;
+  starsEl.appendChild(s);
+}
+
+// ── Colors ──────────────────────────────────────────────────────────────────
+const C = { cyan:'#5AE4FF', blue:'#4D8DFF', purple:'#9B7CFF', amber:'#FFC857', green:'#45E6A5', red:'#FF6B81', text:'rgba(255,255,255,0.7)', grid:'rgba(255,255,255,0.08)' };
+Chart.defaults.color = C.text;
+Chart.defaults.borderColor = C.grid;
+
+// ── Agents Data ─────────────────────────────────────────────────────────────
+const agents = [
+  { id:'grading-authority', name:'Grading Authority', type:'Runtime Logic', status:'Active', desc:'Defines canonical PASS/FAIL/ERROR rules. 100% deterministic grading.', tags:['core','grading','deterministic'] },
+  { id:'architect', name:'Architect', type:'Session Role', status:'Active', desc:'Session persona for structural decisions. One process, no cloud deps.', tags:['architecture','design'] },
+  { id:'reviewer', name:'Reviewer', type:'Runtime Module', status:'Active', desc:'Reviews code and pipeline runs. Surfaces known risk patterns.', tags:['review','risk','audit'] },
+  { id:'element-llm-gateway', name:'Element LLM Gateway', type:'Runtime Agent', status:'Active', desc:'Generates weekly executive reports via GPT-4o. Only LLM in runtime.', tags:['llm','reporting','executive'] },
+  { id:'airtable', name:'Airtable Client', type:'Integration', status:'Active', desc:'All Airtable API calls. Fetches, downloads, updates records.', tags:['airtable','api','integration'] },
+  { id:'code-puppy', name:'Code Puppy', type:'Dev Assistant', status:'Active', desc:'AI coding assistant. Helps with code tasks and questions.', tags:['assistant','dev'] },
+  { id:'chiefmaxim', name:'Chief Maxim', type:'Oversight', status:'Active', desc:'Executive oversight and program direction.', tags:['executive','oversight'] },
+  { id:'generator', name:'Generator', type:'Code Gen', status:'Active', desc:'Generates code from specifications and fixes.', tags:['codegen','automation'] },
+  { id:'git-truth-guard', name:'Git Truth Guard', type:'Quality Gate', status:'Active', desc:'Ensures git hygiene. Validates commits and branches.', tags:['git','quality'] },
+  { id:'docker-platform-engineer', name:'Docker Platform Engineer', type:'Infrastructure', status:'Ready', desc:'Container orchestration and deployment expertise.', tags:['docker','infra'] },
+  { id:'share-puppy', name:'Share Puppy', type:'Utility', status:'Active', desc:'Shares reports via puppy.walmart.com links.', tags:['sharing','utility'] },
+  { id:'siteowlqa-dev', name:'SiteOwlQA Dev', type:'Dev Mode', status:'Active', desc:'Development mode for the SiteOwlQA pipeline.', tags:['dev','pipeline'] },
+  { id:'specialist-output-validator', name:'Output Validator', type:'Quality Gate', status:'Active', desc:'Validates output format and content integrity.', tags:['validation','quality'] },
+  { id:'system-bottleneck-auditor', name:'Bottleneck Auditor', type:'Analytics', status:'Active', desc:'Identifies system bottlenecks and performance issues.', tags:['performance','audit'] }
+];
+
+// ── Skills Data ─────────────────────────────────────────────────────────────
+const skills = [
+  { id:'flat-html-report', name:'Flat HTML Report', trigger:'build a report, dashboard, visualize data', desc:'Creates self-contained HTML reports with Tailwind + Chart.js.', tags:['reporting','html','charts'] },
+  { id:'git-focused-commit', name:'Git Focused Commit', trigger:'commit changes, save progress', desc:'Creates focused, atomic git commits with clear messages.', tags:['git','commits'] },
+  { id:'git-truth-guard', name:'Git Truth Guard', trigger:'check git hygiene', desc:'Validates git state and ensures clean history.', tags:['git','validation'] },
+  { id:'governance-setup', name:'Governance Setup', trigger:'setup governance, compliance', desc:'Sets up project governance and compliance frameworks.', tags:['governance','compliance'] },
+  { id:'orchestration-map', name:'Orchestration Map', trigger:'show flow, visualize pipeline', desc:'Creates visual pipeline diagrams and architecture maps.', tags:['visualization','architecture'] },
+  { id:'relentless-memory', name:'Relentless Memory', trigger:'remember this, store lesson', desc:'Stores lessons and context for future recall.', tags:['memory','learning'] },
+  { id:'skill-extraction', name:'Skill Extraction', trigger:'extract skill, create skill', desc:'Extracts reusable skills from successful interactions.', tags:['skills','automation'] }
+];
+
+// ── Equations Data ──────────────────────────────────────────────────────────
+const equations = [
+  { name:'Program Health Score', cat:'Core Health', formula:'(0.30 × Quality) + (0.25 × Completion) + (0.20 × SLA) + (0.15 × Cost) + (0.10 × Data)', desc:'Weighted health equation for full program scoring.', inputs:['Quality Score','Completion Rate','SLA Adherence','Cost Efficiency','Data Integrity'], outputs:['0-100 score','health band','trend delta'] },
+  { name:'Vendor Risk Index', cat:'Risk', formula:'((Schedule × 0.30) + (Rework × 0.25) + (Quality × 0.20) + (Saturation × 0.15) + (Gaps × 0.10)) × 100', desc:'Determines which vendors need intervention.', inputs:['Schedule Variance','Rework Rate','Quality Variance','Resource Saturation','Data Gaps'], outputs:['risk score','risk tier','escalation flag'] },
+  { name:'Survey Scope Yield', cat:'Optimization', formula:'(Correct First-Pass Decisions ÷ Total Decisions) × 100', desc:'Measures scope assignment accuracy.', inputs:['Correct Decisions','Total Decisions'], outputs:['scope accuracy %','confidence trend'] },
+  { name:'Cost Avoidance Projection', cat:'Finance', formula:'(Legacy Cost − Current Cost) × Forecasted Volume', desc:'Projects savings from automation and optimization.', inputs:['Legacy Cost/Site','Current Cost/Site','Forecasted Volume'], outputs:['projected savings','savings/site'] }
+];
+
+// ── Render Agents ───────────────────────────────────────────────────────────
+function renderAgents(filter = '') {
+  const list = document.getElementById('agentList');
+  const filtered = agents.filter(a => !filter || a.name.toLowerCase().includes(filter) || a.type.toLowerCase().includes(filter) || a.tags.some(t => t.includes(filter)));
+  list.innerHTML = filtered.map(a => `
+    <div class="registry-card">
+      <div class="registry-card-header">
+        <div class="registry-card-title">${a.name}</div>
+        <span class="pill pill-${a.status==='Active'?'green':'cyan'}">${a.status}</span>
+      </div>
+      <div class="registry-card-desc">${a.desc}</div>
+      <div class="registry-card-meta">
+        <span class="pill pill-blue">${a.type}</span>
+        ${a.tags.map(t => `<span class="pill pill-purple">${t}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('agentCount').textContent = `${filtered.length} agents`;
+}
+
+// ── Render Skills ───────────────────────────────────────────────────────────
+function renderSkills(filter = '') {
+  const list = document.getElementById('skillList');
+  const filtered = skills.filter(s => !filter || s.name.toLowerCase().includes(filter) || s.trigger.toLowerCase().includes(filter) || s.tags.some(t => t.includes(filter)));
+  list.innerHTML = filtered.map(s => `
+    <div class="registry-card">
+      <div class="registry-card-header">
+        <div class="registry-card-title">${s.name}</div>
+      </div>
+      <div class="registry-card-desc">${s.desc}</div>
+      <div style="color:var(--amber);font-size:11px;margin-bottom:10px;">Trigger: "${s.trigger}"</div>
+      <div class="registry-card-meta">${s.tags.map(t => `<span class="pill pill-cyan">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+  document.getElementById('skillCount').textContent = `${filtered.length} skills`;
+}
+
+// ── Render Equations ────────────────────────────────────────────────────────
+function renderEquations() {
+  const list = document.getElementById('equationList');
+  list.innerHTML = equations.map((e, i) => `<button class="equation-btn${i===0?' active':''}" onclick="selectEquation(${i})" id="eq${i}"><div class="equation-btn-title">${e.name}</div><div class="equation-btn-cat">${e.cat}</div></button>`).join('');
+  selectEquation(0);
+}
+function selectEquation(i) {
+  document.querySelectorAll('.equation-btn').forEach((b,j) => b.classList.toggle('active', i===j));
+  const e = equations[i];
+  document.getElementById('eqName').textContent = e.name;
+  document.getElementById('eqDesc').textContent = e.desc;
+  document.getElementById('eqFormula').textContent = e.formula;
+  document.getElementById('eqInputs').innerHTML = e.inputs.map(x => `<span class="pill pill-cyan">${x}</span>`).join('');
+  document.getElementById('eqOutputs').innerHTML = e.outputs.map(x => `<span class="pill pill-amber">${x}</span>`).join('');
+}
+
+// ── Cost Calculator ─────────────────────────────────────────────────────────
+function calcCosts() {
+  const v = id => parseFloat(document.getElementById(id).value) || 0;
+  const total = v('totalSites'), scout = v('scoutCost'), fire = v('fireCost'), cctv = v('cctvCost'), comb = v('combinedCost'), legacy = v('legacyCost');
+  const firePct = v('firePct'), cctvPct = v('cctvPct'), combPct = v('combinedPct'), retPct = v('returnPct'), retCost = v('returnCost'), contPct = v('contingencyPct');
+  const sum = firePct + cctvPct + combPct || 1;
+  const fireSites = Math.round(total * firePct / sum), cctvSites = Math.round(total * cctvPct / sum), combSites = total - fireSites - cctvSites;
+  const scoutTotal = total * scout, surveyTotal = fireSites * fire + cctvSites * cctv + combSites * comb;
+  const returnExp = total * (retPct/100) * retCost, contingency = (scoutTotal + surveyTotal + returnExp) * (contPct/100);
+  const optimized = scoutTotal + surveyTotal + returnExp + contingency, legacyTotal = total * legacy, savings = legacyTotal - optimized;
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  document.getElementById('outFire').textContent = fireSites;
+  document.getElementById('outCctv').textContent = cctvSites;
+  document.getElementById('outCombined').textContent = combSites;
+  document.getElementById('outBlended').textContent = fmt(optimized / total);
+  document.getElementById('outScout').textContent = fmt(scoutTotal);
+  document.getElementById('outSurvey').textContent = fmt(surveyTotal);
+  document.getElementById('outReturn').textContent = fmt(returnExp);
+  document.getElementById('outSavings').textContent = fmt(savings);
+}
+document.querySelectorAll('.cost-input').forEach(el => el.addEventListener('input', calcCosts));
+
+// ── Load Survey Data ────────────────────────────────────────────────────────
+let surveyData = null;
+async function loadData() {
+  try {
+    const r = await fetch('team_dashboard_data.json');
+    if (r.ok) { surveyData = await r.json(); renderAll(); }
+  } catch(e) { console.log('No data:', e); }
+}
+
+function renderAll() {
+  if (!surveyData) return;
+  const recs = surveyData?.survey?.records || [];
+  const vendors = surveyData?.vendor_assignments?.vendors || [];
+  
+  // Survey stats
+  const total = recs.length;
+  const passed = recs.filter(r => r.processing_status==='PASS').length;
+  const failed = recs.filter(r => r.processing_status==='FAIL').length;
+  const pending = total - passed - failed;
+  const passRate = total ? Math.round(passed/total*100) : 0;
+  
+  // Scout stats
+  let scoutAssigned = 0, scoutCompleted = 0;
+  vendors.forEach(v => { 
+    scoutAssigned += v.total_assigned || 0; 
+    scoutCompleted += v.completed || 0; 
+  });
+  const scoutPct = scoutAssigned ? Math.round(scoutCompleted/scoutAssigned*100) : 0;
+  
+  // Update KPIs
+  updateKPI('kpiPassRate', passRate, 'kpiRing1', passRate >= 80 ? '#45E6A5' : passRate >= 50 ? '#FFC857' : '#FF6B81');
+  updateKPI('kpiScoutPct', scoutPct, 'kpiRing2', scoutPct >= 50 ? '#45E6A5' : scoutPct >= 20 ? '#FFC857' : '#5AE4FF');
+  document.getElementById('kpiSurveyCount').textContent = total;
+  document.getElementById('kpiScoutCount').textContent = scoutAssigned;
+  document.getElementById('kpiRing3').style.background = `conic-gradient(#9B7CFF ${Math.min(total/100*3.6, 360)}deg, rgba(255,255,255,0.08) 0deg)`;
+  document.getElementById('kpiRing4').style.background = `conic-gradient(#FFC857 ${Math.min(scoutAssigned/1000*360, 360)}deg, rgba(255,255,255,0.08) 0deg)`;
+  
+  // Update stat cards
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPassed').textContent = passed;
+  document.getElementById('statFailed').textContent = failed;
+  document.getElementById('statPending').textContent = pending;
+  
+  renderVendorChart(recs); 
+  renderTrendChart(recs); 
+  renderVendorTable(recs);
+  renderScoutTimeStudy();
+}
+
+function updateKPI(id, val, ringId, color) {
+  document.getElementById(id).textContent = val;
+  document.getElementById(ringId).style.background = `conic-gradient(${color} ${val*3.6}deg, rgba(255,255,255,0.08) 0deg)`;
+}
+
+function renderVendorChart(recs) {
+  const stats = {};
+  recs.forEach(r => { const v = r.vendor_name || 'Unknown'; if (!stats[v]) stats[v] = {p:0,f:0}; if (r.processing_status==='PASS') stats[v].p++; else if (r.processing_status==='FAIL') stats[v].f++; });
+  const labels = Object.keys(stats).slice(0,8);
+  new Chart(document.getElementById('vendorChart'), { type:'bar', data:{ labels, datasets:[{ label:'Pass', data:labels.map(v=>stats[v].p), backgroundColor:C.cyan, borderRadius:6 },{ label:'Fail', data:labels.map(v=>stats[v].f), backgroundColor:C.red, borderRadius:6 }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{grid:{display:false}}, y:{grid:{color:C.grid}} } } });
+}
+
+function renderTrendChart(recs) {
+  const stats = {};
+  recs.forEach(r => { const d = (r.submitted_at||'').slice(0,10); if (d) { if (!stats[d]) stats[d]=0; stats[d]++; } });
+  const dates = Object.keys(stats).sort().slice(-14);
+  new Chart(document.getElementById('trendChart'), { type:'line', data:{ labels:dates.map(d=>d.slice(5)), datasets:[{ label:'Submissions', data:dates.map(d=>stats[d]), borderColor:C.cyan, backgroundColor:'rgba(90,228,255,0.15)', fill:true, tension:0.4 }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{grid:{color:C.grid}}, y:{grid:{color:C.grid}} } } });
+}
+
+function renderVendorTable(recs) {
+  const stats = {};
+  recs.forEach(r => { const v = r.vendor_name || 'Unknown'; if (!stats[v]) stats[v] = {t:0,p:0,f:0}; stats[v].t++; if (r.processing_status==='PASS') stats[v].p++; else if (r.processing_status==='FAIL') stats[v].f++; });
+  const sorted = Object.entries(stats).sort((a,b) => b[1].t - a[1].t);
+  document.getElementById('vendorTableBody').innerHTML = sorted.map(([v,s]) => {
+    const rate = Math.round(s.p/s.t*100), risk = 100-rate, cls = risk>=55?'risk-high':risk>=35?'risk-med':'risk-low';
+    return `<tr><td>${v}</td><td>${s.t}</td><td>${s.p}</td><td>${s.f}</td><td>${rate}%</td><td><span class="risk-badge ${cls}">${risk}</span></td></tr>`;
+  }).join('');
+}
+
+// ── Search handlers ─────────────────────────────────────────────────────────
+document.getElementById('agentSearch').addEventListener('input', e => renderAgents(e.target.value.toLowerCase()));
+document.getElementById('skillSearch').addEventListener('input', e => renderSkills(e.target.value.toLowerCase()));
+
+// ── Scroll helper ───────────────────────────────────────────────────────────
+function scrollToSection(id) { 
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ── Scout Time Study ────────────────────────────────────────────────────────
+function renderScoutTimeStudy() {
+  const scout = surveyData?.scout?.records || [];
+  const vendors = surveyData?.vendor_assignments?.vendors || [];
+  
+  // Calculate totals
+  let totalAssigned = 0, totalCompleted = 0;
+  vendors.forEach(v => { totalAssigned += v.total_assigned || 0; totalCompleted += v.completed || 0; });
+  
+  // Group by week
+  const weeklyStats = {};
+  const vendorWeekly = {};
+  const surveyorStats = {};
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  let thisWeekCount = 0;
+  
+  scout.forEach(r => {
+    const raw = r.raw_fields || {};
+    const scoutDate = raw['Scout Date'];
+    const surveyor = raw['Surveyor Name'] || 'Unknown';
+    const vendor = r.vendor_name || 'Unknown';
+    
+    if (!scoutDate) return;
+    const d = new Date(scoutDate);
+    
+    // Week key (ISO week)
+    const wk = getWeekKey(d);
+    if (!weeklyStats[wk]) weeklyStats[wk] = 0;
+    weeklyStats[wk]++;
+    
+    // Vendor weekly
+    if (!vendorWeekly[vendor]) vendorWeekly[vendor] = {};
+    if (!vendorWeekly[vendor][wk]) vendorWeekly[vendor][wk] = 0;
+    vendorWeekly[vendor][wk]++;
+    
+    // This week
+    if (d >= weekStart) thisWeekCount++;
+    
+    // Surveyor stats
+    if (!surveyorStats[surveyor]) surveyorStats[surveyor] = { count: 0, thisWeek: 0, dates: [] };
+    surveyorStats[surveyor].count++;
+    surveyorStats[surveyor].dates.push(d);
+    if (d >= weekStart) surveyorStats[surveyor].thisWeek++;
+  });
+  
+  // Update KPIs
+  document.getElementById('scoutTotal').textContent = totalAssigned;
+  document.getElementById('scoutDone').textContent = totalCompleted;
+  document.getElementById('scoutWeek').textContent = thisWeekCount;
+  
+  // Average per week
+  const weeks = Object.keys(weeklyStats).length || 1;
+  const avgPerWeek = (totalCompleted / weeks).toFixed(1);
+  document.getElementById('scoutAvgWeek').textContent = avgPerWeek;
+  
+  // Weekly completion chart
+  renderWeeklyChart(weeklyStats);
+  
+  // Vendor velocity chart
+  renderVelocityChart(vendorWeekly, weeks);
+  
+  // Surveyor leaderboard
+  renderSurveyorTable(surveyorStats);
+  
+  // Projected completion chart
+  renderTimeToCompleteChart(vendors, vendorWeekly, weeks);
+}
+
+function getWeekKey(d) {
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+function renderWeeklyChart(weeklyStats) {
+  const labels = Object.keys(weeklyStats).sort().slice(-12);
+  const data = labels.map(w => weeklyStats[w]);
+  
+  const ctx = document.getElementById('scoutWeeklyChart');
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.map(w => w.split('-')[1]),
+      datasets: [{
+        label: 'Sites Completed',
+        data,
+        backgroundColor: 'rgba(90,228,255,0.7)',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+// Vendor name mapping
+const vendorNameMap = {
+  'customelectronics.com': 'CEI',
+  'securitasinc.com': 'SAS',
+  'teaborinc.com': 'Techwise',
+  'wachter.com': 'Wachter',
+  'evaborinc.com': 'Everon',
+  'Wachter': 'Wachter',
+  'Everon': 'Everon',
+  'Custom Electronics': 'CEI',
+  'Securitas': 'SAS',
+  'Techwise': 'Techwise'
+};
+
+function getVendorShortName(name) {
+  if (vendorNameMap[name]) return vendorNameMap[name];
+  // Try partial matches
+  const lower = name.toLowerCase();
+  if (lower.includes('custom') || lower.includes('cei')) return 'CEI';
+  if (lower.includes('securitas') || lower.includes('sas')) return 'SAS';
+  if (lower.includes('tech') || lower.includes('teabor')) return 'Techwise';
+  if (lower.includes('wachter')) return 'Wachter';
+  if (lower.includes('everon') || lower.includes('evabor')) return 'Everon';
+  return name.split('.')[0].slice(0, 10);
+}
+
+function renderVelocityChart(vendorWeekly, weeks) {
+  const velocities = [];
+  for (const [vendor, wks] of Object.entries(vendorWeekly)) {
+    const total = Object.values(wks).reduce((a, b) => a + b, 0);
+    velocities.push({ vendor, velocity: (total / weeks).toFixed(1) });
+  }
+  velocities.sort((a, b) => b.velocity - a.velocity);
+  
+  const ctx = document.getElementById('vendorVelocityChart');
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: velocities.map(v => getVendorShortName(v.vendor)),
+      datasets: [{
+        label: 'Sites/Week',
+        data: velocities.map(v => parseFloat(v.velocity)),
+        backgroundColor: ['#9B7CFF', '#5AE4FF', '#45E6A5', '#FFC857', '#FF6B81'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true },
+        y: { grid: { display: false } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function renderSurveyorTable(surveyorStats) {
+  const sorted = Object.entries(surveyorStats)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 10);
+  
+  const tbody = document.getElementById('surveyorTableBody');
+  tbody.innerHTML = sorted.map(([name, s], i) => {
+    // Calculate avg days between completions
+    let avgDays = '—';
+    if (s.dates.length > 1) {
+      s.dates.sort((a, b) => a - b);
+      let totalDiff = 0;
+      for (let j = 1; j < s.dates.length; j++) {
+        totalDiff += (s.dates[j] - s.dates[j-1]) / 86400000;
+      }
+      avgDays = (totalDiff / (s.dates.length - 1)).toFixed(1);
+    }
+    const medal = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
+    return `<tr><td>${medal}${name}</td><td>${s.count}</td><td>${avgDays}</td><td>${s.thisWeek}</td></tr>`;
+  }).join('');
+}
+
+function renderTimeToCompleteChart(vendors, vendorWeekly, weeks) {
+  // Calculate projected weeks to finish based on current velocity
+  const projections = vendors.map(v => {
+    const name = v.vendor_name;
+    const remaining = v.remaining || 0;
+    
+    // Get this vendor's velocity
+    let velocity = 0;
+    for (const [vn, wks] of Object.entries(vendorWeekly)) {
+      if (vn.toLowerCase().includes(name.toLowerCase().slice(0,4)) || 
+          name.toLowerCase().includes(vn.toLowerCase().slice(0,4))) {
+        const total = Object.values(wks).reduce((a, b) => a + b, 0);
+        velocity = total / weeks;
+        break;
+      }
+    }
+    
+    // If no velocity data, estimate from completion rate
+    if (velocity === 0 && v.completed > 0) {
+      velocity = v.completed / weeks;
+    }
+    
+    const weeksToFinish = velocity > 0 ? Math.ceil(remaining / velocity) : 999;
+    
+    return {
+      name: getVendorShortName(name),
+      remaining,
+      velocity: velocity.toFixed(1),
+      weeksToFinish: weeksToFinish > 100 ? '100+' : weeksToFinish
+    };
+  }).filter(p => p.remaining > 0).sort((a, b) => {
+    const aW = a.weeksToFinish === '100+' ? 999 : a.weeksToFinish;
+    const bW = b.weeksToFinish === '100+' ? 999 : b.weeksToFinish;
+    return aW - bW;
+  });
+  
+  const ctx = document.getElementById('timeToCompleteChart');
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: projections.map(p => p.name),
+      datasets: [{
+        label: 'Weeks to Finish',
+        data: projections.map(p => p.weeksToFinish === '100+' ? 100 : p.weeksToFinish),
+        backgroundColor: projections.map(p => {
+          const w = p.weeksToFinish === '100+' ? 100 : p.weeksToFinish;
+          if (w <= 12) return '#45E6A5'; // Green - on track
+          if (w <= 26) return '#FFC857'; // Amber - moderate
+          return '#FF6B81'; // Red - behind
+        }),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false } },
+        y: { 
+          grid: { color: 'rgba(255,255,255,0.06)' }, 
+          beginAtZero: true,
+          title: { display: true, text: 'Weeks', color: '#9EB1D4' }
+        }
+      },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const p = projections[ctx.dataIndex];
+              return `${p.weeksToFinish} weeks (${p.remaining} sites @ ${p.velocity}/wk)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+renderAgents(); renderSkills(); renderEquations(); calcCosts(); loadData();
+</script>
+</body>
+</html>

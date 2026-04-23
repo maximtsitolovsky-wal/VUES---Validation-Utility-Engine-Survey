@@ -27,3 +27,4 @@ python-dotenv>=1.0.1
 
 # Standard library modules used (no install needed, listed for clarity):
 # smtplib, csv, json, logging, pathlib, dataclasses, typing, shutil
+watchdog

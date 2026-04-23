@@ -145,7 +145,7 @@ if exist "%PORT_FILE%" (
   set /p PORT=<"%PORT_FILE%"
   set PORT=!PORT: =!
 )
-set DASHBOARD_URL=http://127.0.0.1:!PORT!/executive_dashboard.html
+set DASHBOARD_URL=http://127.0.0.1:!PORT!/index.html
 echo [INFO] Opening: !DASHBOARD_URL!
 start "" "!DASHBOARD_URL!"
 exit /b 0

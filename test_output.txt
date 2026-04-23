@@ -1,0 +1,27 @@
+============================================================
+SURVEY TYPE COLUMN SELECTION TEST
+============================================================
+
+CCTV Survey Type:
+  Input columns: ('Name', 'Part Number', 'Manufacturer', 'IP Address', 'MAC Address', 'IP / Analog')
+  Selected: ('Name', 'Part Number', 'Manufacturer', 'IP Address', 'MAC Address', 'IP / Analog')
+  Count: 6
+
+FA/Intrusion Survey Type:
+  Input columns: ('Abbreviated Name', 'Description')
+  Base selected: ('Abbreviated Name', 'Description')
+  After Name adjustment: ('Name', 'Abbreviated Name', 'Description')
+  (Name added because Abbreviated Name has content)
+
+FA/Intrusion (no Abbreviated content):
+  After Name adjustment: ('Abbreviated Name', 'Description')
+  (Name NOT added because Abbreviated Name is empty)
+
+BOTH Survey Type:
+  Input columns: ('Name', 'Abbreviated Name', 'Part Number', 'Manufacturer', 'IP Address', 'MAC Address', 'IP / Analog', 'Description')
+  Selected: ('Name', 'Abbreviated Name', 'Part Number', 'Manufacturer', 'IP Address', 'MAC Address', 'IP / Analog', 'Description')
+  Count: 8
+
+============================================================
+ALL TESTS PASSED - Survey Type Routing Works!
+============================================================

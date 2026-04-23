@@ -29,26 +29,32 @@ def find_and_regrade(submission_id: str) -> None:
     corrections_dir = cfg.correction_log_dir or (cfg.output_dir / "corrections")
     correction_state = CorrectionStateDB(corrections_dir)
     
-    # Search for the submission
-    formula = f"{{Submission ID}}='{submission_id}'"
-    records = airtable.fetch_records(formula=formula)
+    # Fetch all raw records and filter client-side
+    print("[FETCH] Loading all raw records from Airtable...")
+    all_records = airtable.list_all_raw_records()
     
-    if not records:
-        print(f"[X] No record found with Submission ID = {submission_id}")
-        print("   Trying as Site Number instead...")
-        formula = f"{{Site Number}}='{submission_id}'"
-        records = airtable.fetch_records(formula=formula)
-        
-        if not records:
-            print(f"[X] No record found with Site Number = {submission_id} either.")
-            return
-        print(f"[OK] Found {len(records)} record(s) for Site Number {submission_id}")
-    else:
-        print(f"[OK] Found {len(records)} record(s) for Submission ID {submission_id}")
+    # Find by Submission ID first, then by Site Number
+    matches = [
+        r for r in all_records
+        if str(r.get("fields", {}).get("Submission ID", "")) == submission_id
+    ]
     
-    for rec in records:
-        record_id = rec.record_id
-        fields = airtable.get_record_fields(record_id)
+    if not matches:
+        print(f"[INFO] No match for Submission ID = {submission_id}, trying Site Number...")
+        matches = [
+            r for r in all_records
+            if str(r.get("fields", {}).get("Site Number", "")) == submission_id
+        ]
+    
+    if not matches:
+        print(f"[X] No record found for '{submission_id}' as Submission ID or Site Number.")
+        return
+    
+    print(f"[OK] Found {len(matches)} record(s)")
+    
+    for raw in matches:
+        record_id = raw["id"]
+        fields = raw.get("fields", {})
         
         print(f"\n{'='*60}")
         print(f"Record ID: {record_id}")

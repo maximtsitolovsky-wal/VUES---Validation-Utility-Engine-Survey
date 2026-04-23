@@ -22,10 +22,14 @@ cfg = load_config()
 print("Config loaded")
 
 # Load the file
-from siteowlqa.file_processor import load_submission_file
-df = load_submission_file(file_path)
+from siteowlqa.file_processor import load_vendor_file
+result = load_vendor_file(file_path)
+df = result.df
 print(f"Submission loaded: {len(df)} rows")
+print(f"Vendor detected: {result.vendor_name}")
 print(f"Columns: {list(df.columns)[:6]}...")
+if result.errors:
+    print(f"Load warnings: {result.errors}")
 
 # Get reference data
 from siteowlqa.reference_data import fetch_reference_rows

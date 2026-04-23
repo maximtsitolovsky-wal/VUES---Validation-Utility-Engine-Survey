@@ -22,18 +22,19 @@ cfg = load_config()
 print("Config loaded")
 
 # Load the file
-from siteowlqa.file_processor import load_vendor_file
-result = load_vendor_file(file_path)
-df = result.df
+site_number = '686'
+from siteowlqa.file_processor import load_vendor_file_with_metadata
+file_result = load_vendor_file_with_metadata(file_path, site_number)
+df = file_result.dataframe
 print(f"Submission loaded: {len(df)} rows")
-print(f"Vendor detected: {result.vendor_name}")
 print(f"Columns: {list(df.columns)[:6]}...")
-if result.errors:
-    print(f"Load warnings: {result.errors}")
+if file_result.missing_required_columns:
+    print(f"Missing columns: {file_result.missing_required_columns}")
+if file_result.extra_columns:
+    print(f"Extra columns: {file_result.extra_columns[:5]}...")
 
 # Get reference data
 from siteowlqa.reference_data import fetch_reference_rows
-site_number = '686'
 print(f"\nFetching reference data for site {site_number}...")
 ref_rows = fetch_reference_rows(cfg, site_number)
 print(f"Reference rows: {len(ref_rows)}")
@@ -46,10 +47,10 @@ if not ref_rows:
 from siteowlqa.python_grader import grade_submission_in_python
 print("Running grader...")
 result = grade_submission_in_python(
-    raw_df=df,
-    site_number=site_number,
-    vendor_name='Test',
     cfg=cfg,
+    submission_df=df,
+    submission_id='test-686-local',
+    site_number=site_number,
 )
 
 print(f"\n{'='*40}")

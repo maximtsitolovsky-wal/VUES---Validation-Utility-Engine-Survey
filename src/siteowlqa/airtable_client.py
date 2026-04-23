@@ -879,6 +879,7 @@ class AirtableClient:
             processing_status=str(fields.get(FIELDS.status, "")),
             submitted_at=str(fields.get(FIELDS.submitted_at, "")),
             team_key="survey",
+            survey_type=str(fields.get(FIELDS.survey_type, "")).strip() or None,
         )
 
 

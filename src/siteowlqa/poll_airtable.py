@@ -165,6 +165,7 @@ def process_record(
                     submission_df=df,
                     submission_id=record.submission_id,
                     site_number=record.site_number,
+                    survey_type=record.survey_type,
                 )
                 result = grade_outcome.result
                 error_df = grade_outcome.error_df

@@ -39,7 +39,7 @@ print(f"\nFetching reference data for site {site_number}...")
 ref_rows = fetch_reference_rows(cfg, site_number)
 print(f"Reference rows: {len(ref_rows)}")
 
-if not ref_rows:
+if ref_rows.empty:
     print("ERROR: No reference data found for site 686!")
     sys.exit(1)
 

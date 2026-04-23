@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from unittest.mock import patch, MagicMock
 
 import pandas as pd
 
@@ -14,6 +15,7 @@ from siteowlqa.reference_data import (
     fetch_reference_rows,
     fetch_site_reference_profile,
     normalize_reference_dataframe,
+    _resolve_reference_source,
 )
 
 

@@ -4,8 +4,9 @@ One module, one job: provide site-scoped reference rows and site profiles
 from the configured source of truth.
 
 Supported sources:
-- bigquery -> device_survey_task_details (GSOC table)
-- excel    -> cleaned workbook keyed by Site ID
+- bigquery              -> device_survey_task_details (GSOC table), no fallback
+- excel                 -> cleaned workbook keyed by Site ID
+- bigquery_with_fallback -> try BQ first, fall back to Excel if BQ fails/times out
 
 Because duplicating lookup logic in multiple modules is how bugs breed.
 """
@@ -46,11 +47,55 @@ class SiteReferenceProfile:
 def fetch_reference_rows(cfg: AppConfig, site_number: str) -> pd.DataFrame:
     """Return canonical reference rows for one site from the active source."""
     source = _resolve_reference_source(cfg)
+    
     if source == "excel":
         workbook_path = _require_workbook_path(cfg)
         return _fetch_reference_rows_from_excel(cfg, workbook_path, site_number)
-    # Default: bigquery
+    
+    if source == "bigquery_with_fallback":
+        return _fetch_with_bq_fallback(cfg, site_number)
+    
+    # Default: bigquery (no fallback)
     return fetch_reference_rows_from_bigquery(cfg, site_number)
+
+
+def _fetch_with_bq_fallback(cfg: AppConfig, site_number: str) -> pd.DataFrame:
+    """Try BigQuery first; fall back to Excel workbook if BQ fails.
+    
+    This pattern keeps the grading pipeline running when BQ is slow, down,
+    or throwing quota errors. The Excel workbook acts as a local cache/backup.
+    """
+    try:
+        log.debug("Attempting BigQuery fetch for site=%s...", site_number)
+        df = fetch_reference_rows_from_bigquery(cfg, site_number)
+        log.debug("BigQuery fetch succeeded for site=%s (%d rows)", site_number, len(df))
+        return df
+    except Exception as exc:  # noqa: BLE001 — intentionally broad catch for resilience
+        # Log the BQ failure but don't crash — try the backup.
+        log.warning(
+            "BigQuery fetch failed for site=%s (%s: %s). Falling back to Excel workbook.",
+            site_number,
+            type(exc).__name__,
+            exc,
+        )
+    
+    # Fallback: Excel workbook
+    try:
+        workbook_path = _require_workbook_path(cfg)
+        df = _fetch_reference_rows_from_excel(cfg, workbook_path, site_number)
+        log.info(
+            "Excel fallback succeeded for site=%s (%d rows). "
+            "Consider investigating BQ issues.",
+            site_number,
+            len(df),
+        )
+        return df
+    except Exception as fallback_exc:
+        # Both sources failed — this is fatal for grading.
+        raise RuntimeError(
+            f"Both BigQuery AND Excel fallback failed for site={site_number}. "
+            f"BQ error was logged above. Excel error: {fallback_exc}"
+        ) from fallback_exc
 
 
 
@@ -96,15 +141,28 @@ def normalize_reference_dataframe(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 def _resolve_reference_source(cfg: AppConfig) -> str:
     source = (cfg.reference_source or "bigquery").strip().lower()
-    if source not in {"excel", "bigquery"}:
+    valid_sources = {"excel", "bigquery", "bigquery_with_fallback"}
+    
+    if source not in valid_sources:
         raise ValueError(
             f"Unsupported REFERENCE_SOURCE='{cfg.reference_source}'. "
-            "Expected one of: bigquery, excel."
+            f"Expected one of: {', '.join(sorted(valid_sources))}."
         )
+    
+    # Excel-only mode requires a workbook path.
     if source == "excel" and not cfg.reference_workbook_path:
         raise ValueError(
             "REFERENCE_SOURCE=excel requires REFERENCE_WORKBOOK_PATH or an auto-detected workbook."
         )
+    
+    # Fallback mode also needs a workbook path (otherwise what would we fall back to?).
+    if source == "bigquery_with_fallback" and not cfg.reference_workbook_path:
+        raise ValueError(
+            "REFERENCE_SOURCE=bigquery_with_fallback requires REFERENCE_WORKBOOK_PATH "
+            "to be set so there's actually something to fall back to. "
+            "Either set the path or use REFERENCE_SOURCE=bigquery (no fallback)."
+        )
+    
     return source
 
 

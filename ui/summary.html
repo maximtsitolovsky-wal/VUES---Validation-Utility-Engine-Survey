@@ -271,14 +271,15 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">🏢 Vendor Scorecard</div>
+          <span class="badge badge-date" style="font-size:9px;" title="Score = (Completion% × 0.4) + (Velocity × 0.3) + (OnTrack × 0.3)">🧮 Score Formula</span>
         </div>
         <div class="panel-body" style="padding:0; overflow-x:auto;">
           <table class="vendor-table">
             <thead>
-              <tr><th>Vendor</th><th>Assigned</th><th>Done</th><th>Progress</th><th>Rate</th><th>Status</th></tr>
+              <tr><th>Vendor</th><th>Assigned</th><th>Done</th><th>Velocity</th><th>Progress</th><th>Score</th><th>Rank</th></tr>
             </thead>
             <tbody id="vendorTableBody">
-              <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-soft);">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-soft);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -527,19 +528,36 @@ function renderDistChart(vendors) {
 }
 
 function renderVendorTable(vendors) {
+  // Recalculate scores for table
+  const PROGRAM_WEEK = 3;
+  const TOTAL_WEEKS = 16;
+  const expectedProgress = (PROGRAM_WEEK / TOTAL_WEEKS) * 100;
+  const maxVelocity = Math.max(...vendors.map(v => v.completed / PROGRAM_WEEK || 0), 1);
+  
+  const scoredVendors = vendors.map(v => {
+    const completionScore = (v.completion_rate || 0) * 0.4;
+    const vendorVelocity = v.completed / PROGRAM_WEEK || 0;
+    const velocityScore = (vendorVelocity / maxVelocity) * 30;
+    const onTrackBonus = (v.completion_rate || 0) >= expectedProgress ? 30 : ((v.completion_rate || 0) / expectedProgress) * 30;
+    const totalScore = completionScore + velocityScore + onTrackBonus;
+    return { ...v, score: totalScore, velocity: vendorVelocity };
+  }).sort((a, b) => b.score - a.score);
+  
   const tbody = document.getElementById('vendorTableBody');
-  tbody.innerHTML = vendors.map(v => {
+  tbody.innerHTML = scoredVendors.map((v, idx) => {
     const rate = v.completion_rate || 0;
     const color = rate >= 10 ? C.green : rate >= 5 ? C.amber : C.red;
-    const status = rate >= 10 ? 'On Track' : rate >= 5 ? 'Slow' : 'Behind';
     const initials = getVendorName(v.vendor_name).slice(0, 2).toUpperCase();
+    const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
+    const scoreColor = v.score >= 50 ? C.green : v.score >= 30 ? C.amber : C.red;
     return `<tr>
       <td><div class="vendor-name"><div class="vendor-avatar">${initials}</div>${getVendorName(v.vendor_name)}</div></td>
       <td>${v.total_assigned}</td>
-      <td>${v.completed}</td>
-      <td><div class="progress-bar"><div class="progress-fill" style="width:${rate}%;background:${color}"></div></div></td>
-      <td style="color:${color};font-weight:700;">${rate.toFixed(1)}%</td>
-      <td><span class="status-chip" style="background:${color}22;color:${color}">${status}</span></td>
+      <td style="color:${C.green};font-weight:700;">${v.completed}</td>
+      <td><span class="metric" style="font-size:11px;">${v.velocity.toFixed(1)}/wk</span></td>
+      <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(rate, 100)}%;background:${color}"></div></div><span style="font-size:10px;color:${color};margin-left:6px;">${rate.toFixed(1)}%</span></td>
+      <td style="color:${scoreColor};font-weight:800;font-size:16px;">${v.score.toFixed(0)}</td>
+      <td style="font-size:16px;">${rankEmoji}</td>
     </tr>`;
   }).join('');
 }

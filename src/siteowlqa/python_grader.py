@@ -186,8 +186,10 @@ def grade_submission_in_python(
     # This naturally penalizes both:
     # - Inaccurate submissions (mismatches reduce matched_rows)
     # - Incomplete submissions (missing inventory reduces score)
-    submitted_rows = max(len(submission_norm), 1)
-    reference_rows = max(len(reference_norm), 1)
+    # 
+    # Use FILTERED row counts - we only score rows relevant to this survey type
+    submitted_rows = max(len(submission_filtered), 1)
+    reference_rows = max(len(reference_filtered), 1)
 
     accuracy = comparison.matched_rows / submitted_rows
     coverage = comparison.covered_reference_rows / reference_rows
@@ -208,8 +210,8 @@ def grade_submission_in_python(
     notes_internal = _build_internal_notes(
         submission_id=submission_id,
         site_number=site_number,
-        submission_row_count=len(submission_norm),
-        reference_row_count=len(reference_norm),
+        submission_row_count=len(submission_filtered),
+        reference_row_count=len(reference_filtered),
         accuracy_pct=accuracy_pct,
         coverage_pct=coverage_pct,
         comparable_cols=comparable_cols,

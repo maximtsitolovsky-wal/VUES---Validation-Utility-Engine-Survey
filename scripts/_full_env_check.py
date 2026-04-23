@@ -14,15 +14,15 @@ failed = []
 warned = []
 
 def ok(name, detail=""):
-    print(f"  ✓ {name}" + (f" ({detail})" if detail else ""))
+    print(f"  [OK]   {name}" + (f" ({detail})" if detail else ""))
     passed.append(name)
 
 def fail(name, reason):
-    print(f"  ✗ {name}: {reason}")
+    print(f"  [FAIL] {name}: {reason}")
     failed.append(name)
 
 def warn(name, reason):
-    print(f"  ⚠ {name}: {reason}")
+    print(f"  [WARN] {name}: {reason}")
     warned.append(name)
 
 # ---------------------------------------------------------------------------
@@ -329,17 +329,17 @@ if cfg:
 print("\n" + "=" * 60)
 print("SUMMARY")
 print("=" * 60)
-print(f"  ✓ Passed: {len(passed)}")
-print(f"  ⚠ Warned: {len(warned)}")
-print(f"  ✗ Failed: {len(failed)}")
+print(f"  [OK]   Passed: {len(passed)}")
+print(f"  [WARN] Warned: {len(warned)}")
+print(f"  [FAIL] Failed: {len(failed)}")
 
 if failed:
     print("\nFAILED ITEMS:")
     for f in failed:
         print(f"  - {f}")
-    print("\n❌ FIX THESE BEFORE RUNNING main.py")
+    print("\n>> FIX THESE BEFORE RUNNING main.py")
     sys.exit(1)
 else:
-    print("\n✅ ALL CHECKS PASSED — System ready!")
+    print("\n>> ALL CHECKS PASSED -- System ready!")
     print("\n  Run:  python main.py")
     sys.exit(0)

@@ -120,7 +120,22 @@ def grade_submission_in_python(
     submission_df: pd.DataFrame,
     submission_id: str,
     site_number: str,
+    survey_type: str | None = None,
 ) -> PythonGradeOutcome:
+    """Grade a submission against reference data.
+    
+    Args:
+        cfg: Application configuration.
+        submission_df: The vendor submission DataFrame.
+        submission_id: Unique submission identifier.
+        site_number: Site/Project number for reference lookup.
+        survey_type: One of 'CCTV', 'FA/Intrusion', 'BOTH', or None.
+                     Determines which columns are graded.
+                     None defaults to 'BOTH' for backward compatibility.
+    """
+    # Get the grading columns for this survey type
+    grade_columns = get_grade_columns_for_survey_type(survey_type)
+    
     reference_df = fetch_reference_rows(cfg, site_number)
     if reference_df.empty:
         # Business rule: no ERRORs. Missing reference is a FAIL with score 0.

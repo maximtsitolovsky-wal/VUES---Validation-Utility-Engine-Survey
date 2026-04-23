@@ -237,10 +237,10 @@
     <div class="stats-row">
       <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--green)" id="statWeekly">—</div><div class="stat-label">This Week</div></div>
       <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" style="color:var(--cyan)" id="statVelocity">—</div><div class="stat-label">Velocity/Day</div></div>
-      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value" style="color:var(--amber)" id="statTopVendor">—</div><div class="stat-label">Top Vendor</div></div>
+      <div class="stat-card" title="Score = (Completion% × 40) + (Velocity × 30) + (OnTrack × 30)"><div class="stat-icon">🏆</div><div class="stat-value" style="color:var(--amber)" id="statTopVendor">—</div><div class="stat-label">Top Vendor (Score)</div></div>
       <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" style="color:var(--purple)" id="statETA">—</div><div class="stat-label">Est. Completion</div></div>
       <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" style="color:var(--pink)" id="statAccuracy">—</div><div class="stat-label">Data Accuracy</div></div>
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" style="color:var(--green)" id="statSavings">—</div><div class="stat-label">Est. Savings</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" style="color:var(--cyan)" id="statWeek">W3</div><div class="stat-label">Program Week</div></div>
     </div>
     
     <!-- Main Content -->
@@ -420,7 +420,14 @@ function renderAll() {
   else if (scoutRate >= 20) { scoutStatusEl.textContent = '● In Progress'; scoutStatusEl.className = 'status-chip status-warning'; }
   else { scoutStatusEl.textContent = '● Early Stage'; scoutStatusEl.className = 'status-chip status-warning'; }
   
+  // Program week (hardcoded for now - Week 3)
+  const PROGRAM_WEEK = 3;
+  const TOTAL_WEEKS = 16; // Expected program duration
+  const expectedProgress = (PROGRAM_WEEK / TOTAL_WEEKS) * 100; // ~18.75% by Week 3
+  
   // Quick Stats
+  document.getElementById('statWeek').textContent = 'W' + PROGRAM_WEEK;
+  
   const thisWeek = scout.filter(r => {
     const d = new Date(r.raw_fields?.['Scout Date']);
     const now = new Date();
@@ -429,17 +436,31 @@ function renderAll() {
   }).length;
   document.getElementById('statWeekly').textContent = thisWeek;
   
-  const velocity = (scoutCompleted / 14).toFixed(1);
-  document.getElementById('statVelocity').textContent = velocity;
+  // Calculate velocity (sites per week based on program weeks)
+  const velocityPerWeek = PROGRAM_WEEK > 0 ? (scoutCompleted / PROGRAM_WEEK) : 0;
+  document.getElementById('statVelocity').textContent = velocityPerWeek.toFixed(1) + '/wk';
   
-  const topVendor = vendors.sort((a,b) => b.completion_rate - a.completion_rate)[0];
-  document.getElementById('statTopVendor').textContent = topVendor ? getVendorName(topVendor.vendor_name) : '—';
+  // Calculate Top Vendor using weighted scoring equation
+  // Score = (Completion% × 0.4) + (Velocity_normalized × 0.3) + (OnTrack_bonus × 0.3)
+  const maxVelocity = Math.max(...vendors.map(v => v.completed / PROGRAM_WEEK || 0), 1);
   
-  const weeksToComplete = velocity > 0 ? Math.ceil(scoutRemaining / (velocity * 7)) : 99;
-  document.getElementById('statETA').textContent = weeksToComplete < 99 ? weeksToComplete + 'w' : '—';
+  const scoredVendors = vendors.map(v => {
+    const completionScore = (v.completion_rate || 0) * 0.4; // 0-40 points
+    const vendorVelocity = v.completed / PROGRAM_WEEK || 0;
+    const velocityScore = (vendorVelocity / maxVelocity) * 30; // 0-30 points (normalized)
+    const onTrackBonus = (v.completion_rate || 0) >= expectedProgress ? 30 : ((v.completion_rate || 0) / expectedProgress) * 30; // 0-30 points
+    const totalScore = completionScore + velocityScore + onTrackBonus;
+    return { ...v, score: totalScore, velocity: vendorVelocity };
+  }).sort((a, b) => b.score - a.score);
+  
+  const topVendor = scoredVendors[0];
+  document.getElementById('statTopVendor').textContent = topVendor ? `${getVendorName(topVendor.vendor_name)}` : '—';
+  document.getElementById('statTopVendor').title = topVendor ? `Score: ${topVendor.score.toFixed(1)} | Rate: ${topVendor.completion_rate?.toFixed(1)}% | Velocity: ${topVendor.velocity.toFixed(1)}/wk` : '';
+  
+  const weeksToComplete = velocityPerWeek > 0 ? Math.ceil(scoutRemaining / velocityPerWeek) : 99;
+  document.getElementById('statETA').textContent = weeksToComplete < 99 ? 'W' + (PROGRAM_WEEK + weeksToComplete) : '—';
   
   document.getElementById('statAccuracy').textContent = surveyRate + '%';
-  document.getElementById('statSavings').textContent = '$' + Math.round(scoutCompleted * 450).toLocaleString();
   
   // Render charts
   renderTrendChart(survey, scout);

@@ -169,16 +169,16 @@ def grade_submission_in_python(
     if survey_type == SURVEY_TYPE_FA_INTRUSION:
         comparable_cols = _adjust_fa_intrusion_columns(comparable_cols, submission_filtered)
 
-    if submission_norm.empty:
+    if submission_filtered.empty:
         # Business rule: no ERRORs. Treat as FAIL with score 0.
         return _fail(
             submission_id=submission_id,
-            message="NO_COMPARABLE_ROWS_AFTER_NORMALIZATION",
+            message=f"NO_{survey_type or 'COMPARABLE'}_ROWS_AFTER_FILTERING",
             submission_row_count=0,
-            reference_row_count=len(reference_norm),
+            reference_row_count=len(reference_filtered),
         )
 
-    comparison = _compare_rows(submission_id, site_number, submission_norm, reference_norm, comparable_cols)
+    comparison = _compare_rows(submission_id, site_number, submission_filtered, reference_filtered, comparable_cols)
     error_df = comparison.error_df
     mismatch_count = len(error_df)
 

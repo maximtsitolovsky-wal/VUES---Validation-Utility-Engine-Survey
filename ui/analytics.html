@@ -671,10 +671,13 @@ const vendorNameMap = {
   'teaborinc.com': 'Techwise',
   'wachter.com': 'Wachter',
   'evaborinc.com': 'Everon',
+  'everon.com': 'Everon',
   'Wachter': 'Wachter',
   'Everon': 'Everon',
   'Custom Electronics': 'CEI',
   'Securitas': 'SAS',
+  'Safe and Sound': 'SAS',
+  'SAS': 'SAS',
   'Techwise': 'Techwise'
 };
 
@@ -683,7 +686,7 @@ function getVendorShortName(name) {
   // Try partial matches
   const lower = name.toLowerCase();
   if (lower.includes('custom') || lower.includes('cei')) return 'CEI';
-  if (lower.includes('securitas') || lower.includes('sas')) return 'SAS';
+  if (lower.includes('securitas') || lower.includes('sas') || lower.includes('safe') && lower.includes('sound')) return 'SAS';
   if (lower.includes('tech') || lower.includes('teabor')) return 'Techwise';
   if (lower.includes('wachter')) return 'Wachter';
   if (lower.includes('everon') || lower.includes('evabor')) return 'Everon';

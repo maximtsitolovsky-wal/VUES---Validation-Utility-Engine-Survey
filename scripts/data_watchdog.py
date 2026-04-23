@@ -274,7 +274,7 @@ class DataWatchdog:
         """Verify Airtable API is working."""
         try:
             # Just try to fetch one record
-            records = self.airtable.fetch_pending_records(max_records=1)
+            records = self.airtable.get_pending_records(max_records=1)
             self._add_result(WatchdogResult(
                 check_name="Airtable Connectivity",
                 passed=True,

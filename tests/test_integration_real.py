@@ -234,7 +234,7 @@ class TestAirtableConnection(unittest.TestCase):
     def test_can_fetch_records(self):
         """Should be able to fetch at least one record."""
         # Fetch recent records
-        records = self.airtable.fetch_pending_records(max_records=1)
+        records = self.airtable.get_pending_records(max_records=1)
         # This may be empty if no pending, but shouldn't error
         self.assertIsInstance(records, list)
 

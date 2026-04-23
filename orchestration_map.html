@@ -52,6 +52,38 @@
     .realm-fade-in{animation:rIn .28s ease forwards}
     @keyframes rOut{to{opacity:0;transform:scale(1.03);filter:blur(10px)}}
     @keyframes rIn{from{opacity:0;transform:scale(.975);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+    /* Analytics View Styles */
+    .analytics-view{position:fixed;inset:0;z-index:100;background:radial-gradient(circle at center,#0b1220 0%,#060a12 34%,#03050a 100%);overflow-y:auto;display:none;padding:24px}
+    .analytics-view.show{display:block}
+    .analytics-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+    .analytics-title{font-size:28px;font-weight:800;letter-spacing:-0.02em}
+    .analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;max-width:1600px;margin:0 auto}
+    .agent-card{border-radius:20px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);backdrop-filter:blur(18px);padding:18px;transition:transform .18s,border-color .18s}
+    .agent-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.14)}
+    .agent-card.healthy{border-left:3px solid #2a8703}
+    .agent-card.error{border-left:3px solid #ea1100}
+    .agent-card.checking{border-left:3px solid #ffc220}
+    .agent-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .agent-name{font-size:15px;font-weight:700;color:rgba(255,255,255,0.92)}
+    .agent-status{padding:5px 10px;border-radius:999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+    .agent-status.healthy{background:rgba(42,135,3,0.18);color:#7ce65b;border:1px solid rgba(42,135,3,0.35)}
+    .agent-status.error{background:rgba(234,17,0,0.18);color:#ff7b7b;border:1px solid rgba(234,17,0,0.35)}
+    .agent-status.checking{background:rgba(255,194,32,0.18);color:#ffc220;border:1px solid rgba(255,194,32,0.35)}
+    .agent-desc{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:10px}
+    .agent-error{font-size:11px;color:#ff7b7b;background:rgba(234,17,0,0.12);border-radius:8px;padding:8px 10px;margin-top:8px;font-family:ui-monospace,monospace;word-break:break-word}
+    .agent-meta{display:flex;gap:8px;flex-wrap:wrap}
+    .agent-tag{padding:4px 8px;border-radius:999px;font-size:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.65)}
+    .analytics-section{margin-bottom:32px}
+    .analytics-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,0.45);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+    .analytics-section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
+    .summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+    .summary-card{border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)),rgba(10,12,18,0.72);padding:16px;text-align:center}
+    .summary-card-value{font-size:32px;font-weight:800;color:#0053e2}
+    .summary-card-value.success{color:#2a8703}
+    .summary-card-value.error{color:#ea1100}
+    .summary-card-value.warning{color:#ffc220}
+    .summary-card-label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,0.45);margin-top:6px}
+    .lux-btn.active{border-color:#ffc220;background:linear-gradient(180deg,rgba(255,194,32,0.12),rgba(255,194,32,0.04)),rgba(10,12,18,0.72)}
   </style>
 </head>
 <body>
@@ -68,6 +100,10 @@
       <span>Back</span>
     </button>
     <div id="breadcrumb" class="lux-pill">VUES · System Architecture</div>
+    <button id="analyticsBtn" class="lux-btn" style="margin-left:auto">
+      <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg></div>
+      <span>Analytics</span>
+    </button>
   </div>
   <div class="statsbar">
     <div class="stat-blk"><div class="stat-n" id="sN">8</div><div class="stat-l">Components</div></div>
@@ -88,6 +124,35 @@
     <div id="bTitle" class="bc-title"></div>
     <div id="bText" class="bc-text"></div>
     <div id="bDrill" class="bc-drill"></div>
+  </div>
+</div>
+
+<!-- Analytics View -->
+<div id="analyticsView" class="analytics-view">
+  <div class="analytics-header">
+    <button id="closeAnalyticsBtn" class="lux-btn">
+      <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <span>Back to Architecture</span>
+    </button>
+    <h1 class="analytics-title">System Analytics</h1>
+    <button id="refreshAgentsBtn" class="lux-btn" style="margin-left:auto">
+      <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></div>
+      <span>Refresh All</span>
+    </button>
+  </div>
+
+  <div class="summary-cards" id="summaryCards">
+    <div class="summary-card"><div class="summary-card-value" id="totalAgents">—</div><div class="summary-card-label">Total Agents</div></div>
+    <div class="summary-card"><div class="summary-card-value success" id="healthyAgents">—</div><div class="summary-card-label">Healthy</div></div>
+    <div class="summary-card"><div class="summary-card-value error" id="errorAgents">—</div><div class="summary-card-label">Errors</div></div>
+    <div class="summary-card"><div class="summary-card-value warning" id="checkingAgents">—</div><div class="summary-card-label">Checking</div></div>
+  </div>
+
+  <div class="analytics-section">
+    <div class="analytics-section-title">Agent Health Status</div>
+    <div class="analytics-grid" id="agentGrid">
+      <!-- Agents will be populated dynamically -->
+    </div>
   </div>
 </div>
 <script>

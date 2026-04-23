@@ -21,12 +21,19 @@ from decimal import Decimal
 
 import pandas as pd
 
-from siteowlqa.config import PASS_THRESHOLD, VENDOR_GRADE_COLUMNS
+from siteowlqa.config import (
+    PASS_THRESHOLD,
+    VENDOR_GRADE_COLUMNS,
+    SURVEY_TYPE_FA_INTRUSION,
+    FA_INTRUSION_NAME_CONDITION_COLUMN,
+    get_grade_columns_for_survey_type,
+)
 from siteowlqa.models import ProcessingStatus, SubmissionResult
 from siteowlqa.reference_data import fetch_reference_rows
 
 log = logging.getLogger(__name__)
 
+# Default comparable columns (for BOTH or unspecified survey type)
 COMPARABLE_COLUMNS: tuple[str, ...] = VENDOR_GRADE_COLUMNS
 
 # Identity key for pairing submission rows to reference rows.

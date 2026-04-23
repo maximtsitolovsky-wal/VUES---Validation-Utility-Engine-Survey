@@ -306,6 +306,57 @@ def _adjust_fa_intrusion_columns(
         return tuple(col for col in comparable_cols if col != "Name")
 
 
+def _filter_rows_by_survey_type(
+    df: pd.DataFrame,
+    survey_type: str | None,
+) -> pd.DataFrame:
+    """Filter rows based on survey type to avoid overlap between CCTV and FA/Intrusion.
+    
+    The same submission may contain both CCTV devices (cameras) and FA/Intrusion 
+    devices (panels). We filter to only the relevant rows based on survey type:
+    
+    - CCTV: Only rows where Abbreviated Name AND Description are EMPTY.
+            These are camera/video equipment rows.
+    - FA/Intrusion: Only rows where Abbreviated Name OR Description have content.
+            These are fire alarm/intrusion panel rows.
+    - BOTH (or None): All rows - no filtering.
+    
+    Args:
+        df: Normalized DataFrame to filter.
+        survey_type: Survey type from Airtable.
+        
+    Returns:
+        Filtered DataFrame containing only rows relevant to the survey type.
+    """
+    if survey_type is None or survey_type == SURVEY_TYPE_BOTH:
+        # No filtering for BOTH - grade everything
+        return df
+    
+    # Check which rows have FA/Intrusion content (Abbreviated Name or Description)
+    abbrev_col = "Abbreviated Name"
+    desc_col = "Description"
+    
+    # Get content indicators (after canonicalization, empty = "")
+    has_abbrev = df[abbrev_col].ne("") if abbrev_col in df.columns else pd.Series(False, index=df.index)
+    has_desc = df[desc_col].ne("") if desc_col in df.columns else pd.Series(False, index=df.index)
+    
+    # A row is FA/Intrusion if it has Abbreviated Name OR Description
+    is_fa_intrusion_row = has_abbrev | has_desc
+    
+    if survey_type == SURVEY_TYPE_CCTV:
+        # CCTV: Only rows that are NOT FA/Intrusion (no Abbreviated, no Description)
+        filtered = df[~is_fa_intrusion_row].reset_index(drop=True)
+        return filtered
+    
+    elif survey_type == SURVEY_TYPE_FA_INTRUSION:
+        # FA/Intrusion: Only rows that ARE FA/Intrusion (have Abbreviated or Description)
+        filtered = df[is_fa_intrusion_row].reset_index(drop=True)
+        return filtered
+    
+    # Unknown survey type - default to no filtering
+    return df
+
+
 @dataclass(frozen=True)
 class ComparisonResult:
     matched_rows: int

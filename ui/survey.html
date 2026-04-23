@@ -225,6 +225,85 @@ function renderAll(recs) {
     const cls = risk >= 55 ? 'risk-high' : risk >= 35 ? 'risk-med' : 'risk-low';
     return `<tr><td><strong>${v}</strong></td><td>${s.t}</td><td>${s.p}</td><td>${s.f}</td><td>${rate}%</td><td><span class="risk-badge ${cls}">${risk}</span></td></tr>`;
   }).join('');
+  
+  // Store records globally for filtering
+  window.allRecords = recs;
+  renderSubmissions(recs);
+}
+
+function renderSubmissions(recs) {
+  // Sort by submitted date descending
+  const sorted = [...recs].sort((a, b) => {
+    const da = a.created_time || a.submitted_at || '';
+    const db = b.created_time || b.submitted_at || '';
+    return db.localeCompare(da);
+  });
+  
+  document.getElementById('submissionsBody').innerHTML = sorted.slice(0, 50).map(r => {
+    const status = r.processing_status || 'PENDING';
+    const score = r.raw_fields?.['Score'] || r.raw_fields?.['True Score'] || '—';
+    const failSummary = r.raw_fields?.['Fail Summary'] || r.raw_fields?.['Notes for Internal'] || '';
+    const site = r.site_number || '—';
+    const vendor = (r.vendor_name || 'Unknown').slice(0, 15);
+    const submitted = (r.submitted_at || r.created_time || '').slice(0, 10);
+    
+    // Status styling
+    let statusBadge = '';
+    if (status === 'PASS') {
+      statusBadge = '<span style="background:rgba(69,230,165,0.2);color:#45E6A5;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">✓ PASS</span>';
+    } else if (status === 'FAIL') {
+      statusBadge = '<span style="background:rgba(255,107,129,0.2);color:#FF6B81;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">✗ FAIL</span>';
+    } else {
+      statusBadge = '<span style="background:rgba(255,200,87,0.2);color:#FFC857;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">⏳ PENDING</span>';
+    }
+    
+    // Parse fail details
+    let detailsHtml = '—';
+    if (status === 'FAIL' && failSummary) {
+      // Extract key failure reasons
+      const reasons = [];
+      if (failSummary.includes('MISSING_CRITICAL_COLUMNS')) reasons.push('Missing Columns');
+      if (failSummary.includes('ROW_COUNT_MISMATCH')) reasons.push('Row Mismatch');
+      if (failSummary.includes('INVALID_SITE')) reasons.push('Invalid Site');
+      if (failSummary.includes('Missing critical cols')) {
+        const match = failSummary.match(/Missing critical cols: \[([^\]]+)\]/);
+        if (match) reasons.push(match[1].replace(/'/g, '').split(',').slice(0, 2).join(', ') + '...');
+      }
+      if (failSummary.includes('Reference rows:')) {
+        const match = failSummary.match(/References: (\d+) \| Submitted rows: (\d+)/);
+        if (match) reasons.push(`${match[2]}/${match[1]} rows`);
+      }
+      if (reasons.length === 0) reasons.push(failSummary.slice(0, 40) + '...');
+      
+      detailsHtml = `<span title="${failSummary.replace(/"/g, "'")}" style="cursor:help;color:#FF6B81;font-size:11px;">${reasons.join(' · ')}</span>`;
+    } else if (status === 'PASS') {
+      detailsHtml = '<span style="color:#45E6A5;font-size:11px;">All checks passed</span>';
+    }
+    
+    return `<tr>
+      <td><strong>${site}</strong></td>
+      <td>${vendor}</td>
+      <td>${submitted}</td>
+      <td>${statusBadge}</td>
+      <td style="font-weight:700;color:${status === 'PASS' ? '#45E6A5' : status === 'FAIL' ? '#FF6B81' : '#FFC857'};">${score}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${detailsHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSubmissions() {
+  const filter = document.getElementById('statusFilter').value;
+  let filtered = window.allRecords || [];
+  
+  if (filter === 'PASS') {
+    filtered = filtered.filter(r => r.processing_status === 'PASS');
+  } else if (filter === 'FAIL') {
+    filtered = filtered.filter(r => r.processing_status === 'FAIL');
+  } else if (filter === 'pending') {
+    filtered = filtered.filter(r => !r.processing_status || (r.processing_status !== 'PASS' && r.processing_status !== 'FAIL'));
+  }
+  
+  renderSubmissions(filtered);
 }
 
 loadData();

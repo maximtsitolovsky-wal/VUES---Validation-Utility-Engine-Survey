@@ -58,7 +58,7 @@ def main():
 
     # Load the file
     try:
-        load_result = load_vendor_file_with_metadata(attachment_path)
+        load_result = load_vendor_file_with_metadata(attachment_path, test_record.site_number)
         df = load_result.dataframe
         print(f"Loaded {len(df)} rows, columns: {list(df.columns)}")
     except Exception as e:

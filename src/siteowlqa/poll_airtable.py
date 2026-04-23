@@ -21,7 +21,7 @@ import pandas as pd
 
 from siteowlqa.archive import Archive, extract_lesson_from_failure
 from siteowlqa.airtable_client import AirtableClient
-from siteowlqa.config import AppConfig, STATUS_FAIL, STATUS_PASS
+from siteowlqa.config import AppConfig, STATUS_FAIL, STATUS_PASS, should_run_post_pass_correction
 from siteowlqa.correction_state import CorrectionStateDB
 from siteowlqa.file_processor import load_vendor_file_with_metadata
 from siteowlqa.post_pass_correction import run_post_pass_correction
@@ -348,7 +348,11 @@ def process_record(
         #       CORRECTED— corrected CSV in original submission schema
         #       LOG      — correction log (primary audit artifact)
         # ------------------------------------------------------------------
-        if final_status == ProcessingStatus.PASS and _archived_vendor_file is not None:
+        if (
+            final_status == ProcessingStatus.PASS
+            and _archived_vendor_file is not None
+            and should_run_post_pass_correction(record.survey_type)
+        ):
             # Guard: CorrectionWorker may have already processed this record
             # between the time grading started and Step 15 runs. Skip if so.
             _already_done = (

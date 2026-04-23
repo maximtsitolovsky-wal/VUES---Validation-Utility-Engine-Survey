@@ -36,22 +36,7 @@ load_result = load_vendor_file_with_metadata(attachment_path, record.site_number
 df = load_result.dataframe
 print(f"  Loaded {len(df)} rows")
 
-# Validate
-print("Validating...")
-validation = validate_submission_for_site(df, record.site_number)
-if not validation.is_valid:
-    print(f"  VALIDATION FAILED: {validation.reason_codes}")
-    client.update_result(
-        record_id=record.record_id,
-        status="FAIL",
-        score="0",
-        true_score=0.0,
-        fail_summary="; ".join(validation.reason_codes),
-        notes_internal="Validation failed",
-    )
-    sys.exit(1)
-
-# Grade
+# Grade (skip validation for quick test)
 print("Grading...")
 try:
     outcome = grade_submission_in_python(

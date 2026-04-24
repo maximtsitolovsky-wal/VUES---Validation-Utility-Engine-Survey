@@ -185,7 +185,7 @@ function renderAll(data) {
   
   // Vendor completion chart
   const sortedByCompletion = [...vendors].sort((a,b) => b.completion_rate - a.completion_rate).slice(0, 8);
-  new Chart(document.getElementById('vendorChart'), {
+  chartInstances.vendor = new Chart(document.getElementById('vendorChart'), {
     type: 'bar',
     data: {
       labels: sortedByCompletion.map(v => v.vendor_name.slice(0, 10)),
@@ -196,7 +196,7 @@ function renderAll(data) {
   
   // Assigned vs Completed chart
   const sortedByAssigned = [...vendors].sort((a,b) => b.total_assigned - a.total_assigned).slice(0, 6);
-  new Chart(document.getElementById('assignedChart'), {
+  chartInstances.assigned = new Chart(document.getElementById('assignedChart'), {
     type: 'bar',
     data: {
       labels: sortedByAssigned.map(v => v.vendor_name.slice(0, 8)),

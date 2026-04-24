@@ -86,6 +86,16 @@
     .risk-med { background: rgba(255,200,87,0.12); border: 1px solid #FFC857; color: #FFEAB8; }
     .risk-high { background: rgba(255,107,129,0.12); border: 1px solid #FF6B81; color: #FFD6DE; }
     
+    /* Critical vendor alert */
+    .critical-alert { padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
+    .critical-alert .alert-icon { color: var(--red); font-size: 20px; flex-shrink: 0; }
+    .critical-alert .alert-text { color: var(--text); font-size: 12px; line-height: 1.5; }
+    .critical-alert strong { color: var(--red); }
+    .vendor-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-left: 6px; }
+    .vendor-badge.danger { background: rgba(255,107,129,0.18); border: 1px solid rgba(255,107,129,0.4); color: #FF6B81; animation: pulse-danger 2s ease-in-out infinite; }
+    .vendor-badge.warning { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.4); color: #FFC857; }
+    @keyframes pulse-danger { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
     /* Stat cards */
     .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
     .stat-card { padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
@@ -227,6 +237,8 @@
 
     <!-- Scout Time Study -->
     <div class="section-heading" id="scout-study" style="margin: 24px 0 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-soft); font-weight: 700; display: flex; align-items: center; gap: 12px;">🔭 Scout Time Study<span style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></span></div>
+    
+    <div id="scoutCriticalAlert"></div>
     
     <div class="stat-grid" style="margin-bottom:18px;">
       <div class="stat-card stat-cyan"><div class="stat-label">Total Scout Sites</div><div class="stat-value" id="scoutTotal">—</div><div class="stat-note">assigned</div></div>
@@ -568,6 +580,16 @@ function renderScoutTimeStudy() {
   // Calculate totals
   let totalAssigned = 0, totalCompleted = 0;
   vendors.forEach(v => { totalAssigned += v.total_assigned || 0; totalCompleted += v.completed || 0; });
+  
+  // Show critical alert for vendors with no submissions
+  const criticalVendors = vendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  const alertEl = document.getElementById('scoutCriticalAlert');
+  if (criticalVendors.length > 0 && alertEl) {
+    const names = criticalVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
+    alertEl.innerHTML = `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalVendors.length === 1 ? 'has' : 'have'} <strong>NO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation recommended.</span></div>`;
+  } else if (alertEl) {
+    alertEl.innerHTML = '';
+  }
   
   // Group by week
   const weeklyStats = {};

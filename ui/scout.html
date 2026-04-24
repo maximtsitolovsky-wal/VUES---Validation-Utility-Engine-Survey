@@ -58,6 +58,21 @@
     .vendor-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
     .vendor-bar-fill { height: 100%; border-radius: 4px; background: var(--cyan); }
     
+    /* Warning states for vendors with no/low submissions */
+    .vendor-warning { background: rgba(255,107,129,0.08); }
+    .vendor-warning td { color: var(--red) !important; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-danger { background: rgba(255,107,129,0.18); border: 1px solid rgba(255,107,129,0.4); color: #FF6B81; animation: pulse-danger 2s ease-in-out infinite; }
+    .badge-warning { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.4); color: #FFC857; }
+    .badge-success { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.4); color: #45E6A5; }
+    @keyframes pulse-danger { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
+    .alert-banner { padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .alert-danger { background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
+    .alert-danger .alert-icon { color: var(--red); font-size: 20px; }
+    .alert-danger .alert-text { color: var(--text); font-size: 13px; line-height: 1.5; }
+    .alert-danger strong { color: var(--red); }
+    
     @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 768px) { .main-grid, .stats-row { grid-template-columns: 1fr; } }
   </style>
@@ -76,6 +91,11 @@
         <p>Site completion tracking and field operations</p>
       </div>
       <span class="pill pill-cyan" id="headerPill">Loading...</span>
+    </div>
+    
+    <div id="alertBanner" class="alert-banner alert-danger" style="display:none;">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text" id="alertText">Loading...</span>
     </div>
     
     <div class="stats-row">
@@ -183,13 +203,19 @@ function renderAll(data) {
     <strong>${remaining}</strong> sites remaining. <strong>${totalSubmissions}</strong> total submissions received.
   `;
   
-  // Vendor completion chart
+  // Vendor completion chart with color-coded bars
   const sortedByCompletion = [...vendors].sort((a,b) => b.completion_rate - a.completion_rate).slice(0, 8);
+  const barColors = sortedByCompletion.map(v => {
+    const pct = v.completion_rate || 0;
+    if (pct < 5 && v.total_assigned > 50) return C.red;  // Critical - no submissions
+    if (pct < 20) return C.amber;  // Behind
+    return C.green;  // On track
+  });
   chartInstances.vendor = new Chart(document.getElementById('vendorChart'), {
     type: 'bar',
     data: {
       labels: sortedByCompletion.map(v => v.vendor_name.slice(0, 10)),
-      datasets: [{ label: 'Completion %', data: sortedByCompletion.map(v => v.completion_rate || 0), backgroundColor: C.cyan, borderRadius: 4 }]
+      datasets: [{ label: 'Completion %', data: sortedByCompletion.map(v => v.completion_rate || 0), backgroundColor: barColors, borderRadius: 4 }]
     },
     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { grid: { color: C.grid }, max: 100 }, y: { grid: { display: false } } }, plugins: { legend: { display: false } } }
   });
@@ -208,17 +234,47 @@ function renderAll(data) {
     options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: C.grid } } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
   });
   
-  // Vendor table
+  // Vendor table with warning states
   const sortedVendors = [...vendors].sort((a,b) => b.total_assigned - a.total_assigned);
+  
+  // Identify vendors with critical issues (< 5% completion and > 50 assignments)
+  const criticalVendors = sortedVendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  
+  // Show alert banner if there are critical vendors
+  const alertBanner = document.getElementById('alertBanner');
+  const alertText = document.getElementById('alertText');
+  if (criticalVendors.length > 0) {
+    const names = criticalVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
+    alertText.innerHTML = `${names} ${criticalVendors.length === 1 ? 'has' : 'have'} virtually <strong>NO SCOUT SUBMISSIONS</strong> despite having active assignments. Immediate escalation recommended.`;
+    alertBanner.style.display = 'flex';
+  } else {
+    alertBanner.style.display = 'none';
+  }
+  
   document.getElementById('vendorBody').innerHTML = sortedVendors.map(v => {
     const pct = v.completion_rate || 0;
-    return `<tr>
-      <td><strong>${v.vendor_name}</strong></td>
+    const isWarning = pct < 5 && v.total_assigned > 20;
+    const isCritical = pct < 5 && v.total_assigned > 50;
+    const rowClass = isCritical ? 'vendor-warning' : '';
+    const barColor = isCritical ? 'var(--red)' : pct < 20 ? 'var(--amber)' : 'var(--cyan)';
+    
+    // Status badge
+    let badge = '';
+    if (isCritical) {
+      badge = `<span class="badge badge-danger">⚠️ NO SUBMISSIONS</span>`;
+    } else if (pct < 20) {
+      badge = `<span class="badge badge-warning">BEHIND</span>`;
+    } else if (pct >= 70) {
+      badge = `<span class="badge badge-success">ON TRACK</span>`;
+    }
+    
+    return `<tr class="${rowClass}">
+      <td><strong>${v.vendor_name}</strong> ${badge}</td>
       <td>${v.total_assigned}</td>
       <td>${v.completed}</td>
       <td>${v.remaining}</td>
       <td>${pct.toFixed(1)}%</td>
-      <td style="width:120px;"><div class="vendor-bar"><div class="vendor-bar-fill" style="width:${pct}%"></div></div></td>
+      <td style="width:120px;"><div class="vendor-bar"><div class="vendor-bar-fill" style="width:${Math.max(pct, 2)}%;background:${barColor}"></div></div></td>
     </tr>`;
   }).join('');
 }

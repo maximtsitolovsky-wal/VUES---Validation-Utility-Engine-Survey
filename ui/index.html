@@ -366,6 +366,15 @@
       va.forEach(v => { total += v.total_assigned || 0; done += v.completed || 0; });
       document.getElementById('scoutPill').textContent = `${total} Sites`;
       document.getElementById('scoutRate').textContent = `${(total ? (done/total*100).toFixed(1) : 0)}% Complete`;
+      
+      // Check for critical vendors (no submissions)
+      const critical = va.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+      if (critical.length > 0) {
+        const scoutRate = document.getElementById('scoutRate');
+        scoutRate.className = 'pill pill-red';
+        scoutRate.textContent = `⚠️ ${critical.length} Vendor(s) Behind`;
+        scoutRate.title = critical.map(v => `${v.vendor_name}: ${v.completed}/${v.total_assigned}`).join(', ');
+      }
     }).catch(() => {});
     
     // Generate stars

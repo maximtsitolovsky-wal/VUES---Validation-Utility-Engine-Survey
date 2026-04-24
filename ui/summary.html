@@ -89,8 +89,21 @@
     .vendor-table th { text-align: left; padding: 12px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .vendor-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
     .vendor-table tr:hover { background: rgba(255,255,255,0.02); }
-    .vendor-name { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .vendor-table tr.vendor-critical { background: rgba(255,107,129,0.08); }
+    .vendor-table tr.vendor-critical td { color: var(--red); }
+    .vendor-name { font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .vendor-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--purple), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+    .vendor-avatar.critical { background: linear-gradient(135deg, var(--red), #FF4560); }
+    .vendor-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; margin-left: 6px; }
+    .vendor-badge.danger { background: rgba(255,107,129,0.18); border: 1px solid rgba(255,107,129,0.4); color: #FF6B81; animation: pulse-danger 2s ease-in-out infinite; }
+    .vendor-badge.warning { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.4); color: #FFC857; }
+    .vendor-badge.success { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.4); color: #45E6A5; }
+    @keyframes pulse-danger { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
+    .critical-alert { padding: 14px 18px; border-radius: 12px; margin: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
+    .critical-alert .alert-icon { color: var(--red); font-size: 20px; flex-shrink: 0; }
+    .critical-alert .alert-text { color: var(--text); font-size: 12px; line-height: 1.5; }
+    .critical-alert strong { color: var(--red); }
     .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 80px; }
     .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease-out; }
     
@@ -274,6 +287,7 @@
           <span class="badge badge-date" style="font-size:9px;" title="Score = (Completion% × 0.4) + (Velocity × 0.3) + (OnTrack × 0.3)">🧮 Score Formula</span>
         </div>
         <div class="panel-body" style="padding:0; overflow-x:auto;">
+          <div id="vendorCriticalAlert"></div>
           <table class="vendor-table">
             <thead>
               <tr><th>Vendor</th><th>Assigned</th><th>Done</th><th>Velocity</th><th>Progress</th><th>Score</th><th>Rank</th></tr>
@@ -560,18 +574,44 @@ function renderVendorTable(vendors, scoutCompleted, scoutExcelTotal) {
   }).sort((a, b) => b.score - a.score);
   
   const tbody = document.getElementById('vendorTableBody');
+  
+  // Add critical alert banner if vendors have no submissions
+  const criticalVendors = scoredVendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  const alertContainer = document.getElementById('vendorCriticalAlert');
+  if (criticalVendors.length > 0 && alertContainer) {
+    const names = criticalVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong>`).join(', ');
+    alertContainer.innerHTML = `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalVendors.length === 1 ? 'has' : 'have'} <strong>NO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation required.</span></div>`;
+  } else if (alertContainer) {
+    alertContainer.innerHTML = '';
+  }
+  
   tbody.innerHTML = scoredVendors.map((v, idx) => {
     const rate = v.completion_rate || 0;
-    const color = rate >= 10 ? C.green : rate >= 5 ? C.amber : C.red;
+    const isCritical = rate < 5 && v.total_assigned > 50;
+    const isWarning = rate < 20 && v.total_assigned > 30;
+    const color = isCritical ? C.red : rate >= 10 ? C.green : rate >= 5 ? C.amber : C.red;
     const initials = getVendorName(v.vendor_name).slice(0, 2).toUpperCase();
     const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
     const scoreColor = v.score >= 50 ? C.green : v.score >= 30 ? C.amber : C.red;
-    return `<tr>
-      <td><div class="vendor-name"><div class="vendor-avatar">${initials}</div>${getVendorName(v.vendor_name)}</div></td>
+    const rowClass = isCritical ? 'vendor-critical' : '';
+    const avatarClass = isCritical ? 'vendor-avatar critical' : 'vendor-avatar';
+    
+    // Status badge
+    let badge = '';
+    if (isCritical) {
+      badge = `<span class="vendor-badge danger">⚠️ NO SUBMISSIONS</span>`;
+    } else if (isWarning) {
+      badge = `<span class="vendor-badge warning">BEHIND</span>`;
+    } else if (rate >= 70) {
+      badge = `<span class="vendor-badge success">ON TRACK</span>`;
+    }
+    
+    return `<tr class="${rowClass}">
+      <td><div class="vendor-name"><div class="${avatarClass}">${initials}</div>${getVendorName(v.vendor_name)}${badge}</div></td>
       <td>${v.total_assigned}</td>
-      <td style="color:${C.green};font-weight:700;">${v.completed}</td>
+      <td style="color:${isCritical ? C.red : C.green};font-weight:700;">${v.completed}</td>
       <td><span class="metric" style="font-size:11px;">${v.velocity.toFixed(1)}/wk</span></td>
-      <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(rate, 100)}%;background:${color}"></div></div><span style="font-size:10px;color:${color};margin-left:6px;">${rate.toFixed(1)}%</span></td>
+      <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.max(Math.min(rate, 100), 2)}%;background:${color}"></div></div><span style="font-size:10px;color:${color};margin-left:6px;">${rate.toFixed(1)}%</span></td>
       <td style="color:${scoreColor};font-weight:800;font-size:16px;">${v.score.toFixed(0)}</td>
       <td style="font-size:16px;">${rankEmoji}</td>
     </tr>`;

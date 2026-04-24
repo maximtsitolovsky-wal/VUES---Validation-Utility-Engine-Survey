@@ -240,13 +240,17 @@ class VendorAssignmentTracker:
             completion_days = []
             
             for assignment in assignments:
-                if assignment.site_number in completion_map:
-                    completed_count += 1
-                    
-                    # Calculate completion time if we have dates
-                    if assignment.assigned_date:
-                        completion_info = completion_map[assignment.site_number]
-                        submitted_at = completion_info.get("submitted_at")
+                # Only count as completed if the SAME vendor completed it
+                completion_info = completion_map.get(assignment.site_number)
+                if completion_info:
+                    completing_vendor = self._normalize_vendor_name(completion_info.get("vendor", ""))
+                    # Must be completed by the assigned vendor
+                    if completing_vendor == vendor:
+                        completed_count += 1
+                        
+                        # Calculate completion time if we have dates
+                        if assignment.assigned_date:
+                            submitted_at = completion_info.get("submitted_at")
                         
                         if submitted_at:
                             if isinstance(submitted_at, str):

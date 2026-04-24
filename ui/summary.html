@@ -705,12 +705,14 @@ ${surveyRate < 50 ? '<li><strong>Critical:</strong> Implement mandatory pre-subm
 <p><strong>Generated:</strong> ${today} | <strong>Status:</strong> <span class="metric" style="color:${scoutRate >= 50 ? C.green : scoutRate >= 20 ? C.amber : C.purple}">${scoutRate >= 50 ? '✅ On Track' : scoutRate >= 20 ? '⚠️ Progressing' : '🔵 Early Stage'}</span></p>
 
 <h3>Executive Overview</h3>
-<p>The Scout Program encompasses <span class="highlight">${scoutAssigned}</span> sites distributed across <span class="highlight">${vendors.length}</span> vendors. Currently <span class="highlight">${scoutCompleted}</span> sites have been surveyed (<span class="highlight">${scoutRate}%</span>), with <span class="highlight">${scoutRemaining}</span> sites remaining in the pipeline.</p>
+<p>The Scout Program targets <span class="highlight">${scoutExcelTotal}</span> sites per the reference scope. Currently <span class="highlight">${scoutCompleted}</span> unique sites have been verified as complete (<span class="highlight">${scoutRate}%</span>), with <span class="highlight">${scoutRemaining}</span> sites remaining. We've received <span class="highlight">${scoutTotalSubmissions}</span> total submissions (<span class="highlight">${scoutUniqueSubmissions}</span> unique sites).</p>
 
 <h3>Key Performance Indicators</h3>
 <ul>
-<li><strong>Total Sites Assigned:</strong> <span class="metric">${scoutAssigned}</span></li>
-<li><strong>Sites Completed:</strong> <span class="metric" style="color:${C.green}">${scoutCompleted}</span></li>
+<li><strong>Target Sites (Excel Scope):</strong> <span class="metric">${scoutExcelTotal}</span></li>
+<li><strong>Total Submissions:</strong> <span class="metric">${scoutTotalSubmissions}</span></li>
+<li><strong>Unique Sites Submitted:</strong> <span class="metric">${scoutUniqueSubmissions}</span></li>
+<li><strong>Sites Completed (Verified):</strong> <span class="metric" style="color:${C.green}">${scoutCompleted}</span></li>
 <li><strong>Sites Remaining:</strong> <span class="metric" style="color:${C.amber}">${scoutRemaining}</span></li>
 <li><strong>Completion Rate:</strong> <span class="metric">${scoutRate}%</span></li>
 <li><strong>Active Vendors:</strong> <span class="metric">${vendors.length}</span></li>
@@ -725,10 +727,16 @@ ${vendors.map(v => `<li><strong>${getVendorName(v.vendor_name)}:</strong> <span 
 <p>${topVendor ? `<strong>${getVendorName(topVendor.vendor_name)}</strong> leads performance with ${topVendor.completion_rate?.toFixed(1)}% completion.` : ''}</p>
 ${lowVendors.length > 0 ? `<p><span class="metric" style="color:${C.red}">${lowVendors.length} vendor(s)</span> are below 5% completion and require intervention: ${lowVendors.map(v => getVendorName(v.vendor_name)).join(', ')}.</p>` : '<p>All vendors are progressing adequately.</p>'}
 
+<h3>Data Quality Notes</h3>
+<ul>
+<li><strong>Duplicate Submissions:</strong> <span class="metric">${scoutTotalSubmissions - scoutUniqueSubmissions}</span> (${scoutTotalSubmissions > 0 ? ((scoutTotalSubmissions - scoutUniqueSubmissions) / scoutTotalSubmissions * 100).toFixed(1) : 0}%)</li>
+<li><strong>Unmatched Sites:</strong> <span class="metric">${scoutUniqueSubmissions - scoutCompleted}</span> submitted but not in Excel scope</li>
+</ul>
+
 <h3>Timeline Projection</h3>
 <p>Based on current velocity of <span class="highlight">${(scoutCompleted/14).toFixed(1)} sites/day</span>:</p>
 <ul>
-<li><strong>Estimated Completion:</strong> <span class="metric">${scoutRate > 0 ? Math.ceil(scoutRemaining / (scoutCompleted / 14)) + ' days' : 'TBD'}</span></li>
+<li><strong>Estimated Completion:</strong> <span class="metric">${scoutCompleted > 0 ? Math.ceil(scoutRemaining / (scoutCompleted / 14)) + ' days' : 'TBD'}</span></li>
 <li><strong>Required Acceleration:</strong> ${scoutRate < 50 ? 'Yes - increase velocity by 25%' : 'No - maintain current pace'}</li>
 </ul>
 

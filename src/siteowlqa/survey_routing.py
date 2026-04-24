@@ -38,6 +38,12 @@ DEFAULT_WORKBOOK_PATH = (
 # Scheduling threshold
 CONSTRUCTION_DEADLINE_DAYS = 165
 
+# Valid survey vendors (only these should appear in output)
+VALID_SURVEY_VENDORS = {"Wachter", "CEI", "Everon"}
+
+# Invalid values to filter out
+INVALID_VALUES = {"#REF!", "#N/A", "#VALUE!", "#ERROR!", "MAXIM"}
+
 
 @dataclass
 class SurveyRoutingRow:
@@ -183,7 +189,11 @@ def fetch_scout_data(token: str) -> list[ScoutAnswers]:
 
 
 def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
-    """Load vendor and timing data from Excel workbook."""
+    """Load vendor and timing data from Excel workbook.
+    
+    Only includes rows with valid survey vendors (Wachter, CEI, Everon).
+    Filters out #REF!, MAXIM, and other invalid values.
+    """
     try:
         import openpyxl
     except ImportError:
@@ -208,6 +218,7 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
     
     ws = wb["Project Tracking"]
     data = []
+    skipped = 0
     
     # Column A = Site, Column X = Days to Construction, Column Y = Vendor
     # openpyxl is 1-indexed, so A=1, X=24, Y=25
@@ -218,9 +229,20 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
         site = _normalize_site(row[0])  # Column A
         if not site:
             continue
+        
+        # Skip invalid site values
+        if site in INVALID_VALUES or site.startswith("#"):
+            skipped += 1
+            continue
             
         days_raw = row[23]  # Column X (0-indexed: 23)
         vendor = str(row[24] or "").strip()  # Column Y (0-indexed: 24)
+        
+        # Skip invalid vendor values and non-survey vendors
+        if vendor in INVALID_VALUES or vendor.startswith("#"):
+            vendor = ""  # Clear invalid vendor
+        elif vendor and vendor not in VALID_SURVEY_VENDORS:
+            vendor = ""  # Not a survey vendor - clear it
         
         days = None
         if days_raw is not None:
@@ -232,6 +254,8 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
         data.append(ScheduleData(site=site, vendor=vendor, days_to_construction=days))
     
     wb.close()
+    if skipped > 0:
+        log.info(f"Skipped {skipped} invalid rows from Excel")
     log.info(f"Loaded {len(data)} schedule rows from {path}")
     return data
 

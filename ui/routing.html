@@ -212,6 +212,10 @@
       <label>Vendor</label>
       <select id="filterVendor" onchange="applyFilters()">
         <option value="">All Vendors</option>
+        <option value="CEI">CEI</option>
+        <option value="Everon">Everon</option>
+        <option value="Wachter">Wachter</option>
+        <option value="unassigned">Unassigned</option>
       </select>
     </div>
     <div class="filter-group">
@@ -352,16 +356,6 @@ async function loadData() {
       document.getElementById('lastUpdated').textContent = `Updated ${d.toLocaleTimeString()}`;
     }
     
-    // Populate vendor filter
-    const vendors = [...new Set(allData.map(r => r.vendor).filter(v => v))].sort();
-    const vendorSelect = document.getElementById('filterVendor');
-    vendors.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v;
-      opt.textContent = v;
-      vendorSelect.appendChild(opt);
-    });
-    
     renderTable();
   } catch (e) {
     console.error('Failed to load data:', e);
@@ -384,7 +378,9 @@ function applyFilters() {
   const ready = document.getElementById('filterReady').value;
   
   filteredData = allData.filter(r => {
-    if (vendor && r.vendor !== vendor) return false;
+    // Handle vendor filter with "unassigned" option
+    if (vendor === 'unassigned' && r.vendor) return false;
+    if (vendor && vendor !== 'unassigned' && r.vendor !== vendor) return false;
     if (surveyReq && r.survey_required !== surveyReq) return false;
     if (surveyType && r.survey_type !== surveyType) return false;
     if (upgrade && r.upgrade_decision !== upgrade) return false;

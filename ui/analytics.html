@@ -591,14 +591,22 @@ function renderScoutTimeStudy() {
   let totalAssigned = 0, totalCompleted = 0;
   vendors.forEach(v => { totalAssigned += v.total_assigned || 0; totalCompleted += v.completed || 0; });
   
-  // Show critical alert for vendors with no submissions
-  const criticalVendors = vendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  // Show critical alert for vendors with issues
+  const zeroSubmissionVendors = vendors.filter(v => v.completed === 0 && v.total_assigned > 50);
+  const criticalLowVendors = vendors.filter(v => v.completed > 0 && (v.completion_rate || 0) < 5 && v.total_assigned > 50);
   const alertEl = document.getElementById('scoutCriticalAlert');
-  if (criticalVendors.length > 0 && alertEl) {
-    const names = criticalVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
-    alertEl.innerHTML = `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalVendors.length === 1 ? 'has' : 'have'} <strong>NO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation recommended.</span></div>`;
-  } else if (alertEl) {
-    alertEl.innerHTML = '';
+  
+  let alertHtml = '';
+  if (zeroSubmissionVendors.length > 0) {
+    const names = zeroSubmissionVendors.map(v => `<strong>${v.vendor_name}</strong>`).join(', ');
+    alertHtml += `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${zeroSubmissionVendors.length === 1 ? 'has' : 'have'} <strong>ZERO SCOUT SUBMISSIONS</strong> despite active assignments.</span></div>`;
+  }
+  if (criticalLowVendors.length > 0) {
+    const names = criticalLowVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
+    alertHtml += `<div class="critical-alert" style="background:rgba(255,200,87,0.12);border-color:rgba(255,200,87,0.3);"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalLowVendors.length === 1 ? 'is' : 'are'} <strong>CRITICALLY BEHIND</strong> (&lt;5% complete).</span></div>`;
+  }
+  if (alertEl) {
+    alertEl.innerHTML = alertHtml;
   }
   
   // Group by week

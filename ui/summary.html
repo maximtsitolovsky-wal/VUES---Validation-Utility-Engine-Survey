@@ -106,7 +106,7 @@
     /* Formula Popup */
     .formula-btn { background: rgba(155,124,255,0.15); border: 1px solid rgba(155,124,255,0.4); color: var(--purple); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .formula-btn:hover { background: rgba(155,124,255,0.25); transform: translateY(-1px); }
-    .formula-popup { position: absolute; top: 50px; right: 12px; width: 380px; background: var(--panel); border: 1px solid rgba(155,124,255,0.4); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; }
+    .formula-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-height: 90vh; overflow-y: auto; background: #0a1020; border: 1px solid rgba(155,124,255,0.4); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); z-index: 1000; }
     .formula-popup-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(155,124,255,0.1); border-bottom: 1px solid rgba(155,124,255,0.2); font-weight: 700; color: var(--purple); }
     .formula-popup-body { padding: 18px; }
     .formula-equation { font-family: ui-monospace, monospace; font-size: 13px; color: var(--cyan); background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; margin-bottom: 16px; text-align: center; font-weight: 600; }
@@ -638,14 +638,22 @@ function renderVendorTable(vendors, scoutCompleted, scoutExcelTotal) {
   
   const tbody = document.getElementById('vendorTableBody');
   
-  // Add critical alert banner if vendors have no submissions
-  const criticalVendors = scoredVendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  // Add critical alert banner ONLY if vendors have literally 0 submissions
+  const zeroSubmissionVendors = scoredVendors.filter(v => v.completed === 0 && v.total_assigned > 50);
+  const criticalLowVendors = scoredVendors.filter(v => v.completed > 0 && (v.completion_rate || 0) < 5 && v.total_assigned > 50);
   const alertContainer = document.getElementById('vendorCriticalAlert');
-  if (criticalVendors.length > 0 && alertContainer) {
-    const names = criticalVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong>`).join(', ');
-    alertContainer.innerHTML = `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalVendors.length === 1 ? 'has' : 'have'} <strong>NO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation required.</span></div>`;
-  } else if (alertContainer) {
-    alertContainer.innerHTML = '';
+  
+  let alertHtml = '';
+  if (zeroSubmissionVendors.length > 0) {
+    const names = zeroSubmissionVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong>`).join(', ');
+    alertHtml += `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${zeroSubmissionVendors.length === 1 ? 'has' : 'have'} <strong>ZERO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation required.</span></div>`;
+  }
+  if (criticalLowVendors.length > 0) {
+    const names = criticalLowVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
+    alertHtml += `<div class="critical-alert" style="background:rgba(255,200,87,0.12);border-color:rgba(255,200,87,0.3);"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalLowVendors.length === 1 ? 'is' : 'are'} <strong>CRITICALLY BEHIND</strong> (&lt;5% complete). Follow-up recommended.</span></div>`;
+  }
+  if (alertContainer) {
+    alertContainer.innerHTML = alertHtml;
   }
   
   tbody.innerHTML = scoredVendors.map((v, idx) => {

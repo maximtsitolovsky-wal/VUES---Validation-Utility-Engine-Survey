@@ -237,15 +237,26 @@ function renderAll(data) {
   // Vendor table with warning states
   const sortedVendors = [...vendors].sort((a,b) => b.total_assigned - a.total_assigned);
   
-  // Identify vendors with critical issues (< 5% completion and > 50 assignments)
-  const criticalVendors = sortedVendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
+  // Identify vendors with critical issues
+  const zeroSubmissionVendors = sortedVendors.filter(v => v.completed === 0 && v.total_assigned > 50);
+  const criticalLowVendors = sortedVendors.filter(v => v.completed > 0 && (v.completion_rate || 0) < 5 && v.total_assigned > 50);
   
   // Show alert banner if there are critical vendors
   const alertBanner = document.getElementById('alertBanner');
   const alertText = document.getElementById('alertText');
-  if (criticalVendors.length > 0) {
-    const names = criticalVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
-    alertText.innerHTML = `${names} ${criticalVendors.length === 1 ? 'has' : 'have'} virtually <strong>NO SCOUT SUBMISSIONS</strong> despite having active assignments. Immediate escalation recommended.`;
+  
+  let alertHtml = '';
+  if (zeroSubmissionVendors.length > 0) {
+    const names = zeroSubmissionVendors.map(v => `<strong>${v.vendor_name}</strong>`).join(', ');
+    alertHtml += `${names} ${zeroSubmissionVendors.length === 1 ? 'has' : 'have'} <strong>ZERO SUBMISSIONS</strong> despite active assignments. `;
+  }
+  if (criticalLowVendors.length > 0) {
+    const names = criticalLowVendors.map(v => `<strong>${v.vendor_name}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
+    alertHtml += `${criticalLowVendors.length === 1 ? '' : ''}${names} ${criticalLowVendors.length === 1 ? 'is' : 'are'} <strong>CRITICALLY BEHIND</strong> (&lt;5% complete). `;
+  }
+  
+  if (alertHtml) {
+    alertText.innerHTML = alertHtml + 'Immediate escalation recommended.';
     alertBanner.style.display = 'flex';
   } else {
     alertBanner.style.display = 'none';

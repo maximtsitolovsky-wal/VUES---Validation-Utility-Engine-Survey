@@ -223,10 +223,10 @@
             </div>
           </div>
           <div class="metrics-list">
-            <div class="metric-row"><span class="metric-label">Sites Assigned</span><span class="metric-value" id="scoutTotal">—</span></div>
+            <div class="metric-row"><span class="metric-label">Target Sites</span><span class="metric-value" id="scoutTotal">—</span></div>
             <div class="metric-row"><span class="metric-label">Completed</span><span class="metric-value" style="color:var(--green)" id="scoutDone">—</span></div>
             <div class="metric-row"><span class="metric-label">Remaining</span><span class="metric-value" style="color:var(--amber)" id="scoutRemaining">—</span></div>
-            <div class="metric-row"><span class="metric-label">Vendors Active</span><span class="metric-value" style="color:var(--purple)" id="scoutVendors">—</span></div>
+            <div class="metric-row"><span class="metric-label">Submissions</span><span class="metric-value" style="color:var(--purple)" id="scoutVendors">—</span></div>
           </div>
         </div>
         <div class="mini-chart"><canvas id="scoutMiniChart"></canvas></div>
@@ -418,7 +418,7 @@ function renderAll() {
   document.getElementById('scoutTotal').textContent = scoutExcelTotal;  // Target sites from Excel
   document.getElementById('scoutDone').textContent = scoutCompleted;    // Matching Excel
   document.getElementById('scoutRemaining').textContent = scoutRemaining;
-  document.getElementById('scoutVendors').textContent = scoutTotalSubmissions + ' submissions';  // Show total submissions instead
+  document.getElementById('scoutVendors').textContent = scoutTotalSubmissions;  // Total submissions count
   document.getElementById('scoutRing').style.strokeDashoffset = 314 - (314 * parseFloat(scoutRate) / 100);
   
   const scoutStatusEl = document.getElementById('scoutStatus');

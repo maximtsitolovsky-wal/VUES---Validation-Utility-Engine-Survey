@@ -434,7 +434,7 @@ function renderAll() {
   // Quick Stats
   document.getElementById('statWeek').textContent = 'W' + PROGRAM_WEEK;
   
-  const thisWeek = scout.filter(r => {
+  const thisWeek = scoutRecords.filter(r => {
     const d = new Date(r.raw_fields?.['Scout Date']);
     const now = new Date();
     const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);

@@ -383,9 +383,18 @@ function badge(value, type) {
 async function loadData() {
   try {
     const resp = await fetch('survey_routing_data.json');
+    if (!resp.ok) throw new Error('Failed to fetch data');
     const data = await resp.json();
     
     allData = data.rows || [];
+    
+    // Sort by days_to_construction (least to greatest, empty values at end)
+    allData.sort((a, b) => {
+      const daysA = a.days_to_construction === '' ? Infinity : parseInt(a.days_to_construction) || Infinity;
+      const daysB = b.days_to_construction === '' ? Infinity : parseInt(b.days_to_construction) || Infinity;
+      return daysA - daysB;
+    });
+    
     filteredData = [...allData];
     
     // Update summary
@@ -406,14 +415,6 @@ async function loadData() {
     document.getElementById('fullCctvCount').textContent = s.full_cctv || 0;
     document.getElementById('fullFaCount').textContent = s.full_fa || 0;
     document.getElementById('fullBothCount').textContent = s.full_both || 0;
-    
-    // Sort by days_to_construction (least to greatest, empty values at end)
-    allData.sort((a, b) => {
-      const daysA = a.days_to_construction === '' ? Infinity : parseInt(a.days_to_construction) || Infinity;
-      const daysB = b.days_to_construction === '' ? Infinity : parseInt(b.days_to_construction) || Infinity;
-      return daysA - daysB;
-    });
-    filteredData = [...allData];
     
     // Update timestamp
     if (data.generated_at) {
@@ -475,7 +476,9 @@ function clearFilters() {
 // Render table
 function renderTable() {
   const tbody = document.getElementById('tableBody');
-  document.getElementById('rowCount').textContent = `Showing ${filteredData.length} of ${allData.length} sites`;
+  const countEl = document.getElementById('rowCount');
+  countEl.textContent = `Showing ${filteredData.length} of ${allData.length} sites`;
+  countEl.style.color = filteredData.length < allData.length ? 'var(--yellow)' : 'var(--text-soft)';
   
   if (filteredData.length === 0) {
     tbody.innerHTML = `

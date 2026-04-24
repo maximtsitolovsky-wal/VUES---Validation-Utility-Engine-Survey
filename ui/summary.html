@@ -102,6 +102,22 @@
     
     .critical-alert { padding: 14px 18px; border-radius: 12px; margin: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
     .critical-alert .alert-icon { color: var(--red); font-size: 20px; flex-shrink: 0; }
+    
+    /* Formula Popup */
+    .formula-btn { background: rgba(155,124,255,0.15); border: 1px solid rgba(155,124,255,0.4); color: var(--purple); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .formula-btn:hover { background: rgba(155,124,255,0.25); transform: translateY(-1px); }
+    .formula-popup { position: absolute; top: 50px; right: 12px; width: 380px; background: var(--panel); border: 1px solid rgba(155,124,255,0.4); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; }
+    .formula-popup-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(155,124,255,0.1); border-bottom: 1px solid rgba(155,124,255,0.2); font-weight: 700; color: var(--purple); }
+    .formula-popup-body { padding: 18px; }
+    .formula-equation { font-family: ui-monospace, monospace; font-size: 13px; color: var(--cyan); background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; margin-bottom: 16px; text-align: center; font-weight: 600; }
+    .formula-breakdown { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .formula-component { padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+    .formula-component-title { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+    .formula-component-desc { font-size: 11px; color: var(--text-soft); margin-bottom: 6px; }
+    .formula-component code { font-size: 10px; color: var(--amber); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .formula-example { background: rgba(69,230,165,0.08); border: 1px solid rgba(69,230,165,0.2); border-radius: 10px; padding: 12px; font-size: 11px; color: var(--text-soft); }
+    .formula-example code { color: var(--green); background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; }
+    .formula-example strong { color: var(--green); }
     .critical-alert .alert-text { color: var(--text); font-size: 12px; line-height: 1.5; }
     .critical-alert strong { color: var(--red); }
     .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 80px; }
@@ -281,10 +297,42 @@
       </div>
       
       <!-- Vendor Performance -->
-      <div class="panel">
+      <div class="panel" style="position:relative;">
         <div class="panel-header">
           <div class="panel-title">🏢 Vendor Scorecard</div>
-          <span class="badge badge-date" style="font-size:9px;" title="Score = (Completion% × 0.4) + (Velocity × 0.3) + (OnTrack × 0.3)">🧮 Score Formula</span>
+          <button class="formula-btn" onclick="toggleFormulaPopup()">🧮 Score Formula</button>
+        </div>
+        <div id="formulaPopup" class="formula-popup" style="display:none;">
+          <div class="formula-popup-header">
+            <span>🧮 Vendor Score Formula</span>
+            <button onclick="toggleFormulaPopup()" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:18px;">&times;</button>
+          </div>
+          <div class="formula-popup-body">
+            <div class="formula-equation">
+              Score = (Completion% × 0.40) + (Velocity × 0.30) + (OnTrack × 0.30)
+            </div>
+            <div class="formula-breakdown">
+              <div class="formula-component">
+                <div class="formula-component-title" style="color:var(--green);">Completion (40%)</div>
+                <div class="formula-component-desc">Percentage of assigned sites completed. Higher = better.</div>
+                <code>completed / total_assigned × 40</code>
+              </div>
+              <div class="formula-component">
+                <div class="formula-component-title" style="color:var(--cyan);">Velocity (30%)</div>
+                <div class="formula-component-desc">Sites per week, normalized against top performer.</div>
+                <code>(vendor_velocity / max_velocity) × 30</code>
+              </div>
+              <div class="formula-component">
+                <div class="formula-component-title" style="color:var(--purple);">On-Track Bonus (30%)</div>
+                <div class="formula-component-desc">+30 points if completion rate ≥ 40% (on track to finish).</div>
+                <code>completion_rate ≥ 40% ? 30 : 0</code>
+              </div>
+            </div>
+            <div class="formula-example">
+              <strong>Example:</strong> CEI has 76.6% completion, top velocity, and is on-track<br>
+              <code>Score = (76.6 × 0.4) + (30) + (30) = 30.6 + 30 + 30 = <strong>90.6</strong></code>
+            </div>
+          </div>
         </div>
         <div class="panel-body" style="padding:0; overflow-x:auto;">
           <div id="vendorCriticalAlert"></div>
@@ -378,6 +426,21 @@ const vendorNames = {
   'CEI': 'CEI', 'SAS': 'SAS', 'Techwise': 'Techwise', 'Safe and Sound': 'SAS'
 };
 function getVendorName(n) { return vendorNames[n] || n.split('.')[0].slice(0,10); }
+
+// Toggle formula popup
+function toggleFormulaPopup() {
+  const popup = document.getElementById('formulaPopup');
+  popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('formulaPopup');
+  const btn = document.querySelector('.formula-btn');
+  if (popup && !popup.contains(e.target) && !btn.contains(e.target)) {
+    popup.style.display = 'none';
+  }
+});
 
 // Destroy existing charts before redrawing
 function destroyCharts() {

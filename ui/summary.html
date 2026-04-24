@@ -596,10 +596,12 @@ function renderVendorTable(vendors, scoutCompleted, scoutExcelTotal) {
     const rowClass = isCritical ? 'vendor-critical' : '';
     const avatarClass = isCritical ? 'vendor-avatar critical' : 'vendor-avatar';
     
-    // Status badge
+    // Status badge - only show "NO SUBMISSIONS" when actually 0 completed
     let badge = '';
-    if (isCritical) {
+    if (v.completed === 0 && v.total_assigned > 50) {
       badge = `<span class="vendor-badge danger">⚠️ NO SUBMISSIONS</span>`;
+    } else if (isCritical) {
+      badge = `<span class="vendor-badge danger">⚠️ CRITICAL</span>`;
     } else if (isWarning) {
       badge = `<span class="vendor-badge warning">BEHIND</span>`;
     } else if (rate >= 70) {

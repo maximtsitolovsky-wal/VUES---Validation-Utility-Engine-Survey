@@ -258,10 +258,12 @@ function renderAll(data) {
     const rowClass = isCritical ? 'vendor-warning' : '';
     const barColor = isCritical ? 'var(--red)' : pct < 20 ? 'var(--amber)' : 'var(--cyan)';
     
-    // Status badge
+    // Status badge - only show "NO SUBMISSIONS" when actually 0 completed
     let badge = '';
-    if (isCritical) {
+    if (v.completed === 0 && v.total_assigned > 50) {
       badge = `<span class="badge badge-danger">⚠️ NO SUBMISSIONS</span>`;
+    } else if (isCritical) {
+      badge = `<span class="badge badge-danger">⚠️ CRITICAL</span>`;
     } else if (pct < 20) {
       badge = `<span class="badge badge-warning">BEHIND</span>`;
     } else if (pct >= 70) {

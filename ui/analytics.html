@@ -385,7 +385,17 @@ const agents = [
   { id:'share-puppy', name:'Share Puppy', type:'Utility', status:'Active', desc:'Shares reports via puppy.walmart.com links.', tags:['sharing','utility'] },
   { id:'siteowlqa-dev', name:'SiteOwlQA Dev', type:'Dev Mode', status:'Active', desc:'Development mode for the SiteOwlQA pipeline.', tags:['dev','pipeline'] },
   { id:'specialist-output-validator', name:'Output Validator', type:'Quality Gate', status:'Active', desc:'Validates output format and content integrity.', tags:['validation','quality'] },
-  { id:'system-bottleneck-auditor', name:'Bottleneck Auditor', type:'Analytics', status:'Active', desc:'Identifies system bottlenecks and performance issues.', tags:['performance','audit'] }
+  { id:'system-bottleneck-auditor', name:'Bottleneck Auditor', type:'Analytics', status:'Active', desc:'Identifies system bottlenecks and performance issues.', tags:['performance','audit'] },
+  { id:'html-data-verifier', name:'HTML Data Verifier', type:'Quality Gate', status:'Active', desc:'Verifies all HTML displayed values match source data. Zero tolerance for bad data.', tags:['verification','quality','html'] },
+  { id:'vendor-assignment-tracker', name:'Vendor Assignment Tracker', type:'Analytics', status:'Active', desc:'Tracks vendor assignments from Excel vs completions from Airtable.', tags:['vendor','tracking','analytics'] },
+  { id:'qa-kitten', name:'QA Kitten', type:'Testing', status:'Active', desc:'Browser automation and visual QA testing using Playwright.', tags:['testing','playwright','browser'] },
+  { id:'planning-agent', name:'Planning Agent', type:'Strategy', status:'Active', desc:'Breaks down complex tasks into clear actionable steps.', tags:['planning','strategy'] },
+  { id:'security-auditor', name:'Security Auditor', type:'Security', status:'Active', desc:'Risk-based security auditor with remediation guidance.', tags:['security','audit'] },
+  { id:'slide-creator', name:'Slide Creator', type:'Reporting', status:'Active', desc:'Creates HTML slidedecks with Walmart branding.', tags:['slides','reporting','presentations'] },
+  { id:'confluence-search', name:'Confluence Search', type:'Integration', status:'Active', desc:'Search and retrieve docs from Walmart Confluence.', tags:['confluence','docs','search'] },
+  { id:'bigquery-explorer', name:'BigQuery Explorer', type:'Data', status:'Active', desc:'Explore and query Google BigQuery databases.', tags:['bigquery','data','sql'] },
+  { id:'jira-agent', name:'Jira Agent', type:'Integration', status:'Active', desc:'Search, create, and manage Jira issues.', tags:['jira','tickets','tracking'] },
+  { id:'msgraph-agent', name:'MS Graph Agent', type:'Integration', status:'Active', desc:'Access M365 services - mail, calendar, Teams, files.', tags:['microsoft','teams','outlook'] }
 ];
 
 // ── Skills Data ─────────────────────────────────────────────────────────────
@@ -603,7 +613,7 @@ function renderScoutTimeStudy() {
     const raw = r.raw_fields || {};
     const scoutDate = raw['Scout Date'];
     const surveyor = raw['Surveyor Name'] || 'Unknown';
-    const vendor = r.vendor_name || 'Unknown';
+    const vendor = getVendorShortName(r.vendor_name || 'Unknown');  // Normalize vendor name
     
     if (!scoutDate) return;
     const d = new Date(scoutDate);

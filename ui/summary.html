@@ -352,6 +352,7 @@ for (let i = 0; i < 80; i++) {
 let programData = null;
 let currentTab = 'survey';
 let generatedReports = { survey: null, scout: null, combined: null };
+let chartInstances = {};  // Track chart instances to destroy on refresh
 
 const C = { cyan: '#5AE4FF', purple: '#9B7CFF', green: '#45E6A5', red: '#FF6B81', amber: '#FFC857', pink: '#FF7EB3', grid: 'rgba(255,255,255,0.06)' };
 
@@ -364,15 +365,25 @@ const vendorNames = {
 };
 function getVendorName(n) { return vendorNames[n] || n.split('.')[0].slice(0,10); }
 
-// Load data
+// Destroy existing charts before redrawing
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+  chartInstances = {};
+}
+
+// Load data with cache-bust
 async function loadData() {
   try {
-    const r = await fetch('team_dashboard_data.json');
+    const r = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     programData = await r.json();
+    destroyCharts();
     renderAll();
   } catch(e) { console.log('Error:', e); }
 }
+
+// Auto-refresh every 15 seconds
+setInterval(loadData, 15000);
 
 function renderAll() {
   if (!programData) return;
@@ -488,7 +499,7 @@ function renderTrendChart(survey, scout) {
   scout.forEach(r => { const d = r.raw_fields?.['Scout Date']; if (days[d]) days[d].scout++; });
   
   const labels = Object.keys(days).map(d => d.slice(5));
-  new Chart(document.getElementById('trendChart'), {
+  chartInstances.trend = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
       labels,
@@ -507,7 +518,7 @@ function renderSurveyMiniChart(survey) {
     const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     days.push(survey.filter(r => (r.submitted_at || '').slice(0, 10) === d).length);
   }
-  new Chart(document.getElementById('surveyMiniChart'), {
+  chartInstances.surveyMini = new Chart(document.getElementById('surveyMiniChart'), {
     type: 'bar', data: { labels: ['', '', '', '', '', '', ''], datasets: [{ data: days, backgroundColor: 'rgba(90,228,255,0.5)', borderRadius: 4 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
   });
@@ -515,14 +526,14 @@ function renderSurveyMiniChart(survey) {
 
 function renderScoutMiniChart(vendors) {
   const data = vendors.slice(0, 5).map(v => v.completed || 0);
-  new Chart(document.getElementById('scoutMiniChart'), {
+  chartInstances.scoutMini = new Chart(document.getElementById('scoutMiniChart'), {
     type: 'bar', data: { labels: vendors.slice(0, 5).map(v => ''), datasets: [{ data, backgroundColor: 'rgba(155,124,255,0.5)', borderRadius: 4 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
   });
 }
 
 function renderDistChart(vendors) {
-  new Chart(document.getElementById('distChart'), {
+  chartInstances.dist = new Chart(document.getElementById('distChart'), {
     type: 'doughnut',
     data: {
       labels: vendors.map(v => getVendorName(v.vendor_name)),

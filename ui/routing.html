@@ -249,6 +249,10 @@
   <!-- Filters -->
   <div class="filters">
     <div class="filter-group">
+      <label>Site Search</label>
+      <input type="text" id="filterSite" placeholder="Enter site #" oninput="applyFilters()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--text); width: 120px;">
+    </div>
+    <div class="filter-group">
       <label>Vendor</label>
       <select id="filterVendor" onchange="applyFilters()">
         <option value="">All Vendors</option>
@@ -282,9 +286,9 @@
       <label>Upgrade Decision</label>
       <select id="filterUpgrade" onchange="applyFilters()">
         <option value="">All</option>
-        <option value="FULL BOTH UPGRADE">Full Both Upgrade</option>
         <option value="FULL CCTV UPGRADE">Full CCTV Upgrade</option>
         <option value="FULL FA/INTRUSION UPGRADE">Full FA/Intrusion Upgrade</option>
+        <option value="FULL BOTH UPGRADE">Full Both Upgrade</option>
         <option value="SURVEY REQUIRED">Survey Required</option>
         <option value="REVIEW REQUIRED">Review Required</option>
       </select>
@@ -306,6 +310,9 @@
         <option value="YES">Yes</option>
         <option value="NO">No</option>
       </select>
+    </div>
+    <div class="filter-group" style="display: flex; align-items: flex-end;">
+      <button onclick="clearFilters()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--text); cursor: pointer; font-size: 13px;">Clear All</button>
     </div>
   </div>
 
@@ -428,6 +435,7 @@ async function loadData() {
 
 // Apply filters
 function applyFilters() {
+  const site = document.getElementById('filterSite').value.trim().toLowerCase();
   const vendor = document.getElementById('filterVendor').value;
   const surveyReq = document.getElementById('filterSurveyRequired').value;
   const surveyType = document.getElementById('filterSurveyType').value;
@@ -436,18 +444,32 @@ function applyFilters() {
   const ready = document.getElementById('filterReady').value;
   
   filteredData = allData.filter(r => {
+    // Site search (partial match)
+    if (site && !r.site.toLowerCase().includes(site)) return false;
     // Handle vendor filter with "unassigned" option
     if (vendor === 'unassigned' && r.vendor) return false;
     if (vendor && vendor !== 'unassigned' && r.vendor !== vendor) return false;
     if (surveyReq && r.survey_required !== surveyReq) return false;
     if (surveyType && r.survey_type !== surveyType) return false;
-    if (upgrade && r.upgrade_decision !== upgrade) return false;
+    // Upgrade uses "contains" since values like "FULL CCTV UPGRADE + FA/INTRUSION SURVEY"
+    if (upgrade && !r.upgrade_decision.includes(upgrade)) return false;
     if (schedule && r.schedule_status !== schedule) return false;
     if (ready && r.ready_to_assign !== ready) return false;
     return true;
   });
   
   renderTable();
+}
+
+function clearFilters() {
+  document.getElementById('filterSite').value = '';
+  document.getElementById('filterVendor').value = '';
+  document.getElementById('filterSurveyRequired').value = '';
+  document.getElementById('filterSurveyType').value = '';
+  document.getElementById('filterUpgrade').value = '';
+  document.getElementById('filterSchedule').value = '';
+  document.getElementById('filterReady').value = '';
+  applyFilters();
 }
 
 // Render table

@@ -440,7 +440,8 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         schedule_status = "URGENT"
     
     # === STEP 5: Ready to Assign ===
-    if survey_required == "YES" and days is not None and days <= CONSTRUCTION_DEADLINE_DAYS:
+    # If scout data exists and a decision is made (not REVIEW), ready to assign
+    if survey_required in ("YES", "NO"):
         ready_to_assign = "YES"
     else:
         ready_to_assign = "NO"
@@ -515,6 +516,14 @@ def build_survey_routing_data(
     fa_surveys = sum(1 for r in rows if r["survey_type"] == "FA/INTRUSION")
     both_surveys = sum(1 for r in rows if r["survey_type"] == "BOTH")
     
+    # Full upgrade breakdown
+    # CCTV full upgrade = no CCTV survey needed (coax/siamese cable)
+    full_cctv = sum(1 for r in rows if "FULL CCTV" in r["upgrade_decision"] or "FULL BOTH" in r["upgrade_decision"])
+    # FA full upgrade = no FA survey needed (one notification device)
+    full_fa = sum(1 for r in rows if "FULL FA" in r["upgrade_decision"] or "FULL BOTH" in r["upgrade_decision"])
+    # Both full upgrade = no survey at all
+    full_both = sum(1 for r in rows if "FULL BOTH" in r["upgrade_decision"])
+    
     return {
         "generated_at": datetime.now().isoformat(),
         "summary": {
@@ -524,6 +533,9 @@ def build_survey_routing_data(
             "fa_surveys": fa_surveys,
             "both_surveys": both_surveys,
             "full_upgrades": full_upgrades,
+            "full_cctv": full_cctv,
+            "full_fa": full_fa,
+            "full_both": full_both,
             "review_required": review_required,
             "urgent_sites": urgent_sites,
             "ready_to_assign": ready_to_assign,

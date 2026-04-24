@@ -178,15 +178,33 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
+  <!-- Survey Breakdown (Primary) -->
+  <div style="background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+      <div style="font-size: 20px; font-weight: 700;">Surveys Needed</div>
+      <div style="font-size: 36px; font-weight: 800; color: var(--wm-blue);" id="totalSurveys">--</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <div style="background: rgba(77,141,255,0.1); border: 1px solid rgba(77,141,255,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+        <div style="font-size: 32px; font-weight: 700; color: var(--blue);" id="cctvCount">--</div>
+        <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">CCTV Only</div>
+      </div>
+      <div style="background: rgba(255,107,129,0.1); border: 1px solid rgba(255,107,129,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+        <div style="font-size: 32px; font-weight: 700; color: var(--red);" id="faCount">--</div>
+        <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">FA/Intrusion Only</div>
+      </div>
+      <div style="background: rgba(155,124,255,0.1); border: 1px solid rgba(155,124,255,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+        <div style="font-size: 32px; font-weight: 700; color: var(--purple);" id="bothCount">--</div>
+        <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">Both Surveys</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Stats -->
   <div class="summary-grid">
     <div class="summary-card cyan">
       <div class="value" id="totalSites">--</div>
       <div class="label">Total Sites</div>
-    </div>
-    <div class="summary-card blue">
-      <div class="value" id="surveysRequired">--</div>
-      <div class="label">Surveys Required</div>
     </div>
     <div class="summary-card yellow">
       <div class="value" id="fullUpgrades">--</div>
@@ -198,7 +216,7 @@
     </div>
     <div class="summary-card red">
       <div class="value" id="urgentSites">--</div>
-      <div class="label">Urgent Sites</div>
+      <div class="label">Urgent</div>
     </div>
     <div class="summary-card green">
       <div class="value" id="readyToAssign">--</div>
@@ -344,11 +362,16 @@ async function loadData() {
     // Update summary
     const s = data.summary || {};
     document.getElementById('totalSites').textContent = s.total_sites || 0;
-    document.getElementById('surveysRequired').textContent = s.surveys_required || 0;
     document.getElementById('fullUpgrades').textContent = s.full_upgrades || 0;
     document.getElementById('reviewRequired').textContent = s.review_required || 0;
     document.getElementById('urgentSites').textContent = s.urgent_sites || 0;
     document.getElementById('readyToAssign').textContent = s.ready_to_assign || 0;
+    
+    // Survey breakdown
+    document.getElementById('totalSurveys').textContent = s.surveys_required || 0;
+    document.getElementById('cctvCount').textContent = s.cctv_surveys || 0;
+    document.getElementById('faCount').textContent = s.fa_surveys || 0;
+    document.getElementById('bothCount').textContent = s.both_surveys || 0;
     
     // Update timestamp
     if (data.generated_at) {

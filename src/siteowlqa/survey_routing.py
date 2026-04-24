@@ -92,14 +92,19 @@ class ScheduleData:
     
 
 def _normalize_site(site: str | int | float | None) -> str:
-    """Normalize site ID for consistent joining."""
+    """Normalize site ID for consistent joining.
+    
+    Strips leading zeros so '0336' matches '336'.
+    """
     if site is None:
         return ""
     site_str = str(site).strip()
     # Remove .0 from float conversion
     if site_str.endswith(".0"):
         site_str = site_str[:-2]
-    # Preserve leading zeros by keeping as string
+    # Strip leading zeros for consistent matching
+    # But keep at least one digit (so "0" stays "0")
+    site_str = site_str.lstrip("0") or "0"
     return site_str
 
 
@@ -505,11 +510,19 @@ def build_survey_routing_data(
     urgent_sites = sum(1 for r in rows if r["schedule_status"] == "URGENT")
     ready_to_assign = sum(1 for r in rows if r["ready_to_assign"] == "YES")
     
+    # Survey type breakdown (only for sites that need surveys)
+    cctv_surveys = sum(1 for r in rows if r["survey_type"] == "CCTV")
+    fa_surveys = sum(1 for r in rows if r["survey_type"] == "FA/INTRUSION")
+    both_surveys = sum(1 for r in rows if r["survey_type"] == "BOTH")
+    
     return {
         "generated_at": datetime.now().isoformat(),
         "summary": {
             "total_sites": total,
             "surveys_required": surveys_required,
+            "cctv_surveys": cctv_surveys,
+            "fa_surveys": fa_surveys,
+            "both_surveys": both_surveys,
             "full_upgrades": full_upgrades,
             "review_required": review_required,
             "urgent_sites": urgent_sites,

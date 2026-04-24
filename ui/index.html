@@ -206,6 +206,7 @@
     .pill-purple { background: rgba(155,124,255,0.15); border: 1px solid rgba(155,124,255,0.3); color: var(--purple); }
     .pill-amber { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.3); color: var(--amber); }
     .pill-green { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.3); color: var(--green); }
+    .pill-red { background: rgba(255,107,129,0.15); border: 1px solid rgba(255,107,129,0.3); color: var(--red); }
     
     /* Footer */
     .footer {
@@ -373,7 +374,7 @@
       const critical = va.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
       if (critical.length > 0) {
         scoutRateEl.className = 'pill pill-red';
-        scoutRateEl.innerHTML = `<span style="margin-right:4px;">⚠️</span>${critical.length} Behind`;
+        scoutRateEl.textContent = `⚠️ ${critical.length} Behind`;
         scoutRateEl.title = `${completionPct}% overall | ` + critical.map(v => `${v.vendor_name}: ${v.completed}/${v.total_assigned}`).join(', ');
       }
     }).catch(() => {});

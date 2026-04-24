@@ -632,10 +632,41 @@
         <ul>
           <li><strong>Survey Submissions:</strong> Airtable base <code>apptK6zNN0Hf3OuoJ</code> — vendors upload here</li>
           <li><strong>Scout Records:</strong> Airtable base <code>appAwgaX89x0JxG3Z</code> — field visit tracking</li>
-          <li><strong>Reference Data:</strong> SQL Server <code>ReferenceExport</code> view — ground truth per site</li>
+          <li><strong>Scout Reference:</strong> Excel <code>ScoutSurveyLab.xlsm</code> — "Scout Map Data" sheet defines target sites</li>
+          <li><strong>Vendor Assignments:</strong> Excel <code>Vendor ASSIGN.xlsx</code> — per-vendor site allocations</li>
+          <li><strong>Reference Data:</strong> SQL Server / BigQuery <code>ReferenceExport</code> — ground truth per site</li>
           <li><strong>Dashboard Data:</strong> <code>team_dashboard_data.json</code> — aggregated every refresh cycle</li>
         </ul>
-        <p style="margin-top:12px;">All data refreshes automatically when the pipeline runs. The dashboard reads from <code>team_dashboard_data.json</code> which is updated every time a submission is processed.</p>
+        <p style="margin-top:12px;">All data refreshes automatically when the pipeline runs. The dashboard reads from <code>team_dashboard_data.json</code> which is updated every <strong>60 seconds</strong>.</p>
+      </div>
+      
+      <div class="card">
+        <h3>🔄 Data Refresh Architecture</h3>
+        <div class="flow">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-label">Airtable</div><div class="flow-desc">Poll every 60s</div></div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-label">Backend</div><div class="flow-desc">Process & Grade</div></div>
+          <div class="flow-step"><div class="flow-num">3</div><div class="flow-label">Excel Match</div><div class="flow-desc">Scout vs Reference</div></div>
+          <div class="flow-step"><div class="flow-num">4</div><div class="flow-label">JSON</div><div class="flow-desc">Update stats</div></div>
+          <div class="flow-step"><div class="flow-num">5</div><div class="flow-label">Dashboard</div><div class="flow-desc">Poll every 15s</div></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
+          <div class="info-box cyan">
+            <div class="info-label cyan">Scout Completion Logic</div>
+            <div class="info-text">
+              <strong>Completed</strong> = Sites in Airtable that match StoreNumber in Excel reference.<br>
+              <strong>Unique Submissions</strong> = Deduplicated site numbers from Airtable.<br>
+              <strong>Total Submissions</strong> = All Airtable records (including dupes).
+            </div>
+          </div>
+          <div class="info-box purple">
+            <div class="info-label purple">Hot Reload</div>
+            <div class="info-text">
+              Dashboard fetches fresh JSON on every page load with no-cache headers. 
+              No HTML regeneration needed — data is always live.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

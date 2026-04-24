@@ -78,9 +78,24 @@ SURVEY_TYPE_CCTV = "CCTV"
 SURVEY_TYPE_FA_INTRUSION = "FA/Intrusion"
 SURVEY_TYPE_BOTH = "BOTH"
 
-# Columns graded for each survey type
-GRADE_COLUMNS_CCTV: tuple[str, ...] = (
-    "Name",
+# ---------------------------------------------------------------------------
+# Per-row conditional grading rules for Name column
+# ---------------------------------------------------------------------------
+# 
+# Name is checked PER-ROW based on a condition column:
+#   - CCTV: Name checked only if that row has MAC Address content
+#   - FA/Intrusion: Name checked only if that row has Abbreviated Name content
+#   - BOTH: Name always checked
+#
+# The grader applies this logic row-by-row, not submission-wide.
+# ---------------------------------------------------------------------------
+
+# Condition column that triggers Name checking for each survey type
+CCTV_NAME_CONDITION_COLUMN = "MAC Address"  # If row has MAC Address, check Name
+FA_INTRUSION_NAME_CONDITION_COLUMN = "Abbreviated Name"  # If row has Abbreviated Name, check Name
+
+# Base columns ALWAYS checked for each survey type (excluding conditional Name)
+GRADE_COLUMNS_CCTV_BASE: tuple[str, ...] = (
     "Part Number",
     "Manufacturer",
     "IP Address",
@@ -88,15 +103,19 @@ GRADE_COLUMNS_CCTV: tuple[str, ...] = (
     "IP / Analog",
 )
 
-GRADE_COLUMNS_FA_INTRUSION: tuple[str, ...] = (
-    # "Name" is conditional — only graded if Abbreviated Name has content
-    # This is handled in the grader, not here
+GRADE_COLUMNS_FA_INTRUSION_BASE: tuple[str, ...] = (
     "Abbreviated Name",
     "Description",
 )
 
-# For FA/Intrusion: Name is only graded if this column has content
-FA_INTRUSION_NAME_CONDITION_COLUMN = "Abbreviated Name"
+# Full column sets (for reference / backward compat - includes Name)
+GRADE_COLUMNS_CCTV: tuple[str, ...] = (
+    "Name",
+) + GRADE_COLUMNS_CCTV_BASE
+
+GRADE_COLUMNS_FA_INTRUSION: tuple[str, ...] = (
+    "Name",
+) + GRADE_COLUMNS_FA_INTRUSION_BASE
 
 GRADE_COLUMNS_BOTH: tuple[str, ...] = (
     "Name",
@@ -108,6 +127,42 @@ GRADE_COLUMNS_BOTH: tuple[str, ...] = (
     "IP / Analog",
     "Description",
 )
+
+
+def get_name_condition_column(survey_type: str | None) -> str | None:
+    """Return the column that conditions whether Name should be checked for a row.
+    
+    Args:
+        survey_type: One of SURVEY_TYPE_CCTV, SURVEY_TYPE_FA_INTRUSION, SURVEY_TYPE_BOTH.
+    
+    Returns:
+        Column name that must have content for Name to be checked, or None if Name is always checked.
+    """
+    if survey_type == SURVEY_TYPE_CCTV:
+        return CCTV_NAME_CONDITION_COLUMN
+    elif survey_type == SURVEY_TYPE_FA_INTRUSION:
+        return FA_INTRUSION_NAME_CONDITION_COLUMN
+    else:
+        # BOTH or None - Name is always checked
+        return None
+
+
+def get_base_grade_columns(survey_type: str | None) -> tuple[str, ...]:
+    """Return the base grading columns (excluding conditional Name) for the survey type.
+    
+    Args:
+        survey_type: One of SURVEY_TYPE_CCTV, SURVEY_TYPE_FA_INTRUSION, SURVEY_TYPE_BOTH.
+    
+    Returns:
+        Tuple of column names that are ALWAYS graded (Name handled separately per-row).
+    """
+    if survey_type == SURVEY_TYPE_CCTV:
+        return GRADE_COLUMNS_CCTV_BASE
+    elif survey_type == SURVEY_TYPE_FA_INTRUSION:
+        return GRADE_COLUMNS_FA_INTRUSION_BASE
+    else:
+        # BOTH or None - use full BOTH columns (Name always included)
+        return GRADE_COLUMNS_BOTH
 
 
 def get_grade_columns_for_survey_type(survey_type: str | None) -> tuple[str, ...]:

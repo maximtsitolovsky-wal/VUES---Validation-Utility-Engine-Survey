@@ -181,7 +181,10 @@ def grade_submission_in_python(
             reference_row_count=len(reference_filtered),
         )
 
-    comparison = _compare_rows(submission_id, site_number, submission_filtered, reference_filtered, comparable_cols)
+    comparison = _compare_rows(
+        submission_id, site_number, submission_filtered, reference_filtered,
+        comparable_cols, survey_type=survey_type
+    )
     error_df = comparison.error_df
     mismatch_count = len(error_df)
 

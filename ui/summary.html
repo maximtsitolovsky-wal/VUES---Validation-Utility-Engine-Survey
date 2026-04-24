@@ -532,7 +532,7 @@ function renderDistChart(vendors) {
   });
 }
 
-function renderVendorTable(vendors) {
+function renderVendorTable(vendors, scoutCompleted, scoutExcelTotal) {
   // Recalculate scores for table
   const PROGRAM_WEEK = 3;
   const TOTAL_WEEKS = 16;
@@ -567,7 +567,7 @@ function renderVendorTable(vendors) {
   }).join('');
 }
 
-function renderInsights(surveyRate, scoutRate, vendors) {
+function renderInsights(surveyRate, scoutRate, vendors, scoutCompleted, scoutExcelTotal) {
   const insights = [];
   
   if (surveyRate < 50) {

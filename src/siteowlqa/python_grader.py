@@ -166,11 +166,8 @@ def grade_submission_in_python(
     )
 
     # Use survey-type-specific columns, filtered to those present in reference
+    # Note: Name is handled conditionally PER-ROW in _compare_rows based on survey_type
     comparable_cols = _select_comparable_columns(reference_filtered, grade_columns)
-    
-    # FA/Intrusion special case: include "Name" only if Abbreviated Name has content
-    if survey_type == SURVEY_TYPE_FA_INTRUSION:
-        comparable_cols = _adjust_fa_intrusion_columns(comparable_cols, submission_filtered)
 
     if submission_filtered.empty:
         # Business rule: no ERRORs. Treat as FAIL with score 0.

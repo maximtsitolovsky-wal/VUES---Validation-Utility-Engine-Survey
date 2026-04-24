@@ -752,7 +752,7 @@ ${lowVendors.length > 0 ? `<p><span class="metric" style="color:${C.red}">${lowV
 <p><strong>Generated:</strong> ${today} | <strong>Report Type:</strong> Combined Analysis</p>
 
 <h3>Program Overview</h3>
-<p>This executive brief provides a consolidated view of both the Survey and Scout programs. The combined operation spans <span class="highlight">${scoutAssigned}</span> sites with <span class="highlight">${vendors.length}</span> active vendors executing field and survey operations.</p>
+<p>This executive brief provides a consolidated view of both the Survey and Scout programs. The Scout program targets <span class="highlight">${scoutExcelTotal}</span> sites with <span class="highlight">${vendors.length}</span> active vendors executing field operations.</p>
 
 <h3>Survey Program Summary</h3>
 <ul>
@@ -763,7 +763,9 @@ ${lowVendors.length > 0 ? `<p><span class="metric" style="color:${C.red}">${lowV
 
 <h3>Scout Program Summary</h3>
 <ul>
-<li><strong>Sites:</strong> <span class="metric">${scoutAssigned}</span> assigned | <span class="metric" style="color:${C.green}">${scoutCompleted}</span> completed | <span class="metric" style="color:${C.amber}">${scoutRemaining}</span> remaining</li>
+<li><strong>Target Sites (Excel Scope):</strong> <span class="metric">${scoutExcelTotal}</span></li>
+<li><strong>Total Submissions:</strong> <span class="metric">${scoutTotalSubmissions}</span> | <span class="metric">Unique: ${scoutUniqueSubmissions}</span></li>
+<li><strong>Sites Completed:</strong> <span class="metric" style="color:${C.green}">${scoutCompleted}</span> | <span class="metric" style="color:${C.amber}">Remaining: ${scoutRemaining}</span></li>
 <li><strong>Completion Rate:</strong> <span class="metric" style="color:${C.purple}">${scoutRate}%</span></li>
 <li><strong>Top Performer:</strong> ${topVendor ? `${getVendorName(topVendor.vendor_name)} (${topVendor.completion_rate?.toFixed(1)}%)` : 'TBD'}</li>
 </ul>
@@ -787,7 +789,7 @@ ${lowVendors.length > 0 ? `<p><span class="metric" style="color:${C.red}">${lowV
 <h3>Financial Impact</h3>
 <ul>
 <li><strong>Scout Cost Savings:</strong> <span class="metric" style="color:${C.green}">$${Math.round(scoutCompleted * 450).toLocaleString()}</span> (vs legacy approach)</li>
-<li><strong>Projected Total Savings:</strong> <span class="metric">$${Math.round(scoutAssigned * 450).toLocaleString()}</span> at completion</li>
+<li><strong>Projected Total Savings:</strong> <span class="metric">$${Math.round(scoutExcelTotal * 450).toLocaleString()}</span> at completion</li>
 <li><strong>ROI Status:</strong> ${scoutRate > 10 ? '✅ Positive' : '⏳ Tracking'}</li>
 </ul>`;
   }

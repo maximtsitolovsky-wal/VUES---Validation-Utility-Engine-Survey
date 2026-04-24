@@ -339,7 +339,7 @@
     <!-- Agent & Skill Registry -->
     <div class="grid-2" id="agents">
       <div class="panel">
-        <div class="panel-header"><div><div class="panel-title">🤖 Agent Registry</div><div class="panel-subtitle">14 agents available</div></div><span class="pill pill-green" id="agentCount">14 agents</span></div>
+        <div class="panel-header"><div><div class="panel-title">🤖 Agent Registry</div><div class="panel-subtitle">24 agents available</div></div><span class="pill pill-green" id="agentCount">24 agents</span></div>
         <div class="panel-body">
           <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" placeholder="Search agents..." id="agentSearch"></div>
           <div class="scroll-area" id="agentList"></div>
@@ -651,8 +651,8 @@ function renderScoutTimeStudy() {
   // Weekly completion chart
   renderWeeklyChart(weeklyStats);
   
-  // Vendor velocity chart
-  renderVelocityChart(vendorWeekly, weeks);
+  // Vendor velocity chart - pass vendors to ensure all show (even 0)
+  renderVelocityChart(vendorWeekly, weeks, vendors);
   
   // Surveyor leaderboard
   renderSurveyorTable(surveyorStats);
@@ -728,12 +728,29 @@ function getVendorShortName(name) {
   return name.split('.')[0].slice(0, 10);
 }
 
-function renderVelocityChart(vendorWeekly, weeks) {
+function renderVelocityChart(vendorWeekly, weeks, vendors = []) {
   const velocities = [];
+  const seenVendors = new Set();
+  
+  // Add vendors with submissions
   for (const [vendor, wks] of Object.entries(vendorWeekly)) {
     const total = Object.values(wks).reduce((a, b) => a + b, 0);
-    velocities.push({ vendor, velocity: (total / weeks).toFixed(1) });
+    const normalizedName = getVendorShortName(vendor);
+    if (!seenVendors.has(normalizedName)) {
+      velocities.push({ vendor: normalizedName, velocity: (total / weeks).toFixed(1) });
+      seenVendors.add(normalizedName);
+    }
   }
+  
+  // Add vendors with 0 submissions (like Everon)
+  for (const v of vendors) {
+    const normalizedName = getVendorShortName(v.vendor_name);
+    if (!seenVendors.has(normalizedName)) {
+      velocities.push({ vendor: normalizedName, velocity: '0.0' });
+      seenVendors.add(normalizedName);
+    }
+  }
+  
   velocities.sort((a, b) => b.velocity - a.velocity);
   
   const ctx = document.getElementById('vendorVelocityChart');
@@ -741,7 +758,7 @@ function renderVelocityChart(vendorWeekly, weeks) {
   ctx._chart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: velocities.map(v => getVendorShortName(v.vendor)),
+      labels: velocities.map(v => v.vendor),  // Already normalized
       datasets: [{
         label: 'Sites/Week',
         data: velocities.map(v => parseFloat(v.velocity)),

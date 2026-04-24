@@ -373,11 +373,28 @@ def _compare_rows(
     submission_df: pd.DataFrame,
     reference_df: pd.DataFrame,
     comparable_cols: tuple[str, ...],
+    survey_type: str | None = None,
 ) -> ComparisonResult:
+    """Compare submission rows against reference rows.
+    
+    Args:
+        submission_id: Submission ID for logging.
+        site_number: Site number for logging.
+        submission_df: Normalized submission DataFrame.
+        reference_df: Normalized reference DataFrame.
+        comparable_cols: Base columns to always compare.
+        survey_type: Survey type for per-row conditional Name logic.
+    """
     issue_rows: list[dict[str, str]] = []
     exact_pairs, submission_left, reference_left = _pair_exact_matches(submission_df, reference_df)
     matched_rows = exact_pairs
     covered_reference_rows = exact_pairs
+    
+    # Get the condition column for Name checking (per-row conditional)
+    # - CCTV: check Name only if row has MAC Address
+    # - FA/Intrusion: check Name only if row has Abbreviated Name
+    # - BOTH/None: always check Name
+    name_condition_col = get_name_condition_column(survey_type)
 
     aligned_pairs, submission_unmatched, reference_unmatched = _pair_identity_matches(
         submission_left,
@@ -386,7 +403,23 @@ def _compare_rows(
     for row_number, sub, ref in aligned_pairs:
         covered_reference_rows += 1
         mismatched_cols: list[str] = []
-        for col in comparable_cols:
+        
+        # Determine columns to check for THIS ROW
+        # Start with base columns, add Name conditionally per-row
+        row_cols = list(comparable_cols)
+        
+        if name_condition_col is not None:
+            # Name is conditional - check if condition column has content in this row
+            condition_val = str(ref.get(name_condition_col, "")).strip()
+            if condition_val and condition_val != "0":
+                # Condition met - include Name for this row
+                if "Name" not in row_cols:
+                    row_cols = ["Name"] + row_cols
+            else:
+                # Condition not met - exclude Name for this row
+                row_cols = [c for c in row_cols if c != "Name"]
+        
+        for col in row_cols:
             ref_val = str(ref[col])
             sub_val = str(sub[col])
 

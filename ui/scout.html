@@ -145,31 +145,31 @@ async function loadData() {
 function renderAll(data) {
   const va = data.vendor_assignments || {};
   const vendors = va.vendors || [];
-  const scout = data.scout?.records || [];
+  const scout = data.scout || {};
+  const scoutRecords = scout.records || [];
   
-  // Calculate totals from vendor assignments
-  let totalAssigned = 0, totalCompleted = 0;
-  vendors.forEach(v => {
-    totalAssigned += v.total_assigned || 0;
-    totalCompleted += v.completed || 0;
-  });
-  const totalRemaining = totalAssigned - totalCompleted;
-  const rate = totalAssigned ? Math.round(totalCompleted / totalAssigned * 100 * 10) / 10 : 0;
+  // Use new scout stats from backend (computed against Excel reference)
+  const totalSubmissions = scout.total_submissions || scoutRecords.length;
+  const uniqueSubmissions = scout.unique_submissions || 0;
+  const completed = scout.completed || 0;
+  const excelTotal = scout.excel_total || 0;
+  const remaining = scout.remaining || (excelTotal - completed);
+  const rate = scout.completion_rate || (excelTotal > 0 ? Math.round(completed / excelTotal * 100 * 10) / 10 : 0);
   
   // Update stats
-  document.getElementById('statTotal').textContent = totalAssigned;
-  document.getElementById('statComplete').textContent = totalCompleted;
-  document.getElementById('statRemaining').textContent = totalRemaining;
-  document.getElementById('statVendors').textContent = vendors.length;
+  document.getElementById('statTotal').textContent = totalSubmissions;
+  document.getElementById('statUnique').textContent = uniqueSubmissions;
+  document.getElementById('statComplete').textContent = completed;
+  document.getElementById('statRemaining').textContent = remaining;
   document.getElementById('statRate').textContent = rate + '%';
-  document.getElementById('headerPill').textContent = `📍 ${totalAssigned} Sites`;
+  document.getElementById('headerPill').textContent = `📍 ${excelTotal} Target Sites`;
   
-  // Progress bar
+  // Progress bar (completed vs Excel target)
   document.getElementById('progressFill').style.width = rate + '%';
   document.getElementById('progressPct').textContent = rate + '%';
   document.getElementById('progressNote').innerHTML = `
-    <strong>${totalCompleted}</strong> sites completed of <strong>${totalAssigned}</strong> assigned.<br>
-    <strong>${totalRemaining}</strong> sites remaining across <strong>${vendors.length}</strong> vendors.
+    <strong>${completed}</strong> sites completed of <strong>${excelTotal}</strong> in scope.<br>
+    <strong>${remaining}</strong> sites remaining. <strong>${totalSubmissions}</strong> total submissions received.
   `;
   
   // Vendor completion chart

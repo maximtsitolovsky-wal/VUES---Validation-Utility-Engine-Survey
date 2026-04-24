@@ -365,15 +365,16 @@
       let total = 0, done = 0;
       va.forEach(v => { total += v.total_assigned || 0; done += v.completed || 0; });
       document.getElementById('scoutPill').textContent = `${total} Sites`;
-      document.getElementById('scoutRate').textContent = `${(total ? (done/total*100).toFixed(1) : 0)}% Complete`;
+      const scoutRateEl = document.getElementById('scoutRate');
+      const completionPct = total ? (done/total*100).toFixed(1) : 0;
+      scoutRateEl.textContent = `${completionPct}% Complete`;
       
-      // Check for critical vendors (no submissions)
+      // Check for critical vendors (< 5% completion with significant assignments)
       const critical = va.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 50);
       if (critical.length > 0) {
-        const scoutRate = document.getElementById('scoutRate');
-        scoutRate.className = 'pill pill-red';
-        scoutRate.textContent = `⚠️ ${critical.length} Vendor(s) Behind`;
-        scoutRate.title = critical.map(v => `${v.vendor_name}: ${v.completed}/${v.total_assigned}`).join(', ');
+        scoutRateEl.className = 'pill pill-red';
+        scoutRateEl.innerHTML = `<span style="margin-right:4px;">⚠️</span>${critical.length} Behind`;
+        scoutRateEl.title = `${completionPct}% overall | ` + critical.map(v => `${v.vendor_name}: ${v.completed}/${v.total_assigned}`).join(', ');
       }
     }).catch(() => {});
     

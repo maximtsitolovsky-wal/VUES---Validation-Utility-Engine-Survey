@@ -676,11 +676,13 @@
       <div class="card">
         <h3>❓ Common Questions</h3>
         <ul>
-          <li><strong>How often does data refresh?</strong> — The pipeline polls Airtable every 30 seconds. Dashboard data updates after each submission is processed.</li>
+          <li><strong>How often does data refresh?</strong> — Backend polls Airtable every <strong>60 seconds</strong>. Dashboard JS polls every <strong>15 seconds</strong>. Max latency: ~75s.</li>
+          <li><strong>Why doesn't my Scout count match Airtable?</strong> — "Completed" shows only sites that match the Excel reference (ScoutSurveyLab.xlsm). Check if the site is in scope.</li>
+          <li><strong>What's the difference between Total/Unique/Completed?</strong> — Total = all submissions, Unique = deduplicated sites, Completed = sites matching Excel scope.</li>
           <li><strong>What happens when a submission fails?</strong> — The vendor receives an email with the score and a CSV showing which rows didn't match.</li>
           <li><strong>Can I re-grade a submission?</strong> — Yes, change the Processing Status in Airtable back to blank and VUES will re-process it.</li>
           <li><strong>Why is my pass rate low?</strong> — Common causes: wrong site number, missing columns, outdated reference data, or incorrect device naming.</li>
-          <li><strong>How do I add a new vendor?</strong> — Vendors are auto-detected from submissions. For Scout assignments, update the Vendor Assignments table in Airtable.</li>
+          <li><strong>How do I force a refresh?</strong> — Click the "Refresh now" button on the dashboard or hit Ctrl+Shift+R in your browser.</li>
         </ul>
       </div>
     </div>

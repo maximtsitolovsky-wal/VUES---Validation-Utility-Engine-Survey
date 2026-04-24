@@ -379,7 +379,8 @@ function renderAll() {
   
   const survey = programData.survey?.records || [];
   const vendors = programData.vendor_assignments?.vendors || [];
-  const scout = programData.scout?.records || [];
+  const scout = programData.scout || {};
+  const scoutRecords = scout.records || [];
   
   // Survey metrics
   const surveyTotal = survey.length;
@@ -388,11 +389,13 @@ function renderAll() {
   const surveyPending = surveyTotal - surveyPass - surveyFail;
   const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
   
-  // Scout metrics
-  let scoutAssigned = 0, scoutCompleted = 0;
-  vendors.forEach(v => { scoutAssigned += v.total_assigned || 0; scoutCompleted += v.completed || 0; });
-  const scoutRemaining = scoutAssigned - scoutCompleted;
-  const scoutRate = scoutAssigned ? (scoutCompleted / scoutAssigned * 100).toFixed(1) : 0;
+  // Scout metrics - use new stats from backend (computed against Excel reference)
+  const scoutTotalSubmissions = scout.total_submissions || scoutRecords.length;
+  const scoutUniqueSubmissions = scout.unique_submissions || 0;
+  const scoutCompleted = scout.completed || 0;  // Sites matching Excel reference
+  const scoutExcelTotal = scout.excel_total || 0;  // Total sites in Excel scope
+  const scoutRemaining = scout.remaining || (scoutExcelTotal - scoutCompleted);
+  const scoutRate = scout.completion_rate || (scoutExcelTotal > 0 ? (scoutCompleted / scoutExcelTotal * 100).toFixed(1) : 0);
   
   // Update date
   document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -410,12 +413,12 @@ function renderAll() {
   else if (surveyRate >= 50) { surveyStatusEl.textContent = '● Warning'; surveyStatusEl.className = 'status-chip status-warning'; }
   else { surveyStatusEl.textContent = '● Critical'; surveyStatusEl.className = 'status-chip status-critical'; }
   
-  // Scout Health Card
+  // Scout Health Card - using Excel reference stats
   document.getElementById('scoutRate').textContent = scoutRate + '%';
-  document.getElementById('scoutTotal').textContent = scoutAssigned;
-  document.getElementById('scoutDone').textContent = scoutCompleted;
+  document.getElementById('scoutTotal').textContent = scoutExcelTotal;  // Target sites from Excel
+  document.getElementById('scoutDone').textContent = scoutCompleted;    // Matching Excel
   document.getElementById('scoutRemaining').textContent = scoutRemaining;
-  document.getElementById('scoutVendors').textContent = vendors.length;
+  document.getElementById('scoutVendors').textContent = scoutTotalSubmissions + ' submissions';  // Show total submissions instead
   document.getElementById('scoutRing').style.strokeDashoffset = 314 - (314 * parseFloat(scoutRate) / 100);
   
   const scoutStatusEl = document.getElementById('scoutStatus');
@@ -466,12 +469,12 @@ function renderAll() {
   document.getElementById('statAccuracy').textContent = surveyRate + '%';
   
   // Render charts
-  renderTrendChart(survey, scout);
+  renderTrendChart(survey, scoutRecords);
   renderSurveyMiniChart(survey);
   renderScoutMiniChart(vendors);
   renderDistChart(vendors);
-  renderVendorTable(vendors);
-  renderInsights(surveyRate, scoutRate, vendors);
+  renderVendorTable(vendors, scoutCompleted, scoutExcelTotal);
+  renderInsights(surveyRate, scoutRate, vendors, scoutCompleted, scoutExcelTotal);
 }
 
 function renderTrendChart(survey, scout) {
@@ -637,15 +640,21 @@ function regenerateReport() {
 function generateLocalReport(type) {
   const survey = programData.survey?.records || [];
   const vendors = programData.vendor_assignments?.vendors || [];
+  const scout = programData.scout || {};
+  
+  // Survey stats
   const surveyTotal = survey.length;
   const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
   const surveyFail = surveyTotal - surveyPass;
   const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
   
-  let scoutAssigned = 0, scoutCompleted = 0;
-  vendors.forEach(v => { scoutAssigned += v.total_assigned || 0; scoutCompleted += v.completed || 0; });
-  const scoutRate = scoutAssigned ? (scoutCompleted / scoutAssigned * 100).toFixed(1) : 0;
-  const scoutRemaining = scoutAssigned - scoutCompleted;
+  // Scout stats - from backend (computed against Excel reference)
+  const scoutTotalSubmissions = scout.total_submissions || 0;
+  const scoutUniqueSubmissions = scout.unique_submissions || 0;
+  const scoutCompleted = scout.completed || 0;  // Sites matching Excel
+  const scoutExcelTotal = scout.excel_total || 0;  // Target sites from Excel
+  const scoutRemaining = scout.remaining || 0;
+  const scoutRate = scout.completion_rate || 0;
   
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const topVendor = vendors.sort((a,b) => b.completion_rate - a.completion_rate)[0];

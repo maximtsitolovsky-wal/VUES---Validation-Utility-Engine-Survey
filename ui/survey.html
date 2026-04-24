@@ -160,16 +160,27 @@ for (let i = 0; i < 60; i++) {
 const C = { cyan:'#5AE4FF', green:'#45E6A5', red:'#FF6B81', amber:'#FFC857', purple:'#9B7CFF', text:'rgba(255,255,255,0.6)', grid:'rgba(255,255,255,0.06)' };
 Chart.defaults.color = C.text;
 Chart.defaults.borderColor = C.grid;
+let chartInstances = {};
 
-// Load data
+// Destroy existing charts before redrawing
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+  chartInstances = {};
+}
+
+// Load data with cache-bust
 async function loadData() {
   try {
-    const r = await fetch('team_dashboard_data.json');
+    const r = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const data = await r.json();
+    destroyCharts();
     renderAll(data.survey?.records || []);
   } catch(e) { console.log('No data:', e); }
 }
+
+// Auto-refresh every 15 seconds
+setInterval(loadData, 15000);
 
 function renderAll(recs) {
   const total = recs.length;
@@ -185,7 +196,7 @@ function renderAll(recs) {
   document.getElementById('statRate').textContent = rate + '%';
   
   // Status chart
-  new Chart(document.getElementById('statusChart'), {
+  chartInstances.status = new Chart(document.getElementById('statusChart'), {
     type: 'doughnut',
     data: { labels: ['Passed', 'Failed', 'Pending'], datasets: [{ data: [passed, failed, pending], backgroundColor: [C.green, C.red, C.amber], borderWidth: 0 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }, cutout: '65%' }
@@ -195,7 +206,7 @@ function renderAll(recs) {
   const dateStats = {};
   recs.forEach(r => { const d = (r.submitted_at || '').slice(0, 10); if (d) { if (!dateStats[d]) dateStats[d] = 0; dateStats[d]++; } });
   const dates = Object.keys(dateStats).sort().slice(-10);
-  new Chart(document.getElementById('trendChart'), {
+  chartInstances.trend = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: { labels: dates.map(d => d.slice(5)), datasets: [{ label: 'Submissions', data: dates.map(d => dateStats[d]), borderColor: C.cyan, backgroundColor: 'rgba(90,228,255,0.1)', fill: true, tension: 0.4 }] },
     options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: C.grid } } }, plugins: { legend: { display: false } } }
@@ -213,7 +224,7 @@ function renderAll(recs) {
   const sorted = Object.entries(vendorStats).sort((a, b) => b[1].t - a[1].t);
   const top8 = sorted.slice(0, 8);
   
-  new Chart(document.getElementById('vendorChart'), {
+  chartInstances.vendor = new Chart(document.getElementById('vendorChart'), {
     type: 'bar',
     data: { labels: top8.map(([v]) => v.slice(0, 12)), datasets: [{ label: 'Pass', data: top8.map(([, s]) => s.p), backgroundColor: C.cyan, borderRadius: 4 }, { label: 'Fail', data: top8.map(([, s]) => s.f), backgroundColor: C.red, borderRadius: 4 }] },
     options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, stacked: true }, y: { grid: { color: C.grid }, stacked: true } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }

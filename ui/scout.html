@@ -131,16 +131,27 @@ for (let i = 0; i < 60; i++) {
 const C = { cyan:'#5AE4FF', green:'#45E6A5', amber:'#FFC857', purple:'#9B7CFF', text:'rgba(255,255,255,0.6)', grid:'rgba(255,255,255,0.06)' };
 Chart.defaults.color = C.text;
 Chart.defaults.borderColor = C.grid;
+let chartInstances = {};
 
-// Load real data
+// Destroy existing charts before redrawing
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+  chartInstances = {};
+}
+
+// Load real data with cache-bust
 async function loadData() {
   try {
-    const r = await fetch('team_dashboard_data.json');
+    const r = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const data = await r.json();
+    destroyCharts();
     renderAll(data);
   } catch(e) { console.log('Error loading data:', e); }
 }
+
+// Auto-refresh every 15 seconds
+setInterval(loadData, 15000);
 
 function renderAll(data) {
   const va = data.vendor_assignments || {};

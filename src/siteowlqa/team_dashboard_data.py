@@ -27,6 +27,11 @@ log = logging.getLogger(__name__)
 
 _TEAM_DASHBOARD_DATA = "team_dashboard_data.json"
 
+# Default path to Scout completion reference Excel
+_DEFAULT_SCOUT_REFERENCE_FILE = (
+    r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\ScoutSurveyLab.xlsm"
+)
+
 
 def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, output_dir: Path) -> None:
     """Write a live dashboard snapshot for Survey + Scout tabs."""
@@ -62,6 +67,10 @@ def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, out
     )
 
     scout_payload = _build_team_payload(airtable, scout_source, label="Scout Team")
+    
+    # Add scout completion stats (Total/Unique/Completed vs Excel reference)
+    scout_stats = _compute_scout_completion_stats(scout_payload)
+    scout_payload.update(scout_stats)
     
     # Load vendor assignment tracking (if configured)
     vendor_assignments_payload = _build_vendor_assignments_payload(scout_payload)

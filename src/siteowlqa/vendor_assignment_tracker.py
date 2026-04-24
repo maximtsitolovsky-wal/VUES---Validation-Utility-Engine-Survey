@@ -251,21 +251,21 @@ class VendorAssignmentTracker:
                         # Calculate completion time if we have dates
                         if assignment.assigned_date:
                             submitted_at = completion_info.get("submitted_at")
-                        
-                        if submitted_at:
-                            if isinstance(submitted_at, str):
-                                try:
-                                    submitted_at = datetime.fromisoformat(submitted_at.replace("Z", "+00:00"))
-                                except:
-                                    try:
-                                        submitted_at = datetime.strptime(submitted_at, "%Y-%m-%d")
-                                    except:
-                                        submitted_at = None
                             
                             if submitted_at:
-                                days = (submitted_at - assignment.assigned_date).days
-                                if days >= 0:  # Only count positive days
-                                    completion_days.append(days)
+                                if isinstance(submitted_at, str):
+                                    try:
+                                        submitted_at = datetime.fromisoformat(submitted_at.replace("Z", "+00:00"))
+                                    except:
+                                        try:
+                                            submitted_at = datetime.strptime(submitted_at, "%Y-%m-%d")
+                                        except:
+                                            submitted_at = None
+                                
+                                if submitted_at:
+                                    days = (submitted_at - assignment.assigned_date).days
+                                    if days >= 0:  # Only count positive days
+                                        completion_days.append(days)
             
             remaining = total_assigned - completed_count
             completion_rate = (completed_count / total_assigned * 100) if total_assigned > 0 else 0.0

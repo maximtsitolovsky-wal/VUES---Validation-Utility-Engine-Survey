@@ -1,3 +1,12 @@
+### 2026-04-24 — Per-Row Conditional Name Grading Logic Implemented
+- **Decision:** Name column is now checked **per-row** based on a condition column, not submission-wide.
+  - **CCTV**: Name checked only if that row has `MAC Address` content
+  - **FA/Intrusion**: Name checked only if that row has `Abbreviated Name` content  
+  - **BOTH/None**: Name always checked
+- **Impact:** `src/siteowlqa/config.py` (new `get_name_condition_column()`, `get_base_grade_columns()`, `CCTV_NAME_CONDITION_COLUMN`, `FA_INTRUSION_NAME_CONDITION_COLUMN`), `src/siteowlqa/python_grader.py` (`_compare_rows()` now accepts `survey_type` and applies per-row Name logic, removed `_adjust_fa_intrusion_columns()`), `src/siteowlqa/site_validation.py` (Name removed from critical columns since it's per-row conditional).
+- **Test:** FA/Intrusion submission `recryYpfpuVlYKm1g` regrades to PASS 100%.
+- **Closed:** Yes.
+
 ### 2026-04-23 — Survey Type Validation Bug Fixed (recryYpfpuVlYKm1g)
 - **Bug:** `site_validation.py` used hardcoded CCTV columns (`Part Number`, `Manufacturer`, `IP Address`, `MAC Address`, `IP / Analog`) as critical for ALL submissions, regardless of `survey_type`. FA/Intrusion submissions were incorrectly failing validation with `MISSING_CRITICAL_COLUMNS` even though those columns are not required for FA/Intrusion.
 - **Fix:** Added `survey_type` parameter to `validate_submission_for_site()`. New helper functions `_get_critical_columns_for_survey_type()` and `_get_optional_columns_for_survey_type()` route column requirements correctly:
@@ -88,9 +97,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
-2. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails.
-3. **2026-04-17** — Vendor Assignment Tracker: Built complete vendor assignment tracking vs Scout completions. 5 vendors tracked with color-coded completion pills.
+1. **2026-04-24** — Per-Row Conditional Name: Name checked per-row based on condition column (CCTV=MAC Address, FA/Intrusion=Abbreviated Name).
+2. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
+3. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails.
 
 ---
 

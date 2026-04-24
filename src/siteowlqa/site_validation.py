@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from siteowlqa.config import (
     AppConfig,
     get_grade_columns_for_survey_type,
+    get_base_grade_columns,
     SURVEY_TYPE_CCTV,
     SURVEY_TYPE_FA_INTRUSION,
     SURVEY_TYPE_BOTH,
@@ -20,9 +21,15 @@ from siteowlqa.config import (
 from siteowlqa.file_processor import VendorFileLoadResult
 from siteowlqa.reference_data import SiteReferenceProfile, fetch_site_reference_profile
 
-# Legacy constants for backward compatibility and reference
+# ---------------------------------------------------------------------------
+# Critical columns per survey type (must be present in file)
+# NOTE: Name is NOT critical because it's checked PER-ROW conditionally.
+#       - CCTV: Name checked only if row has MAC Address
+#       - FA/Intrusion: Name checked only if row has Abbreviated Name
+# ---------------------------------------------------------------------------
+
+# CCTV base columns (always required, Name is per-row conditional)
 CRITICAL_VENDOR_COLUMNS_CCTV: tuple[str, ...] = (
-    "Name",
     "Part Number",
     "Manufacturer",
     "IP Address",
@@ -30,15 +37,18 @@ CRITICAL_VENDOR_COLUMNS_CCTV: tuple[str, ...] = (
     "IP / Analog",
 )
 
+# FA/Intrusion base columns (always required, Name is per-row conditional)
 CRITICAL_VENDOR_COLUMNS_FA_INTRUSION: tuple[str, ...] = (
     "Abbreviated Name",
     "Description",
 )
 
-# Backward compat alias — defaults to CCTV (was the original hardcoded value)
+# Backward compat alias
 CRITICAL_VENDOR_COLUMNS: tuple[str, ...] = CRITICAL_VENDOR_COLUMNS_CCTV
 
+# Name is always optional at the file level (checked per-row in grader)
 OPTIONAL_VENDOR_COLUMNS: tuple[str, ...] = (
+    "Name",
     "Abbreviated Name",
     "Description",
 )
@@ -47,33 +57,37 @@ OPTIONAL_VENDOR_COLUMNS: tuple[str, ...] = (
 def _get_critical_columns_for_survey_type(survey_type: str | None) -> tuple[str, ...]:
     """Return critical columns that MUST be present for a given survey type.
     
-    For CCTV: Name, Part Number, Manufacturer, IP Address, MAC Address, IP / Analog
+    NOTE: Name is NOT included because it's checked per-row conditionally in the grader.
+    
+    For CCTV: Part Number, Manufacturer, IP Address, MAC Address, IP / Analog
     For FA/Intrusion: Abbreviated Name, Description
-    For BOTH or None: All columns (union)
+    For BOTH or None: All base columns (union)
     """
     if survey_type == SURVEY_TYPE_CCTV:
         return CRITICAL_VENDOR_COLUMNS_CCTV
     elif survey_type == SURVEY_TYPE_FA_INTRUSION:
         return CRITICAL_VENDOR_COLUMNS_FA_INTRUSION
     else:
-        # BOTH or None — need all columns
+        # BOTH or None — need all base columns
         return CRITICAL_VENDOR_COLUMNS_CCTV + CRITICAL_VENDOR_COLUMNS_FA_INTRUSION
 
 
 def _get_optional_columns_for_survey_type(survey_type: str | None) -> tuple[str, ...]:
     """Return optional columns for a given survey type.
     
-    For CCTV: Abbreviated Name, Description are optional
-    For FA/Intrusion: CCTV columns are optional
-    For BOTH or None: Nothing is optional (all critical)
+    Name is always optional at file level (per-row conditional in grader).
+    
+    For CCTV: Name, Abbreviated Name, Description are optional
+    For FA/Intrusion: Name, CCTV columns are optional
+    For BOTH or None: Only Name is optional
     """
     if survey_type == SURVEY_TYPE_CCTV:
-        return ("Abbreviated Name", "Description")
+        return ("Name", "Abbreviated Name", "Description")
     elif survey_type == SURVEY_TYPE_FA_INTRUSION:
         return ("Name", "Part Number", "Manufacturer", "IP Address", "MAC Address", "IP / Analog")
     else:
-        # BOTH or None — nothing is optional
-        return ()
+        # BOTH or None — only Name is optional
+        return ("Name",)
 
 
 @dataclass(frozen=True)

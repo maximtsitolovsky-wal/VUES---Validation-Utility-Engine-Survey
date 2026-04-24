@@ -278,6 +278,24 @@
         </div>
       </a>
       
+      <a href="routing.html" class="category-card">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-content">
+          <div class="card-text">
+            <div class="card-title">Survey Routing</div>
+            <div class="card-subtitle">Vendor output sheet based on scout responses</div>
+            <div class="card-pills">
+              <span class="pill pill-amber" id="routingPill">Loading...</span>
+              <span class="pill pill-green" id="routingReady">Loading...</span>
+            </div>
+          </div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24"><path d="M16 3h5v5M21 3l-7 7M8 21H3v-5M3 21l7-7"/></svg>
+          </div>
+        </div>
+      </a>
+      
       <a href="analytics.html" class="category-card">
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
@@ -378,6 +396,16 @@
         scoutRateEl.title = `${completionPct}% overall | ` + critical.map(v => `${v.vendor_name}: ${v.completed}/${v.total_assigned}`).join(', ');
       }
     }).catch(() => {});
+    
+    // Load routing data
+    fetch('survey_routing_data.json').then(r => r.json()).then(d => {
+      const s = d.summary || {};
+      document.getElementById('routingPill').textContent = `${s.surveys_required || 0} Surveys`;
+      document.getElementById('routingReady').textContent = `${s.ready_to_assign || 0} Ready`;
+    }).catch(() => {
+      document.getElementById('routingPill').textContent = 'No Data';
+      document.getElementById('routingReady').textContent = '—';
+    });
     
     // Generate stars
     const stars = document.getElementById('stars');

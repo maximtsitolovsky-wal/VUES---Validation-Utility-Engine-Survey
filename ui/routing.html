@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey Routing Output · VUES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060914; --panel: rgba(12, 20, 40, 0.85); --panel-border: rgba(120, 160, 255, 0.15);
+      --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF;
+      --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81;
+      /* Walmart colors */
+      --wm-blue: #0053E2; --wm-yellow: #FFC220; --wm-light-blue: #4DBDF5;
+    }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -2;
+      background: radial-gradient(circle at 20% 30%, rgba(77,141,255,0.12), transparent 30%),
+                  radial-gradient(circle at 80% 70%, rgba(155,124,255,0.1), transparent 30%),
+                  linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%);
+    }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    .star { position: absolute; border-radius: 50%; background: white; box-shadow: 0 0 6px rgba(255,255,255,0.5); }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--panel); border: 1px solid var(--panel-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-soft); text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { background: rgba(90,228,255,0.1); border-color: var(--cyan); color: var(--cyan); }
+    .back-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .header-pills { margin-left: auto; display: flex; gap: 8px; }
+    
+    /* Pills */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pill-blue { background: rgba(0,83,226,0.2); border: 1px solid rgba(0,83,226,0.4); color: var(--wm-light-blue); }
+    .pill-yellow { background: rgba(255,194,32,0.2); border: 1px solid rgba(255,194,32,0.4); color: var(--wm-yellow); }
+    .pill-cyan { background: rgba(90,228,255,0.15); border: 1px solid rgba(90,228,255,0.3); color: var(--cyan); }
+    .pill-green { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.3); color: var(--green); }
+    .pill-red { background: rgba(255,107,129,0.15); border: 1px solid rgba(255,107,129,0.3); color: var(--red); }
+    .pill-purple { background: rgba(155,124,255,0.15); border: 1px solid rgba(155,124,255,0.3); color: var(--purple); }
+    .pill-amber { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.3); color: var(--amber); }
+
+    /* Summary Cards */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--panel); border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 20px; text-align: center;
+    }
+    .summary-card .value { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+    .summary-card .label { font-size: 12px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-card.blue .value { color: var(--wm-blue); }
+    .summary-card.yellow .value { color: var(--wm-yellow); }
+    .summary-card.green .value { color: var(--green); }
+    .summary-card.red .value { color: var(--red); }
+    .summary-card.cyan .value { color: var(--cyan); }
+    .summary-card.purple .value { color: var(--purple); }
+
+    /* Filters */
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+      padding: 16px; background: var(--panel); border: 1px solid var(--panel-border);
+      border-radius: 12px;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-group select {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border);
+      border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px;
+      min-width: 140px; cursor: pointer;
+    }
+    .filter-group select:focus { outline: none; border-color: var(--cyan); }
+    .filter-group select option { background: #1a1f2e; color: var(--text); }
+
+    /* Table Panel */
+    .panel {
+      background: var(--panel); border: 1px solid var(--panel-border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px; border-bottom: 1px solid var(--panel-border);
+    }
+    .panel-title { font-size: 18px; font-weight: 600; }
+    .panel-subtitle { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+    
+    /* Export Button */
+    .export-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 8px;
+      background: var(--wm-blue); color: white; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .export-btn:hover { background: #0066ff; transform: translateY(-1px); }
+    .export-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    /* Table */
+    .table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { position: sticky; top: 0; z-index: 10; }
+    th {
+      background: rgba(0,0,0,0.4); padding: 14px 12px; text-align: left;
+      font-weight: 600; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-soft);
+      border-bottom: 1px solid var(--panel-border);
+    }
+    td {
+      padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: top;
+    }
+    tr:hover td { background: rgba(90,228,255,0.03); }
+    
+    /* Status Badges */
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-yes { background: rgba(0,83,226,0.2); color: var(--wm-light-blue); }
+    .badge-no { background: rgba(255,194,32,0.2); color: var(--wm-yellow); }
+    .badge-review { background: rgba(155,124,255,0.2); color: var(--purple); }
+    .badge-urgent { background: rgba(255,107,129,0.2); color: var(--red); }
+    .badge-ontrack { background: rgba(69,230,165,0.2); color: var(--green); }
+    .badge-notrequired { background: rgba(255,200,87,0.2); color: var(--amber); }
+
+    /* Supplemental flags */
+    .flags { font-size: 11px; color: var(--text-soft); max-width: 200px; }
+    .instructions { font-size: 11px; color: var(--text-soft); max-width: 250px; line-height: 1.4; }
+    
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-soft);
+    }
+    .empty-state svg { width: 48px; height: 48px; stroke: var(--text-soft); stroke-width: 1.5; fill: none; margin-bottom: 16px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: var(--text-soft); }
+    
+    @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <a href="index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div>
+      <h1>Survey Routing Output</h1>
+      <div style="color: var(--text-soft); font-size: 13px; margin-top: 4px;">Vendor-ready survey assignments based on scout responses</div>
+    </div>
+    <div class="header-pills">
+      <span class="pill pill-cyan" id="lastUpdated">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card cyan">
+      <div class="value" id="totalSites">--</div>
+      <div class="label">Total Sites</div>
+    </div>
+    <div class="summary-card blue">
+      <div class="value" id="surveysRequired">--</div>
+      <div class="label">Surveys Required</div>
+    </div>
+    <div class="summary-card yellow">
+      <div class="value" id="fullUpgrades">--</div>
+      <div class="label">Full Upgrades</div>
+    </div>
+    <div class="summary-card purple">
+      <div class="value" id="reviewRequired">--</div>
+      <div class="label">Review Required</div>
+    </div>
+    <div class="summary-card red">
+      <div class="value" id="urgentSites">--</div>
+      <div class="label">Urgent Sites</div>
+    </div>
+    <div class="summary-card green">
+      <div class="value" id="readyToAssign">--</div>
+      <div class="label">Ready to Assign</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Vendor</label>
+      <select id="filterVendor" onchange="applyFilters()">
+        <option value="">All Vendors</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Survey Required</label>
+      <select id="filterSurveyRequired" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="YES">Yes</option>
+        <option value="NO">No</option>
+        <option value="REVIEW">Review</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Survey Type</label>
+      <select id="filterSurveyType" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="CCTV">CCTV</option>
+        <option value="FA/INTRUSION">FA/Intrusion</option>
+        <option value="BOTH">Both</option>
+        <option value="NONE">None</option>
+        <option value="REVIEW">Review</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Upgrade Decision</label>
+      <select id="filterUpgrade" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="FULL BOTH UPGRADE">Full Both Upgrade</option>
+        <option value="FULL CCTV UPGRADE">Full CCTV Upgrade</option>
+        <option value="FULL FA/INTRUSION UPGRADE">Full FA/Intrusion Upgrade</option>
+        <option value="SURVEY REQUIRED">Survey Required</option>
+        <option value="REVIEW REQUIRED">Review Required</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Schedule Status</label>
+      <select id="filterSchedule" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="URGENT">Urgent</option>
+        <option value="ON TRACK">On Track</option>
+        <option value="NOT REQUIRED">Not Required</option>
+        <option value="REVIEW">Review</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Ready to Assign</label>
+      <select id="filterReady" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="YES">Yes</option>
+        <option value="NO">No</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Vendor Output Sheet</div>
+        <div class="panel-subtitle" id="rowCount">Loading data...</div>
+      </div>
+      <button class="export-btn" onclick="exportData()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Export CSV
+      </button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Site</th>
+            <th>Vendor</th>
+            <th>Days to Construction</th>
+            <th>Survey Required</th>
+            <th>Survey Type</th>
+            <th>Upgrade Decision</th>
+            <th>Reason</th>
+            <th>Schedule Status</th>
+            <th>Ready to Assign</th>
+            <th>Supplemental Flags</th>
+            <th>Vendor Instructions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="11" class="loading">Loading data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+// Generate stars
+const stars = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('span');
+  s.className = 'star';
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;opacity:${0.2+Math.random()*0.5};animation:twinkle ${2+Math.random()*4}s ease-in-out infinite;animation-delay:${Math.random()*5}s;`;
+  stars.appendChild(s);
+}
+
+let allData = [];
+let filteredData = [];
+
+// Badge helper
+function badge(value, type) {
+  const classes = {
+    'YES': 'badge-yes',
+    'NO': 'badge-no',
+    'REVIEW': 'badge-review',
+    'URGENT': 'badge-urgent',
+    'ON TRACK': 'badge-ontrack',
+    'NOT REQUIRED': 'badge-notrequired',
+  };
+  const cls = classes[value] || 'badge-review';
+  return `<span class="badge ${cls}">${value}</span>`;
+}
+
+// Load data
+async function loadData() {
+  try {
+    const resp = await fetch('survey_routing_data.json');
+    const data = await resp.json();
+    
+    allData = data.rows || [];
+    filteredData = [...allData];
+    
+    // Update summary
+    const s = data.summary || {};
+    document.getElementById('totalSites').textContent = s.total_sites || 0;
+    document.getElementById('surveysRequired').textContent = s.surveys_required || 0;
+    document.getElementById('fullUpgrades').textContent = s.full_upgrades || 0;
+    document.getElementById('reviewRequired').textContent = s.review_required || 0;
+    document.getElementById('urgentSites').textContent = s.urgent_sites || 0;
+    document.getElementById('readyToAssign').textContent = s.ready_to_assign || 0;
+    
+    // Update timestamp
+    if (data.generated_at) {
+      const d = new Date(data.generated_at);
+      document.getElementById('lastUpdated').textContent = `Updated ${d.toLocaleTimeString()}`;
+    }
+    
+    // Populate vendor filter
+    const vendors = [...new Set(allData.map(r => r.vendor).filter(v => v))].sort();
+    const vendorSelect = document.getElementById('filterVendor');
+    vendors.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      vendorSelect.appendChild(opt);
+    });
+    
+    renderTable();
+  } catch (e) {
+    console.error('Failed to load data:', e);
+    document.getElementById('tableBody').innerHTML = `
+      <tr><td colspan="11" class="empty-state">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div>No data available. Survey routing data has not been generated yet.</div>
+      </td></tr>
+    `;
+  }
+}
+
+// Apply filters
+function applyFilters() {
+  const vendor = document.getElementById('filterVendor').value;
+  const surveyReq = document.getElementById('filterSurveyRequired').value;
+  const surveyType = document.getElementById('filterSurveyType').value;
+  const upgrade = document.getElementById('filterUpgrade').value;
+  const schedule = document.getElementById('filterSchedule').value;
+  const ready = document.getElementById('filterReady').value;
+  
+  filteredData = allData.filter(r => {
+    if (vendor && r.vendor !== vendor) return false;
+    if (surveyReq && r.survey_required !== surveyReq) return false;
+    if (surveyType && r.survey_type !== surveyType) return false;
+    if (upgrade && r.upgrade_decision !== upgrade) return false;
+    if (schedule && r.schedule_status !== schedule) return false;
+    if (ready && r.ready_to_assign !== ready) return false;
+    return true;
+  });
+  
+  renderTable();
+}
+
+// Render table
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('rowCount').textContent = `Showing ${filteredData.length} of ${allData.length} sites`;
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="11" class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>No sites match the current filters</div>
+      </td></tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = filteredData.map(r => `
+    <tr>
+      <td><strong>${r.site}</strong></td>
+      <td>${r.vendor || '—'}</td>
+      <td>${r.days_to_construction || '—'}</td>
+      <td>${badge(r.survey_required, 'req')}</td>
+      <td>${r.survey_type}</td>
+      <td>${r.upgrade_decision}</td>
+      <td style="max-width:200px;font-size:11px;color:var(--text-soft);">${r.reason_for_decision}</td>
+      <td>${badge(r.schedule_status, 'sched')}</td>
+      <td>${badge(r.ready_to_assign, 'ready')}</td>
+      <td class="flags">${r.supplemental_flags || '—'}</td>
+      <td class="instructions">${r.vendor_instructions}</td>
+    </tr>
+  `).join('');
+}
+
+// Export CSV
+function exportData() {
+  const headers = [
+    'Site', 'Vendor', 'Survey Required', 'Survey Type', 'Upgrade Decision',
+    'Schedule Status', 'Supplemental Flags', 'Vendor Instructions'
+  ];
+  
+  const rows = filteredData.map(r => [
+    r.site,
+    r.vendor,
+    r.survey_required,
+    r.survey_type,
+    r.upgrade_decision,
+    r.schedule_status,
+    `"${(r.supplemental_flags || '').replace(/"/g, '""')}"`,
+    `"${(r.vendor_instructions || '').replace(/"/g, '""')}"`
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `survey_routing_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Auto-refresh every 15 seconds
+loadData();
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>

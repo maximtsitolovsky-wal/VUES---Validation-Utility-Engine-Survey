@@ -22,6 +22,7 @@ from typing import Any
 from siteowlqa.airtable_client import AirtableClient, TeamSourceConfig
 from siteowlqa.config import AppConfig
 from siteowlqa.vendor_assignment_tracker import VendorAssignmentTracker
+from siteowlqa.survey_routing import refresh_survey_routing
 
 log = logging.getLogger(__name__)
 
@@ -86,6 +87,15 @@ def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, out
         encoding="utf-8",
     )
     log.info("team_dashboard_data.json updated.")
+    
+    # Refresh survey routing data (separate JSON for vendor output sheet)
+    try:
+        refresh_survey_routing(
+            token=cfg.scout_airtable_token or cfg.airtable_token,
+            output_dir=output_dir,
+        )
+    except Exception as e:
+        log.warning(f"Survey routing refresh failed (non-fatal): {e}")
 
 
 def _build_team_payload(

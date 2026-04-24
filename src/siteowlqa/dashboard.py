@@ -27,6 +27,7 @@ _UI_PAGES = [
     "index.html",
     "survey.html",
     "scout.html",
+    "routing.html",
     "analytics.html",
     "summary.html",
     "orchestration_map.html",

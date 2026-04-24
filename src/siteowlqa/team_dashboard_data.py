@@ -136,6 +136,119 @@ def _build_team_payload(
         }
 
 
+def _compute_scout_completion_stats(scout_payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Compute Scout submission stats by comparing against reference Excel.
+    
+    Returns:
+        Dict with:
+        - total_submissions: Count of all scout records from Airtable
+        - unique_submissions: Count of unique site numbers
+        - completed: Count of unique sites that match Excel reference
+        - excel_total: Total store numbers in Excel reference
+        - remaining: excel_total - completed
+        - completion_rate: completed / excel_total * 100
+    """
+    # Default stats if we can't compute
+    default_stats = {
+        "total_submissions": 0,
+        "unique_submissions": 0,
+        "completed": 0,
+        "excel_total": 0,
+        "remaining": 0,
+        "completion_rate": 0.0,
+        "scout_stats_error": "",
+    }
+    
+    records = scout_payload.get("records", [])
+    if not records:
+        default_stats["scout_stats_error"] = "No scout records available."
+        return default_stats
+    
+    # Get reference file path from env or default
+    reference_file = os.getenv("SCOUT_REFERENCE_FILE", _DEFAULT_SCOUT_REFERENCE_FILE)
+    reference_path = Path(reference_file)
+    
+    if not reference_path.exists():
+        log.warning("Scout reference file not found: %s", reference_file)
+        default_stats["scout_stats_error"] = f"Reference file not found: {reference_file}"
+        # Still compute what we can without Excel
+        total_submissions = len(records)
+        unique_sites = set(
+            r.get("site_number", "").strip().lstrip("0")
+            for r in records if r.get("site_number")
+        )
+        return {
+            "total_submissions": total_submissions,
+            "unique_submissions": len(unique_sites),
+            "completed": 0,
+            "excel_total": 0,
+            "remaining": 0,
+            "completion_rate": 0.0,
+            "scout_stats_error": f"Reference file not found: {reference_file}",
+        }
+    
+    try:
+        import openpyxl
+        
+        # Load Excel reference (Scout Map Data sheet, Column A = StoreNumber)
+        wb = openpyxl.load_workbook(reference_path, read_only=True, data_only=True)
+        ws = wb["Scout Map Data"]
+        excel_stores = set(
+            str(row[0].value).strip().lstrip("0")
+            for row in ws.iter_rows(min_row=2, max_col=1)
+            if row[0].value
+        )
+        wb.close()
+        
+        # Compute stats from scout records
+        total_submissions = len(records)
+        unique_sites = set(
+            r.get("site_number", "").strip().lstrip("0")
+            for r in records if r.get("site_number")
+        )
+        unique_submissions = len(unique_sites)
+        
+        # Completed = sites that appear in BOTH Airtable AND Excel
+        completed = len(unique_sites & excel_stores)
+        excel_total = len(excel_stores)
+        remaining = excel_total - completed
+        completion_rate = round((completed / excel_total * 100), 1) if excel_total > 0 else 0.0
+        
+        log.info(
+            "Scout stats: total=%d, unique=%d, completed=%d, excel=%d, remaining=%d",
+            total_submissions, unique_submissions, completed, excel_total, remaining
+        )
+        
+        return {
+            "total_submissions": total_submissions,
+            "unique_submissions": unique_submissions,
+            "completed": completed,
+            "excel_total": excel_total,
+            "remaining": remaining,
+            "completion_rate": completion_rate,
+            "scout_stats_error": "",
+        }
+        
+    except Exception as exc:  # noqa: BLE001
+        log.error("Error computing scout completion stats: %s", exc, exc_info=True)
+        # Return partial stats
+        total_submissions = len(records)
+        unique_sites = set(
+            r.get("site_number", "").strip().lstrip("0")
+            for r in records if r.get("site_number")
+        )
+        return {
+            "total_submissions": total_submissions,
+            "unique_submissions": len(unique_sites),
+            "completed": 0,
+            "excel_total": 0,
+            "remaining": 0,
+            "completion_rate": 0.0,
+            "scout_stats_error": str(exc),
+        }
+
+
 def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str, Any]:
     """
     Build vendor assignment tracking payload.

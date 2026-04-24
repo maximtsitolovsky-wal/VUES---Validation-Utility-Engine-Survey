@@ -157,12 +157,12 @@ def fetch_scout_data(token: str) -> list[ScoutAnswers]:
             continue
             
         # Map Airtable field names to our structure
-        # These field names need to match the actual Airtable schema
+        # These field names need to match the actual Airtable schema EXACTLY
         answers = ScoutAnswers(
             site=site,
             record_id=rec.get("id", ""),
             # FA/Intrusion
-            one_notification_device=_is_yes(fields.get("Does this site only have one notification device located in the store?")),
+            one_notification_device=_is_yes(fields.get("Does this site only have one notification device located in the store? (Usually at the Service Desk)")),
             ceiling_mounted_devices=_is_yes(fields.get("Are any notification devices ceiling mounted?")),
             sales_floor_column_devices=_is_yes(fields.get("Are any notification devices mounted on sales floor columns?")),
             emergency_exit_only_devices=_is_yes(fields.get("Are notification devices installed only above emergency exits?")),
@@ -237,7 +237,15 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
 
 
 def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> SurveyRoutingRow:
-    """Apply all routing logic to determine survey requirements."""
+    """Apply all routing logic to determine survey requirements.
+    
+    Logic order:
+    1. Full upgrade triggers (override survey need for that category)
+    2. Survey triggers (for categories without full upgrade)
+    3. Supplemental flags (informational)
+    4. Scheduling logic
+    5. Vendor instructions
+    """
     
     # Determine site ID
     site = scout.site if scout else (schedule.site if schedule else "UNKNOWN")
@@ -247,7 +255,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     days = schedule.days_to_construction if schedule else None
     days_str = str(days) if days is not None else ""
     
-    # Handle missing data cases
+    # Handle missing scout data
     if scout is None:
         return SurveyRoutingRow(
             site=site,
@@ -264,123 +272,135 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         )
     
     if schedule is None:
-        # Site in Airtable but not in workbook
         vendor = ""
         days_str = ""
     
-    # Initialize result variables
-    survey_required = ""
-    survey_type = ""
-    upgrade_decision = ""
-    reason = ""
     supplemental_flags_list = []
-    
-    # === STEP 1: Full Upgrade Triggers ===
-    fa_full_upgrade = False
-    cctv_full_upgrade = False
+    reasons = []
     needs_review = False
     
-    # FA/Intrusion Full Upgrade: only one notification device
-    if scout.one_notification_device:
-        fa_full_upgrade = True
+    # === STEP 1: Check Full Upgrade Triggers ===
+    # These determine if a survey is NOT needed for that category
     
-    # CCTV Full Upgrade: coax/siamese cable
-    if scout.coax_siamese_cable:
-        cctv_full_upgrade = True
+    # FA/Intrusion Full Upgrade: only one notification device = YES
+    fa_full_upgrade = scout.one_notification_device
     
-    # Conditional CCTV Full Upgrade: homerun + AP office moving
-    if scout.homerun_cabling_present:
+    # CCTV Full Upgrade: coax/siamese cable = YES
+    cctv_full_upgrade = scout.coax_siamese_cable
+    
+    # Conditional CCTV Full Upgrade: homerun + AP office moving = YES
+    if scout.homerun_cabling_present and not cctv_full_upgrade:
         if scout.ap_office_moving == "YES":
             cctv_full_upgrade = True
         elif _is_blank(scout.ap_office_moving):
+            # Homerun present but AP office status unknown - needs review
             needs_review = True
             supplemental_flags_list.append("AP office move status missing — internal review required.")
     
-    # Apply full upgrade logic
-    if fa_full_upgrade and cctv_full_upgrade:
-        survey_required = "NO"
-        survey_type = "NONE"
-        upgrade_decision = "FULL BOTH UPGRADE"
-        reason = "Both FA/Intrusion and CCTV full upgrade triggers are present. No survey needed."
-    elif fa_full_upgrade:
-        survey_required = "NO"
-        survey_type = "NONE"
-        upgrade_decision = "FULL FA/INTRUSION UPGRADE"
-        reason = "Site has only one notification device. Full FA/Intrusion upgrade required. No survey needed."
-    elif cctv_full_upgrade:
-        survey_required = "NO"
-        survey_type = "NONE"
-        upgrade_decision = "FULL CCTV UPGRADE"
-        if scout.coax_siamese_cable:
-            reason = "Coax or Siamese cabling is present. Full CCTV upgrade required. No survey needed."
-        else:
-            reason = "Homerun cabling is present and AP office is moving. Full CCTV upgrade required. No survey needed."
-    elif needs_review and not (fa_full_upgrade or cctv_full_upgrade):
-        # Homerun present but AP office status unknown
+    # === STEP 2: Check Survey Triggers for categories WITHOUT full upgrade ===
+    fa_survey_needed = False
+    cctv_survey_needed = False
+    
+    # FA/Intrusion survey triggers (only check if no FA full upgrade)
+    if not fa_full_upgrade:
+        if scout.ceiling_mounted_devices:
+            fa_survey_needed = True
+            supplemental_flags_list.append("Ceiling mounted notification devices")
+        if scout.sales_floor_column_devices:
+            fa_survey_needed = True
+            supplemental_flags_list.append("Notification devices on sales floor columns")
+        if scout.emergency_exit_only_devices:
+            fa_survey_needed = True
+            supplemental_flags_list.append("Notification devices only above emergency exits")
+        if scout.fire_panel_type:
+            fa_survey_needed = True
+            supplemental_flags_list.append(f"Fire panel type: {scout.fire_panel_type}")
+    
+    # CCTV survey triggers (only check if no CCTV full upgrade)
+    if not cctv_full_upgrade:
+        if scout.analog_baluns_present:
+            cctv_survey_needed = True
+            supplemental_flags_list.append("Analog CCTV baluns present")
+        if scout.rooftop_trimount_present:
+            cctv_survey_needed = True
+            supplemental_flags_list.append("Rooftop tri-mount present")
+        if scout.rooftop_trimount_count > 0:
+            cctv_survey_needed = True
+            supplemental_flags_list.append(f"Rooftop tri-mount count: {scout.rooftop_trimount_count}")
+        if scout.cable_condition:
+            cctv_survey_needed = True
+            supplemental_flags_list.append(f"Cable condition: {scout.cable_condition}")
+        if scout.homerun_cabling_present and not needs_review:
+            # Only add as trigger if not already flagged for review
+            cctv_survey_needed = True
+            supplemental_flags_list.append("Homerun cabling present")
+    
+    # === STEP 3: Determine Final Survey Type and Decision ===
+    
+    # Handle review case first
+    if needs_review:
         survey_required = "REVIEW"
         survey_type = "REVIEW"
         upgrade_decision = "REVIEW REQUIRED"
         reason = "Homerun cabling is present, but AP office move status is unknown."
     
-    # === STEP 2: Survey Triggers (only if no full upgrade) ===
-    if not (fa_full_upgrade or cctv_full_upgrade or needs_review):
-        fa_required = False
-        cctv_required = False
-        
-        # FA/Intrusion survey triggers
-        if scout.ceiling_mounted_devices:
-            fa_required = True
-            supplemental_flags_list.append("Ceiling mounted notification devices")
-        if scout.sales_floor_column_devices:
-            fa_required = True
-            supplemental_flags_list.append("Notification devices on sales floor columns")
-        if scout.emergency_exit_only_devices:
-            fa_required = True
-            supplemental_flags_list.append("Notification devices only above emergency exits")
-        if scout.fire_panel_type:
-            fa_required = True
-            supplemental_flags_list.append(f"Fire panel type: {scout.fire_panel_type}")
-        
-        # CCTV survey triggers
-        if scout.analog_baluns_present:
-            cctv_required = True
-            supplemental_flags_list.append("Analog CCTV baluns present")
-        if scout.rooftop_trimount_present:
-            cctv_required = True
-            supplemental_flags_list.append("Rooftop tri-mount present")
-        if scout.rooftop_trimount_count > 0:
-            cctv_required = True
-            supplemental_flags_list.append(f"Rooftop tri-mount count: {scout.rooftop_trimount_count}")
-        if scout.cable_condition:
-            cctv_required = True
-            supplemental_flags_list.append(f"Cable condition: {scout.cable_condition}")
-        if scout.homerun_cabling_present:
-            cctv_required = True
-            supplemental_flags_list.append("Homerun cabling present")
-        
-        # Determine survey type
-        if fa_required and cctv_required:
-            survey_required = "YES"
-            survey_type = "BOTH"
-            upgrade_decision = "SURVEY REQUIRED"
-            reason = "Both FA/Intrusion and CCTV survey triggers present."
-        elif fa_required:
-            survey_required = "YES"
-            survey_type = "FA/INTRUSION"
-            upgrade_decision = "SURVEY REQUIRED"
-            reason = "FA/Intrusion survey triggers present."
-        elif cctv_required:
+    # Both full upgrades - no survey at all
+    elif fa_full_upgrade and cctv_full_upgrade:
+        survey_required = "NO"
+        survey_type = "NONE"
+        upgrade_decision = "FULL BOTH UPGRADE"
+        reason = "Both FA/Intrusion and CCTV full upgrade triggers present. No survey needed."
+    
+    # FA full upgrade only - check if CCTV survey still needed
+    elif fa_full_upgrade and not cctv_full_upgrade:
+        if cctv_survey_needed:
             survey_required = "YES"
             survey_type = "CCTV"
-            upgrade_decision = "SURVEY REQUIRED"
-            reason = "CCTV survey triggers present."
+            upgrade_decision = "FULL FA/INTRUSION UPGRADE + CCTV SURVEY"
+            reason = "FA/Intrusion full upgrade (one notification device). CCTV survey still required."
         else:
-            survey_required = "REVIEW"
-            survey_type = "REVIEW"
-            upgrade_decision = "REVIEW REQUIRED"
-            reason = "No clear survey triggers found. Manual review required."
+            survey_required = "NO"
+            survey_type = "NONE"
+            upgrade_decision = "FULL FA/INTRUSION UPGRADE"
+            reason = "Site has only one notification device. Full FA/Intrusion upgrade required. No survey needed."
     
-    # === STEP 3: Scheduling Logic ===
+    # CCTV full upgrade only - check if FA survey still needed
+    elif cctv_full_upgrade and not fa_full_upgrade:
+        if fa_survey_needed:
+            survey_required = "YES"
+            survey_type = "FA/INTRUSION"
+            upgrade_decision = "FULL CCTV UPGRADE + FA/INTRUSION SURVEY"
+            reason = "CCTV full upgrade (coax/siamese cable). FA/Intrusion survey still required."
+        else:
+            survey_required = "NO"
+            survey_type = "NONE"
+            upgrade_decision = "FULL CCTV UPGRADE"
+            reason = "Coax or Siamese cabling present. Full CCTV upgrade required. No survey needed."
+    
+    # No full upgrades - check survey triggers
+    elif fa_survey_needed and cctv_survey_needed:
+        survey_required = "YES"
+        survey_type = "BOTH"
+        upgrade_decision = "SURVEY REQUIRED"
+        reason = "Both FA/Intrusion and CCTV survey triggers present."
+    elif fa_survey_needed:
+        survey_required = "YES"
+        survey_type = "FA/INTRUSION"
+        upgrade_decision = "SURVEY REQUIRED"
+        reason = "FA/Intrusion survey triggers present."
+    elif cctv_survey_needed:
+        survey_required = "YES"
+        survey_type = "CCTV"
+        upgrade_decision = "SURVEY REQUIRED"
+        reason = "CCTV survey triggers present."
+    else:
+        # No triggers at all
+        survey_required = "REVIEW"
+        survey_type = "REVIEW"
+        upgrade_decision = "REVIEW REQUIRED"
+        reason = "No clear survey or upgrade triggers found. Manual review required."
+    
+    # === STEP 4: Scheduling Logic ===
     if survey_required == "NO":
         schedule_status = "NOT REQUIRED"
     elif days is None:
@@ -390,7 +410,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     else:
         schedule_status = "URGENT"
     
-    # === STEP 4: Ready to Assign ===
+    # === STEP 5: Ready to Assign ===
     if survey_required == "YES" and days is not None and days <= CONSTRUCTION_DEADLINE_DAYS:
         ready_to_assign = "YES"
     else:
@@ -401,7 +421,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         schedule_status = "REVIEW"
         ready_to_assign = "NO"
     
-    # === STEP 5: Vendor Instructions ===
+    # === STEP 6: Vendor Instructions ===
     if survey_type == "CCTV":
         vendor_instructions = "Complete CCTV mapped survey with GPS. Review supplemental CCTV flags before submission."
     elif survey_type == "FA/INTRUSION":

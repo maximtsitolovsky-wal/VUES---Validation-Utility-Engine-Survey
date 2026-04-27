@@ -1143,10 +1143,13 @@ async function cycleStatus(site) {
   if (!row) return;
   
   const current = getStatus(row);
-  const next = current === 'pending' ? 'inprogress' : current === 'inprogress' ? 'complete' : 'pending';
+  const statusOrder = ['not-begun', 'scout-in-progress', 'scout-completed', 'survey-needs-assignment', 'survey-in-progress', 'survey-completed'];
+  const currentIdx = statusOrder.indexOf(current);
+  const nextIdx = (currentIdx + 1) % statusOrder.length;
+  const next = statusOrder[nextIdx];
   
   row.status = next;
-  row.survey_complete = next === 'complete';
+  row.survey_complete = next === 'survey-completed';
   
   renderTables();
   updateGlobalStats();

@@ -1021,14 +1021,19 @@ function exportTable(type) {
   } else if (type === 'fa') {
     data = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
     filename = 'fa_surveys';
-  } else {
+  } else if (type === 'upgrade') {
     data = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
-    filename = 'full_upgrades';
+    filename = 'both_surveys';
+  } else {
+    data = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+    filename = 'needs_review';
   }
   
-  const headers = ['Site','Vendor','Days','Status','Scout Submitted','VUES Submitted','Notes'];
+  const headers = ['Site','Vendor','Days','Survey Type','Upgrade Decision','Reason','Status','Scout','VUES','Notes'];
   const rows = data.map(r => [
     r.site, r.vendor || '', r.days_to_construction || '',
+    r.survey_type || '', `"${(r.upgrade_decision || '').replace(/"/g, '""')}"`,
+    `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`,
     getStatus(r), r.scout_submitted ? 'YES' : 'NO', r.vues_submitted ? 'YES' : 'NO',
     `"${(r.notes || '').replace(/"/g, '""')}"`
   ]);

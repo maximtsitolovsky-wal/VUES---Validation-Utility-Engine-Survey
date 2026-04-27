@@ -213,6 +213,64 @@ def _trigger_dashboard_rebuild_background() -> bool:
     return True
 
 
+def _update_survey_routing(site: str, updates: dict[str, Any]) -> dict[str, Any]:
+    """Update survey routing data in JSON and optionally Excel."""
+    json_updated = False
+    excel_updated = False
+    errors = []
+    
+    # 1. Update JSON file
+    try:
+        if _SURVEY_ROUTING_JSON.exists():
+            data = json.loads(_SURVEY_ROUTING_JSON.read_text(encoding="utf-8"))
+            rows = data.get("rows", [])
+            
+            for row in rows:
+                if row.get("site") == site:
+                    # Apply updates
+                    for key, value in updates.items():
+                        row[key] = value
+                    json_updated = True
+                    break
+            
+            if json_updated:
+                data["last_modified"] = datetime.now(timezone.utc).isoformat()
+                _SURVEY_ROUTING_JSON.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception as e:
+        errors.append(f"JSON update failed: {e}")
+    
+    # 2. Update Excel file (Column V = Complete checkbox)
+    if "survey_complete" in updates and _EXCEL_WORKBOOK.exists():
+        try:
+            wb = openpyxl.load_workbook(_EXCEL_WORKBOOK, keep_vba=True)
+            ws = wb.active
+            
+            # Find the site row and update Column V
+            site_col = 1  # Column A = Site
+            complete_col = 22  # Column V = Complete
+            
+            for row_idx in range(2, ws.max_row + 1):
+                cell_value = ws.cell(row=row_idx, column=site_col).value
+                if cell_value and str(cell_value).strip() == site:
+                    ws.cell(row=row_idx, column=complete_col).value = updates["survey_complete"]
+                    excel_updated = True
+                    break
+            
+            if excel_updated:
+                wb.save(_EXCEL_WORKBOOK)
+            wb.close()
+        except Exception as e:
+            errors.append(f"Excel update failed: {e}")
+    
+    return {
+        "ok": len(errors) == 0,
+        "site": site,
+        "json_updated": json_updated,
+        "excel_updated": excel_updated,
+        "errors": errors if errors else None
+    }
+
+
 def _load_realtime_snapshot() -> dict[str, Any] | None:
     if not _REALTIME_SNAPSHOT.exists():
         return None

@@ -13,20 +13,20 @@
 Open **PowerShell** (not CMD!) and run:
 
 ```powershell
-git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
-cd VUES---Validation-Utility-Engine-Survey
+git clone <REPO_URL>
+cd VUES
 python tools/install.py
 ```
 
 ### Option 2: No Git? Download ZIP instead
 
-1. Go to: https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey
+1. Download the ZIP from the repo link provided by your admin
 2. Click the green **"Code"** button → **"Download ZIP"**
 3. Extract the ZIP anywhere (e.g., your Downloads folder)
 4. Open **PowerShell**, then run:
 
 ```powershell
-cd "$env:USERPROFILE\Downloads\VUES---Validation-Utility-Engine-Survey-main"
+cd "$env:USERPROFILE\Downloads\VUES-main"
 python tools/install.py
 ```
 

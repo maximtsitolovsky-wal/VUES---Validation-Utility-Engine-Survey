@@ -143,7 +143,12 @@
     }
     .status-badge:hover { transform: scale(1.05); }
     .status-badge.scout-in-progress { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple); }
-    .status-badge.scout-completed { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); }
+    .status-badge.scout-completed { 
+      background: linear-gradient(90deg, rgba(59,130,246,0.25), rgba(239,68,68,0.25)); 
+      border: 1px solid rgba(168,85,247,0.4); 
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
     .status-badge.survey-in-progress { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.4); color: var(--yellow); }
     .status-badge.survey-completed { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
 
@@ -476,6 +481,11 @@
       <span class="summary-dot green"></span>
       <span class="summary-value" id="statCompleted">0</span>
       <span>Completed</span>
+    </div>
+    <div class="summary-item" style="margin-left: auto;">
+      <button class="btn btn-ghost" id="sortDaysBtn" onclick="toggleDaysSort()" style="padding: 4px 12px; font-size: 12px;">
+        📅 Days: <span id="sortDaysLabel">Low → High</span>
+      </button>
     </div>
   </div>
 
@@ -840,6 +850,7 @@
 let allData = [];
 let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [], noSurveyData = [];
 let currentTab = 'cctv';
+let sortByDays = 'asc'; // 'asc' = lowest first, 'desc' = highest first, null = no sort
 
 // Toggle legend popup
 function toggleLegend() {

@@ -141,9 +141,12 @@
       user-select: none;
     }
     .status-badge:hover { transform: scale(1.05); }
-    .status-badge.complete { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
-    .status-badge.inprogress { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.4); color: var(--yellow); }
-    .status-badge.pending { background: rgba(161,161,170,0.15); border: 1px solid rgba(161,161,170,0.4); color: var(--muted-fg); }
+    .status-badge.not-begun { background: rgba(161,161,170,0.15); border: 1px solid rgba(161,161,170,0.4); color: var(--muted-fg); }
+    .status-badge.scout-in-progress { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple); }
+    .status-badge.scout-completed { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); }
+    .status-badge.survey-needs-assignment { background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.4); color: var(--orange); }
+    .status-badge.survey-in-progress { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.4); color: var(--yellow); }
+    .status-badge.survey-completed { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
 
     /* Submission Tracking */
     .track-badges { display: flex; gap: 4px; }
@@ -992,6 +995,18 @@ function getStatus(row) {
   return 'scout-in-progress';
 }
 
+function getStatusLabel(status) {
+  const labels = {
+    'not-begun': '○ Not Begun',
+    'scout-in-progress': '◐ Scout IP',
+    'scout-completed': '✓ Scout Done',
+    'survey-needs-assignment': '📋 Needs Assign',
+    'survey-in-progress': '◐ Survey IP',
+    'survey-completed': '✓ Complete'
+  };
+  return labels[status] || '○ Unknown';
+}
+
 function renderRow(row, index, type) {
   const status = getStatus(row);
   const days = row.days_to_construction;
@@ -1035,7 +1050,7 @@ function renderRow(row, index, type) {
       <div class="row-days ${isUrgent ? 'urgent' : ''}">${days || '—'}</div>
       <div onclick="event.stopPropagation()">
         <div class="status-badge ${status}" onclick="cycleStatus('${row.site}')" title="Click to change status">
-          ${status === 'complete' ? '✓' : status === 'inprogress' ? '◐' : '○'}
+          ${getStatusLabel(status)}
         </div>
       </div>
       <div onclick="event.stopPropagation()">

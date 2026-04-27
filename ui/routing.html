@@ -913,8 +913,10 @@ function filterData(data, searchId, vendorId, statusId) {
 }
 
 function getStatus(row) {
-  if (row.status) return row.status;
-  if (row.survey_complete) return 'complete';
+  // Auto-derive status from actual data
+  if (row.survey_complete === true) return 'complete';  // Column V = done
+  if (row.scout_submitted === true) return 'inprogress'; // Has Scout submission = in progress
+  if (row.status && row.status !== 'pending') return row.status; // Manual override
   return 'pending';
 }
 

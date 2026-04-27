@@ -60,6 +60,11 @@ class SurveyRoutingRow:
     supplemental_flags: str
     vendor_instructions: str
     survey_complete: bool = False  # Column V from Excel
+    # Tracking fields (editable from UI)
+    status: str = "pending"  # pending, inprogress, complete
+    scout_submitted: bool = False  # Submitted in Airtable Scout
+    vues_submitted: bool = False  # Submitted in VUES
+    notes: str = ""  # Free-form notes
 
 
 @dataclass

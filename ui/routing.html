@@ -106,6 +106,7 @@
     }
     .row.status-survey-in-progress { border-left: 3px solid var(--yellow); }
     .row.status-survey-completed { border-left: 3px solid var(--green); }
+    .row.status-full-upgrade { border-left: 3px solid var(--cyan); }
 
     @keyframes rowIn {
       from { opacity: 0; transform: translateX(-20px); }
@@ -153,6 +154,7 @@
     }
     .status-badge.survey-in-progress { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.4); color: var(--yellow); }
     .status-badge.survey-completed { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
+    .status-badge.full-upgrade { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); color: var(--cyan); }
 
     /* Submission Tracking */
     .track-badges { display: flex; gap: 4px; }
@@ -480,6 +482,11 @@
       <span>Survey IP</span>
     </div>
     <div class="summary-item">
+      <span class="summary-dot" style="background: var(--cyan);"></span>
+      <span class="summary-value" id="statFullUpgrade">0</span>
+      <span>Full Upgrade</span>
+    </div>
+    <div class="summary-item">
       <span class="summary-dot green"></span>
       <span class="summary-value" id="statCompleted">0</span>
       <span>Completed</span>
@@ -518,6 +525,10 @@
           <option value="scout-completed">Ready to Assign</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
         </select>
         <button class="btn btn-primary" onclick="exportTable('cctv')">Export</button>
       </div>
@@ -816,6 +827,7 @@
             <option value="scout-completed">Scout Done • Ready to Assign</option>
             <option value="survey-in-progress">Survey in Progress</option>
             <option value="survey-completed">Survey Completed</option>
+            <option value="full-upgrade">Full Upgrade</option>
           </select>
         </div>
 
@@ -982,11 +994,13 @@ function updateGlobalStats() {
   const statScoutIP = allData.filter(r => getStatus(r) === 'scout-in-progress').length;
   const statScoutDone = allData.filter(r => getStatus(r) === 'scout-completed').length;
   const statSurveyIP = allData.filter(r => getStatus(r) === 'survey-in-progress').length;
+  const statFullUpgrade = allData.filter(r => getStatus(r) === 'full-upgrade').length;
   const statCompleted = allData.filter(r => getStatus(r) === 'survey-completed').length;
   
   document.getElementById('statScoutIP').textContent = statScoutIP;
   document.getElementById('statScoutDone').textContent = statScoutDone;
   document.getElementById('statSurveyIP').textContent = statSurveyIP;
+  document.getElementById('statFullUpgrade').textContent = statFullUpgrade;
   document.getElementById('statCompleted').textContent = statCompleted;
 }
 
@@ -1017,7 +1031,7 @@ function filterData(data, searchId, vendorId, statusId) {
 function getStatus(row) {
   // Auto-derive status from actual data
   if (row.survey_complete === true) return 'survey-completed';  // Column V = done
-  if (row.survey_required === 'NO') return 'survey-completed';  // No survey needed = done
+  if (row.survey_required === 'NO') return 'full-upgrade';  // No survey needed = full upgrade
   
   // Check if scout submission exists (not "No scout submission")
   const hasScout = !row.reason_for_decision?.includes('No scout submission');
@@ -1036,7 +1050,8 @@ function getStatusLabel(status) {
     'scout-in-progress': '◐ Scout IP',
     'scout-completed': '✓ Scout • Assign Survey',
     'survey-in-progress': '◐ Survey IP',
-    'survey-completed': '✓ Complete'
+    'survey-completed': '✓ Complete',
+    'full-upgrade': '✨ Full Upgrade'
   };
   return labels[status] || '○ Unknown';
 }
@@ -1165,7 +1180,7 @@ async function cycleStatus(site) {
   if (!row) return;
   
   const current = getStatus(row);
-  const statusOrder = ['scout-in-progress', 'scout-completed', 'survey-in-progress', 'survey-completed'];
+  const statusOrder = ['scout-in-progress', 'scout-completed', 'survey-in-progress', 'survey-completed', 'full-upgrade'];
   const currentIdx = statusOrder.indexOf(current);
   const nextIdx = (currentIdx + 1) % statusOrder.length;
   const next = statusOrder[nextIdx];

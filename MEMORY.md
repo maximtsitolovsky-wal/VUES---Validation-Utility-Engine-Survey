@@ -1,3 +1,13 @@
+### 2026-04-27 — Scout Airtable Config & Viewer Distribution Fixed
+- **Scout Config:**
+  - Base ID: `appAwgaX89x0JxG3Z`
+  - Table: `tblC4o9AvVulyxFMk` (or name: `Submissions`)
+  - View ID: `viwYF5nUCDkVFDNT8` (shows ALL records, not filtered)
+  - Full URL: `https://airtable.com/appAwgaX89x0JxG3Z/tblC4o9AvVulyxFMk/viwYF5nUCDkVFDNT8`
+- **Viewer Distribution:** Dashboard now serves from `ui/` folder (tracked in git). Viewers clone/download, run `python tools/install.py`, get desktop shortcut. JSON data files committed to `ui/` folder.
+- **Admin Commands:** `python scripts/force_refresh_now.py` (refresh data), `python tools/publish_viewer_data.py` (push to viewers).
+- **Closed:** Yes.
+
 ### 2026-04-24 — Per-Row Conditional Name Grading Logic Implemented
 - **Decision:** Name column is now checked **per-row** based on a condition column, not submission-wide.
   - **CCTV**: Name checked only if that row has `MAC Address` content

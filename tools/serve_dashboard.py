@@ -96,11 +96,37 @@ def show_error(msg: str):
             pass
 
 
+def auto_pull_latest(repo_root: Path) -> bool:
+    """Auto-pull latest data from git. Silent failure - won't block dashboard."""
+    import subprocess
+    git_dir = repo_root / '.git'
+    if not git_dir.exists():
+        return False  # Not a git repo (ZIP user)
+    
+    try:
+        # Quick pull with timeout - don't hang the dashboard
+        result = subprocess.run(
+            ['git', 'pull', '--ff-only', '--quiet'],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            creationflags=0x08000000 if sys.platform == 'win32' else 0,  # CREATE_NO_WINDOW
+        )
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return False
+
+
 def main():
     # Find UI directory (relative to script location)
     # UI folder is tracked in git - viewers can use it directly
     script_dir = Path(__file__).parent.parent.resolve()
     ui_dir = script_dir / 'ui'
+    
+    # AUTO-SYNC: Pull latest data from git before showing dashboard
+    # This ensures viewers always see the freshest data
+    auto_pull_latest(script_dir)
     
     # For viewers: serve from ui/ (tracked in git)
     # For admin: if output/ exists with data, prefer that for freshest data

@@ -587,9 +587,12 @@ async function loadData() {
     });
     
     // Split into categories
-    cctvData = allData.filter(r => r.survey_type === 'CCTV' || r.survey_type === 'BOTH');
-    faData = allData.filter(r => r.survey_type === 'FA/INTRUSION' || r.survey_type === 'BOTH');
-    upgradeData = allData.filter(r => r.upgrade_decision.includes('FULL') && r.survey_required === 'NO');
+    // CCTV: only CCTV survey type (not BOTH)
+    cctvData = allData.filter(r => r.survey_type === 'CCTV');
+    // FA: only FA/INTRUSION survey type (not BOTH)
+    faData = allData.filter(r => r.survey_type === 'FA/INTRUSION');
+    // Full Upgrades: BOTH survey types OR any full upgrade decision
+    upgradeData = allData.filter(r => r.survey_type === 'BOTH' || r.upgrade_decision?.includes('FULL'));
     
     // Update global stats
     updateGlobalStats();

@@ -52,19 +52,25 @@ python3 tools/install.py
 
 **Dashboard not loading data?** Run the diagnostic:
 
-```powershell
+```bash
+# Windows (PowerShell)
 python tools/diagnose.py
+
+# Mac (Terminal)
+python3 tools/diagnose.py
 ```
 
 This checks all required files exist and your data is valid. Common fixes:
 
 | Problem | Fix |
 |---------|-----|
-| Dashboard shows "Loading..." forever | Run `git pull` then Ctrl+Shift+R in browser |
-| Browser doesn't open | Check Python is in PATH: `python --version` |
+| Dashboard shows "Loading..." forever | Run `git pull` then Ctrl+Shift+R (Cmd+Shift+R on Mac) |
+| Browser doesn't open | Check Python is in PATH: `python --version` or `python3 --version` |
 | Old data showing | Run `git pull` then click shortcut again |
-| Shortcut does nothing | Re-run `python tools/install.py` |
-| Git not found | Install Git from https://git-scm.com/download/win |
+| Shortcut does nothing | Re-run `python tools/install.py` (or `python3` on Mac) |
+| Git not found (Windows) | Install Git from https://git-scm.com/download/win |
+| Git not found (Mac) | Run `xcode-select --install` or install from https://git-scm.com/download/mac |
+| Mac: "unidentified developer" | Right-click the .command file → Open → Open (first time only) |
 
 ---
 

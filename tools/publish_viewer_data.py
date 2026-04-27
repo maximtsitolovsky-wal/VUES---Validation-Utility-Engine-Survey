@@ -51,7 +51,7 @@ def main():
         return 1
     
     print("")
-    print("  ─────────────────────────────────────────")
+    print("  -------------------------------------------")
     print(f"  Copied {copied} file(s) to ui/")
     print("")
     

@@ -44,6 +44,9 @@ services:
       CORRECTION_LOG_DIR: /app/output/corrections/logs
       CORRECTION_RAW_DIR: /app/output/corrections/raw
 
+      # Enable live-reload in the dashboard server (browser auto-refreshes)
+      VUES_LIVE_RELOAD: "1"
+
     ports:
       - "8765:8765"     # Dashboard server (executive_dashboard.html)
 

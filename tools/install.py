@@ -142,24 +142,7 @@ def check_git_setup():
     repo_root = Path(__file__).parent.parent.resolve()
     git_dir = repo_root / ".git"
     
-    # Check if .git folder exists
-    if not git_dir.exists():
-        print("  [ERROR] This is not a Git clone!")
-        print("")
-        print("  You downloaded a ZIP file. Please use Git instead:")
-        print("")
-        print("    1. Install Git: https://git-scm.com/download/win")
-        print("    2. Open PowerShell and run:")
-        print("       git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git")
-        print("       cd VUES---Validation-Utility-Engine-Survey")
-        print("       python tools/install.py")
-        print("")
-        print("  Git is required for auto-updates. The dashboard")
-        print("  auto-syncs with admin's data every time you launch it.")
-        print("")
-        return False
-    
-    # Check if git command works
+    # Check if git command works first
     result = subprocess.run(
         ["git", "--version"],
         capture_output=True,
@@ -168,8 +151,38 @@ def check_git_setup():
     if result.returncode != 0:
         print("  [ERROR] Git is not installed!")
         print("")
-        print("  Install Git from: https://git-scm.com/download/win")
-        print("  Then restart PowerShell and run: python tools/install.py")
+        if sys.platform == 'darwin':
+            print("  To install Git on Mac, open Terminal and run:")
+            print("    xcode-select --install")
+            print("")
+            print("  Or download from: https://git-scm.com/download/mac")
+        else:
+            print("  To install Git on Windows:")
+            print("    1. Download: https://git-scm.com/download/win")
+            print("    2. Run the installer (use all default options)")
+            print("    3. Restart PowerShell")
+        print("")
+        print("  After installing Git, run this installer again.")
+        print("")
+        return False
+    
+    # Check if .git folder exists
+    if not git_dir.exists():
+        print("  [ERROR] This is not a Git clone!")
+        print("")
+        print("  You downloaded a ZIP file. Please use Git instead:")
+        print("")
+        if sys.platform == 'darwin':
+            print("    git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git")
+            print("    cd VUES---Validation-Utility-Engine-Survey")
+            print("    python3 tools/install.py")
+        else:
+            print("    git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git")
+            print("    cd VUES---Validation-Utility-Engine-Survey")
+            print("    python tools/install.py")
+        print("")
+        print("  Git is required for auto-updates. The dashboard")
+        print("  auto-syncs with admin's data every time you launch it.")
         print("")
         return False
     

@@ -8,14 +8,25 @@
 
 ## 🚀 Quick Start (Viewers)
 
-### Prerequisites
+### Step 1: Install Git (if you don't have it)
 
-| Platform | Requirements |
-|----------|-------------|
-| **Windows** | Git ([download](https://git-scm.com/download/win)), Python 3.11+ (Microsoft Store or python.org) |
-| **Mac** | Git (`xcode-select --install` or [download](https://git-scm.com/download/mac)), Python 3.11+ (`brew install python` or python.org) |
+| Platform | How to Install Git |
+|----------|--------------------|
+| **Windows** | Download & run: **https://git-scm.com/download/win** (use all default options) |
+| **Mac** | Open Terminal and run: `xcode-select --install` (or download from https://git-scm.com/download/mac) |
 
-### Installation (One-Time)
+> **Check if you already have Git:** Open Terminal/PowerShell and type `git --version`. If you see a version number, you're good!
+
+### Step 2: Install Python (if you don't have it)
+
+| Platform | How to Install Python |
+|----------|----------------------|
+| **Windows** | Open **Microsoft Store** → search "Python 3.11" → Install |
+| **Mac** | Run: `brew install python` (or download from https://www.python.org/downloads/) |
+
+> **Check if you already have Python:** Type `python --version` (Windows) or `python3 --version` (Mac)
+
+### Step 3: Clone & Install VUES
 
 **Windows (PowerShell):**
 ```powershell
@@ -30,6 +41,12 @@ git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engi
 cd VUES---Validation-Utility-Engine-Survey
 python3 tools/install.py
 ```
+
+### Step 4: Launch!
+
+Double-click the **VUES Dashboard** shortcut on your desktop. That's it!
+
+---
 
 ### What the installer does:
 - 📦 Installs Python dependencies

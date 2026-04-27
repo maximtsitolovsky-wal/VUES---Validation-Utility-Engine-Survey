@@ -39,7 +39,7 @@ _WATCHMEDO = _ROOT / ".venv" / "Scripts" / "watchmedo.exe"
 
 _BANNER = r"""
  ╔═══════════════════════════════════════════════╗
- ║  VUES — Hot-Reload Development Mode  🔥       ║
+ ║  VUES -- Hot-Reload Development Mode           ║
  ║  Watching: src/  tools/  prompts/             ║
  ║  Auto-restart on any .py / prompt change      ║
  ║  Dashboard: live-reload enabled (auto F5)     ║
@@ -131,7 +131,7 @@ def main() -> None:
                 git_proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 git_proc.kill()
-        print("  [DEV] Goodbye! 🐶", flush=True)
+        print("  [DEV] Goodbye!", flush=True)
 
 
 if __name__ == "__main__":

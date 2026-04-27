@@ -124,13 +124,18 @@
         <div class="panel-body"><div class="chart-container"><canvas id="assignedChart"></canvas></div></div>
       </div>
       <div class="panel" style="grid-column: span 3;">
-        <div class="panel-header"><div class="panel-title">🏢 Vendor Assignments</div></div>
+        <div class="panel-header">
+          <div class="panel-title">🏢 Vendor Assignments</div>
+          <div style="display:flex;gap:8px;">
+            <button class="sort-btn active" data-sort="assigned" onclick="sortVendors('assigned')">By Assigned</button>
+            <button class="sort-btn" data-sort="completion" onclick="sortVendors('completion')">By Completion</button>
+            <button class="sort-btn" data-sort="status" onclick="sortVendors('status')">By Status</button>
+          </div>
+        </div>
         <div class="panel-body">
-          <div class="scroll-area">
-            <table class="data-table">
-              <thead><tr><th>Vendor</th><th>Assigned</th><th>Completed</th><th>Remaining</th><th>Completion</th><th>Progress</th></tr></thead>
-              <tbody id="vendorBody"><tr><td colspan="6" style="text-align:center;padding:30px;">Loading...</td></tr></tbody>
-            </table>
+          <div class="vendor-summary" id="vendorSummary"></div>
+          <div class="scroll-area" style="max-height:400px;">
+            <div id="vendorGroups"></div>
           </div>
         </div>
       </div>

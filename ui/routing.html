@@ -1013,6 +1013,20 @@ function renderTables() {
   document.getElementById('reviewBody').innerHTML = reviewFiltered.length
     ? reviewFiltered.map((r, i) => renderRow(r, i, 'review')).join('')
     : '<div class="empty-state">No sites needing review match filters</div>';
+  
+  // Awaiting Scout
+  const scoutFiltered = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+  document.getElementById('scoutCount').textContent = scoutFiltered.length;
+  document.getElementById('scoutBody').innerHTML = scoutFiltered.length
+    ? scoutFiltered.map((r, i) => renderRow(r, i, 'scout')).join('')
+    : '<div class="empty-state">No sites awaiting scout match filters</div>';
+  
+  // Completed
+  const completeFiltered = filterData(completeData, 'completeSearch', 'completeVendor', null);
+  document.getElementById('completeCount').textContent = completeFiltered.length;
+  document.getElementById('completeBody').innerHTML = completeFiltered.length
+    ? completeFiltered.map((r, i) => renderRow(r, i, 'complete')).join('')
+    : '<div class="empty-state">No completed sites match filters</div>';
 }
 
 // Cycle through status: pending -> inprogress -> complete -> pending

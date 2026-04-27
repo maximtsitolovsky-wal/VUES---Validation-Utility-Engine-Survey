@@ -13,8 +13,8 @@
 Open **PowerShell** (not CMD!) and run:
 
 ```powershell
-git clone <REPO_URL>
-cd VUES
+git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
 python tools/install.py
 ```
 

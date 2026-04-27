@@ -81,10 +81,34 @@ $Shortcut.Save()
         return False
 
 
+def check_data_files():
+    """Check if dashboard data files exist."""
+    repo_root = Path(__file__).parent.parent.resolve()
+    ui_dir = repo_root / "ui"
+    data_file = ui_dir / "team_dashboard_data.json"
+    
+    if data_file.exists():
+        size_kb = data_file.stat().st_size / 1024
+        print(f"  [OK] Dashboard data found ({size_kb:.0f} KB)")
+        return True
+    else:
+        print("  [WARN] No dashboard data found!")
+        print("         Try: git pull (or re-download the ZIP)")
+        return False
+
+
 def install_dependencies():
-    """Install required Python packages."""
+    """Install required Python packages (only if requirements.txt exists)."""
     repo_root = Path(__file__).parent.parent.resolve()
     requirements = repo_root / "requirements.txt"
+    
+    # Check if this is admin (has full source) or viewer (just dashboard)
+    src_dir = repo_root / "src" / "siteowlqa"
+    is_admin = src_dir.exists()
+    
+    if not is_admin:
+        print("  [OK] Viewer mode - no dependencies needed")
+        return True
     
     if not requirements.exists():
         print("  [SKIP] No requirements.txt found")
@@ -115,12 +139,18 @@ def main():
     print("  ============================================")
     print("")
     
-    # Install dependencies
+    # Check for data files
+    print("  [1/3] Checking dashboard data...")
+    check_data_files()
+    
+    # Install dependencies (only for admin/full install)
+    print("")
+    print("  [2/3] Checking dependencies...")
     install_dependencies()
     
     # Create desktop shortcut
     print("")
-    print("  [2/2] Creating desktop shortcut...")
+    print("  [3/3] Creating desktop shortcut...")
     create_desktop_shortcut()
     
     print("")

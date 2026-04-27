@@ -68,12 +68,13 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
     inject_lines.append("</script>")
     inject_block = "\n".join(inject_lines)
     
-    # Remove any previous injection
+    # Remove ANY previous injections (handle multiple if file got bloated)
     pattern = re.compile(
-        r'<script>\s*//\s*===\s*EMBEDDED DATA.*?//\s*===\s*END EMBEDDED DATA\s*===\s*</script>',
+        r'<script>\s*//\s*===\s*EMBEDDED DATA.*?</script>',
         re.DOTALL
     )
-    content = pattern.sub('', content)
+    while pattern.search(content):
+        content = pattern.sub('', content, count=1)
     
     # Inject right before </head> (or </body> if no head)
     if '</head>' in content:

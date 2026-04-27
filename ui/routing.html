@@ -86,6 +86,7 @@
     .table-header.review-grid, .row.review-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.scout-grid, .row.scout-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.complete-grid, .row.complete-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.nosurvey-grid, .row.nosurvey-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
 
     .table-body { display: flex; flex-direction: column; gap: 8px; }
 
@@ -226,6 +227,7 @@
     .tab.active.tab-cctv { border-bottom: 3px solid var(--blue); }
     .tab.active.tab-fa { border-bottom: 3px solid var(--red); }
     .tab.active.tab-upgrade { border-bottom: 3px solid var(--yellow); }
+    .tab.active.tab-nosurvey { border-bottom: 3px solid var(--cyan); }
     .tab.active.tab-review { border-bottom: 3px solid var(--orange); }
     .tab.active.tab-scout { border-bottom: 3px solid var(--purple); }
     .tab.active.tab-complete { border-bottom: 3px solid var(--green); }
@@ -355,6 +357,14 @@
             </div>
           </div>
           <div class="legend-item">
+            <span class="legend-icon">✨</span>
+            <div class="legend-text">
+              <div class="legend-label">No Survey Needed</div>
+              <div class="legend-desc">Full upgrade — no survey required</div>
+              <code class="legend-code">survey_required = "NO"</code>
+            </div>
+          </div>
+          <div class="legend-item">
             <span class="legend-icon">📋</span>
             <div class="legend-text">
               <div class="legend-label">Awaiting Scout</div>
@@ -408,6 +418,13 @@
         <div class="tab-counts">
           <span class="tab-count total"><span class="num" id="upgradeTotal">0</span> total</span>
           <span class="tab-count done"><span class="num" id="upgradeDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-nosurvey" onclick="switchTab('nosurvey')">
+        <span class="tab-icon">✨</span>
+        <span class="tab-label">No Survey</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="nosurveyTotal">0</span> total</span>
         </div>
       </button>
       <button class="tab tab-review" onclick="switchTab('review')">
@@ -776,7 +793,7 @@
 
 <script>
 let allData = [];
-let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [];
+let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [], noSurveyData = [];
 let currentTab = 'cctv';
 
 // Toggle legend popup
@@ -838,9 +855,13 @@ async function loadData() {
     completeData = allData.filter(r => r.survey_complete === true);
     const notComplete = allData.filter(r => r.survey_complete !== true);
     
+    // No Survey Needed - full upgrade, no survey required
+    noSurveyData = notComplete.filter(r => r.survey_required === 'NO');
+    const needsSurvey = notComplete.filter(r => r.survey_required !== 'NO');
+    
     // Awaiting Scout - no scout submission yet
-    scoutData = notComplete.filter(r => r.reason_for_decision?.includes('No scout submission'));
-    const hasScout = notComplete.filter(r => !r.reason_for_decision?.includes('No scout submission'));
+    scoutData = needsSurvey.filter(r => r.reason_for_decision?.includes('No scout submission'));
+    const hasScout = needsSurvey.filter(r => !r.reason_for_decision?.includes('No scout submission'));
     
     // CCTV: only CCTV survey type
     cctvData = hasScout.filter(r => r.survey_type === 'CCTV');

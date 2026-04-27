@@ -65,11 +65,21 @@ def cleanup_files(output_dir: Path):
 
 
 def main():
-    # Find output directory (relative to script location)
+    # Find UI directory (relative to script location)
+    # UI folder is tracked in git - viewers can use it directly
     script_dir = Path(__file__).parent.parent.resolve()
-    output_dir = script_dir / 'output'
+    ui_dir = script_dir / 'ui'
     
-    if not output_dir.exists():
+    # For viewers: serve from ui/ (tracked in git)
+    # For admin: if output/ exists with data, prefer that for freshest data
+    output_dir = script_dir / 'output'
+    serve_dir = ui_dir  # Default to ui/
+    
+    # Admin mode: if output/ has the JSON data files, use it (fresher data)
+    if (output_dir / 'team_dashboard_data.json').exists():
+        serve_dir = output_dir
+    
+    if not serve_dir.exists():
         # Try creating a simple message for pythonw (no console)
         try:
             import ctypes

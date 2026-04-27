@@ -867,19 +867,23 @@ function renderTables() {
     ? faFiltered.map((r, i) => renderRow(r, i, 'fa')).join('')
     : '<div class="empty-state">No FA/Intrusion surveys match filters</div>';
   
-  // Upgrades
-  let upgradeFiltered = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
-  const upgradeType = document.getElementById('upgradeType')?.value || '';
-  if (upgradeType === 'CCTV') upgradeFiltered = upgradeFiltered.filter(r => r.upgrade_decision.includes('CCTV') && !r.upgrade_decision.includes('BOTH'));
-  if (upgradeType === 'FA') upgradeFiltered = upgradeFiltered.filter(r => r.upgrade_decision.includes('FA') && !r.upgrade_decision.includes('BOTH'));
-  if (upgradeType === 'BOTH') upgradeFiltered = upgradeFiltered.filter(r => r.upgrade_decision.includes('BOTH'));
-  
+  // Both Surveys
+  const upgradeFiltered = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
   const upgradeDone = upgradeFiltered.filter(r => getStatus(r) === 'complete').length;
   document.getElementById('upgradeCount').textContent = upgradeFiltered.length;
   document.getElementById('upgradeComplete').textContent = `${upgradeDone} Done`;
   document.getElementById('upgradeBody').innerHTML = upgradeFiltered.length
     ? upgradeFiltered.map((r, i) => renderRow(r, i, 'upgrade')).join('')
-    : '<div class="empty-state">No upgrades match filters</div>';
+    : '<div class="empty-state">No sites needing both surveys match filters</div>';
+  
+  // Needs Review
+  const reviewFiltered = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+  const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'complete').length;
+  document.getElementById('reviewCount').textContent = reviewFiltered.length;
+  document.getElementById('reviewComplete').textContent = `${reviewDone} Done`;
+  document.getElementById('reviewBody').innerHTML = reviewFiltered.length
+    ? reviewFiltered.map((r, i) => renderRow(r, i, 'review')).join('')
+    : '<div class="empty-state">No sites needing review match filters</div>';
 }
 
 // Cycle through status: pending -> inprogress -> complete -> pending

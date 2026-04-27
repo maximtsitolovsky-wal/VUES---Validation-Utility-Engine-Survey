@@ -21,14 +21,14 @@ DATA_FILES = [
 
 def main():
     print("")
-    print("  ═══════════════════════════════════════")
-    print("   VUES · Publish Viewer Data")
-    print("  ═══════════════════════════════════════")
+    print("  ===========================================")
+    print("   VUES - Publish Viewer Data")
+    print("  ===========================================")
     print("")
     
     # Check output exists
     if not OUTPUT_DIR.exists():
-        print("  ❌ output/ folder not found!")
+        print("  [ERROR] output/ folder not found!")
         print("     Run the pipeline first to generate data.")
         return 1
     
@@ -40,14 +40,14 @@ def main():
         if src.exists():
             shutil.copy2(src, dst)
             size_kb = src.stat().st_size / 1024
-            print(f"  ✓ {filename} ({size_kb:.1f} KB)")
+            print(f"  [OK] {filename} ({size_kb:.1f} KB)")
             copied += 1
         else:
-            print(f"  ⚠ {filename} not found in output/")
+            print(f"  [WARN] {filename} not found in output/")
     
     if copied == 0:
         print("")
-        print("  ❌ No data files to publish!")
+        print("  [ERROR] No data files to publish!")
         return 1
     
     print("")
@@ -56,7 +56,7 @@ def main():
     print("")
     
     # Git add + commit + push
-    print("  📤 Committing and pushing...")
+    print("  Committing and pushing...")
     try:
         subprocess.run(['git', 'add'] + [f'ui/{f}' for f in DATA_FILES], 
                        cwd=REPO_ROOT, check=True, capture_output=True)
@@ -69,19 +69,19 @@ def main():
         if result.returncode == 0:
             # Push
             subprocess.run(['git', 'push'], cwd=REPO_ROOT, check=True, capture_output=True)
-            print("  ✓ Data pushed to repository!")
+            print("  [OK] Data pushed to repository!")
             print("")
-            print("  ═══════════════════════════════════════")
+            print("  ===========================================")
             print("   Viewers can now git pull or re-download")
             print("   to see your latest data!")
-            print("  ═══════════════════════════════════════")
+            print("  ===========================================")
         else:
             if "nothing to commit" in result.stdout:
-                print("  ℹ No changes - data already up to date")
+                print("  [INFO] No changes - data already up to date")
             else:
-                print(f"  ⚠ Git commit: {result.stderr[:100]}")
+                print(f"  [WARN] Git commit: {result.stderr[:100]}")
     except subprocess.CalledProcessError as e:
-        print(f"  ⚠ Git error: {e}")
+        print(f"  [ERROR] Git error: {e}")
     
     print("")
     return 0

@@ -6,12 +6,13 @@
 
 ---
 
-## 🚀 Quick Start (Copy & Paste)
+## 🚀 Quick Start
 
-**Open PowerShell and paste this entire block:**
+### Option 1: If you have Git installed
+
+Open **PowerShell** (not CMD!) and run:
 
 ```powershell
-# Clone, setup, and launch VUES dashboard
 git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
 cd VUES---Validation-Utility-Engine-Survey
 python -m venv .venv
@@ -20,7 +21,22 @@ pip install -r requirements.txt
 python tools/serve_dashboard.py
 ```
 
-The server automatically finds a free port and opens your browser to the dashboard!
+### Option 2: No Git? Download ZIP instead
+
+1. Go to: https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey
+2. Click the green **"Code"** button → **"Download ZIP"**
+3. Extract the ZIP to `C:\VUES`
+4. Open **PowerShell**, then run:
+
+```powershell
+cd C:\VUES
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python tools/serve_dashboard.py
+```
+
+> ⚠️ **Must use PowerShell**, not Command Prompt (CMD). Right-click Start → "Windows PowerShell"
 
 ---
 

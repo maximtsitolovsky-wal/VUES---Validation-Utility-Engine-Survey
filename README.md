@@ -39,6 +39,33 @@ python tools/install.py
 
 ---
 
+## 🔐 Admin vs Viewer Mode
+
+### 📺 Viewer (Everyone)
+The instructions above set you up as a **Viewer**. You get:
+- Read-only dashboard access
+- Latest data (pull/re-download to refresh)
+- No pipeline running on your machine
+
+**To update data:** Run `git pull` or re-download the ZIP.
+
+### 🔧 Admin (Pipeline Host)
+One machine runs the full pipeline. The Admin:
+- Polls Airtable for new submissions
+- Grades submissions automatically
+- Publishes fresh data to the repo
+
+**Admin commands:**
+```powershell
+# Start the pipeline
+python -m src.siteowlqa.main
+
+# Publish data to viewers
+python tools/publish_viewer_data.py
+```
+
+---
+
 ## 📊 Survey Routing Dashboard
 
 The **Survey Routing Dashboard** shows all sites and their survey requirements:

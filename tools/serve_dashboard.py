@@ -178,11 +178,18 @@ def main():
     # Write port file (to output dir if exists, for admin consistency)
     write_port_file(port_file_dir, port)
     
-    # Create handler
-    handler = http.server.SimpleHTTPRequestHandler
-    
-    # Suppress logging for pythonw (no console)
-    handler.log_message = lambda *args: None
+    # Create handler with no-cache headers so browser always shows fresh data
+    class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+        def end_headers(self):
+            self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+            super().end_headers()
+
+        def log_message(self, *args):
+            pass  # Suppress logging for pythonw (no console)
+
+    handler = NoCacheHandler
     
     try:
         with socketserver.TCPServer(("", port), handler) as httpd:

@@ -75,6 +75,42 @@
     
     @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 768px) { .main-grid, .stats-row { grid-template-columns: 1fr; } }
+    
+    /* Vendor Organization */
+    .sort-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-soft); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .sort-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+    .sort-btn.active { background: rgba(90,228,255,0.15); border-color: rgba(90,228,255,0.4); color: var(--cyan); }
+    
+    .vendor-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .summary-card { padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .summary-card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); }
+    .summary-card-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+    .summary-card-note { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    
+    .vendor-group { margin-bottom: 20px; }
+    .vendor-group-header { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; }
+    .vendor-group-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .vendor-group-count { padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+    .group-critical .vendor-group-title { color: var(--red); }
+    .group-critical .vendor-group-count { background: rgba(255,107,129,0.2); color: var(--red); }
+    .group-behind .vendor-group-title { color: var(--amber); }
+    .group-behind .vendor-group-count { background: rgba(255,200,87,0.2); color: var(--amber); }
+    .group-ontrack .vendor-group-title { color: var(--green); }
+    .group-ontrack .vendor-group-count { background: rgba(69,230,165,0.2); color: var(--green); }
+    
+    .vendor-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .vendor-card { padding: 14px 16px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); transition: all 0.15s; }
+    .vendor-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-1px); }
+    .vendor-card.critical { border-color: rgba(255,107,129,0.3); background: rgba(255,107,129,0.05); }
+    .vendor-card.behind { border-color: rgba(255,200,87,0.2); }
+    .vendor-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .vendor-card-name { font-weight: 700; font-size: 14px; }
+    .vendor-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .vendor-stat { text-align: center; }
+    .vendor-stat-value { font-size: 16px; font-weight: 700; }
+    .vendor-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); }
+    .vendor-progress { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .vendor-progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
   </style>
 </head>
 <body>

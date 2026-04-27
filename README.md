@@ -10,25 +10,35 @@
 
 ### Prerequisites
 
-1. **Git** - Required for auto-updates. Install from: https://git-scm.com/download/win
-2. **Python 3.11+** - Install from Microsoft Store or python.org
+| Platform | Requirements |
+|----------|-------------|
+| **Windows** | Git ([download](https://git-scm.com/download/win)), Python 3.11+ (Microsoft Store or python.org) |
+| **Mac** | Git (`xcode-select --install` or [download](https://git-scm.com/download/mac)), Python 3.11+ (`brew install python` or python.org) |
 
 ### Installation (One-Time)
 
-Open **PowerShell** (not CMD!) and run:
-
+**Windows (PowerShell):**
 ```powershell
 git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
 cd VUES---Validation-Utility-Engine-Survey
 python tools/install.py
 ```
 
+**Mac (Terminal):**
+```bash
+git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
+python3 tools/install.py
+```
+
 ### What the installer does:
 - 📦 Installs Python dependencies
 - 🖥️ Creates a **VUES Dashboard** shortcut on your desktop
+  - Windows: `.lnk` shortcut
+  - Mac: `.command` script (double-click to run)
 - 🔄 Enables auto-sync with admin's latest data on every launch
 
-> ⚠️ **Must use PowerShell**, not Command Prompt (CMD). Right-click Start → "Windows PowerShell"
+> ⚠️ **Windows users:** Must use PowerShell, not CMD. Right-click Start → "Windows PowerShell"
 
 ### Why Git is Required
 

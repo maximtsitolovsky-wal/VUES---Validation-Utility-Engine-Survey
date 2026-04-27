@@ -41,6 +41,25 @@ python tools/install.py
 
 ---
 
+## 🔧 Troubleshooting
+
+**Dashboard not loading data?** Run the diagnostic:
+
+```powershell
+python tools/diagnose.py
+```
+
+This checks all required files exist and your data is valid. Common fixes:
+
+| Problem | Fix |
+|---------|-----|
+| Dashboard shows "Loading..." forever | Run `git pull` then click shortcut again |
+| Browser doesn't open | Check Python is in PATH: `python --version` |
+| Old data showing | Delete `ui\dashboard.port` and `output\dashboard.port`, then re-launch |
+| Shortcut does nothing | Re-run `python tools/install.py` |
+
+---
+
 ## 🔄 Updating Your Data
 
 The dashboard shows live data from the VUES pipeline. To get the latest:

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """VUES Installer - Creates desktop shortcut and sets up the app."""
 
-# Fix Windows console encoding for emoji
+# Fix Windows console encoding
 import sys
 if sys.platform == 'win32':
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 import os
-import sys
 import subprocess
 from pathlib import Path
+
 
 def create_desktop_shortcut():
     """Create a desktop shortcut for VUES Dashboard."""
@@ -22,20 +25,28 @@ def create_desktop_shortcut():
     shortcut_path = desktop / "VUES Dashboard.lnk"
     
     # Check if icon exists
-    if not icon_path.exists():
-    print("  [WARN] Icon not found:", icon_path)
-        print("     Shortcut will use default Python icon")
-        icon_path = None
+    icon_arg = ""
+    if icon_path.exists():
+        icon_arg = f'$Shortcut.IconLocation = "{icon_path}"'
+    else:
+        print("  [WARN] Icon not found:", icon_path)
+        print("         Shortcut will use default icon")
+    
+    # Get Python path
+    python_exe = Path(sys.executable)
+    pythonw_exe = python_exe.parent / "pythonw.exe"
+    if not pythonw_exe.exists():
+        pythonw_exe = python_exe  # Fall back to python.exe
     
     # PowerShell script to create shortcut
     ps_script = f'''
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("{shortcut_path}")
-$Shortcut.TargetPath = "pythonw.exe"
+$Shortcut.TargetPath = "{pythonw_exe}"
 $Shortcut.Arguments = '"{target_script}"'
 $Shortcut.WorkingDirectory = "{repo_root}"
 $Shortcut.Description = "VUES - Survey Routing Dashboard"
-{f'$Shortcut.IconLocation = "{icon_path}"' if icon_path else ''}
+{icon_arg}
 $Shortcut.Save()
 '''
     
@@ -47,10 +58,12 @@ $Shortcut.Save()
     )
     
     if result.returncode == 0:
-    print("  [OK] Desktop shortcut created:", shortcut_path)
+        print("  [OK] Desktop shortcut created!")
+        print("       Location:", shortcut_path)
         return True
     else:
-    print("  [FAIL] Failed to create shortcut:", result.stderr)
+        print("  [FAIL] Failed to create shortcut")
+        print("        ", result.stderr[:200] if result.stderr else "Unknown error")
         return False
 
 
@@ -60,28 +73,32 @@ def install_dependencies():
     requirements = repo_root / "requirements.txt"
     
     if not requirements.exists():
-    print("  [WARN] requirements.txt not found, skipping")
+        print("  [SKIP] No requirements.txt found")
         return True
     
     print("  [1/2] Installing dependencies...")
     result = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-r", str(requirements), "-q"],
+        [sys.executable, "-m", "pip", "install", "-r", str(requirements), "-q",
+         "--index-url", "https://pypi.ci.artifacts.walmart.com/artifactory/api/pypi/external-pypi/simple",
+         "--trusted-host", "pypi.ci.artifacts.walmart.com"],
         capture_output=True,
         text=True
     )
     
     if result.returncode == 0:
-    print("  [OK] Dependencies installed")
+        print("  [OK] Dependencies installed")
         return True
     else:
-    print("  [WARN] Some dependencies may have failed")
+        print("  [WARN] Some dependencies may have failed")
         return True  # Continue anyway
 
 
 def main():
     print("")
-    print("  VUES Installer")
-    print("  ═════════════════════════════")
+    print("  ============================================")
+    print("   VUES Installer")
+    print("   Validation Utility Engine Survey")
+    print("  ============================================")
     print("")
     
     # Install dependencies
@@ -93,7 +110,9 @@ def main():
     create_desktop_shortcut()
     
     print("")
-    print("  Installation complete!")
+    print("  ============================================")
+    print("   Installation complete!")
+    print("  ============================================")
     print("")
     print("  Double-click 'VUES Dashboard' on your desktop to launch.")
     print("")

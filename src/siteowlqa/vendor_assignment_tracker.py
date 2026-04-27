@@ -192,6 +192,176 @@ class VendorAssignmentTracker:
         except (ValueError, TypeError):
             # If conversion fails, return as-is
             return str(site_num).strip()
+
+    def _record_sort_key(self, record: dict[str, Any]) -> tuple[int, str, str, str]:
+        """Prefer completed Scout responses, then newest dates."""
+        raw_fields = record.get("raw_fields", {}) or {}
+        is_complete = 1 if raw_fields.get("Complete?") == 1 else 0
+        scout_date = str(raw_fields.get("Scout Date") or record.get("submitted_at") or "")
+        created_time = str(record.get("created_time") or "")
+        record_id = str(record.get("record_id") or "")
+        return (is_complete, scout_date, created_time, record_id)
+
+    def _pick_best_records_by_site(
+        self,
+        scout_records: List[dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Collapse multiple Airtable records per site into one best live record."""
+        records_by_site: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for record in scout_records:
+            site_number = self._normalize_site_number(str(record.get("site_number", "")).strip())
+            if site_number:
+                records_by_site[site_number].append(record)
+
+        return {
+            site_number: max(records, key=self._record_sort_key)
+            for site_number, records in records_by_site.items()
+        }
+
+    def _build_response_summary(self, raw_fields: dict[str, Any]) -> list[str]:
+        """Return a compact Scout-response summary for the live mesh table."""
+        field_map = [
+            ("Panel", "Fire Panel Type"),
+            ("Tri-Mount", "Rooftop Tri-Mount Present"),
+            ("Baluns", "Analog CCTV Baluns Present?"),
+            ("Cable", "Coax or Siamese Cable"),
+            ("Homerun", "Homerun Cabling Present"),
+            ("Condition", "Cable Condition"),
+        ]
+        summary: list[str] = []
+        for label, field_name in field_map:
+            value = raw_fields.get(field_name)
+            if value in (None, "", []):
+                continue
+            if isinstance(value, list):
+                value = ", ".join(str(item) for item in value if item not in (None, ""))
+            summary.append(f"{label}: {value}")
+        return summary[:4]
+
+    def _build_mesh_row(
+        self,
+        *,
+        assignment: VendorAssignment | None,
+        record: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        """Build one row of Excel × Airtable mesh data for the UI."""
+        raw_fields = record.get("raw_fields", {}) if record else {}
+        assigned_vendor = assignment.vendor_name if assignment else ""
+        assigned_date = assignment.assigned_date.isoformat() if assignment and assignment.assigned_date else ""
+        site_number = assignment.site_number if assignment else self._normalize_site_number(
+            str(record.get("site_number", "")).strip()
+        )
+
+        completed_by_vendor = self._normalize_vendor_name(
+            str(raw_fields.get("Surveyor Parent Company", "")).strip()
+        ) if record else ""
+        is_complete = raw_fields.get("Complete?") == 1 if record else False
+
+        status_key = "pending_assignment"
+        status_label = "Pending in Excel"
+        status_rank = 2
+
+        if assignment and record:
+            if is_complete and completed_by_vendor == assigned_vendor:
+                status_key = "matched_complete"
+                status_label = "Win · matched complete"
+                status_rank = 0
+            elif is_complete and completed_by_vendor and completed_by_vendor != assigned_vendor:
+                status_key = "completed_by_other_vendor"
+                status_label = "Loss · wrong vendor"
+                status_rank = 1
+            else:
+                status_key = "started_not_complete"
+                status_label = "Loss · response started"
+                status_rank = 2
+        elif assignment and not record:
+            status_key = "pending_assignment"
+            status_label = "Loss · no Airtable response"
+            status_rank = 3
+        elif record and not assignment:
+            status_key = "unassigned_airtable"
+            status_label = "Loss · Airtable only"
+            status_rank = 4
+
+        return {
+            "site_number": site_number,
+            "assigned_vendor": assigned_vendor or "—",
+            "assigned_date": assigned_date,
+            "record_id": str(record.get("record_id") or "") if record else "",
+            "created_time": str(record.get("created_time") or "") if record else "",
+            "status_key": status_key,
+            "status_label": status_label,
+            "status_rank": status_rank,
+            "has_excel_assignment": assignment is not None,
+            "has_airtable_record": record is not None,
+            "is_complete": is_complete,
+            "completed_by_vendor": completed_by_vendor or "—",
+            "surveyor_name": str(raw_fields.get("Surveyor Name") or "").strip(),
+            "surveyor_email": str(raw_fields.get("Surveyor Email") or "").strip(),
+            "scout_date": str(raw_fields.get("Scout Date") or record.get("submitted_at") or "") if record else "",
+            "comments": str(raw_fields.get("Comments") or "").strip(),
+            "panel_type": str(raw_fields.get("Fire Panel Type") or "").strip(),
+            "response_summary": self._build_response_summary(raw_fields),
+        }
+
+    def build_assignment_mesh(
+        self,
+        scout_records: List[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Join Excel assignments with live Airtable Scout responses for the UI."""
+        if not self._loaded:
+            return {
+                "generated_at": datetime.utcnow().isoformat(),
+                "rows": [],
+                "summary": {
+                    "matched_complete": 0,
+                    "started_not_complete": 0,
+                    "pending_assignment": 0,
+                    "completed_by_other_vendor": 0,
+                    "unassigned_airtable": 0,
+                    "losses_total": 0,
+                },
+            }
+
+        best_records = self._pick_best_records_by_site(scout_records)
+        rows: list[dict[str, Any]] = []
+        summary = {
+            "matched_complete": 0,
+            "started_not_complete": 0,
+            "pending_assignment": 0,
+            "completed_by_other_vendor": 0,
+            "unassigned_airtable": 0,
+            "losses_total": 0,
+        }
+
+        sorted_assignments = sorted(
+            self.assignments,
+            key=lambda item: (item.vendor_name, item.site_number),
+        )
+        for assignment in sorted_assignments:
+            record = best_records.pop(assignment.site_number, None)
+            row = self._build_mesh_row(assignment=assignment, record=record)
+            summary[row["status_key"]] += 1
+            rows.append(row)
+
+        for site_number, record in sorted(best_records.items()):
+            row = self._build_mesh_row(assignment=None, record=record)
+            summary[row["status_key"]] += 1
+            rows.append(row)
+
+        summary["losses_total"] = (
+            summary["started_not_complete"]
+            + summary["pending_assignment"]
+            + summary["completed_by_other_vendor"]
+            + summary["unassigned_airtable"]
+        )
+
+        rows.sort(key=lambda row: (row["status_rank"], row["assigned_vendor"], row["site_number"]))
+        return {
+            "generated_at": datetime.utcnow().isoformat(),
+            "rows": rows,
+            "summary": summary,
+        }
     
     def calculate_vendor_stats(
         self, 

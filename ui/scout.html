@@ -303,34 +303,141 @@ function renderAll(data) {
     alertBanner.style.display = 'none';
   }
   
-  document.getElementById('vendorBody').innerHTML = sortedVendors.map(v => {
-    const pct = v.completion_rate || 0;
-    const isWarning = pct < 5 && v.total_assigned > 20;
-    const isCritical = pct < 5 && v.total_assigned > 50;
-    const rowClass = isCritical ? 'vendor-warning' : '';
-    const barColor = isCritical ? 'var(--red)' : pct < 20 ? 'var(--amber)' : 'var(--cyan)';
-    
-    // Status badge - only show "NO SUBMISSIONS" when actually 0 completed
-    let badge = '';
-    if (v.completed === 0 && v.total_assigned > 50) {
-      badge = `<span class="badge badge-danger">⚠️ NO SUBMISSIONS</span>`;
-    } else if (isCritical) {
-      badge = `<span class="badge badge-danger">⚠️ CRITICAL</span>`;
-    } else if (pct < 20) {
-      badge = `<span class="badge badge-warning">BEHIND</span>`;
-    } else if (pct >= 70) {
-      badge = `<span class="badge badge-success">ON TRACK</span>`;
+  // Store vendors globally for sorting
+  window.allVendors = sortedVendors;
+  renderVendorCards(sortedVendors, 'assigned');
+}
+
+function renderVendorCards(vendors, sortType) {
+  // Group vendors by status
+  const critical = vendors.filter(v => (v.completion_rate || 0) < 5 && v.total_assigned > 20);
+  const behind = vendors.filter(v => (v.completion_rate || 0) >= 5 && (v.completion_rate || 0) < 30);
+  const ontrack = vendors.filter(v => (v.completion_rate || 0) >= 30);
+  
+  // Summary cards
+  const totalAssigned = vendors.reduce((s, v) => s + (v.total_assigned || 0), 0);
+  const totalCompleted = vendors.reduce((s, v) => s + (v.completed || 0), 0);
+  const avgCompletion = vendors.length > 0 ? (vendors.reduce((s, v) => s + (v.completion_rate || 0), 0) / vendors.length).toFixed(1) : 0;
+  
+  document.getElementById('vendorSummary').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-card-label">Total Vendors</div>
+      <div class="summary-card-value" style="color:var(--cyan);">${vendors.length}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">⚠️ Critical</div>
+      <div class="summary-card-value" style="color:var(--red);">${critical.length}</div>
+      <div class="summary-card-note">&lt;5% completion</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">⏳ Behind</div>
+      <div class="summary-card-value" style="color:var(--amber);">${behind.length}</div>
+      <div class="summary-card-note">5-30% completion</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">✅ On Track</div>
+      <div class="summary-card-value" style="color:var(--green);">${ontrack.length}</div>
+      <div class="summary-card-note">&gt;30% completion</div>
+    </div>
+  `;
+  
+  // Sort vendors based on type
+  let sorted = [...vendors];
+  if (sortType === 'assigned') {
+    sorted.sort((a, b) => b.total_assigned - a.total_assigned);
+  } else if (sortType === 'completion') {
+    sorted.sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0));
+  } else if (sortType === 'status') {
+    // Group by status: critical first, then behind, then on track
+    sorted = [...critical.sort((a,b) => b.total_assigned - a.total_assigned),
+              ...behind.sort((a,b) => b.total_assigned - a.total_assigned),
+              ...ontrack.sort((a,b) => b.total_assigned - a.total_assigned)];
+  }
+  
+  // Render grouped or flat based on sort type
+  let html = '';
+  
+  if (sortType === 'status') {
+    // Grouped view
+    if (critical.length > 0) {
+      html += renderVendorGroup('Critical - Immediate Action', critical, 'critical');
     }
-    
-    return `<tr class="${rowClass}">
-      <td><strong>${v.vendor_name}</strong> ${badge}</td>
-      <td>${v.total_assigned}</td>
-      <td>${v.completed}</td>
-      <td>${v.remaining}</td>
-      <td>${pct.toFixed(1)}%</td>
-      <td style="width:120px;"><div class="vendor-bar"><div class="vendor-bar-fill" style="width:${Math.max(pct, 2)}%;background:${barColor}"></div></div></td>
-    </tr>`;
-  }).join('');
+    if (behind.length > 0) {
+      html += renderVendorGroup('Behind Schedule', behind, 'behind');
+    }
+    if (ontrack.length > 0) {
+      html += renderVendorGroup('On Track', ontrack, 'ontrack');
+    }
+  } else {
+    // Flat view with all vendors
+    html = `<div class="vendor-cards">${sorted.map(v => renderVendorCard(v)).join('')}</div>`;
+  }
+  
+  document.getElementById('vendorGroups').innerHTML = html;
+}
+
+function renderVendorGroup(title, vendors, groupClass) {
+  return `
+    <div class="vendor-group group-${groupClass}">
+      <div class="vendor-group-header">
+        <span class="vendor-group-title">${title}</span>
+        <span class="vendor-group-count">${vendors.length}</span>
+      </div>
+      <div class="vendor-cards">
+        ${vendors.map(v => renderVendorCard(v)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderVendorCard(v) {
+  const pct = v.completion_rate || 0;
+  const cardClass = pct < 5 && v.total_assigned > 20 ? 'critical' : pct < 30 ? 'behind' : '';
+  const barColor = pct < 5 ? 'var(--red)' : pct < 30 ? 'var(--amber)' : 'var(--green)';
+  
+  let badge = '';
+  if (v.completed === 0 && v.total_assigned > 50) {
+    badge = `<span class="badge badge-danger">⚠️ NO SUBS</span>`;
+  } else if (pct < 5 && v.total_assigned > 20) {
+    badge = `<span class="badge badge-danger">CRITICAL</span>`;
+  } else if (pct < 30) {
+    badge = `<span class="badge badge-warning">BEHIND</span>`;
+  } else if (pct >= 70) {
+    badge = `<span class="badge badge-success">ON TRACK</span>`;
+  }
+  
+  return `
+    <div class="vendor-card ${cardClass}">
+      <div class="vendor-card-header">
+        <span class="vendor-card-name">${v.vendor_name}</span>
+        ${badge}
+      </div>
+      <div class="vendor-card-stats">
+        <div class="vendor-stat">
+          <div class="vendor-stat-value" style="color:var(--purple);">${v.total_assigned}</div>
+          <div class="vendor-stat-label">Assigned</div>
+        </div>
+        <div class="vendor-stat">
+          <div class="vendor-stat-value" style="color:var(--green);">${v.completed}</div>
+          <div class="vendor-stat-label">Done</div>
+        </div>
+        <div class="vendor-stat">
+          <div class="vendor-stat-value" style="color:var(--amber);">${v.remaining}</div>
+          <div class="vendor-stat-label">Left</div>
+        </div>
+      </div>
+      <div class="vendor-progress">
+        <div class="vendor-progress-fill" style="width:${Math.max(pct, 2)}%;background:${barColor}"></div>
+      </div>
+      <div style="text-align:center;margin-top:6px;font-size:11px;color:var(--text-soft);">${pct.toFixed(1)}% complete</div>
+    </div>
+  `;
+}
+
+function sortVendors(type) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-sort="${type}"]`).classList.add('active');
+  renderVendorCards(window.allVendors || [], type);
 }
 
 loadData();

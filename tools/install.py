@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """VUES Installer - Creates desktop shortcut and sets up the app."""
 
+# Fix Windows console encoding for emoji
+import sys
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import os
 import sys
 import subprocess
@@ -18,7 +23,7 @@ def create_desktop_shortcut():
     
     # Check if icon exists
     if not icon_path.exists():
-        print(f"  ⚠️  Icon not found: {icon_path}")
+    print("  [WARN] Icon not found:", icon_path)
         print("     Shortcut will use default Python icon")
         icon_path = None
     
@@ -42,10 +47,10 @@ $Shortcut.Save()
     )
     
     if result.returncode == 0:
-        print(f"  ✅ Desktop shortcut created: {shortcut_path}")
+    print("  [OK] Desktop shortcut created:", shortcut_path)
         return True
     else:
-        print(f"  ❌ Failed to create shortcut: {result.stderr}")
+    print("  [FAIL] Failed to create shortcut:", result.stderr)
         return False
 
 
@@ -55,10 +60,10 @@ def install_dependencies():
     requirements = repo_root / "requirements.txt"
     
     if not requirements.exists():
-        print("  ⚠️  requirements.txt not found, skipping dependencies")
+    print("  [WARN] requirements.txt not found, skipping")
         return True
     
-    print("  📦 Installing dependencies...")
+    print("  [1/2] Installing dependencies...")
     result = subprocess.run(
         [sys.executable, "-m", "pip", "install", "-r", str(requirements), "-q"],
         capture_output=True,
@@ -66,16 +71,16 @@ def install_dependencies():
     )
     
     if result.returncode == 0:
-        print("  ✅ Dependencies installed")
+    print("  [OK] Dependencies installed")
         return True
     else:
-        print(f"  ⚠️  Some dependencies may have failed: {result.stderr[:200]}")
+    print("  [WARN] Some dependencies may have failed")
         return True  # Continue anyway
 
 
 def main():
     print("")
-    print("  🐕 VUES Installer")
+    print("  VUES Installer")
     print("  ═════════════════════════════")
     print("")
     
@@ -84,11 +89,11 @@ def main():
     
     # Create desktop shortcut
     print("")
-    print("  🖥️  Creating desktop shortcut...")
+    print("  [2/2] Creating desktop shortcut...")
     create_desktop_shortcut()
     
     print("")
-    print("  ✨ Installation complete!")
+    print("  Installation complete!")
     print("")
     print("  Double-click 'VUES Dashboard' on your desktop to launch.")
     print("")

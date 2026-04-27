@@ -113,10 +113,29 @@ if exist "%WORKDIR%\tools\specialist_output_validator.py" (
 )
 
 REM =========================================================================
-REM  4. vues Pipeline — background, logs to logs/vues.*.log
+REM  4. vues Pipeline — HOT-RELOAD MODE (auto-restarts on code changes)
+REM     Uses watchmedo from the watchdog package (same as Docker setup)
 REM =========================================================================
-echo [START] vues Pipeline ...
-start "vues" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
+echo [START] vues Pipeline (hot-reload enabled) ...
+set VUES_LIVE_RELOAD=1
+if exist "%WORKDIR%\.venv\Scripts\watchmedo.exe" (
+  echo [INFO]  watchmedo found — file changes in src/ will auto-restart
+  start "vues" /b "%WORKDIR%\.venv\Scripts\watchmedo.exe" auto-restart ^
+    --directory "%WORKDIR%\src" ^
+    --directory "%WORKDIR%\tools" ^
+    --directory "%WORKDIR%\prompts" ^
+    --pattern "*.py;*.txt;*.md" ^
+    --ignore-pattern "*/__pycache__/*;*.pyc;*.pyo;*.pyd;*.log" ^
+    --recursive ^
+    --debounce-interval 1.5 ^
+    --kill-after 5 ^
+    -- ^
+    "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
+) else (
+  echo [WARN]  watchmedo not found — running without hot-reload
+  echo [WARN]  Install: pip install "watchdog[watchmedo]"
+  start "vues" /b "%PYTHON%" -u main.py >>"%STDOUT_LOG%" 2>>"%STDERR_LOG%"
+)
 
 echo.
 echo [INFO] All components started. Waiting for dashboard ...

@@ -1,54 +1,51 @@
 # VUES - Validation Utility Engine Survey
 
+![Version 1.5.0](https://img.shields.io/badge/version-1.5.0-blue)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Platform Windows](https://img.shields.io/badge/platform-Windows-lightgrey)
-![License MIT](https://img.shields.io/badge/license-MIT-green)
-![BigQuery](https://img.shields.io/badge/data-BigQuery-orange)
 
-> **Enterprise-grade vendor QA pipeline** for automated submission validation.
->
-> Airtable → Python (parallel workers) → BigQuery reference lookup → Grading results
+---
 
-## ✨ Features
+## 🚀 Quick Start (Copy & Paste)
 
-- **Parallel Processing** — Multiple worker threads process submissions concurrently
-- **BigQuery Integration** — Reference data from GSOC production tables
-- **Single-Instance Lock** — Prevents duplicate polling when cloning the repo  
-- **Auto-Recovery** — Stuck records are recovered on startup
-- **Real-time Dashboard** — HTML dashboards with vendor metrics
-- **Autonomous Correction** — Post-pass correction for high-scoring submissions
+**Open PowerShell and run these commands:**
 
-## 🚀 Quick Start
+```powershell
+# 1. Clone the repo
+git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
 
-```bash
-# Clone and setup
-git clone <repo-url>
-cd VUES
+# 2. Create virtual environment & install dependencies
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Configure (interactive wizard)
-python -m siteowlqa.setup_config
-
-# Verify setup
-python scripts/smoke_test.py
-
-# Run
-python main.py
+# 3. Start the dashboard server
+python -m http.server 8765 --directory output
 ```
 
-> ⚠️ **Single Instance**: Only one pipeline should poll a given Airtable base.
-> The application uses a lock file to prevent duplicate instances.
+**Then open your browser to:** http://localhost:8765/routing.html
 
-## 📚 Documentation
+---
 
-| Document | Description |
-|----------|-------------|
-| [Configuration Guide](docs/configuration.md) | Detailed setup instructions |
-| [Clone and Run](docs/clone-and-run.md) | Onboarding for new team members |
-| [Contributing](CONTRIBUTING.md) | Development workflow |
-| [Architecture](prompts/architect_prompt.md) | System design decisions |
+## 📊 Survey Routing Dashboard
+
+The **Survey Routing Dashboard** shows all sites and their survey requirements:
+
+| Tab | What It Shows |
+|-----|---------------|
+| 📹 CCTV | Sites needing CCTV survey |
+| 🔔 FA/Intrusion | Sites needing FA survey |
+| ⚡ Both Surveys | Sites needing both surveys |
+| ✨ No Survey | Full upgrades - no survey needed |
+| ⚠️ Needs Review | Ambiguous - needs human decision |
+| 📋 Awaiting Scout | No Scout submission yet |
+| ✅ Completed | Survey work complete |
+
+**Status Flow:**
+```
+Scout IP → Scout Done (Ready to Assign) → Survey IP → Completed
+```
 
 ---
 

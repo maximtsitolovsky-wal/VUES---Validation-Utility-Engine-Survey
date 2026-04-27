@@ -54,6 +54,7 @@
     .pill-yellow { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow); }
     .pill-purple { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); color: var(--purple); }
     .pill-orange { background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3); color: var(--orange); }
+    .pill-cyan { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan); }
     
     .section-filters { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .section-filters input, .section-filters select {
@@ -608,6 +609,43 @@
     <div class="table-body" id="upgradeBody"></div>
   </div>
 
+  <!-- No Survey Needed Section -->
+  <div class="section-card" id="nosurveySection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">✨</span>
+        No Survey Needed (Full Upgrade)
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-cyan" id="nosurveyCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="nosurveySearch" placeholder="Site #" oninput="renderTables()">
+        <select id="nosurveyVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('nosurvey')">Export</button>
+      </div>
+    </div>
+    <div class="table-header nosurvey-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="nosurveyBody"></div>
+  </div>
+
   <!-- Needs Review Section -->
   <div class="section-card" id="reviewSection">
     <div class="section-header">
@@ -819,7 +857,7 @@ function switchTab(tab) {
   
   // Update section visibility
   document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
-  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', review: 'reviewSection', scout: 'scoutSection', complete: 'completeSection' };
+  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', nosurvey: 'nosurveySection', review: 'reviewSection', scout: 'scoutSection', complete: 'completeSection' };
   document.getElementById(sectionMap[tab]).classList.add('active');
 }
 
@@ -901,6 +939,7 @@ function updateGlobalStats() {
   document.getElementById('upgradeDone').textContent = upgradeComplete;
   document.getElementById('reviewTotal').textContent = reviewData.length;
   document.getElementById('reviewDone').textContent = reviewComplete;
+  document.getElementById('nosurveyTotal').textContent = noSurveyData.length;
   document.getElementById('scoutTotal').textContent = scoutData.length;
   document.getElementById('completeTotal').textContent = completeData.length;
   
@@ -951,7 +990,7 @@ function renderRow(row, index, type) {
   const vuesChecked = row.vues_submitted ? 'checked' : '';
   
   const gridClass = {
-    cctv: 'cctv-grid', fa: 'fa-grid', upgrade: 'upgrade-grid',
+    cctv: 'cctv-grid', fa: 'fa-grid', upgrade: 'upgrade-grid', nosurvey: 'nosurvey-grid',
     review: 'review-grid', scout: 'scout-grid', complete: 'complete-grid'
   }[type] || 'cctv-grid';
   

@@ -857,6 +857,18 @@ function toggleLegend() {
   document.getElementById('legendPopup').classList.toggle('show');
 }
 
+// Toggle days sort
+function toggleDaysSort() {
+  if (sortByDays === 'asc') {
+    sortByDays = 'desc';
+    document.getElementById('sortDaysLabel').textContent = 'High → Low';
+  } else {
+    sortByDays = 'asc';
+    document.getElementById('sortDaysLabel').textContent = 'Low → High';
+  }
+  renderTables();
+}
+
 // Close legend when clicking outside
 document.addEventListener('click', (e) => {
   const legendBtn = document.querySelector('.legend-btn');

@@ -691,6 +691,29 @@
       </div>
     </div>
 
+    <!-- Viewer vs Admin -->
+    <div class="section">
+      <div class="section-title">Viewer vs Admin Mode</div>
+      <div class="card">
+        <h3>🔐 Two Ways to Use VUES</h3>
+        <div class="info-grid">
+          <div class="info-box cyan">
+            <div class="info-label cyan">Admin (Pipeline Host)</div>
+            <div class="info-text">
+              <strong>One machine only.</strong> Runs the full pipeline: polls Airtable, grades submissions, generates data, pushes to Git. Desktop shortcut launches everything.
+            </div>
+          </div>
+          <div class="info-box purple">
+            <div class="info-label purple">Viewer (Read-Only)</div>
+            <div class="info-text">
+              <strong>Everyone else.</strong> Downloads repo, runs installer, gets a dashboard shortcut. Views data but doesn't run the pipeline. Data updates when they sync.
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:16px;">Viewers can refresh their data by running <code>git pull</code> or re-downloading the ZIP from GitHub. Dashboards auto-reload every 15-30 seconds from local files.</p>
+      </div>
+    </div>
+
     <!-- Built With -->
     <div class="section">
       <div class="section-title">Built With 🐶</div>

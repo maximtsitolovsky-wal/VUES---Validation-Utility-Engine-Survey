@@ -119,7 +119,14 @@
     .req-type.fa { background: rgba(239,68,68,0.2); color: var(--red); }
     .req-type.both { background: rgba(168,85,247,0.2); color: var(--purple); }
     .req-type.upgrade { background: rgba(234,179,8,0.2); color: var(--yellow); }
-    .req-reason { color: var(--muted-fg); font-size: 11px; margin-top: 2px; }
+    .req-type.review { background: rgba(249,115,22,0.2); color: var(--orange); }
+    .req-upgrade { 
+      font-size: 11px; font-weight: 600; color: var(--yellow); 
+      margin-top: 4px; padding: 2px 6px; 
+      background: rgba(234,179,8,0.1); border-radius: 4px;
+    }
+    .req-reason { color: var(--muted-fg); font-size: 11px; margin-top: 4px; cursor: pointer; }
+    .req-reason:hover { color: var(--text); text-decoration: underline; }
 
     /* Status Badge - Clickable */
     .status-badge {
@@ -800,49 +807,48 @@ function renderRow(row, index, type) {
   const scoutChecked = row.scout_submitted ? 'checked' : '';
   const vuesChecked = row.vues_submitted ? 'checked' : '';
   
-  const gridClass = type === 'upgrade' ? 'upgrade-grid' : (type === 'cctv' ? 'cctv-grid' : 'fa-grid');
+  const gridClass = type === 'review' ? 'review-grid' : (type === 'upgrade' ? 'upgrade-grid' : (type === 'cctv' ? 'cctv-grid' : 'fa-grid'));
   
   // Determine requirement type badge
   let reqTypeClass = 'cctv';
   let reqTypeLabel = row.survey_type || 'SURVEY';
   if (row.survey_type === 'FA/INTRUSION') reqTypeClass = 'fa';
   else if (row.survey_type === 'BOTH') reqTypeClass = 'both';
-  else if (row.upgrade_decision?.includes('FULL')) reqTypeClass = 'upgrade';
+  else if (row.survey_type === 'REVIEW') reqTypeClass = 'review';
   
-  // For upgrades, show the upgrade decision as the label
-  if (type === 'upgrade') {
-    reqTypeLabel = row.upgrade_decision?.replace('FULL ', '').substring(0, 30) || 'UPGRADE';
-  }
+  // Show upgrade decision prominently for CCTV/FA tabs (they have full upgrade info)
+  const upgradeInfo = row.upgrade_decision && row.upgrade_decision !== 'SURVEY REQUIRED' && row.upgrade_decision !== 'REVIEW REQUIRED'
+    ? row.upgrade_decision : '';
   
-  // Truncate reason for display
+  // Full reason (click to see in modal)
   const reason = row.reason_for_decision || '';
-  const shortReason = reason.length > 60 ? reason.substring(0, 57) + '...' : reason;
   
   return `
-    <div class="row ${gridClass} status-${status}" style="animation-delay: ${delay}ms" data-site="${row.site}">
+    <div class="row ${gridClass} status-${status}" style="animation-delay: ${delay}ms" data-site="${row.site}" onclick="openEditModal('${row.site}')">
       <div class="row-num">${String(index + 1).padStart(2, '0')}</div>
       <div>
         <div class="row-site">${row.site}</div>
       </div>
-      <div class="row-requirements">
+      <div class="row-requirements" onclick="event.stopPropagation()">
         <span class="req-type ${reqTypeClass}">${reqTypeLabel}</span>
-        ${shortReason ? `<div class="req-reason" title="${reason.replace(/"/g, '&quot;')}">${shortReason}</div>` : ''}
+        ${upgradeInfo ? `<div class="req-upgrade">${upgradeInfo}</div>` : ''}
+        ${reason ? `<div class="req-reason" onclick="openEditModal('${row.site}')" title="Click for full details">${reason}</div>` : ''}
       </div>
       <div class="row-vendor">${row.vendor || '—'}</div>
       <div class="row-days ${isUrgent ? 'urgent' : ''}">${days || '—'}</div>
-      <div>
+      <div onclick="event.stopPropagation()">
         <div class="status-badge ${status}" onclick="cycleStatus('${row.site}')" title="Click to change status">
           ${status === 'complete' ? '✓' : status === 'inprogress' ? '◐' : '○'}
         </div>
       </div>
-      <div>
+      <div onclick="event.stopPropagation()">
         <div class="track-badge scout ${scoutChecked}" onclick="toggleTrack('${row.site}', 'scout')" title="Scout submitted">S</div>
       </div>
-      <div>
+      <div onclick="event.stopPropagation()">
         <div class="track-badge vues ${vuesChecked}" onclick="toggleTrack('${row.site}', 'vues')" title="VUES submitted">V</div>
       </div>
-      <div>
-        <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;" onclick="openEditModal('${row.site}')">Edit</button>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;" onclick="openEditModal('${row.site}')">Details</button>
       </div>
     </div>
   `;

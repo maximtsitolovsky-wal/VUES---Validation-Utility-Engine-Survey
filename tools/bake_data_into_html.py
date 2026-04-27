@@ -93,13 +93,13 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
         print(f"  [WARN] {html_path.name} has no </head> or </body> tag")
         return False
     
-    # Patch fetch() calls to use embedded data first
-    # Replace: fetch('team_dashboard_data.json...') with a polyfill
+    # Patch fetch() calls to try live data first, fall back to embedded
     fetch_polyfill = """
-// === FETCH POLYFILL: use embedded data when available ===
+// === FETCH POLYFILL: try live data first, fallback to embedded ===
 (function() {
   const _origFetch = window.fetch;
-  function makeResponse(data) {
+  function makeResponse(data, source) {
+    console.log('[VUES] Serving from ' + source);
     const json = JSON.stringify(data);
     return Promise.resolve({
       ok: true,
@@ -111,15 +111,34 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
   }
   window.fetch = function(url, opts) {
     const u = String(url).split('?')[0].split('/').pop();
-    if (u === 'team_dashboard_data.json' && window.TEAM_DASHBOARD_DATA) {
-      console.log('[VUES] Serving team_dashboard_data.json from embedded data');
-      return makeResponse(window.TEAM_DASHBOARD_DATA);
+    const isFetchingData = (u === 'team_dashboard_data.json' || u === 'survey_routing_data.json');
+    
+    if (!isFetchingData) {
+      return _origFetch.apply(this, arguments);
     }
-    if (u === 'survey_routing_data.json' && window.SURVEY_ROUTING_DATA) {
-      console.log('[VUES] Serving survey_routing_data.json from embedded data');
-      return makeResponse(window.SURVEY_ROUTING_DATA);
-    }
-    return _origFetch.apply(this, arguments);
+    
+    // Try live fetch first
+    return _origFetch.apply(this, arguments)
+      .then(function(resp) {
+        if (resp.ok) {
+          console.log('[VUES] ✓ Fetched live data:', u);
+          return resp;
+        }
+        throw new Error('HTTP ' + resp.status);
+      })
+      .catch(function(err) {
+        // Fetch failed - use fallback data
+        console.warn('[VUES] Fetch failed (' + err.message + '), using fallback data for', u);
+        if (u === 'team_dashboard_data.json' && window.TEAM_DASHBOARD_DATA_FALLBACK) {
+          return makeResponse(window.TEAM_DASHBOARD_DATA_FALLBACK, 'embedded fallback (baked ' + window.VUES_BAKED_VERSION + ')');
+        }
+        if (u === 'survey_routing_data.json' && window.SURVEY_ROUTING_DATA_FALLBACK) {
+          return makeResponse(window.SURVEY_ROUTING_DATA_FALLBACK, 'embedded fallback (baked ' + window.VUES_BAKED_VERSION + ')');
+        }
+        // No fallback available - re-throw error
+        console.error('[VUES] No fallback data available for', u);
+        throw err;
+      });
   };
 })();
 """
@@ -129,54 +148,7 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
         f'// === END EMBEDDED DATA ==={fetch_polyfill}'
     )
     
-    # Add fallback auto-render at end of body (in case polyfill doesn't fire)
-    fallback_render = """
-<script>
-// === FALLBACK AUTO-RENDER: directly use embedded data if fetch didn't work ===
-(function() {
-  function tryRender() {
-    var data = window.TEAM_DASHBOARD_DATA;
-    if (!data) { console.log('[VUES] No embedded data, skipping fallback'); return; }
-    
-    // Check if page still shows Loading... (means fetch/polyfill failed)
-    var body = document.body ? document.body.innerHTML : '';
-    if (body.indexOf('>Loading...<') === -1 && body.indexOf('>Loading vendor') === -1) {
-      console.log('[VUES] Data already rendered, skipping fallback');
-      return;
-    }
-    
-    console.log('[VUES] Fallback: directly rendering embedded data');
-    
-    // Try to call page-specific render functions
-    try {
-      if (typeof renderAll === 'function') {
-        var records = data.survey?.records || data.scout?.records || [];
-        renderAll(records);
-        console.log('[VUES] renderAll() called with', records.length, 'records');
-      }
-      if (typeof loadData === 'function') {
-        // loadData uses fetch internally, but polyfill should intercept
-        loadData();
-        console.log('[VUES] loadData() re-triggered');
-      }
-    } catch(e) {
-      console.error('[VUES] Fallback render error:', e);
-    }
-  }
-  
-  // Run after a delay to let page scripts initialize
-  if (document.readyState === 'complete') {
-    setTimeout(tryRender, 500);
-  } else {
-    window.addEventListener('load', function() { setTimeout(tryRender, 500); });
-  }
-})();
-</script>
-"""
-    # Inject fallback before </body>
-    if '</body>' in content:
-        content = content.replace('</body>', f'{fallback_render}</body>', 1)
-    
+    # No need for auto-render fallback anymore - the fetch polyfill handles it
     html_path.write_text(content, encoding='utf-8')
     return True
 

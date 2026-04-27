@@ -485,6 +485,23 @@
       <div class="modal-body">
         <input type="hidden" id="editSiteId">
         
+        <!-- Read-only details section -->
+        <div class="modal-field" style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+          <label style="margin-bottom: 8px;">Survey Requirements</label>
+          <div id="editSurveyType" style="font-weight: 600; color: var(--blue); margin-bottom: 4px;"></div>
+          <div id="editReason" style="font-size: 13px; color: var(--text-soft);"></div>
+        </div>
+        
+        <div class="modal-field" id="instructionsField" style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+          <label style="margin-bottom: 8px;">Vendor Instructions</label>
+          <div id="editInstructions" style="font-size: 13px; color: var(--text);"></div>
+        </div>
+        
+        <div class="modal-field" id="flagsField" style="background: rgba(234,179,8,0.1); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+          <label style="margin-bottom: 8px; color: var(--yellow);">⚠️ Supplemental Flags</label>
+          <div id="editFlags" style="font-size: 13px; color: var(--text);"></div>
+        </div>
+        
         <div class="modal-field">
           <label>Status</label>
           <select id="editStatus">
@@ -761,11 +778,33 @@ function openEditModal(site) {
   if (!row) return;
   
   document.getElementById('editSiteId').value = site;
-  document.getElementById('modalTitle').textContent = `Edit ${site}`;
+  document.getElementById('modalTitle').textContent = `Site ${site}`;
   document.getElementById('editStatus').value = getStatus(row);
   document.getElementById('editScout').value = row.scout_submitted ? 'true' : 'false';
   document.getElementById('editVues').value = row.vues_submitted ? 'true' : 'false';
   document.getElementById('editNotes').value = row.notes || '';
+  
+  // Populate read-only details
+  document.getElementById('editSurveyType').textContent = row.survey_type || row.upgrade_decision || 'N/A';
+  document.getElementById('editReason').textContent = row.reason_for_decision || '';
+  
+  // Vendor instructions
+  const instrField = document.getElementById('instructionsField');
+  if (row.vendor_instructions) {
+    document.getElementById('editInstructions').textContent = row.vendor_instructions;
+    instrField.style.display = 'block';
+  } else {
+    instrField.style.display = 'none';
+  }
+  
+  // Supplemental flags
+  const flagsField = document.getElementById('flagsField');
+  if (row.supplemental_flags) {
+    document.getElementById('editFlags').textContent = row.supplemental_flags;
+    flagsField.style.display = 'block';
+  } else {
+    flagsField.style.display = 'none';
+  }
   
   document.getElementById('modalOverlay').classList.add('active');
 }

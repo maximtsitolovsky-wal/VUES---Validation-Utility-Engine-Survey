@@ -140,33 +140,48 @@ if ($isAdmin) {
     }
 }
 
-# Rebuild dashboard
-if (Test-Path $rebuildScript) {
+# Rebuild dashboard (admin only)
+if ($isAdmin -and (Test-Path $rebuildScript)) {
     Write-Host 'Rebuilding dashboard...'
     & $python $rebuildScript | Out-Null
 }
 
-# Wait for dashboard HTML
-Write-Host 'Waiting for dashboard data...'
-$sw = [System.Diagnostics.Stopwatch]::StartNew()
-while ($sw.Elapsed.TotalSeconds -lt $maxWaitSeconds) {
-    # Check that index.html exists and data JSON is present
-    $dataFile = Join-Path $outputDir 'team_dashboard_data.json'
-    if ((Test-Path $dashboard) -and (Test-Path $dataFile)) {
-        Write-Host '[OK] Dashboard ready'
-        break
+# Wait for dashboard HTML (or verify it exists for viewers)
+if ($isAdmin) {
+    Write-Host 'Waiting for dashboard data...'
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    while ($sw.Elapsed.TotalSeconds -lt $maxWaitSeconds) {
+        $dataFile = Join-Path $serveDir 'team_dashboard_data.json'
+        if ((Test-Path $dashboard) -and (Test-Path $dataFile)) {
+            Write-Host '[OK] Dashboard ready'
+            break
+        }
+        Start-Sleep -Milliseconds 500
     }
-    Start-Sleep -Milliseconds 500
+} else {
+    # Viewer mode - just check files exist
+    $dataFile = Join-Path $serveDir 'team_dashboard_data.json'
+    if ((Test-Path $dashboard) -and (Test-Path $dataFile)) {
+        Write-Host '[OK] Dashboard files found'
+    } else {
+        Write-Error "Dashboard data not found. Re-download the repo or run 'git pull'"
+        exit 1
+    }
 }
 
 # Start server on free port if not already up
 if (-not $serverReady) {
     $activePort = Find-FreePort 8765
     Write-Host "Starting server on port $activePort..."
+    
+    # Ensure port file directory exists
+    $portFileDir = Split-Path $portFile -Parent
+    if (-not (Test-Path $portFileDir)) { New-Item -ItemType Directory -Path $portFileDir -Force | Out-Null }
     [System.IO.File]::WriteAllText($portFile, "$activePort", [System.Text.Encoding]::ASCII)
 
+    # Start the serve_dashboard.py script (it handles serving from correct dir)
     Start-Process -FilePath $python `
-        -ArgumentList $serverScript, $outputDir, $activePort `
+        -ArgumentList $serverScript `
         -WorkingDirectory $workdir `
         -WindowStyle Hidden
 

@@ -15,21 +15,61 @@ from pathlib import Path
 
 
 def get_desktop_path():
-    """Get the actual Desktop path (handles OneDrive redirection)."""
-    # Use PowerShell to get the real Desktop path
-    result = subprocess.run(
-        ["powershell", "-Command", "[Environment]::GetFolderPath('Desktop')"],
-        capture_output=True,
-        text=True
-    )
-    if result.returncode == 0 and result.stdout.strip():
-        return Path(result.stdout.strip())
+    """Get the actual Desktop path (handles OneDrive redirection on Windows)."""
+    if sys.platform == 'darwin':  # macOS
+        return Path.home() / "Desktop"
+    elif sys.platform == 'win32':  # Windows
+        # Use PowerShell to get the real Desktop path
+        result = subprocess.run(
+            ["powershell", "-Command", "[Environment]::GetFolderPath('Desktop')"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return Path(result.stdout.strip())
     # Fallback
-    return Path(os.environ.get("USERPROFILE", "~")) / "Desktop"
+    return Path(os.environ.get("USERPROFILE", os.environ.get("HOME", "~"))) / "Desktop"
 
 
 def create_desktop_shortcut():
     """Create a desktop shortcut for VUES Dashboard."""
+    if sys.platform == 'darwin':
+        return create_mac_shortcut()
+    else:
+        return create_windows_shortcut()
+
+
+def create_mac_shortcut():
+    """Create a .command file on Mac desktop."""
+    repo_root = Path(__file__).parent.parent.resolve()
+    target_script = repo_root / "tools" / "serve_dashboard.py"
+    desktop = get_desktop_path()
+    shortcut_path = desktop / "VUES Dashboard.command"
+    
+    # Find python3
+    python_exe = sys.executable
+    
+    # Create the .command shell script
+    script_content = f'''#!/bin/bash
+# VUES Dashboard Launcher
+cd "{repo_root}"
+"{python_exe}" "{target_script}"
+'''
+    
+    try:
+        shortcut_path.write_text(script_content)
+        # Make it executable
+        os.chmod(shortcut_path, 0o755)
+        print("  [OK] Desktop shortcut created!")
+        print("       Location:", shortcut_path)
+        return True
+    except OSError as e:
+        print(f"  [FAIL] Failed to create shortcut: {e}")
+        return False
+
+
+def create_windows_shortcut():
+    """Create a .lnk shortcut on Windows desktop."""
     
     # Get paths
     repo_root = Path(__file__).parent.parent.resolve()

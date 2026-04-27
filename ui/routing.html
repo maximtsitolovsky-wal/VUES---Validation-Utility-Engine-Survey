@@ -938,25 +938,26 @@ async function loadData() {
     });
     
     // Split into categories - COMPLETED first (Column V = true)
-    completeData = allData.filter(r => r.survey_complete === true);
-    const notComplete = allData.filter(r => r.survey_complete !== true);
+    // But respect manual section_override if set
+    completeData = allData.filter(r => r.section_override === 'complete' || (r.survey_complete === true && !r.section_override));
+    const notComplete = allData.filter(r => r.section_override !== 'complete' && (r.survey_complete !== true || r.section_override));
     
     // No Survey Needed - full upgrade, no survey required
-    noSurveyData = notComplete.filter(r => r.survey_required === 'NO');
-    const needsSurvey = notComplete.filter(r => r.survey_required !== 'NO');
+    noSurveyData = notComplete.filter(r => r.section_override === 'nosurvey' || (r.survey_required === 'NO' && !r.section_override));
+    const needsSurvey = notComplete.filter(r => r.section_override !== 'nosurvey' && (r.survey_required !== 'NO' || r.section_override));
     
     // Awaiting Scout - no scout submission yet
-    scoutData = needsSurvey.filter(r => r.reason_for_decision?.includes('No scout submission'));
-    const hasScout = needsSurvey.filter(r => !r.reason_for_decision?.includes('No scout submission'));
+    scoutData = needsSurvey.filter(r => r.section_override === 'scout' || (r.reason_for_decision?.includes('No scout submission') && !r.section_override));
+    const hasScout = needsSurvey.filter(r => r.section_override !== 'scout' && (!r.reason_for_decision?.includes('No scout submission') || r.section_override));
     
     // CCTV: only CCTV survey type
-    cctvData = hasScout.filter(r => r.survey_type === 'CCTV');
+    cctvData = hasScout.filter(r => r.section_override === 'cctv' || (r.survey_type === 'CCTV' && !r.section_override));
     // FA: only FA/INTRUSION survey type
-    faData = hasScout.filter(r => r.survey_type === 'FA/INTRUSION');
+    faData = hasScout.filter(r => r.section_override === 'fa' || (r.survey_type === 'FA/INTRUSION' && !r.section_override));
     // Both Surveys: survey_type is BOTH
-    upgradeData = hasScout.filter(r => r.survey_type === 'BOTH');
+    upgradeData = hasScout.filter(r => r.section_override === 'upgrade' || (r.survey_type === 'BOTH' && !r.section_override));
     // Needs Review: survey_type is REVIEW (actual ambiguous cases)
-    reviewData = hasScout.filter(r => r.survey_type === 'REVIEW' || r.survey_type === 'NONE');
+    reviewData = hasScout.filter(r => r.section_override === 'review' || ((r.survey_type === 'REVIEW' || r.survey_type === 'NONE') && !r.section_override));
     
     // Update global stats
     updateGlobalStats();

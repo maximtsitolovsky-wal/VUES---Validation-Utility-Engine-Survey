@@ -99,9 +99,12 @@
       animation: rowIn 0.3s ease-out backwards;
     }
     .row:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
-    .row.status-complete { border-left: 3px solid var(--green); }
-    .row.status-inprogress { border-left: 3px solid var(--yellow); }
-    .row.status-pending { border-left: 3px solid var(--muted-fg); }
+    .row.status-not-begun { border-left: 3px solid var(--muted-fg); }
+    .row.status-scout-in-progress { border-left: 3px solid var(--purple); }
+    .row.status-scout-completed { border-left: 3px solid var(--blue); }
+    .row.status-survey-needs-assignment { border-left: 3px solid var(--orange); }
+    .row.status-survey-in-progress { border-left: 3px solid var(--yellow); }
+    .row.status-survey-completed { border-left: 3px solid var(--green); }
 
     @keyframes rowIn {
       from { opacity: 0; transform: translateX(-20px); }

@@ -82,6 +82,8 @@
     .table-header.fa-grid, .row.fa-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.upgrade-grid, .row.upgrade-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.review-grid, .row.review-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.scout-grid, .row.scout-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.complete-grid, .row.complete-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
 
     .table-body { display: flex; flex-direction: column; gap: 8px; }
 
@@ -223,6 +225,8 @@
     .tab.active.tab-fa { border-bottom: 3px solid var(--red); }
     .tab.active.tab-upgrade { border-bottom: 3px solid var(--yellow); }
     .tab.active.tab-review { border-bottom: 3px solid var(--orange); }
+    .tab.active.tab-scout { border-bottom: 3px solid var(--purple); }
+    .tab.active.tab-complete { border-bottom: 3px solid var(--green); }
     .tab-icon { font-size: 24px; }
     .tab-label { font-size: 13px; font-weight: 600; }
     .tab-counts { display: flex; gap: 12px; font-size: 12px; }
@@ -349,11 +353,27 @@
             </div>
           </div>
           <div class="legend-item">
+            <span class="legend-icon">📋</span>
+            <div class="legend-text">
+              <div class="legend-label">Awaiting Scout</div>
+              <div class="legend-desc">No Scout submission yet — needs Scout first</div>
+              <code class="legend-code">reason = "No scout submission"</code>
+            </div>
+          </div>
+          <div class="legend-item">
             <span class="legend-icon">⚠️</span>
             <div class="legend-text">
               <div class="legend-label">Needs Review</div>
-              <div class="legend-desc">Can't auto-decide — needs human review</div>
-              <code class="legend-code">survey_type = "REVIEW"</code>
+              <div class="legend-desc">Ambiguous — needs human decision</div>
+              <code class="legend-code">survey_type = "REVIEW" (not awaiting scout)</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">✅</span>
+            <div class="legend-text">
+              <div class="legend-label">Completed</div>
+              <div class="legend-desc">Column V marked complete in Excel</div>
+              <code class="legend-code">survey_complete = true</code>
             </div>
           </div>
         </div>
@@ -394,6 +414,20 @@
         <div class="tab-counts">
           <span class="tab-count total"><span class="num" id="reviewTotal">0</span> total</span>
           <span class="tab-count done"><span class="num" id="reviewDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-scout" onclick="switchTab('scout')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Awaiting Scout</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="scoutTotal">0</span> total</span>
+        </div>
+      </button>
+      <button class="tab tab-complete" onclick="switchTab('complete')">
+        <span class="tab-icon">✅</span>
+        <span class="tab-label">Completed</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="completeTotal">0</span> total</span>
         </div>
       </button>
     </div>

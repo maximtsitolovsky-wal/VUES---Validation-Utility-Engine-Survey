@@ -81,6 +81,7 @@
     .table-header.cctv-grid, .row.cctv-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.fa-grid, .row.fa-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
     .table-header.upgrade-grid, .row.upgrade-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.review-grid, .row.review-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
 
     .table-body { display: flex; flex-direction: column; gap: 8px; }
 
@@ -503,12 +504,12 @@
     <div class="table-body" id="faBody"></div>
   </div>
 
-  <!-- Full Upgrades Section -->
+  <!-- Both Surveys Section -->
   <div class="section-card" id="upgradeSection">
     <div class="section-header">
       <div class="section-title">
         <span class="icon">⚡</span>
-        Full Upgrades
+        Both Surveys Required
       </div>
       <div class="section-pills">
         <span class="pill pill-yellow" id="upgradeCount">0</span>
@@ -523,12 +524,6 @@
           <option value="Wachter">Wachter</option>
           <option value="Techwise">Techwise</option>
           <option value="SAS">SAS</option>
-        </select>
-        <select id="upgradeType" onchange="renderTables()">
-          <option value="">All Types</option>
-          <option value="CCTV">CCTV Only</option>
-          <option value="FA">FA Only</option>
-          <option value="BOTH">Both</option>
         </select>
         <select id="upgradeStatus" onchange="renderTables()">
           <option value="">All Status</option>
@@ -551,6 +546,50 @@
       <div>Actions</div>
     </div>
     <div class="table-body" id="upgradeBody"></div>
+  </div>
+
+  <!-- Needs Review Section -->
+  <div class="section-card" id="reviewSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">⚠️</span>
+        Needs Review
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-red" id="reviewCount">0</span>
+        <span class="pill pill-green" id="reviewComplete">0 Done</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="reviewSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="reviewVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <select id="reviewStatus" onchange="renderTables()">
+          <option value="">All Status</option>
+          <option value="complete">Complete</option>
+          <option value="inprogress">In Progress</option>
+          <option value="pending">Pending</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('review')">Export</button>
+      </div>
+    </div>
+    <div class="table-header review-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="reviewBody"></div>
   </div>
 
   <!-- Edit Modal -->

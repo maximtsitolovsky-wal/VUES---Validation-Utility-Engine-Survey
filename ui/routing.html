@@ -462,19 +462,14 @@
   <!-- Summary Bar -->
   <div class="summary-bar">
     <div class="summary-item">
-      <span class="summary-dot" style="background: var(--muted-fg);"></span>
-      <span class="summary-value" id="statNotBegun">0</span>
-      <span>Not Begun</span>
-    </div>
-    <div class="summary-item">
       <span class="summary-dot" style="background: var(--purple);"></span>
       <span class="summary-value" id="statScoutIP">0</span>
       <span>Scout IP</span>
     </div>
     <div class="summary-item">
-      <span class="summary-dot" style="background: var(--orange);"></span>
-      <span class="summary-value" id="statNeedsAssign">0</span>
-      <span>Needs Assign</span>
+      <span class="summary-dot" style="background: var(--blue);"></span>
+      <span class="summary-value" id="statScoutDone">0</span>
+      <span>Scout Done</span>
     </div>
     <div class="summary-item">
       <span class="summary-dot" style="background: var(--yellow);"></span>
@@ -969,15 +964,13 @@ function updateGlobalStats() {
   document.getElementById('completeTotal').textContent = completeData.length;
   
   // Global status counts for summary bar
-  const statNotBegun = allData.filter(r => getStatus(r) === 'not-begun').length;
   const statScoutIP = allData.filter(r => getStatus(r) === 'scout-in-progress').length;
-  const statNeedsAssign = allData.filter(r => getStatus(r) === 'survey-needs-assignment').length;
+  const statScoutDone = allData.filter(r => getStatus(r) === 'scout-completed').length;
   const statSurveyIP = allData.filter(r => getStatus(r) === 'survey-in-progress').length;
   const statCompleted = allData.filter(r => getStatus(r) === 'survey-completed').length;
   
-  document.getElementById('statNotBegun').textContent = statNotBegun;
   document.getElementById('statScoutIP').textContent = statScoutIP;
-  document.getElementById('statNeedsAssign').textContent = statNeedsAssign;
+  document.getElementById('statScoutDone').textContent = statScoutDone;
   document.getElementById('statSurveyIP').textContent = statSurveyIP;
   document.getElementById('statCompleted').textContent = statCompleted;
 }
@@ -1005,14 +998,13 @@ function getStatus(row) {
   // Check if scout submission exists (not "No scout submission")
   const hasScout = !row.reason_for_decision?.includes('No scout submission');
   
-  if (!hasScout) return 'not-begun';  // No scout submission yet
+  if (!hasScout) return 'scout-in-progress';  // No submission yet = scout in progress (assigned out)
   
-  // Has scout data - check further
+  // Has scout data = scout completed, now check survey status
   if (row.vues_submitted === true) return 'survey-in-progress';  // VUES submission = survey in progress
-  if (row.scout_submitted === true) return 'survey-needs-assignment';  // Scout done, needs survey assignment
   
-  // Has scout data but no explicit tracking = scout in progress
-  return 'scout-in-progress';
+  // Scout done, survey not started = needs assignment
+  return 'scout-completed';
 }
 
 function getStatusLabel(status) {

@@ -1080,10 +1080,10 @@ async function loadData() {
 
 function updateGlobalStats() {
   // Per-tab counts (only count done for active survey tabs, not scout/complete)
-  const cctvComplete = cctvData.filter(r => getStatus(r) === 'complete').length;
-  const faComplete = faData.filter(r => getStatus(r) === 'complete').length;
-  const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'complete').length;
-  const reviewComplete = reviewData.filter(r => getStatus(r) === 'complete').length;
+  const cctvComplete = cctvData.filter(r => getStatus(r) === 'survey-completed').length;
+  const faComplete = faData.filter(r => getStatus(r) === 'survey-completed').length;
+  const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'survey-completed').length;
+  const reviewComplete = reviewData.filter(r => getStatus(r) === 'survey-completed').length;
   
   document.getElementById('cctvTotal').textContent = cctvData.length;
   document.getElementById('cctvDone').textContent = cctvComplete;
@@ -1226,7 +1226,7 @@ function renderTables() {
   console.log('[VUES] renderTables() called - cctvData:', cctvData?.length, 'faData:', faData?.length, 'reviewData:', reviewData?.length);
   // CCTV
   const cctvFiltered = filterData(cctvData, 'cctvSearch', 'cctvVendor', 'cctvStatus');
-  const cctvDone = cctvFiltered.filter(r => getStatus(r) === 'complete').length;
+  const cctvDone = cctvFiltered.filter(r => getStatus(r) === 'survey-completed').length;
   document.getElementById('cctvCount').textContent = cctvFiltered.length;
   document.getElementById('cctvComplete').textContent = `${cctvDone} Done`;
   document.getElementById('cctvBody').innerHTML = cctvFiltered.length 
@@ -1235,7 +1235,7 @@ function renderTables() {
   
   // FA
   const faFiltered = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
-  const faDone = faFiltered.filter(r => getStatus(r) === 'complete').length;
+  const faDone = faFiltered.filter(r => getStatus(r) === 'survey-completed').length;
   document.getElementById('faCount').textContent = faFiltered.length;
   document.getElementById('faComplete').textContent = `${faDone} Done`;
   document.getElementById('faBody').innerHTML = faFiltered.length
@@ -1244,7 +1244,7 @@ function renderTables() {
   
   // Both Surveys
   const upgradeFiltered = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
-  const upgradeDone = upgradeFiltered.filter(r => getStatus(r) === 'complete').length;
+  const upgradeDone = upgradeFiltered.filter(r => getStatus(r) === 'survey-completed').length;
   document.getElementById('upgradeCount').textContent = upgradeFiltered.length;
   document.getElementById('upgradeComplete').textContent = `${upgradeDone} Done`;
   document.getElementById('upgradeBody').innerHTML = upgradeFiltered.length
@@ -1260,7 +1260,7 @@ function renderTables() {
   
   // Needs Review
   const reviewFiltered = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
-  const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'complete').length;
+  const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'survey-completed').length;
   document.getElementById('reviewCount').textContent = reviewFiltered.length;
   document.getElementById('reviewComplete').textContent = `${reviewDone} Done`;
   document.getElementById('reviewBody').innerHTML = reviewFiltered.length

@@ -33,6 +33,21 @@ if scout.get("error"):
 print("Rebuilding executive dashboard HTML...")
 refresh_dashboards(output_dir)
 
+# Auto-publish to viewers (copy to ui/ + bake HTML + git push)
+print("Publishing to viewers...")
+import subprocess
+repo_root = Path(__file__).parent.parent
+publish_script = repo_root / "tools" / "publish_viewer_data.py"
+if publish_script.exists():
+    result = subprocess.run(
+        [sys.executable, str(publish_script)],
+        cwd=repo_root, capture_output=True, text=True, timeout=60
+    )
+    if result.returncode == 0:
+        print("  [OK] Viewers will get latest data on next launch")
+    else:
+        print(f"  [WARN] Publish failed: {result.stderr[:200]}")
+
 print("Starting / verifying dashboard server...")
 ensure_dashboard_server(output_dir)
 url = get_dashboard_url(output_dir)

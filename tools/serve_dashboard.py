@@ -28,7 +28,10 @@ def find_free_port():
 
 
 def is_server_running(output_dir: Path) -> int | None:
-    """Check if server is already running. Returns port if running, None otherwise."""
+    """Check if server is already running AND serving our dashboard.
+    
+    Returns port if running with valid data, None otherwise.
+    """
     port_file = output_dir / PORT_FILE
     if not port_file.exists():
         return None
@@ -38,11 +41,29 @@ def is_server_running(output_dir: Path) -> int | None:
         # Check if something is actually listening
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(0.3)
-            if s.connect_ex(('127.0.0.1', port)) == 0:
-                return port  # Server is running
+            if s.connect_ex(('127.0.0.1', port)) != 0:
+                return None  # Not listening
+        
+        # Verify it's actually serving our dashboard (not some other app)
+        import urllib.request
+        try:
+            req = urllib.request.Request(
+                f'http://127.0.0.1:{port}/team_dashboard_data.json',
+                method='HEAD'
+            )
+            with urllib.request.urlopen(req, timeout=1) as resp:
+                if resp.status == 200:
+                    return port
+        except Exception:
+            pass
     except (ValueError, OSError):
         pass
     
+    # Stale or wrong server - remove the file
+    try:
+        port_file.unlink(missing_ok=True)
+    except OSError:
+        pass
     return None
 
 

@@ -93,8 +93,48 @@ def check_data_files():
         return True
     else:
         print("  [WARN] No dashboard data found!")
-        print("         Try: git pull (or re-download the ZIP)")
+        print("         Run: git pull")
         return False
+
+
+def check_git_setup():
+    """Check that git is installed and this is a git clone."""
+    repo_root = Path(__file__).parent.parent.resolve()
+    git_dir = repo_root / ".git"
+    
+    # Check if .git folder exists
+    if not git_dir.exists():
+        print("  [ERROR] This is not a Git clone!")
+        print("")
+        print("  You downloaded a ZIP file. Please use Git instead:")
+        print("")
+        print("    1. Install Git: https://git-scm.com/download/win")
+        print("    2. Open PowerShell and run:")
+        print("       git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git")
+        print("       cd VUES---Validation-Utility-Engine-Survey")
+        print("       python tools/install.py")
+        print("")
+        print("  Git is required for auto-updates. The dashboard")
+        print("  auto-syncs with admin's data every time you launch it.")
+        print("")
+        return False
+    
+    # Check if git command works
+    result = subprocess.run(
+        ["git", "--version"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print("  [ERROR] Git is not installed!")
+        print("")
+        print("  Install Git from: https://git-scm.com/download/win")
+        print("  Then restart PowerShell and run: python tools/install.py")
+        print("")
+        return False
+    
+    print("  [OK] Git clone detected - auto-updates enabled")
+    return True
 
 
 def install_dependencies():

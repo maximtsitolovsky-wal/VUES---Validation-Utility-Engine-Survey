@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VUES Fallback Logic Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #0a0e1a; color: #e0e0e0; }
+    .test { margin: 15px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+    .pass { background: #1a3a1a; border-color: #2a5a2a; }
+    .fail { background: #3a1a1a; border-color: #5a2a2a; }
+    .pending { background: #1a1a3a; border-color: #2a2a5a; }
+    h1 { color: #5AE4FF; }
+    h2 { color: #9B7CFF; font-size: 14px; margin: 0 0 10px 0; }
+    pre { background: #000; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    .status { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🧪 VUES Fetch-First-Fallback Logic Test</h1>
+  
+  <div id="test1" class="test pending">
+    <h2>Test 1: Fetch from Live Server (ui/ directory, should succeed)</h2>
+    <div class="status">⏳ Testing...</div>
+    <pre id="test1-log"></pre>
+  </div>
+  
+  <div id="test2" class="test pending">
+    <h2>Test 2: Fetch with Bad URL (should fallback to embedded data)</h2>
+    <div class="status">⏳ Testing...</div>
+    <pre id="test2-log"></pre>
+  </div>
+  
+  <div id="test3" class="test pending">
+    <h2>Test 3: Verify Fallback Data Exists</h2>
+    <div class="status">⏳ Testing...</div>
+    <pre id="test3-log"></pre>
+  </div>
+
+<script>
+  function log(testId, msg) {
+    const el = document.getElementById(testId + '-log');
+    el.textContent += msg + '\n';
+  }
+  
+  function pass(testId) {
+    const el = document.getElementById(testId);
+    el.className = 'test pass';
+    el.querySelector('.status').innerHTML = '✅ PASS';
+  }
+  
+  function fail(testId, reason) {
+    const el = document.getElementById(testId);
+    el.className = 'test fail';
+    el.querySelector('.status').innerHTML = '❌ FAIL: ' + reason;
+  }
+  
+  // Test 1: Normal fetch
+  async function test1() {
+    try {
+      log('test1', 'Fetching team_dashboard_data.json...');
+      const resp = await fetch('team_dashboard_data.json');
+      log('test1', 'Response status: ' + resp.status);
+      
+      if (!resp.ok) {
+        fail('test1', 'HTTP ' + resp.status);
+        return;
+      }
+      
+      const data = await resp.json();
+      log('test1', 'Parsed JSON successfully');
+      log('test1', 'Scout records: ' + (data.scout?.records?.length || 0));
+      log('test1', 'Vendor assignments: ' + (data.vendor_assignments?.vendors?.length || 0));
+      
+      if (data.scout && data.scout.records) {
+        pass('test1');
+      } else {
+        fail('test1', 'Missing scout data in response');
+      }
+    } catch (err) {
+      log('test1', 'Error: ' + err.message);
+      fail('test1', err.message);
+    }
+  }
+  
+  // Test 2: Fetch with bad URL (triggers fallback)
+  async function test2() {
+    try {
+      log('test2', 'Fetching from non-existent URL...');
+      const resp = await fetch('http://localhost:99999/team_dashboard_data.json');
+      
+      log('test2', 'Response status: ' + resp.status);
+      log('test2', 'Response ok: ' + resp.ok);
+      
+      const data = await resp.json();
+      log('test2', 'Got data from: ' + (window.VUES_BAKED_VERSION ? 'FALLBACK' : 'unknown'));
+      log('test2', 'Scout records: ' + (data.scout?.records?.length || 0));
+      
+      if (data.scout && data.scout.records && data.scout.records.length > 0) {
+        pass('test2');
+      } else {
+        fail('test2', 'Fallback data missing or empty');
+      }
+    } catch (err) {
+      log('test2', 'Error: ' + err.message);
+      fail('test2', 'Fallback mechanism failed: ' + err.message);
+    }
+  }
+  
+  // Test 3: Check fallback data exists
+  function test3() {
+    log('test3', 'Checking for embedded fallback data...');
+    
+    if (window.TEAM_DASHBOARD_DATA_FALLBACK) {
+      log('test3', '✓ TEAM_DASHBOARD_DATA_FALLBACK exists');
+      const scout = window.TEAM_DASHBOARD_DATA_FALLBACK.scout;
+      if (scout) {
+        log('test3', '✓ Scout data: ' + (scout.records?.length || 0) + ' records');
+        log('test3', '✓ Completion: ' + (scout.completed || 0) + '/' + (scout.excel_total || 0));
+      }
+      pass('test3');
+    } else {
+      log('test3', '✗ No TEAM_DASHBOARD_DATA_FALLBACK found');
+      log('test3', 'Available globals: ' + Object.keys(window).filter(k => k.includes('DATA')).join(', '));
+      fail('test3', 'Fallback data not embedded in HTML');
+    }
+    
+    if (window.VUES_BAKED_VERSION) {
+      log('test3', '✓ Baked version: ' + window.VUES_BAKED_VERSION);
+    }
+  }
+  
+  // Run tests
+  setTimeout(() => {
+    test3();
+    test1().then(() => {
+      setTimeout(() => test2(), 1000);
+    });
+  }, 500);
+</script>
+</body>
+</html>

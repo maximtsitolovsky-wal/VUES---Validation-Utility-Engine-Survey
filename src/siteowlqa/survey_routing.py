@@ -515,6 +515,7 @@ def build_survey_routing_data(
     # Calculate summary stats
     total = len(rows)
     surveys_required = sum(1 for r in rows if r["survey_required"] == "YES")
+    surveys_complete = sum(1 for r in rows if r["survey_complete"])
     full_upgrades = sum(1 for r in rows if "FULL" in r["upgrade_decision"])
     review_required = sum(1 for r in rows if r["survey_required"] == "REVIEW")
     urgent_sites = sum(1 for r in rows if r["schedule_status"] == "URGENT")
@@ -538,6 +539,7 @@ def build_survey_routing_data(
         "summary": {
             "total_sites": total,
             "surveys_required": surveys_required,
+            "surveys_complete": surveys_complete,
             "cctv_surveys": cctv_surveys,
             "fa_surveys": fa_surveys,
             "both_surveys": both_surveys,

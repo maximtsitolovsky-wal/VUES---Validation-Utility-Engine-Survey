@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""dev.py — Local hot-reload launcher for VUES.
+"""dev.py - Local hot-reload launcher for VUES.
 
 Mirrors the Docker Compose Watch + watchmedo setup, but runs natively on
 Windows.  When any .py file in src/, tools/, or prompts/ changes, the
 running pipeline is killed and restarted automatically.
 
 Usage:
-    python dev.py              # default — watches src/, tools/, prompts/
+    python dev.py              # default: watches src/, tools/, prompts/
     python dev.py --no-git     # skip launching git-autopush alongside
 
-Under the hood this is just a thin wrapper around `watchmedo auto-restart`
+Under the hood this is just a thin wrapper around 'watchmedo auto-restart'
 (from the watchdog package, already in requirements.txt).
 
 Hot-reload matrix (local):
-    src/**/*.py       → auto-restart main.py
-    tools/**/*.py     → auto-restart main.py
-    prompts/**        → auto-restart main.py
-    .env / main.py    → auto-restart main.py  (watchmedo watches main.py's dir)
-    ui/**             → dashboard server serves with no-cache + live-reload
-    pyproject.toml    → you need to re-install deps manually
+    src/**/*.py       -> auto-restart main.py
+    tools/**/*.py     -> auto-restart main.py
+    prompts/**        -> auto-restart main.py
+    .env / main.py    -> auto-restart main.py  (watchmedo watches main.py dir)
+    ui/**             -> dashboard server serves with no-cache + live-reload
+    pyproject.toml    -> you need to re-install deps manually
 
 For Docker development, use:  docker compose watch
 """
@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -37,19 +36,19 @@ _VENV_PYTHON = _ROOT / ".venv" / "Scripts" / "python.exe"
 _PYTHON = str(_VENV_PYTHON if _VENV_PYTHON.exists() else Path(sys.executable))
 _WATCHMEDO = _ROOT / ".venv" / "Scripts" / "watchmedo.exe"
 
-_BANNER = r"""
- ╔═══════════════════════════════════════════════╗
- ║  VUES -- Hot-Reload Development Mode           ║
- ║  Watching: src/  tools/  prompts/             ║
- ║  Auto-restart on any .py / prompt change      ║
- ║  Dashboard: live-reload enabled (auto F5)     ║
- ║  Press Ctrl+C to stop                         ║
- ╚═══════════════════════════════════════════════╝
+_BANNER = """
+ +===============================================+
+ |  VUES -- Hot-Reload Development Mode          |
+ |  Watching: src/  tools/  prompts/             |
+ |  Auto-restart on any .py / prompt change      |
+ |  Dashboard: live-reload enabled (auto F5)     |
+ |  Press Ctrl+C to stop                         |
+ +===============================================+
 """
 
 
 def _resolve_watchmedo() -> str:
-    """Find the watchmedo executable — venv first, then PATH."""
+    """Find the watchmedo executable -- venv first, then PATH."""
     if _WATCHMEDO.exists():
         return str(_WATCHMEDO)
     # Fall back to running it as a Python module
@@ -101,8 +100,15 @@ def _launch_git_autopush() -> subprocess.Popen | None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--no-git", action="store_true", help="Don't launch git-autopush alongside")
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--no-git",
+        action="store_true",
+        help="Don't launch git-autopush alongside",
+    )
     args = parser.parse_args()
 
     # Enable live-reload in the dashboard server via environment variable.

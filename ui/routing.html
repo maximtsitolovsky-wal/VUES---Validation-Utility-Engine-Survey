@@ -319,7 +319,7 @@
             <span class="legend-icon">📹</span>
             <div class="legend-text">
               <div class="legend-label">CCTV Surveys</div>
-              <div class="legend-desc">Sites needing CCTV survey only</div>
+              <div class="legend-desc">CCTV survey needed (FA may be getting full upgrade)</div>
               <code class="legend-code">survey_type = "CCTV"</code>
             </div>
           </div>
@@ -327,16 +327,24 @@
             <span class="legend-icon">🔔</span>
             <div class="legend-text">
               <div class="legend-label">FA/Intrusion Surveys</div>
-              <div class="legend-desc">Sites needing FA/Intrusion survey only</div>
+              <div class="legend-desc">FA survey needed (CCTV may be getting full upgrade)</div>
               <code class="legend-code">survey_type = "FA/INTRUSION"</code>
             </div>
           </div>
           <div class="legend-item">
             <span class="legend-icon">⚡</span>
             <div class="legend-text">
-              <div class="legend-label">Full Upgrades</div>
-              <div class="legend-desc">Sites needing both surveys OR full system upgrade</div>
-              <code class="legend-code">survey_type = "BOTH" OR upgrade_decision contains "FULL"</code>
+              <div class="legend-label">Both Surveys</div>
+              <div class="legend-desc">Site needs BOTH CCTV and FA/Intrusion surveys</div>
+              <code class="legend-code">survey_type = "BOTH"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">⚠️</span>
+            <div class="legend-text">
+              <div class="legend-label">Needs Review</div>
+              <div class="legend-desc">Can't auto-decide — needs human review</div>
+              <code class="legend-code">survey_type = "REVIEW"</code>
             </div>
           </div>
         </div>
@@ -364,6 +372,23 @@
         </div>
       </button>
       <button class="tab tab-upgrade" onclick="switchTab('upgrade')">
+        <span class="tab-icon">⚡</span>
+        <span class="tab-label">Both Surveys</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="upgradeTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="upgradeDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-review" onclick="switchTab('review')">
+        <span class="tab-icon">⚠️</span>
+        <span class="tab-label">Needs Review</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="reviewTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="reviewDone">0</span> done</span>
+        </div>
+      </button>
+    </div>
+  </div>('upgrade')">
         <span class="tab-icon">⚡</span>
         <span class="tab-label">Full Upgrades</span>
         <div class="tab-counts">

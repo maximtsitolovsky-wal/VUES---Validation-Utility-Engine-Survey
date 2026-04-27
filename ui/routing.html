@@ -462,24 +462,29 @@
   <!-- Summary Bar -->
   <div class="summary-bar">
     <div class="summary-item">
+      <span class="summary-dot" style="background: var(--muted-fg);"></span>
+      <span class="summary-value" id="statNotBegun">0</span>
+      <span>Not Begun</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--purple);"></span>
+      <span class="summary-value" id="statScoutIP">0</span>
+      <span>Scout IP</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--orange);"></span>
+      <span class="summary-value" id="statNeedsAssign">0</span>
+      <span>Needs Assign</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--yellow);"></span>
+      <span class="summary-value" id="statSurveyIP">0</span>
+      <span>Survey IP</span>
+    </div>
+    <div class="summary-item">
       <span class="summary-dot green"></span>
-      <span class="summary-value" id="totalComplete">0</span>
+      <span class="summary-value" id="statCompleted">0</span>
       <span>Completed</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-dot yellow"></span>
-      <span class="summary-value" id="totalInProgress">0</span>
-      <span>In Progress</span>
-    </div>
-    <div class="summary-item" style="margin-left: auto;">
-      <span class="summary-dot purple"></span>
-      <span>Scout:</span>
-      <span class="summary-value" id="scoutSubmitted">0</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-dot cyan"></span>
-      <span>VUES:</span>
-      <span class="summary-value" id="vuesSubmitted">0</span>
     </div>
   </div>
 
@@ -952,17 +957,18 @@ function updateGlobalStats() {
   document.getElementById('scoutTotal').textContent = scoutData.length;
   document.getElementById('completeTotal').textContent = completeData.length;
   
-  // Global counts (across non-complete sites)
-  const activeSites = [...cctvData, ...faData, ...upgradeData, ...reviewData];
-  const complete = activeSites.filter(r => r.status === 'complete').length;
-  const inProgress = activeSites.filter(r => r.status === 'inprogress').length;
-  const scoutSub = allData.filter(r => r.scout_submitted).length;
-  const vuesSub = allData.filter(r => r.vues_submitted).length;
+  // Global status counts for summary bar
+  const statNotBegun = allData.filter(r => getStatus(r) === 'not-begun').length;
+  const statScoutIP = allData.filter(r => getStatus(r) === 'scout-in-progress').length;
+  const statNeedsAssign = allData.filter(r => getStatus(r) === 'survey-needs-assignment').length;
+  const statSurveyIP = allData.filter(r => getStatus(r) === 'survey-in-progress').length;
+  const statCompleted = allData.filter(r => getStatus(r) === 'survey-completed').length;
   
-  document.getElementById('totalComplete').textContent = complete;
-  document.getElementById('totalInProgress').textContent = inProgress;
-  document.getElementById('scoutSubmitted').textContent = scoutSub;
-  document.getElementById('vuesSubmitted').textContent = vuesSub;
+  document.getElementById('statNotBegun').textContent = statNotBegun;
+  document.getElementById('statScoutIP').textContent = statScoutIP;
+  document.getElementById('statNeedsAssign').textContent = statNeedsAssign;
+  document.getElementById('statSurveyIP').textContent = statSurveyIP;
+  document.getElementById('statCompleted').textContent = statCompleted;
 }
 
 function filterData(data, searchId, vendorId, statusId) {

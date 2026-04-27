@@ -1018,6 +1018,7 @@ function filterData(data, searchId, vendorId, statusId) {
 function getStatus(row) {
   // Auto-derive status from actual data
   if (row.survey_complete === true) return 'survey-completed';  // Column V = done
+  if (row.survey_required === 'NO') return 'survey-completed';  // No survey needed = done
   
   // Check if scout submission exists (not "No scout submission")
   const hasScout = !row.reason_for_decision?.includes('No scout submission');

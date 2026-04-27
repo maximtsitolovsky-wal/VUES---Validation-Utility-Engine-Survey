@@ -76,6 +76,14 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
     while pattern.search(content):
         content = pattern.sub('', content, count=1)
     
+    # Also remove previous fallback scripts
+    fallback_pattern = re.compile(
+        r'<script>\s*//\s*===\s*FALLBACK AUTO-RENDER.*?</script>',
+        re.DOTALL
+    )
+    while fallback_pattern.search(content):
+        content = fallback_pattern.sub('', content, count=1)
+    
     # Inject right before </head> (or </body> if no head)
     if '</head>' in content:
         content = content.replace('</head>', f'{inject_block}\n</head>', 1)
@@ -120,6 +128,54 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
         '// === END EMBEDDED DATA ===',
         f'// === END EMBEDDED DATA ==={fetch_polyfill}'
     )
+    
+    # Add fallback auto-render at end of body (in case polyfill doesn't fire)
+    fallback_render = """
+<script>
+// === FALLBACK AUTO-RENDER: directly use embedded data if fetch didn't work ===
+(function() {
+  function tryRender() {
+    var data = window.TEAM_DASHBOARD_DATA;
+    if (!data) { console.log('[VUES] No embedded data, skipping fallback'); return; }
+    
+    // Check if page still shows Loading... (means fetch/polyfill failed)
+    var body = document.body ? document.body.innerHTML : '';
+    if (body.indexOf('>Loading...<') === -1 && body.indexOf('>Loading vendor') === -1) {
+      console.log('[VUES] Data already rendered, skipping fallback');
+      return;
+    }
+    
+    console.log('[VUES] Fallback: directly rendering embedded data');
+    
+    // Try to call page-specific render functions
+    try {
+      if (typeof renderAll === 'function') {
+        var records = data.survey?.records || data.scout?.records || [];
+        renderAll(records);
+        console.log('[VUES] renderAll() called with', records.length, 'records');
+      }
+      if (typeof loadData === 'function') {
+        // loadData uses fetch internally, but polyfill should intercept
+        loadData();
+        console.log('[VUES] loadData() re-triggered');
+      }
+    } catch(e) {
+      console.error('[VUES] Fallback render error:', e);
+    }
+  }
+  
+  // Run after a delay to let page scripts initialize
+  if (document.readyState === 'complete') {
+    setTimeout(tryRender, 500);
+  } else {
+    window.addEventListener('load', function() { setTimeout(tryRender, 500); });
+  }
+})();
+</script>
+"""
+    # Inject fallback before </body>
+    if '</body>' in content:
+        content = content.replace('</body>', f'{fallback_render}</body>', 1)
     
     html_path.write_text(content, encoding='utf-8')
     return True

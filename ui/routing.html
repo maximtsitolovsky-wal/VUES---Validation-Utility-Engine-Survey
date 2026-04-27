@@ -646,10 +646,21 @@ function renderRow(row, index, type) {
   
   const gridClass = type === 'upgrade' ? 'upgrade-grid' : (type === 'cctv' ? 'cctv-grid' : 'fa-grid');
   
-  let extraCol = '';
+  // Determine requirement type badge
+  let reqTypeClass = 'cctv';
+  let reqTypeLabel = row.survey_type || 'SURVEY';
+  if (row.survey_type === 'FA/INTRUSION') reqTypeClass = 'fa';
+  else if (row.survey_type === 'BOTH') reqTypeClass = 'both';
+  else if (row.upgrade_decision?.includes('FULL')) reqTypeClass = 'upgrade';
+  
+  // For upgrades, show the upgrade decision as the label
   if (type === 'upgrade') {
-    extraCol = `<div style="font-size: 12px; color: var(--muted-fg);">${row.upgrade_decision}</div>`;
+    reqTypeLabel = row.upgrade_decision?.replace('FULL ', '').substring(0, 30) || 'UPGRADE';
   }
+  
+  // Truncate reason for display
+  const reason = row.reason_for_decision || '';
+  const shortReason = reason.length > 60 ? reason.substring(0, 57) + '...' : reason;
   
   return `
     <div class="row ${gridClass} status-${status}" style="animation-delay: ${delay}ms" data-site="${row.site}">
@@ -657,29 +668,25 @@ function renderRow(row, index, type) {
       <div>
         <div class="row-site">${row.site}</div>
       </div>
+      <div class="row-requirements">
+        <span class="req-type ${reqTypeClass}">${reqTypeLabel}</span>
+        ${shortReason ? `<div class="req-reason" title="${reason.replace(/"/g, '&quot;')}">${shortReason}</div>` : ''}
+      </div>
       <div class="row-vendor">${row.vendor || '—'}</div>
       <div class="row-days ${isUrgent ? 'urgent' : ''}">${days || '—'}</div>
-      ${type === 'upgrade' ? extraCol : ''}
       <div>
         <div class="status-badge ${status}" onclick="cycleStatus('${row.site}')" title="Click to change status">
-          ${status === 'complete' ? '✓ Complete' : status === 'inprogress' ? '◐ In Progress' : '○ Pending'}
+          ${status === 'complete' ? '✓' : status === 'inprogress' ? '◐' : '○'}
         </div>
       </div>
-      ${type !== 'upgrade' ? `
       <div>
         <div class="track-badge scout ${scoutChecked}" onclick="toggleTrack('${row.site}', 'scout')" title="Scout submitted">S</div>
       </div>
       <div>
         <div class="track-badge vues ${vuesChecked}" onclick="toggleTrack('${row.site}', 'vues')" title="VUES submitted">V</div>
       </div>
-      ` : `
-      <div class="track-badges">
-        <div class="track-badge scout ${scoutChecked}" onclick="toggleTrack('${row.site}', 'scout')" title="Scout">S</div>
-        <div class="track-badge vues ${vuesChecked}" onclick="toggleTrack('${row.site}', 'vues')" title="VUES">V</div>
-      </div>
-      `}
       <div>
-        <button class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;" onclick="openEditModal('${row.site}')">Edit</button>
+        <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;" onclick="openEditModal('${row.site}')">Edit</button>
       </div>
     </div>
   `;

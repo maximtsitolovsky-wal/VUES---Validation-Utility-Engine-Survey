@@ -100,7 +100,10 @@
     }
     .row:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
     .row.status-scout-in-progress { border-left: 3px solid var(--purple); }
-    .row.status-scout-completed { border-left: 3px solid var(--blue); }
+    .row.status-scout-completed { 
+      border-left: 3px solid transparent;
+      border-image: linear-gradient(180deg, var(--blue), var(--red)) 1;
+    }
     .row.status-survey-in-progress { border-left: 3px solid var(--yellow); }
     .row.status-survey-completed { border-left: 3px solid var(--green); }
 
@@ -993,15 +996,23 @@ function filterData(data, searchId, vendorId, statusId) {
   const vendor = document.getElementById(vendorId)?.value || '';
   const status = document.getElementById(statusId)?.value || '';
   
-  return data.filter(r => {
+  let filtered = data.filter(r => {
     if (search && !r.site.toLowerCase().includes(search)) return false;
     if (vendor && r.vendor !== vendor) return false;
-    if (status) {
-      const rowStatus = r.status || (r.survey_complete ? 'complete' : 'pending');
-      if (rowStatus !== status) return false;
-    }
+    if (status && getStatus(r) !== status) return false;
     return true;
   });
+  
+  // Apply days sorting
+  if (sortByDays) {
+    filtered.sort((a, b) => {
+      const daysA = parseInt(a.days_to_construction) || 9999;
+      const daysB = parseInt(b.days_to_construction) || 9999;
+      return sortByDays === 'asc' ? daysA - daysB : daysB - daysA;
+    });
+  }
+  
+  return filtered;
 }
 
 function getStatus(row) {

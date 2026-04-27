@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey Routing · VUES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090b; --card: #18181b; --card-border: rgba(255,255,255,0.08);
+      --muted: #27272a; --muted-fg: #a1a1aa;
+      --text: #fafafa; --text-soft: #a1a1aa;
+      --green: #22c55e; --yellow: #eab308; --red: #ef4444; --blue: #3b82f6;
+      --orange: #f97316; --purple: #a855f7; --cyan: #06b6d4;
+    }
+    html, body { min-height: 100vh; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.5; padding: 24px;
+    }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted-fg); text-decoration: none; transition: all 0.2s;
+    }
+    .back-btn:hover { background: var(--muted); color: var(--text); }
+    .back-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header-meta { color: var(--muted-fg); font-size: 14px; margin-left: 16px; }
+    .header-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+
+    /* Section Card */
+    .section-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 24px; margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .section-title { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+    .section-title .icon { font-size: 24px; }
+    .section-pills { display: flex; gap: 8px; }
+    .pill {
+      padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    }
+    .pill-blue { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--blue); }
+    .pill-green { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
+    .pill-red { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+    .pill-yellow { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow); }
+    .pill-purple { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); color: var(--purple); }
+    .pill-orange { background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3); color: var(--orange); }
+    .pill-cyan { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan); }
+    
+    .section-filters { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .section-filters input, .section-filters select {
+      background: var(--muted); border: 1px solid var(--card-border);
+      border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px;
+    }
+    .section-filters input { width: 120px; }
+    .section-filters select { min-width: 130px; cursor: pointer; }
+    .section-filters input:focus, .section-filters select:focus { outline: none; border-color: var(--blue); }
+
+    .btn {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      border: none; cursor: pointer; transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-ghost { background: transparent; border: 1px solid var(--card-border); color: var(--text); }
+    .btn-ghost:hover { background: var(--muted); }
+
+    /* Table */
+    .table-header {
+      display: grid; gap: 16px; padding: 12px 16px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted-fg);
+    }
+    .table-header.cctv-grid, .row.cctv-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.fa-grid, .row.fa-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.upgrade-grid, .row.upgrade-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.review-grid, .row.review-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.scout-grid, .row.scout-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.complete-grid, .row.complete-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.nosurvey-grid, .row.nosurvey-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+
+    .table-body { display: flex; flex-direction: column; gap: 8px; }
+
+    .row {
+      display: grid; gap: 16px; padding: 16px;
+      background: var(--muted); border: 1px solid var(--card-border);
+      border-radius: 12px; align-items: center;
+      transition: all 0.2s; cursor: pointer; position: relative;
+      animation: rowIn 0.3s ease-out backwards;
+    }
+    .row:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+    .row.status-scout-in-progress { border-left: 3px solid var(--purple); }
+    .row.status-scout-completed { 
+      border-left: 3px solid transparent;
+      border-image: linear-gradient(180deg, rgba(96,165,250,0.7), rgba(248,113,113,0.7)) 1;
+    }
+    .row.status-survey-in-progress { border-left: 3px solid var(--yellow); }
+    .row.status-survey-completed { border-left: 3px solid var(--green); }
+    .row.status-full-upgrade { border-left: 3px solid var(--cyan); }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .row-num { font-size: 16px; font-weight: 700; color: var(--muted-fg); }
+    .row-site { font-weight: 600; font-size: 14px; }
+    .row-vendor { color: var(--text-soft); font-size: 12px; }
+    .row-days { font-family: monospace; font-size: 13px; }
+    .row-days.urgent { color: var(--red); font-weight: 600; }
+
+    /* Requirements column */
+    .row-requirements { font-size: 12px; line-height: 1.4; }
+    .req-type {
+      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .req-type.cctv { background: rgba(59,130,246,0.2); color: var(--blue); }
+    .req-type.fa { background: rgba(239,68,68,0.2); color: var(--red); }
+    .req-type.both { background: rgba(168,85,247,0.2); color: var(--purple); }
+    .req-type.upgrade { background: rgba(234,179,8,0.2); color: var(--yellow); }
+    .req-type.review { background: rgba(249,115,22,0.2); color: var(--orange); }
+    .req-upgrade { 
+      font-size: 13px; font-weight: 600; color: var(--yellow); 
+      margin-top: 6px; padding: 3px 8px; 
+      background: rgba(234,179,8,0.1); border-radius: 4px;
+    }
+    .req-reason { color: var(--text-soft); font-size: 13px; margin-top: 6px; cursor: pointer; line-height: 1.4; }
+    .req-reason:hover { color: var(--text); text-decoration: underline; }
+
+    /* Status Badge - Clickable */
+    .status-badge {
+      padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; text-align: center;
+      user-select: none;
+    }
+    .status-badge:hover { transform: scale(1.05); }
+    .status-badge.scout-in-progress { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple); }
+    .status-badge.scout-completed { 
+      background: linear-gradient(90deg, rgba(96,165,250,0.3), rgba(248,113,113,0.3)); 
+      border: 1px solid rgba(168,85,247,0.3); 
+      color: var(--text);
+    }
+    .status-badge.survey-in-progress { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.4); color: var(--yellow); }
+    .status-badge.survey-completed { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
+    .status-badge.full-upgrade { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); color: var(--cyan); }
+
+    /* Submission Tracking */
+    .track-badges { display: flex; gap: 4px; }
+    .track-badge {
+      width: 28px; height: 28px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .track-badge:hover { transform: scale(1.1); }
+    .track-badge.scout { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple); }
+    .track-badge.scout.checked { background: var(--purple); color: white; }
+    .track-badge.vues { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); color: var(--cyan); }
+    .track-badge.vues.checked { background: var(--cyan); color: white; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 40px; color: var(--muted-fg); }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px); z-index: 100;
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 16px; width: 90%; max-width: 600px; max-height: 80vh;
+      overflow: hidden; animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--card-border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 600; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--muted); border: none; color: var(--text);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--red); }
+    .modal-body { padding: 24px; overflow-y: auto; max-height: 60vh; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted-fg); text-transform: uppercase; margin-bottom: 6px; }
+    .modal-field input, .modal-field select, .modal-field textarea {
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      background: var(--muted); border: 1px solid var(--card-border);
+      color: var(--text); font-size: 14px;
+    }
+    .modal-field textarea { min-height: 80px; resize: vertical; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 10px;
+      background: var(--green); color: white; font-weight: 500;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 200;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { background: var(--red); }
+
+    /* Tabs */
+    .tabs-container { margin-bottom: 24px; }
+    .tabs {
+      display: flex; gap: 8px; background: var(--card);
+      padding: 8px; border-radius: 16px; border: 1px solid var(--card-border);
+    }
+    .tab {
+      flex: 1; padding: 16px 20px; border-radius: 12px;
+      background: transparent; border: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: all 0.2s; color: var(--muted-fg);
+    }
+    .tab:hover { background: var(--muted); color: var(--text); }
+    .tab.active { background: var(--muted); color: var(--text); }
+    .tab.active.tab-cctv { border-bottom: 3px solid var(--blue); }
+    .tab.active.tab-fa { border-bottom: 3px solid var(--red); }
+    .tab.active.tab-upgrade { border-bottom: 3px solid var(--yellow); }
+    .tab.active.tab-nosurvey { border-bottom: 3px solid var(--cyan); }
+    .tab.active.tab-review { border-bottom: 3px solid var(--orange); }
+    .tab.active.tab-scout { border-bottom: 3px solid var(--purple); }
+    .tab.active.tab-complete { border-bottom: 3px solid var(--green); }
+    .tab-icon { font-size: 24px; }
+    .tab-label { font-size: 13px; font-weight: 600; }
+    .tab-counts { display: flex; gap: 12px; font-size: 12px; }
+    .tab-count { display: flex; align-items: center; gap: 4px; }
+    .tab-count .num { font-weight: 700; font-size: 18px; }
+    .tab-count.total .num { color: var(--text); }
+    .tab-count.done .num { color: var(--green); }
+    .tab-count.pending .num { color: var(--muted-fg); }
+
+    /* Summary bar below tabs */
+    .summary-bar {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+      padding: 12px 16px; background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 12px; margin-bottom: 20px; font-size: 13px;
+    }
+    .summary-item { display: flex; align-items: center; gap: 6px; }
+    .summary-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .summary-dot.green { background: var(--green); }
+    .summary-dot.yellow { background: var(--yellow); }
+    .summary-dot.purple { background: var(--purple); }
+    .summary-dot.cyan { background: var(--cyan); }
+    .summary-value { font-weight: 600; }
+
+    /* Section visibility */
+    .section-card { display: none; }
+    .section-card.active { display: block; }
+
+    /* Saving indicator */
+    .saving-indicator {
+      position: fixed; top: 24px; right: 24px;
+      padding: 8px 16px; border-radius: 8px;
+      background: var(--yellow); color: black; font-size: 13px; font-weight: 500;
+      display: none; align-items: center; gap: 8px;
+    }
+    .saving-indicator.active { display: flex; }
+    .saving-indicator .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: black; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Legend */
+    .legend-btn {
+      position: relative;
+    }
+    .legend-popup {
+      position: absolute; top: 100%; right: 0; margin-top: 8px;
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 16px; width: 320px;
+      z-index: 100; display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .legend-popup.show { display: block; }
+    .legend-title { font-weight: 600; margin-bottom: 12px; font-size: 14px; }
+    .legend-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--card-border);
+    }
+    .legend-item:last-child { border-bottom: none; }
+    .legend-icon { font-size: 18px; width: 28px; text-align: center; }
+    .legend-text { flex: 1; }
+    .legend-label { font-weight: 600; font-size: 13px; }
+    .legend-desc { font-size: 11px; color: var(--muted-fg); margin-top: 2px; }
+    .legend-code { 
+      font-family: monospace; font-size: 10px; 
+      background: var(--bg); padding: 2px 6px; border-radius: 4px;
+      color: var(--blue); margin-top: 4px; display: inline-block;
+    }
+  </style>
+
+</head>
+<body>
+
+  <!-- Saving Indicator -->
+  <div class="saving-indicator" id="savingIndicator">
+    <div class="spinner"></div>
+    Saving...
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <a href="index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <h1>Survey Routing</h1>
+    <span class="header-meta" id="lastUpdated">Loading...</span>
+    <div class="header-right">
+      <button class="btn btn-ghost" onclick="refreshData()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        Refresh
+      </button>
+      <div class="legend-btn">
+        <button class="btn btn-ghost" onclick="toggleLegend()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Legend
+        </button>
+        <div class="legend-popup" id="legendPopup">
+          <div class="legend-title">📋 Tab Logic</div>
+          <div class="legend-item">
+            <span class="legend-icon">📹</span>
+            <div class="legend-text">
+              <div class="legend-label">CCTV Surveys</div>
+              <div class="legend-desc">CCTV survey needed (FA may be getting full upgrade)</div>
+              <code class="legend-code">survey_type = "CCTV"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🔔</span>
+            <div class="legend-text">
+              <div class="legend-label">FA/Intrusion Surveys</div>
+              <div class="legend-desc">FA survey needed (CCTV may be getting full upgrade)</div>
+              <code class="legend-code">survey_type = "FA/INTRUSION"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">⚡</span>
+            <div class="legend-text">
+              <div class="legend-label">Both Surveys</div>
+              <div class="legend-desc">Site needs BOTH CCTV and FA/Intrusion surveys</div>
+              <code class="legend-code">survey_type = "BOTH"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">✨</span>
+            <div class="legend-text">
+              <div class="legend-label">No Survey Needed</div>
+              <div class="legend-desc">Full upgrade — no survey required</div>
+              <code class="legend-code">survey_required = "NO"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">📋</span>
+            <div class="legend-text">
+              <div class="legend-label">Awaiting Scout</div>
+              <div class="legend-desc">No Scout submission yet — needs Scout first</div>
+              <code class="legend-code">reason = "No scout submission"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">⚠️</span>
+            <div class="legend-text">
+              <div class="legend-label">Needs Review</div>
+              <div class="legend-desc">Ambiguous — needs human decision</div>
+              <code class="legend-code">survey_type = "REVIEW" (not awaiting scout)</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">✅</span>
+            <div class="legend-text">
+              <div class="legend-label">Completed</div>
+              <div class="legend-desc">Column V marked complete in Excel</div>
+              <code class="legend-code">survey_complete = true</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab tab-cctv active" onclick="switchTab('cctv')">
+        <span class="tab-icon">📹</span>
+        <span class="tab-label">CCTV Surveys</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="cctvTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="cctvDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-fa" onclick="switchTab('fa')">
+        <span class="tab-icon">🔔</span>
+        <span class="tab-label">FA/Intrusion</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="faTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="faDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-upgrade" onclick="switchTab('upgrade')">
+        <span class="tab-icon">⚡</span>
+        <span class="tab-label">Both Surveys</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="upgradeTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="upgradeDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-nosurvey" onclick="switchTab('nosurvey')">
+        <span class="tab-icon">✨</span>
+        <span class="tab-label">No Survey</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="nosurveyTotal">0</span> total</span>
+        </div>
+      </button>
+      <button class="tab tab-review" onclick="switchTab('review')">
+        <span class="tab-icon">⚠️</span>
+        <span class="tab-label">Needs Review</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="reviewTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="reviewDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-scout" onclick="switchTab('scout')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Awaiting Scout</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="scoutTotal">0</span> total</span>
+        </div>
+      </button>
+      <button class="tab tab-complete" onclick="switchTab('complete')">
+        <span class="tab-icon">✅</span>
+        <span class="tab-label">Completed</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="completeTotal">0</span> total</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Bar -->
+  <div class="summary-bar">
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--purple);"></span>
+      <span class="summary-value" id="statScoutIP">0</span>
+      <span>Scout IP</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--blue);"></span>
+      <span class="summary-value" id="statScoutDone">0</span>
+      <span>Ready to Assign</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--yellow);"></span>
+      <span class="summary-value" id="statSurveyIP">0</span>
+      <span>Survey IP</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot" style="background: var(--cyan);"></span>
+      <span class="summary-value" id="statFullUpgrade">0</span>
+      <span>Full Upgrade</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-dot green"></span>
+      <span class="summary-value" id="statCompleted">0</span>
+      <span>Completed</span>
+    </div>
+    <div class="summary-item" style="margin-left: auto;">
+      <button class="btn btn-ghost" id="sortDaysBtn" onclick="toggleDaysSort()" style="padding: 4px 12px; font-size: 12px;">
+        📅 Days: <span id="sortDaysLabel">Low → High</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CCTV Surveys Section -->
+  <div class="section-card active" id="cctvSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">📹</span>
+        CCTV Surveys
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-blue" id="cctvCount">0</span>
+        <span class="pill pill-green" id="cctvComplete">0 Done</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="cctvSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="cctvVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <select id="cctvStatus" onchange="renderTables()">
+          <option value="">All Status</option>
+          <option value="scout-in-progress">Scout IP</option>
+          <option value="scout-completed">Ready to Assign</option>
+          <option value="survey-in-progress">Survey IP</option>
+          <option value="survey-completed">Completed</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
+          <option value="full-upgrade">Full Upgrade</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('cctv')">Export</button>
+      </div>
+    </div>
+    <div class="table-header cctv-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="cctvBody"></div>
+  </div>
+
+  <!-- FA/Intrusion Surveys Section -->
+  <div class="section-card" id="faSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">🔔</span>
+        FA/Intrusion Surveys
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-red" id="faCount">0</span>
+        <span class="pill pill-green" id="faComplete">0 Done</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="faSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="faVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <select id="faStatus" onchange="renderTables()">
+          <option value="">All Status</option>
+          <option value="scout-in-progress">Scout IP</option>
+          <option value="scout-completed">Ready to Assign</option>
+          <option value="survey-in-progress">Survey IP</option>
+          <option value="survey-completed">Completed</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('fa')">Export</button>
+      </div>
+    </div>
+    <div class="table-header fa-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="faBody"></div>
+  </div>
+
+  <!-- Both Surveys Section -->
+  <div class="section-card" id="upgradeSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">⚡</span>
+        Both Surveys Required
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-yellow" id="upgradeCount">0</span>
+        <span class="pill pill-green" id="upgradeComplete">0 Done</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="upgradeSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="upgradeVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <select id="upgradeStatus" onchange="renderTables()">
+          <option value="">All Status</option>
+          <option value="scout-in-progress">Scout IP</option>
+          <option value="scout-completed">Ready to Assign</option>
+          <option value="survey-in-progress">Survey IP</option>
+          <option value="survey-completed">Completed</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('upgrade')">Export</button>
+      </div>
+    </div>
+    <div class="table-header upgrade-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="upgradeBody"></div>
+  </div>
+
+  <!-- No Survey Needed Section -->
+  <div class="section-card" id="nosurveySection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">✨</span>
+        No Survey Needed (Full Upgrade)
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-cyan" id="nosurveyCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="nosurveySearch" placeholder="Site #" oninput="renderTables()">
+        <select id="nosurveyVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('nosurvey')">Export</button>
+      </div>
+    </div>
+    <div class="table-header nosurvey-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="nosurveyBody"></div>
+  </div>
+
+  <!-- Needs Review Section -->
+  <div class="section-card" id="reviewSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">⚠️</span>
+        Needs Review
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-red" id="reviewCount">0</span>
+        <span class="pill pill-green" id="reviewComplete">0 Done</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="reviewSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="reviewVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <select id="reviewStatus" onchange="renderTables()">
+          <option value="">All Status</option>
+          <option value="scout-in-progress">Scout IP</option>
+          <option value="scout-completed">Ready to Assign</option>
+          <option value="survey-in-progress">Survey IP</option>
+          <option value="survey-completed">Completed</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('review')">Export</button>
+      </div>
+    </div>
+    <div class="table-header review-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="reviewBody"></div>
+  </div>
+
+  <!-- Awaiting Scout Section -->
+  <div class="section-card" id="scoutSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">📋</span>
+        Awaiting Scout Submission
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-purple" id="scoutCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="scoutSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="scoutVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('scout')">Export</button>
+      </div>
+    </div>
+    <div class="table-header scout-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="scoutBody"></div>
+  </div>
+
+  <!-- Completed Section -->
+  <div class="section-card" id="completeSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">✅</span>
+        Completed (Column V)
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-green" id="completeCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="completeSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="completeVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('complete')">Export</button>
+      </div>
+    </div>
+    <div class="table-header complete-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="completeBody"></div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modalTitle">Edit Site</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editSiteId">
+        
+        <!-- Force Section Override -->
+        <div class="modal-field">
+          <label>Force Section <span style="color: var(--cyan);">⚡ Override automatic routing</span></label>
+          <select id="editSectionOverride">
+            <option value="">AUTO (Use Survey Type Logic)</option>
+            <option value="cctv">CCTV Surveys</option>
+            <option value="fa">FA/Intrusion Surveys</option>
+            <option value="upgrade">Both Surveys (Upgrade)</option>
+            <option value="nosurvey">No Survey (Full Upgrade)</option>
+            <option value="review">Needs Review</option>
+            <option value="scout">Awaiting Scout</option>
+            <option value="complete">Complete</option>
+          </select>
+        </div>
+        
+        <!-- Editable survey type -->
+        <div class="modal-field">
+          <label>Survey Type <span style="color: var(--orange);">⚠️ Changes affect routing logic</span></label>
+          <select id="editSurveyType" style="font-weight: 600;">
+            <option value="CCTV">CCTV Only</option>
+            <option value="FA/INTRUSION">FA/Intrusion Only</option>
+            <option value="BOTH">Both (CCTV + FA)</option>
+            <option value="REVIEW">Needs Review (Manual Decision)</option>
+            <option value="NONE">None (Full Upgrade)</option>
+          </select>
+        </div>
+        
+        <div class="modal-field" style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+          <label style="margin-bottom: 8px;">Decision Reason</label>
+          <div id="editReason" style="font-size: 13px; color: var(--text-soft);"></div>
+        </div>
+        
+        <div class="modal-field" id="instructionsField" style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+          <label style="margin-bottom: 8px;">Vendor Instructions</label>
+          <div id="editInstructions" style="font-size: 13px; color: var(--text);"></div>
+        </div>
+        
+        <div class="modal-field" id="flagsField" style="background: rgba(234,179,8,0.1); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+          <label style="margin-bottom: 8px; color: var(--yellow);">⚠️ Supplemental Flags</label>
+          <div id="editFlags" style="font-size: 13px; color: var(--text);"></div>
+        </div>
+        
+        <div class="modal-field">
+          <label>Status</label>
+          <select id="editStatus">
+            <option value="scout-in-progress">Scout in Progress</option>
+            <option value="scout-completed">Scout Done • Ready to Assign</option>
+            <option value="survey-in-progress">Survey in Progress</option>
+            <option value="survey-completed">Survey Completed</option>
+            <option value="full-upgrade">Full Upgrade</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>Scout Submitted</label>
+          <select id="editScout">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>VUES Submitted</label>
+          <select id="editVues">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>Notes (Excel Column)</label>
+          <textarea id="editNotes" placeholder="Add notes..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let allData = [];
+let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [], noSurveyData = [];
+let currentTab = 'cctv';
+let sortByDays = 'asc'; // 'asc' = lowest first, 'desc' = highest first, null = no sort
+
+// Toggle legend popup
+function toggleLegend() {
+  document.getElementById('legendPopup').classList.toggle('show');
+}
+
+// Toggle days sort
+function toggleDaysSort() {
+  if (sortByDays === 'asc') {
+    sortByDays = 'desc';
+    document.getElementById('sortDaysLabel').textContent = 'High → Low';
+  } else {
+    sortByDays = 'asc';
+    document.getElementById('sortDaysLabel').textContent = 'Low → High';
+  }
+  renderTables();
+}
+
+// Close legend when clicking outside
+document.addEventListener('click', (e) => {
+  const legendBtn = document.querySelector('.legend-btn');
+  if (!legendBtn.contains(e.target)) {
+    document.getElementById('legendPopup').classList.remove('show');
+  }
+});
+
+// Switch tabs
+function switchTab(tab) {
+  currentTab = tab;
+  
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab-${tab}`).classList.add('active');
+  
+  // Update section visibility
+  document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', nosurvey: 'nosurveySection', review: 'reviewSection', scout: 'scoutSection', complete: 'completeSection' };
+  document.getElementById(sectionMap[tab]).classList.add('active');
+}
+
+// Show toast notification
+function showToast(message, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast' + (isError ? ' error' : '');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Show/hide saving indicator
+function setSaving(saving) {
+  document.getElementById('savingIndicator').classList.toggle('active', saving);
+}
+
+// Load data from JSON
+async function loadData() {
+  try {
+    const resp = await fetch('survey_routing_data.json');
+    const data = await resp.json();
+    allData = data.rows || [];
+    
+    // Filter out Test vendor
+    allData = allData.filter(r => r.vendor !== 'Test' && r.vendor !== 'TEST');
+    
+    // Sort by days
+    allData.sort((a, b) => {
+      const da = a.days_to_construction === '' ? Infinity : parseInt(a.days_to_construction) || Infinity;
+      const db = b.days_to_construction === '' ? Infinity : parseInt(b.days_to_construction) || Infinity;
+      return da - db;
+    });
+    
+    // Split into categories - COMPLETED first (Column V = true)
+    completeData = allData.filter(r => r.survey_complete === true);
+    const notComplete = allData.filter(r => r.survey_complete !== true);
+    
+    // No Survey Needed - full upgrade, no survey required
+    noSurveyData = notComplete.filter(r => r.survey_required === 'NO');
+    const needsSurvey = notComplete.filter(r => r.survey_required !== 'NO');
+    
+    // Awaiting Scout - no scout submission yet
+    scoutData = needsSurvey.filter(r => r.reason_for_decision?.includes('No scout submission'));
+    const hasScout = needsSurvey.filter(r => !r.reason_for_decision?.includes('No scout submission'));
+    
+    // CCTV: only CCTV survey type
+    cctvData = hasScout.filter(r => r.survey_type === 'CCTV');
+    // FA: only FA/INTRUSION survey type
+    faData = hasScout.filter(r => r.survey_type === 'FA/INTRUSION');
+    // Both Surveys: survey_type is BOTH
+    upgradeData = hasScout.filter(r => r.survey_type === 'BOTH');
+    // Needs Review: survey_type is REVIEW (actual ambiguous cases)
+    reviewData = hasScout.filter(r => r.survey_type === 'REVIEW' || r.survey_type === 'NONE');
+    
+    // Apply manual section overrides AFTER automatic filtering
+    if (allData.some(r => r.section_override)) {
+      // Move rows to their override sections
+      allData.forEach(r => {
+        if (!r.section_override) return; // Skip rows without override
+        
+        // Remove from all sections first
+        cctvData = cctvData.filter(x => x.site !== r.site);
+        faData = faData.filter(x => x.site !== r.site);
+        upgradeData = upgradeData.filter(x => x.site !== r.site);
+        reviewData = reviewData.filter(x => x.site !== r.site);
+        scoutData = scoutData.filter(x => x.site !== r.site);
+        noSurveyData = noSurveyData.filter(x => x.site !== r.site);
+        completeData = completeData.filter(x => x.site !== r.site);
+        
+        // Add to override section
+        if (r.section_override === 'cctv') cctvData.push(r);
+        else if (r.section_override === 'fa') faData.push(r);
+        else if (r.section_override === 'upgrade') upgradeData.push(r);
+        else if (r.section_override === 'review') reviewData.push(r);
+        else if (r.section_override === 'scout') scoutData.push(r);
+        else if (r.section_override === 'nosurvey') noSurveyData.push(r);
+        else if (r.section_override === 'complete') completeData.push(r);
+      });
+    }
+    
+    // Update global stats
+    updateGlobalStats();
+    
+    if (data.generated_at) {
+      document.getElementById('lastUpdated').textContent = `Updated ${new Date(data.generated_at).toLocaleTimeString()}`;
+    }
+    
+    renderTables();
+  } catch (e) {
+    console.error('Load error:', e);
+    showToast('Failed to load data', true);
+  }
+}
+
+function updateGlobalStats() {
+  // Per-tab counts (only count done for active survey tabs, not scout/complete)
+  const cctvComplete = cctvData.filter(r => getStatus(r) === 'complete').length;
+  const faComplete = faData.filter(r => getStatus(r) === 'complete').length;
+  const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'complete').length;
+  const reviewComplete = reviewData.filter(r => getStatus(r) === 'complete').length;
+  
+  document.getElementById('cctvTotal').textContent = cctvData.length;
+  document.getElementById('cctvDone').textContent = cctvComplete;
+  document.getElementById('faTotal').textContent = faData.length;
+  document.getElementById('faDone').textContent = faComplete;
+  document.getElementById('upgradeTotal').textContent = upgradeData.length;
+  document.getElementById('upgradeDone').textContent = upgradeComplete;
+  document.getElementById('reviewTotal').textContent = reviewData.length;
+  document.getElementById('reviewDone').textContent = reviewComplete;
+  document.getElementById('nosurveyTotal').textContent = noSurveyData.length;
+  document.getElementById('scoutTotal').textContent = scoutData.length;
+  document.getElementById('completeTotal').textContent = completeData.length;
+  
+  // Global status counts for summary bar
+  const statScoutIP = allData.filter(r => getStatus(r) === 'scout-in-progress').length;
+  const statScoutDone = allData.filter(r => getStatus(r) === 'scout-completed').length;
+  const statSurveyIP = allData.filter(r => getStatus(r) === 'survey-in-progress').length;
+  const statFullUpgrade = allData.filter(r => getStatus(r) === 'full-upgrade').length;
+  const statCompleted = allData.filter(r => getStatus(r) === 'survey-completed').length;
+  
+  document.getElementById('statScoutIP').textContent = statScoutIP;
+  document.getElementById('statScoutDone').textContent = statScoutDone;
+  document.getElementById('statSurveyIP').textContent = statSurveyIP;
+  document.getElementById('statFullUpgrade').textContent = statFullUpgrade;
+  document.getElementById('statCompleted').textContent = statCompleted;
+}
+
+function filterData(data, searchId, vendorId, statusId) {
+  const search = document.getElementById(searchId)?.value.toLowerCase() || '';
+  const vendor = document.getElementById(vendorId)?.value || '';
+  const status = document.getElementById(statusId)?.value || '';
+  
+  let filtered = data.filter(r => {
+    if (search && !r.site.toLowerCase().includes(search)) return false;
+    if (vendor && r.vendor !== vendor) return false;
+    if (status && getStatus(r) !== status) return false;
+    return true;
+  });
+  
+  // Apply days sorting
+  if (sortByDays) {
+    filtered.sort((a, b) => {
+      const daysA = parseInt(a.days_to_construction) || 9999;
+      const daysB = parseInt(b.days_to_construction) || 9999;
+      return sortByDays === 'asc' ? daysA - daysB : daysB - daysA;
+    });
+  }
+  
+  return filtered;
+}
+
+function getStatus(row) {
+  // Auto-derive status from actual data
+  if (row.survey_complete === true) return 'survey-completed';  // Column V = done
+  if (row.survey_required === 'NO') return 'full-upgrade';  // No survey needed = full upgrade
+  
+  // Check if scout submission exists (not "No scout submission")
+  const hasScout = !row.reason_for_decision?.includes('No scout submission');
+  
+  if (!hasScout) return 'scout-in-progress';  // No submission yet = scout in progress (assigned out)
+  
+  // Has scout data = scout completed, now check survey status
+  if (row.vues_submitted === true) return 'survey-in-progress';  // VUES submission = survey in progress
+  
+  // Scout done, survey not started = needs assignment
+  return 'scout-completed';
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    'scout-in-progress': '◐ Scout IP',
+    'scout-completed': '✓ Scout • Assign Survey',
+    'survey-in-progress': '◐ Survey IP',
+    'survey-completed': '✓ Complete',
+    'full-upgrade': '✨ Full Upgrade'
+  };
+  return labels[status] || '○ Unknown';
+}
+
+function renderRow(row, index, type) {
+  const status = getStatus(row);
+  const days = row.days_to_construction;
+  const isUrgent = days && parseInt(days) < 30;
+  const delay = index * 50;
+  
+  const scoutChecked = row.scout_submitted ? 'checked' : '';
+  const vuesChecked = row.vues_submitted ? 'checked' : '';
+  
+  const gridClass = {
+    cctv: 'cctv-grid', fa: 'fa-grid', upgrade: 'upgrade-grid', nosurvey: 'nosurvey-grid',
+    review: 'review-grid', scout: 'scout-grid', complete: 'complete-grid'
+  }[type] || 'cctv-grid';
+  
+  // Determine requirement type badge
+  let reqTypeClass = 'cctv';
+  let reqTypeLabel = row.survey_type || 'SURVEY';
+  if (row.survey_type === 'FA/INTRUSION') reqTypeClass = 'fa';
+  else if (row.survey_type === 'BOTH') reqTypeClass = 'both';
+  else if (row.survey_type === 'REVIEW') reqTypeClass = 'review';
+  
+  // Show upgrade decision prominently for CCTV/FA tabs (they have full upgrade info)
+  const upgradeInfo = row.upgrade_decision && row.upgrade_decision !== 'SURVEY REQUIRED' && row.upgrade_decision !== 'REVIEW REQUIRED'
+    ? row.upgrade_decision : '';
+  
+  // Full reason (click to see in modal)
+  const reason = row.reason_for_decision || '';
+  
+  return `
+    <div class="row ${gridClass} status-${status}" style="animation-delay: ${delay}ms" data-site="${row.site}" onclick="openEditModal('${row.site}')">
+      <div class="row-num">${String(index + 1).padStart(2, '0')}</div>
+      <div>
+        <div class="row-site">${row.site}</div>
+      </div>
+      <div class="row-requirements" onclick="event.stopPropagation()">
+        <span class="req-type ${reqTypeClass}">${reqTypeLabel}</span>
+        ${upgradeInfo ? `<div class="req-upgrade">${upgradeInfo}</div>` : ''}
+        ${reason ? `<div class="req-reason" onclick="openEditModal('${row.site}')" title="Click for full details">${reason}</div>` : ''}
+      </div>
+      <div class="row-vendor">${row.vendor || '—'}</div>
+      <div class="row-days ${isUrgent ? 'urgent' : ''}">${days || '—'}</div>
+      <div onclick="event.stopPropagation()">
+        <div class="status-badge ${status}" onclick="cycleStatus('${row.site}')" title="Click to change status">
+          ${getStatusLabel(status)}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <div class="track-badge scout ${scoutChecked}" onclick="toggleTrack('${row.site}', 'scout')" title="Scout submitted">S</div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <div class="track-badge vues ${vuesChecked}" onclick="toggleTrack('${row.site}', 'vues')" title="VUES submitted">V</div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;" onclick="openEditModal('${row.site}')">Details</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTables() {
+  // CCTV
+  const cctvFiltered = filterData(cctvData, 'cctvSearch', 'cctvVendor', 'cctvStatus');
+  const cctvDone = cctvFiltered.filter(r => getStatus(r) === 'complete').length;
+  document.getElementById('cctvCount').textContent = cctvFiltered.length;
+  document.getElementById('cctvComplete').textContent = `${cctvDone} Done`;
+  document.getElementById('cctvBody').innerHTML = cctvFiltered.length 
+    ? cctvFiltered.map((r, i) => renderRow(r, i, 'cctv')).join('')
+    : '<div class="empty-state">No CCTV surveys match filters</div>';
+  
+  // FA
+  const faFiltered = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
+  const faDone = faFiltered.filter(r => getStatus(r) === 'complete').length;
+  document.getElementById('faCount').textContent = faFiltered.length;
+  document.getElementById('faComplete').textContent = `${faDone} Done`;
+  document.getElementById('faBody').innerHTML = faFiltered.length
+    ? faFiltered.map((r, i) => renderRow(r, i, 'fa')).join('')
+    : '<div class="empty-state">No FA/Intrusion surveys match filters</div>';
+  
+  // Both Surveys
+  const upgradeFiltered = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
+  const upgradeDone = upgradeFiltered.filter(r => getStatus(r) === 'complete').length;
+  document.getElementById('upgradeCount').textContent = upgradeFiltered.length;
+  document.getElementById('upgradeComplete').textContent = `${upgradeDone} Done`;
+  document.getElementById('upgradeBody').innerHTML = upgradeFiltered.length
+    ? upgradeFiltered.map((r, i) => renderRow(r, i, 'upgrade')).join('')
+    : '<div class="empty-state">No sites needing both surveys match filters</div>';
+  
+  // No Survey Needed (Full Upgrade)
+  const nosurveyFiltered = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+  document.getElementById('nosurveyCount').textContent = nosurveyFiltered.length;
+  document.getElementById('nosurveyBody').innerHTML = nosurveyFiltered.length
+    ? nosurveyFiltered.map((r, i) => renderRow(r, i, 'nosurvey')).join('')
+    : '<div class="empty-state">No full upgrade sites match filters</div>';
+  
+  // Needs Review
+  const reviewFiltered = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+  const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'complete').length;
+  document.getElementById('reviewCount').textContent = reviewFiltered.length;
+  document.getElementById('reviewComplete').textContent = `${reviewDone} Done`;
+  document.getElementById('reviewBody').innerHTML = reviewFiltered.length
+    ? reviewFiltered.map((r, i) => renderRow(r, i, 'review')).join('')
+    : '<div class="empty-state">No sites needing review match filters</div>';
+  
+  // Awaiting Scout
+  const scoutFiltered = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+  document.getElementById('scoutCount').textContent = scoutFiltered.length;
+  document.getElementById('scoutBody').innerHTML = scoutFiltered.length
+    ? scoutFiltered.map((r, i) => renderRow(r, i, 'scout')).join('')
+    : '<div class="empty-state">No sites awaiting scout match filters</div>';
+  
+  // Completed
+  const completeFiltered = filterData(completeData, 'completeSearch', 'completeVendor', null);
+  document.getElementById('completeCount').textContent = completeFiltered.length;
+  document.getElementById('completeBody').innerHTML = completeFiltered.length
+    ? completeFiltered.map((r, i) => renderRow(r, i, 'complete')).join('')
+    : '<div class="empty-state">No completed sites match filters</div>';
+}
+
+// Cycle through status: pending -> inprogress -> complete -> pending
+async function cycleStatus(site) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const current = getStatus(row);
+  const statusOrder = ['scout-in-progress', 'scout-completed', 'survey-in-progress', 'survey-completed', 'full-upgrade'];
+  const currentIdx = statusOrder.indexOf(current);
+  const nextIdx = (currentIdx + 1) % statusOrder.length;
+  const next = statusOrder[nextIdx];
+  
+  row.status = next;
+  row.survey_complete = next === 'survey-completed';
+  
+  renderTables();
+  updateGlobalStats();
+  await saveToBackend(site, { status: next, survey_complete: row.survey_complete });
+}
+
+// Toggle Scout/VUES submission
+async function toggleTrack(site, type) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const field = type === 'scout' ? 'scout_submitted' : 'vues_submitted';
+  row[field] = !row[field];
+  
+  renderTables();
+  updateGlobalStats();
+  await saveToBackend(site, { [field]: row[field] });
+}
+
+// Open edit modal
+function openEditModal(site) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  document.getElementById('editSiteId').value = site;
+  document.getElementById('modalTitle').textContent = `Site ${site}`;
+  document.getElementById('editStatus').value = getStatus(row);
+  document.getElementById('editScout').value = row.scout_submitted ? 'true' : 'false';
+  document.getElementById('editVues').value = row.vues_submitted ? 'true' : 'false';
+  document.getElementById('editNotes').value = row.notes || '';
+  
+  // Populate editable fields
+  document.getElementById('editSectionOverride').value = row.section_override || '';
+  document.getElementById('editSurveyType').value = row.survey_type || row.upgrade_decision || 'NONE';
+  document.getElementById('editReason').textContent = row.reason_for_decision || '';
+  
+  // Vendor instructions
+  const instrField = document.getElementById('instructionsField');
+  if (row.vendor_instructions) {
+    document.getElementById('editInstructions').textContent = row.vendor_instructions;
+    instrField.style.display = 'block';
+  } else {
+    instrField.style.display = 'none';
+  }
+  
+  // Supplemental flags
+  const flagsField = document.getElementById('flagsField');
+  if (row.supplemental_flags) {
+    document.getElementById('editFlags').textContent = row.supplemental_flags;
+    flagsField.style.display = 'block';
+  } else {
+    flagsField.style.display = 'none';
+  }
+  
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+async function saveChanges() {
+  const site = document.getElementById('editSiteId').value;
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const status = document.getElementById('editStatus').value;
+  const scoutSubmitted = document.getElementById('editScout').value === 'true';
+  const vuesSubmitted = document.getElementById('editVues').value === 'true';
+  const notes = document.getElementById('editNotes').value;
+  const surveyType = document.getElementById('editSurveyType').value;
+  const sectionOverride = document.getElementById('editSectionOverride').value;
+  
+  // Update local data
+  row.status = status;
+  row.survey_complete = status === 'complete';
+  row.scout_submitted = scoutSubmitted;
+  row.vues_submitted = vuesSubmitted;
+  row.notes = notes;
+  row.survey_type = surveyType; // Update survey type
+  row.section_override = sectionOverride; // Manual section override
+  
+  closeModal();
+  renderTables();
+  updateGlobalStats();
+  
+  // Save to backend (includes survey_type and section_override)
+  await saveToBackend(site, { 
+    status, 
+    survey_complete: row.survey_complete, 
+    scout_submitted: scoutSubmitted, 
+    vues_submitted: vuesSubmitted, 
+    notes,
+    survey_type: surveyType,
+    section_override: sectionOverride
+  });
+}
+  updateGlobalStats();
+  
+  await saveToBackend(site, {
+    status,
+    survey_complete: row.survey_complete,
+    scout_submitted: scoutSubmitted,
+    vues_submitted: vuesSubmitted,
+    notes
+  });
+}
+
+// Save to backend (API call to update Excel + Airtable)
+async function saveToBackend(site, updates) {
+  setSaving(true);
+  try {
+    const resp = await fetch('/api/survey-routing/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site, updates })
+    });
+    
+    if (!resp.ok) throw new Error('Save failed');
+    showToast(`${site} updated successfully`);
+  } catch (e) {
+    console.error('Save error:', e);
+    showToast('Failed to save - changes are local only', true);
+  } finally {
+    setSaving(false);
+  }
+}
+
+// Export table to CSV
+function exportTable(type) {
+  let data, filename;
+  if (type === 'cctv') {
+    data = filterData(cctvData, 'cctvSearch', 'cctvVendor', 'cctvStatus');
+    filename = 'cctv_surveys';
+  } else if (type === 'fa') {
+    data = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
+    filename = 'fa_surveys';
+  } else if (type === 'upgrade') {
+    data = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
+    filename = 'both_surveys';
+  } else if (type === 'nosurvey') {
+    data = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+    filename = 'no_survey_needed';
+  } else if (type === 'review') {
+    data = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+    filename = 'needs_review';
+  } else if (type === 'scout') {
+    data = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+    filename = 'awaiting_scout';
+  } else {
+    data = filterData(completeData, 'completeSearch', 'completeVendor', null);
+    filename = 'completed';
+  }
+  
+  const headers = ['Site','Vendor','Days','Survey Type','Upgrade Decision','Reason','Status','Scout','VUES','Notes'];
+  const rows = data.map(r => [
+    r.site, r.vendor || '', r.days_to_construction || '',
+    r.survey_type || '', `"${(r.upgrade_decision || '').replace(/"/g, '""')}"`,
+    `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`,
+    getStatus(r), r.scout_submitted ? 'YES' : 'NO', r.vues_submitted ? 'YES' : 'NO',
+    `"${(r.notes || '').replace(/"/g, '""')}"`
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
+  a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function refreshData() {
+  loadData();
+  showToast('Data refreshed');
+}
+
+// Initial load
+loadData();
+
+// Auto-refresh every 30 seconds
+setInterval(loadData, 30000);
+</script>
+
+</body>
+</html>

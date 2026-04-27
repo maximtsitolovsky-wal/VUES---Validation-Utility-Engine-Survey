@@ -1161,9 +1161,15 @@ function exportTable(type) {
   } else if (type === 'upgrade') {
     data = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
     filename = 'both_surveys';
-  } else {
+  } else if (type === 'review') {
     data = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
     filename = 'needs_review';
+  } else if (type === 'scout') {
+    data = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+    filename = 'awaiting_scout';
+  } else {
+    data = filterData(completeData, 'completeSearch', 'completeVendor', null);
+    filename = 'completed';
   }
   
   const headers = ['Site','Vendor','Days','Survey Type','Upgrade Decision','Reason','Status','Scout','VUES','Notes'];

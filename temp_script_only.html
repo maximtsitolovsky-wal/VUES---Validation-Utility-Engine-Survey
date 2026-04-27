@@ -1,0 +1,545 @@
+<script>
+window.VUES_DEBUG = true;
+let allData = [];
+let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [], noSurveyData = [];
+let currentTab = 'cctv';
+let sortByDays = 'asc'; // 'asc' = lowest first, 'desc' = highest first, null = no sort
+
+// Toggle legend popup
+function toggleLegend() {
+  document.getElementById('legendPopup').classList.toggle('show');
+}
+
+// Toggle days sort
+function toggleDaysSort() {
+  if (sortByDays === 'asc') {
+    sortByDays = 'desc';
+    document.getElementById('sortDaysLabel').textContent = 'High → Low';
+  } else {
+    sortByDays = 'asc';
+    document.getElementById('sortDaysLabel').textContent = 'Low → High';
+  }
+  renderTables();
+}
+
+// Close legend when clicking outside
+document.addEventListener('click', (e) => {
+  const legendBtn = document.querySelector('.legend-btn');
+  if (!legendBtn.contains(e.target)) {
+    document.getElementById('legendPopup').classList.remove('show');
+  }
+});
+
+// Switch tabs
+function switchTab(tab) {
+  currentTab = tab;
+  
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab-${tab}`).classList.add('active');
+  
+  // Update section visibility
+  document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', nosurvey: 'nosurveySection', review: 'reviewSection', scout: 'scoutSection', complete: 'completeSection' };
+  document.getElementById(sectionMap[tab]).classList.add('active');
+}
+
+// Show toast notification
+function showToast(message, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast' + (isError ? ' error' : '');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Show/hide saving indicator
+function setSaving(saving) {
+  document.getElementById('savingIndicator').classList.toggle('active', saving);
+}
+
+// Load data from JSON
+async function loadData() {
+  try {
+    const resp = await fetch('survey_routing_data.json');
+    const data = await resp.json();
+    allData = data.rows || [];
+    
+    // Filter out Test vendor
+    allData = allData.filter(r => r.vendor !== 'Test' && r.vendor !== 'TEST');
+    
+    // Sort by days
+    allData.sort((a, b) => {
+      const da = a.days_to_construction === '' ? Infinity : parseInt(a.days_to_construction) || Infinity;
+      const db = b.days_to_construction === '' ? Infinity : parseInt(b.days_to_construction) || Infinity;
+      return da - db;
+    });
+    
+    // Split into categories - COMPLETED first (Column V = true)
+    completeData = allData.filter(r => r.survey_complete === true);
+    const notComplete = allData.filter(r => r.survey_complete !== true);
+    
+    // No Survey Needed - full upgrade, no survey required
+    noSurveyData = notComplete.filter(r => r.survey_required === 'NO');
+    const needsSurvey = notComplete.filter(r => r.survey_required !== 'NO');
+    
+    // Awaiting Scout - no scout submission yet
+    scoutData = needsSurvey.filter(r => r.reason_for_decision?.includes('No scout submission'));
+    const hasScout = needsSurvey.filter(r => !r.reason_for_decision?.includes('No scout submission'));
+    
+    // CCTV: only CCTV survey type
+    cctvData = hasScout.filter(r => r.survey_type === 'CCTV');
+    // FA: only FA/INTRUSION survey type
+    faData = hasScout.filter(r => r.survey_type === 'FA/INTRUSION');
+    // Both Surveys: survey_type is BOTH
+    upgradeData = hasScout.filter(r => r.survey_type === 'BOTH');
+    // Needs Review: survey_type is REVIEW (actual ambiguous cases)
+    reviewData = hasScout.filter(r => r.survey_type === 'REVIEW' || r.survey_type === 'NONE');
+    
+    // Apply manual section overrides AFTER automatic filtering
+    if (allData.some(r => r.section_override)) {
+      // Move rows to their override sections
+      allData.forEach(r => {
+        if (!r.section_override) return; // Skip rows without override
+        
+        // Remove from all sections first
+        cctvData = cctvData.filter(x => x.site !== r.site);
+        faData = faData.filter(x => x.site !== r.site);
+        upgradeData = upgradeData.filter(x => x.site !== r.site);
+        reviewData = reviewData.filter(x => x.site !== r.site);
+        scoutData = scoutData.filter(x => x.site !== r.site);
+        noSurveyData = noSurveyData.filter(x => x.site !== r.site);
+        completeData = completeData.filter(x => x.site !== r.site);
+        
+        // Add to override section
+        if (r.section_override === 'cctv') cctvData.push(r);
+        else if (r.section_override === 'fa') faData.push(r);
+        else if (r.section_override === 'upgrade') upgradeData.push(r);
+        else if (r.section_override === 'review') reviewData.push(r);
+        else if (r.section_override === 'scout') scoutData.push(r);
+        else if (r.section_override === 'nosurvey') noSurveyData.push(r);
+        else if (r.section_override === 'complete') completeData.push(r);
+      });
+    }
+    
+    // Update global stats
+    updateGlobalStats();
+    
+    if (data.generated_at) {
+      document.getElementById('lastUpdated').textContent = `Updated ${new Date(data.generated_at).toLocaleTimeString()}`;
+    }
+    
+    renderTables();
+  } catch (e) {
+    console.error('Load error:', e);
+    showToast('Failed to load data', true);
+  }
+}
+
+function updateGlobalStats() {
+  // Per-tab counts (only count done for active survey tabs, not scout/complete)
+  const cctvComplete = cctvData.filter(r => getStatus(r) === 'survey-completed').length;
+  const faComplete = faData.filter(r => getStatus(r) === 'survey-completed').length;
+  const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'survey-completed').length;
+  const reviewComplete = reviewData.filter(r => getStatus(r) === 'survey-completed').length;
+  
+  document.getElementById('cctvTotal').textContent = cctvData.length;
+  document.getElementById('cctvDone').textContent = cctvComplete;
+  document.getElementById('faTotal').textContent = faData.length;
+  document.getElementById('faDone').textContent = faComplete;
+  document.getElementById('upgradeTotal').textContent = upgradeData.length;
+  document.getElementById('upgradeDone').textContent = upgradeComplete;
+  document.getElementById('reviewTotal').textContent = reviewData.length;
+  document.getElementById('reviewDone').textContent = reviewComplete;
+  document.getElementById('nosurveyTotal').textContent = noSurveyData.length;
+  document.getElementById('scoutTotal').textContent = scoutData.length;
+  document.getElementById('completeTotal').textContent = completeData.length;
+  
+  // Global status counts for summary bar
+  const statScoutIP = allData.filter(r => getStatus(r) === 'scout-in-progress').length;
+  const statScoutDone = allData.filter(r => getStatus(r) === 'scout-completed').length;
+  const statSurveyIP = allData.filter(r => getStatus(r) === 'survey-in-progress').length;
+  const statFullUpgrade = allData.filter(r => getStatus(r) === 'full-upgrade').length;
+  const statCompleted = allData.filter(r => getStatus(r) === 'survey-completed').length;
+  
+  document.getElementById('statScoutIP').textContent = statScoutIP;
+  document.getElementById('statScoutDone').textContent = statScoutDone;
+  document.getElementById('statSurveyIP').textContent = statSurveyIP;
+  document.getElementById('statFullUpgrade').textContent = statFullUpgrade;
+  document.getElementById('statCompleted').textContent = statCompleted;
+}
+
+function filterData(data, searchId, vendorId, statusId) {
+  const search = document.getElementById(searchId)?.value.toLowerCase() || '';
+  const vendor = document.getElementById(vendorId)?.value || '';
+  const status = document.getElementById(statusId)?.value || '';
+  
+  let filtered = data.filter(r => {
+    if (search && !r.site.toLowerCase().includes(search)) return false;
+    if (vendor && r.vendor !== vendor) return false;
+    if (status && getStatus(r) !== status) return false;
+    return true;
+  });
+  
+  // Apply days sorting
+  if (sortByDays) {
+    filtered.sort((a, b) => {
+      const daysA = parseInt(a.days_to_construction) || 9999;
+      const daysB = parseInt(b.days_to_construction) || 9999;
+      return sortByDays === 'asc' ? daysA - daysB : daysB - daysA;
+    });
+  }
+  
+  return filtered;
+}
+
+function getStatus(row) {
+  // Auto-derive status from actual data
+  if (row.survey_complete === true) return 'survey-completed';  // Column V = done
+  if (row.survey_required === 'NO') return 'full-upgrade';  // No survey needed = full upgrade
+  
+  // Check if scout submission exists (not "No scout submission")
+  const hasScout = !row.reason_for_decision?.includes('No scout submission');
+  
+  if (!hasScout) return 'scout-in-progress';  // No submission yet = scout in progress (assigned out)
+  
+  // Has scout data = scout completed, now check survey status
+  if (row.vues_submitted === true) return 'survey-in-progress';  // VUES submission = survey in progress
+  
+  // Scout done, survey not started = needs assignment
+  return 'scout-completed';
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    'scout-in-progress': '◐ Scout IP',
+    'scout-completed': '✓ Scout • Assign Survey',
+    'survey-in-progress': '◐ Survey IP',
+    'survey-completed': '✓ Complete',
+    'full-upgrade': '✨ Full Upgrade'
+  };
+  return labels[status] || '○ Unknown';
+}
+
+function renderRow(row, index, type) {
+  const status = getStatus(row);
+  const days = row.days_to_construction;
+  const isUrgent = days && parseInt(days) < 30;
+  const delay = index * 50;
+  
+  const scoutChecked = row.scout_submitted ? 'checked' : '';
+  const vuesChecked = row.vues_submitted ? 'checked' : '';
+  
+  const gridClass = {
+    cctv: 'cctv-grid', fa: 'fa-grid', upgrade: 'upgrade-grid', nosurvey: 'nosurvey-grid',
+    review: 'review-grid', scout: 'scout-grid', complete: 'complete-grid'
+  }[type] || 'cctv-grid';
+  
+  // Determine requirement type badge
+  let reqTypeClass = 'cctv';
+  let reqTypeLabel = row.survey_type || 'SURVEY';
+  if (row.survey_type === 'FA/INTRUSION') reqTypeClass = 'fa';
+  else if (row.survey_type === 'BOTH') reqTypeClass = 'both';
+  else if (row.survey_type === 'REVIEW') reqTypeClass = 'review';
+  
+  // Show upgrade decision prominently for CCTV/FA tabs (they have full upgrade info)
+  const upgradeInfo = row.upgrade_decision && row.upgrade_decision !== 'SURVEY REQUIRED' && row.upgrade_decision !== 'REVIEW REQUIRED'
+    ? row.upgrade_decision : '';
+  
+  // Full reason (click to see in modal)
+  const reason = row.reason_for_decision || '';
+  
+  return `
+    <div class="row ${gridClass} status-${status}" style="animation-delay: ${delay}ms" data-site="${row.site}" onclick="openEditModal('${row.site}')">
+      <div class="row-num">${String(index + 1).padStart(2, '0')}</div>
+      <div>
+        <div class="row-site">${row.site}</div>
+      </div>
+      <div class="row-requirements" onclick="event.stopPropagation()">
+        <span class="req-type ${reqTypeClass}">${reqTypeLabel}</span>
+        ${upgradeInfo ? `<div class="req-upgrade">${upgradeInfo}</div>` : ''}
+        ${reason ? `<div class="req-reason" onclick="openEditModal('${row.site}')" title="Click for full details">${reason}</div>` : ''}
+      </div>
+      <div class="row-vendor">${row.vendor || '—'}</div>
+      <div class="row-days ${isUrgent ? 'urgent' : ''}">${days || '—'}</div>
+      <div onclick="event.stopPropagation()">
+        <div class="status-badge ${status}" onclick="cycleStatus('${row.site}')" title="Click to change status">
+          ${getStatusLabel(status)}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <div class="track-badge scout ${scoutChecked}" onclick="toggleTrack('${row.site}', 'scout')" title="Scout submitted">S</div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <div class="track-badge vues ${vuesChecked}" onclick="toggleTrack('${row.site}', 'vues')" title="VUES submitted">V</div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;" onclick="openEditModal('${row.site}')">Details</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTables() {
+  console.log('[VUES] renderTables() called - cctvData:', cctvData?.length, 'faData:', faData?.length, 'reviewData:', reviewData?.length);
+  // CCTV
+  const cctvFiltered = filterData(cctvData, 'cctvSearch', 'cctvVendor', 'cctvStatus');
+  const cctvDone = cctvFiltered.filter(r => getStatus(r) === 'survey-completed').length;
+  document.getElementById('cctvCount').textContent = cctvFiltered.length;
+  document.getElementById('cctvComplete').textContent = `${cctvDone} Done`;
+  document.getElementById('cctvBody').innerHTML = cctvFiltered.length 
+    ? cctvFiltered.map((r, i) => renderRow(r, i, 'cctv')).join('')
+    : '<div class="empty-state">No CCTV surveys match filters</div>';
+  
+  // FA
+  const faFiltered = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
+  const faDone = faFiltered.filter(r => getStatus(r) === 'survey-completed').length;
+  document.getElementById('faCount').textContent = faFiltered.length;
+  document.getElementById('faComplete').textContent = `${faDone} Done`;
+  document.getElementById('faBody').innerHTML = faFiltered.length
+    ? faFiltered.map((r, i) => renderRow(r, i, 'fa')).join('')
+    : '<div class="empty-state">No FA/Intrusion surveys match filters</div>';
+  
+  // Both Surveys
+  const upgradeFiltered = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
+  const upgradeDone = upgradeFiltered.filter(r => getStatus(r) === 'survey-completed').length;
+  document.getElementById('upgradeCount').textContent = upgradeFiltered.length;
+  document.getElementById('upgradeComplete').textContent = `${upgradeDone} Done`;
+  document.getElementById('upgradeBody').innerHTML = upgradeFiltered.length
+    ? upgradeFiltered.map((r, i) => renderRow(r, i, 'upgrade')).join('')
+    : '<div class="empty-state">No sites needing both surveys match filters</div>';
+  
+  // No Survey Needed (Full Upgrade)
+  const nosurveyFiltered = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+  document.getElementById('nosurveyCount').textContent = nosurveyFiltered.length;
+  document.getElementById('nosurveyBody').innerHTML = nosurveyFiltered.length
+    ? nosurveyFiltered.map((r, i) => renderRow(r, i, 'nosurvey')).join('')
+    : '<div class="empty-state">No full upgrade sites match filters</div>';
+  
+  // Needs Review
+  const reviewFiltered = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+  const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'survey-completed').length;
+  document.getElementById('reviewCount').textContent = reviewFiltered.length;
+  document.getElementById('reviewComplete').textContent = `${reviewDone} Done`;
+  document.getElementById('reviewBody').innerHTML = reviewFiltered.length
+    ? reviewFiltered.map((r, i) => renderRow(r, i, 'review')).join('')
+    : '<div class="empty-state">No sites needing review match filters</div>';
+  
+  // Awaiting Scout
+  const scoutFiltered = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+  document.getElementById('scoutCount').textContent = scoutFiltered.length;
+  document.getElementById('scoutBody').innerHTML = scoutFiltered.length
+    ? scoutFiltered.map((r, i) => renderRow(r, i, 'scout')).join('')
+    : '<div class="empty-state">No sites awaiting scout match filters</div>';
+  
+  // Completed
+  const completeFiltered = filterData(completeData, 'completeSearch', 'completeVendor', null);
+  document.getElementById('completeCount').textContent = completeFiltered.length;
+  document.getElementById('completeBody').innerHTML = completeFiltered.length
+    ? completeFiltered.map((r, i) => renderRow(r, i, 'complete')).join('')
+    : '<div class="empty-state">No completed sites match filters</div>';
+}
+
+// Cycle through status: pending -> inprogress -> complete -> pending
+async function cycleStatus(site) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const current = getStatus(row);
+  const statusOrder = ['scout-in-progress', 'scout-completed', 'survey-in-progress', 'survey-completed', 'full-upgrade'];
+  const currentIdx = statusOrder.indexOf(current);
+  const nextIdx = (currentIdx + 1) % statusOrder.length;
+  const next = statusOrder[nextIdx];
+  
+  row.status = next;
+  row.survey_complete = next === 'survey-completed';
+  
+  renderTables();
+  updateGlobalStats();
+  await saveToBackend(site, { status: next, survey_complete: row.survey_complete });
+}
+
+// Toggle Scout/VUES submission
+async function toggleTrack(site, type) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const field = type === 'scout' ? 'scout_submitted' : 'vues_submitted';
+  row[field] = !row[field];
+  
+  renderTables();
+  updateGlobalStats();
+  await saveToBackend(site, { [field]: row[field] });
+}
+
+// Open edit modal
+function openEditModal(site) {
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  document.getElementById('editSiteId').value = site;
+  document.getElementById('modalTitle').textContent = `Site ${site}`;
+  document.getElementById('editStatus').value = getStatus(row);
+  document.getElementById('editScout').value = row.scout_submitted ? 'true' : 'false';
+  document.getElementById('editVues').value = row.vues_submitted ? 'true' : 'false';
+  document.getElementById('editNotes').value = row.notes || '';
+  
+  // Populate editable fields
+  document.getElementById('editSectionOverride').value = row.section_override || '';
+  document.getElementById('editSurveyType').value = row.survey_type || row.upgrade_decision || 'NONE';
+  document.getElementById('editReason').textContent = row.reason_for_decision || '';
+  
+  // Vendor instructions
+  const instrField = document.getElementById('instructionsField');
+  if (row.vendor_instructions) {
+    document.getElementById('editInstructions').textContent = row.vendor_instructions;
+    instrField.style.display = 'block';
+  } else {
+    instrField.style.display = 'none';
+  }
+  
+  // Supplemental flags
+  const flagsField = document.getElementById('flagsField');
+  if (row.supplemental_flags) {
+    document.getElementById('editFlags').textContent = row.supplemental_flags;
+    flagsField.style.display = 'block';
+  } else {
+    flagsField.style.display = 'none';
+  }
+  
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+async function saveChanges() {
+  const site = document.getElementById('editSiteId').value;
+  const row = allData.find(r => r.site === site);
+  if (!row) return;
+  
+  const status = document.getElementById('editStatus').value;
+  const scoutSubmitted = document.getElementById('editScout').value === 'true';
+  const vuesSubmitted = document.getElementById('editVues').value === 'true';
+  const notes = document.getElementById('editNotes').value;
+  const surveyType = document.getElementById('editSurveyType').value;
+  const sectionOverride = document.getElementById('editSectionOverride').value;
+  
+  // Update local data
+  row.status = status;
+  row.survey_complete = status === 'complete';
+  row.scout_submitted = scoutSubmitted;
+  row.vues_submitted = vuesSubmitted;
+  row.notes = notes;
+  row.survey_type = surveyType; // Update survey type
+  row.section_override = sectionOverride; // Manual section override
+  
+  closeModal();
+  renderTables();
+  updateGlobalStats();
+  
+  // Save to backend (includes survey_type and section_override)
+  await saveToBackend(site, { 
+    status, 
+    survey_complete: row.survey_complete, 
+    scout_submitted: scoutSubmitted, 
+    vues_submitted: vuesSubmitted, 
+    notes,
+    survey_type: surveyType,
+    section_override: sectionOverride
+  });
+}
+  updateGlobalStats();
+  
+  await saveToBackend(site, {
+    status,
+    survey_complete: row.survey_complete,
+    scout_submitted: scoutSubmitted,
+    vues_submitted: vuesSubmitted,
+    notes
+  });
+}
+
+// Save to backend (API call to update Excel + Airtable)
+async function saveToBackend(site, updates) {
+  setSaving(true);
+  try {
+    const resp = await fetch('/api/survey-routing/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site, updates })
+    });
+    
+    if (!resp.ok) throw new Error('Save failed');
+    showToast(`${site} updated successfully`);
+  } catch (e) {
+    console.error('Save error:', e);
+    showToast('Failed to save - changes are local only', true);
+  } finally {
+    setSaving(false);
+  }
+}
+
+// Export table to CSV
+function exportTable(type) {
+  let data, filename;
+  if (type === 'cctv') {
+    data = filterData(cctvData, 'cctvSearch', 'cctvVendor', 'cctvStatus');
+    filename = 'cctv_surveys';
+  } else if (type === 'fa') {
+    data = filterData(faData, 'faSearch', 'faVendor', 'faStatus');
+    filename = 'fa_surveys';
+  } else if (type === 'upgrade') {
+    data = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
+    filename = 'both_surveys';
+  } else if (type === 'nosurvey') {
+    data = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+    filename = 'no_survey_needed';
+  } else if (type === 'review') {
+    data = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
+    filename = 'needs_review';
+  } else if (type === 'scout') {
+    data = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+    filename = 'awaiting_scout';
+  } else {
+    data = filterData(completeData, 'completeSearch', 'completeVendor', null);
+    filename = 'completed';
+  }
+  
+  const headers = ['Site','Vendor','Days','Survey Type','Upgrade Decision','Reason','Status','Scout','VUES','Notes'];
+  const rows = data.map(r => [
+    r.site, r.vendor || '', r.days_to_construction || '',
+    r.survey_type || '', `"${(r.upgrade_decision || '').replace(/"/g, '""')}"`,
+    `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`,
+    getStatus(r), r.scout_submitted ? 'YES' : 'NO', r.vues_submitted ? 'YES' : 'NO',
+    `"${(r.notes || '').replace(/"/g, '""')}"`
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
+  a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function refreshData() {
+  loadData();
+  showToast('Data refreshed');
+}
+
+// Initial load
+if (window.VUES_DEBUG) console.log('[VUES] Calling loadData() on page load');
+loadData().then(() => {
+  if (window.VUES_DEBUG) console.log('[VUES] loadData() completed successfully');
+}).catch(e => {
+  console.error('[VUES] loadData() FAILED:', e);
+});
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  console.log('[VUES] Auto-refresh triggered');
+  loadData();
+}, 30000);
+</script>

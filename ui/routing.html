@@ -1392,17 +1392,7 @@ async function saveChanges() {
     survey_type: surveyType,
     section_override: sectionOverride
   });
-}
-  updateGlobalStats();
-  
-  await saveToBackend(site, {
-    status,
-    survey_complete: row.survey_complete,
-    scout_submitted: scoutSubmitted,
-    vues_submitted: vuesSubmitted,
-    notes
-  });
-}
+
 
 // Save to backend (API call to update Excel + Airtable)
 async function saveToBackend(site, updates) {

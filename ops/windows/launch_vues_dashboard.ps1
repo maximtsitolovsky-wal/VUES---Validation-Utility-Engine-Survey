@@ -1,23 +1,45 @@
 $ErrorActionPreference = 'Stop'
 
-$workdir       = 'C:\VUES'
+# Dynamic path resolution - works from any install location
+$workdir       = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not $workdir) { $workdir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path) }
+
 $opsDir        = Join-Path $workdir 'ops\windows'
 $launcher      = Join-Path $opsDir  'start_vues_background.ps1'
 $outputDir     = Join-Path $workdir 'output'
+$uiDir         = Join-Path $workdir 'ui'
 $portFile      = Join-Path $outputDir 'dashboard.port'
-$dashboard     = Join-Path $outputDir 'index.html'
-$serverScript  = Join-Path $workdir  'tools\run_dashboard_server.py'
+$serverScript  = Join-Path $workdir  'tools\serve_dashboard.py'
 $rebuildScript = Join-Path $workdir  'tools\rebuild_current_dashboard.py'
 $maxWaitSeconds = 30
 $launchStartUtc = [DateTime]::UtcNow
 
+# Determine serve directory: output/ for admin, ui/ for viewers
+if (Test-Path (Join-Path $outputDir 'team_dashboard_data.json')) {
+    $serveDir = $outputDir
+    $dashboard = Join-Path $outputDir 'index.html'
+} else {
+    $serveDir = $uiDir
+    $dashboard = Join-Path $uiDir 'index.html'
+    # Use ui dir for port file if output doesn't exist
+    if (-not (Test-Path $outputDir)) { $portFile = Join-Path $uiDir 'dashboard.port' }
+}
+
 $venvPython   = Join-Path $workdir '.venv\Scripts\python.exe'
-$systemPython = 'C:\Python314\python.exe'
+$systemPython = (Get-Command python -ErrorAction SilentlyContinue).Source
+if (-not $systemPython) { $systemPython = 'python' }
 $python = if (Test-Path $venvPython) { $venvPython } else { $systemPython }
 
-if (-not (Test-Path $launcher))     { Write-Error "Launcher helper not found: $launcher"; exit 1 }
-if (-not (Test-Path $python))       { Write-Error "Python not found: $python"; exit 1 }
+if (-not (Test-Path $dashboard))    { Write-Error "Dashboard not found: $dashboard"; exit 1 }
+if (-not (Test-Path $python))       { Write-Error "Python not found. Install Python 3.11+ first."; exit 1 }
 if (-not (Test-Path $serverScript)) { Write-Error "Server script not found: $serverScript"; exit 1 }
+
+# Check if we're admin (has pipeline) or viewer (read-only)
+$isAdmin = Test-Path $launcher
+
+Write-Host "[INFO] Workdir: $workdir"
+Write-Host "[INFO] Serve from: $serveDir"
+Write-Host "[INFO] Mode: $(if ($isAdmin) { 'Admin (pipeline)' } else { 'Viewer (read-only)' })"
 
 # Pre-flight dependency check
 Write-Host '[CHECK] Validating dependencies...'

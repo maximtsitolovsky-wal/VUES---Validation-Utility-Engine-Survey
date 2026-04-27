@@ -85,6 +85,17 @@ def cleanup_files(output_dir: Path):
         pass
 
 
+def show_error(msg: str):
+    """Show error to user (works with both pythonw and console)."""
+    print(f"ERROR: {msg}", file=sys.stderr)
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(0, msg, "VUES Dashboard", 0x10)
+        except Exception:
+            pass
+
+
 def main():
     # Find UI directory (relative to script location)
     # UI folder is tracked in git - viewers can use it directly
@@ -100,18 +111,28 @@ def main():
     if (output_dir / 'team_dashboard_data.json').exists():
         serve_dir = output_dir
     
+    # Verify required files exist
     if not serve_dir.exists():
-        # Try creating a simple message for pythonw (no console)
-        try:
-            import ctypes
-            ctypes.windll.user32.MessageBoxW(
-                0, 
-                f"Dashboard directory not found:\n{serve_dir}\n\nCheck your installation.",
-                "VUES Dashboard", 
-                0x10  # MB_ICONERROR
-            )
-        except Exception:
-            pass
+        show_error(
+            f"Dashboard directory not found:\n{serve_dir}\n\n"
+            f"Run 'git pull' to get the latest files, or re-download the ZIP."
+        )
+        return
+    
+    data_file = serve_dir / 'team_dashboard_data.json'
+    if not data_file.exists():
+        show_error(
+            f"Dashboard data file missing:\n{data_file}\n\n"
+            f"Run 'git pull' to get the latest data."
+        )
+        return
+    
+    index_file = serve_dir / 'index.html'
+    if not index_file.exists():
+        show_error(
+            f"Dashboard index.html missing:\n{index_file}\n\n"
+            f"Run 'git pull' to get the latest files."
+        )
         return
     
     # Check if already running - just open browser to existing server
@@ -152,8 +173,10 @@ def main():
             httpd.serve_forever()
     except KeyboardInterrupt:
         pass
-    except Exception:
-        pass
+    except OSError as e:
+        show_error(f"Failed to start server on port {port}:\n{e}")
+    except Exception as e:
+        show_error(f"Unexpected error:\n{e}")
     finally:
         cleanup_files(port_file_dir)
 

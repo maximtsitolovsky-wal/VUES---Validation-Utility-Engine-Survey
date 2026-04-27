@@ -55,10 +55,26 @@ def main():
     print(f"  Copied {copied} file(s) to ui/")
     print("")
     
+    # Bake data into HTML files (so they work without a server)
+    print("  Baking data into HTML files...")
+    bake_script = REPO_ROOT / 'tools' / 'bake_data_into_html.py'
+    if bake_script.exists():
+        result = subprocess.run(
+            ['python', str(bake_script)],
+            cwd=REPO_ROOT, capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            print("  [OK] HTML files baked with embedded data")
+        else:
+            print(f"  [WARN] Bake step failed: {result.stderr[:200]}")
+    print("")
+    
     # Git add + commit + push
     print("  Committing and pushing...")
     try:
-        subprocess.run(['git', 'add'] + [f'ui/{f}' for f in DATA_FILES], 
+        # Add JSON + HTML files
+        files_to_add = [f'ui/{f}' for f in DATA_FILES] + ['ui/']
+        subprocess.run(['git', 'add'] + files_to_add, 
                        cwd=REPO_ROOT, check=True, capture_output=True)
         
         result = subprocess.run(

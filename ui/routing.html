@@ -203,6 +203,50 @@
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.error { background: var(--red); }
 
+    /* Tabs */
+    .tabs-container { margin-bottom: 24px; }
+    .tabs {
+      display: flex; gap: 8px; background: var(--card);
+      padding: 8px; border-radius: 16px; border: 1px solid var(--card-border);
+    }
+    .tab {
+      flex: 1; padding: 16px 20px; border-radius: 12px;
+      background: transparent; border: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: all 0.2s; color: var(--muted-fg);
+    }
+    .tab:hover { background: var(--muted); color: var(--text); }
+    .tab.active { background: var(--muted); color: var(--text); }
+    .tab.active.tab-cctv { border-bottom: 3px solid var(--blue); }
+    .tab.active.tab-fa { border-bottom: 3px solid var(--red); }
+    .tab.active.tab-upgrade { border-bottom: 3px solid var(--yellow); }
+    .tab-icon { font-size: 24px; }
+    .tab-label { font-size: 13px; font-weight: 600; }
+    .tab-counts { display: flex; gap: 12px; font-size: 12px; }
+    .tab-count { display: flex; align-items: center; gap: 4px; }
+    .tab-count .num { font-weight: 700; font-size: 18px; }
+    .tab-count.total .num { color: var(--text); }
+    .tab-count.done .num { color: var(--green); }
+    .tab-count.pending .num { color: var(--muted-fg); }
+
+    /* Summary bar below tabs */
+    .summary-bar {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+      padding: 12px 16px; background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 12px; margin-bottom: 20px; font-size: 13px;
+    }
+    .summary-item { display: flex; align-items: center; gap: 6px; }
+    .summary-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .summary-dot.green { background: var(--green); }
+    .summary-dot.yellow { background: var(--yellow); }
+    .summary-dot.purple { background: var(--purple); }
+    .summary-dot.cyan { background: var(--cyan); }
+    .summary-value { font-weight: 600; }
+
+    /* Section visibility */
+    .section-card { display: none; }
+    .section-card.active { display: block; }
+
     /* Saving indicator */
     .saving-indicator {
       position: fixed; top: 24px; right: 24px;
@@ -245,33 +289,62 @@
     </div>
   </div>
 
-  <!-- Stats Row -->
-  <div class="stats-row">
-    <div class="stat-pill green">
-      <div class="dot"></div>
-      <span class="value" id="totalComplete">0</span>
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab tab-cctv active" onclick="switchTab('cctv')">
+        <span class="tab-icon">📹</span>
+        <span class="tab-label">CCTV Surveys</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="cctvTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="cctvDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-fa" onclick="switchTab('fa')">
+        <span class="tab-icon">🔔</span>
+        <span class="tab-label">FA/Intrusion</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="faTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="faDone">0</span> done</span>
+        </div>
+      </button>
+      <button class="tab tab-upgrade" onclick="switchTab('upgrade')">
+        <span class="tab-icon">⚡</span>
+        <span class="tab-label">Full Upgrades</span>
+        <div class="tab-counts">
+          <span class="tab-count total"><span class="num" id="upgradeTotal">0</span> total</span>
+          <span class="tab-count done"><span class="num" id="upgradeDone">0</span> done</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Bar -->
+  <div class="summary-bar">
+    <div class="summary-item">
+      <span class="summary-dot green"></span>
+      <span class="summary-value" id="totalComplete">0</span>
       <span>Completed</span>
     </div>
-    <div class="stat-pill yellow">
-      <div class="dot"></div>
-      <span class="value" id="totalInProgress">0</span>
+    <div class="summary-item">
+      <span class="summary-dot yellow"></span>
+      <span class="summary-value" id="totalInProgress">0</span>
       <span>In Progress</span>
     </div>
-    <div class="stat-pill blue">
-      <div class="dot"></div>
-      <span class="value" id="totalSites">0</span>
-      <span>Total Sites</span>
+    <div class="summary-item" style="margin-left: auto;">
+      <span class="summary-dot purple"></span>
+      <span>Scout:</span>
+      <span class="summary-value" id="scoutSubmitted">0</span>
     </div>
-    <div class="stat-pill" style="margin-left: auto;">
-      <span style="color: var(--purple);">Scout:</span>
-      <span class="value" id="scoutSubmitted">0</span>
-      <span style="margin-left: 12px; color: var(--cyan);">VUES:</span>
-      <span class="value" id="vuesSubmitted">0</span>
+    <div class="summary-item">
+      <span class="summary-dot cyan"></span>
+      <span>VUES:</span>
+      <span class="summary-value" id="vuesSubmitted">0</span>
     </div>
   </div>
 
   <!-- CCTV Surveys Section -->
-  <div class="section-card" id="cctvSection">
+  <div class="section-card active" id="cctvSection">
     <div class="section-header">
       <div class="section-title">
         <span class="icon">📹</span>
@@ -456,7 +529,20 @@
 <script>
 let allData = [];
 let cctvData = [], faData = [], upgradeData = [];
-let rowCounter = 0;
+let currentTab = 'cctv';
+
+// Switch tabs
+function switchTab(tab) {
+  currentTab = tab;
+  
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab-${tab}`).classList.add('active');
+  
+  // Update section visibility
+  document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+  document.getElementById(`${tab === 'fa' ? 'fa' : tab === 'upgrade' ? 'upgrade' : 'cctv'}Section`).classList.add('active');
+}
 
 // Show toast notification
 function showToast(message, isError = false) {
@@ -506,6 +592,19 @@ async function loadData() {
 }
 
 function updateGlobalStats() {
+  // Per-tab counts
+  const cctvComplete = cctvData.filter(r => getStatus(r) === 'complete').length;
+  const faComplete = faData.filter(r => getStatus(r) === 'complete').length;
+  const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'complete').length;
+  
+  document.getElementById('cctvTotal').textContent = cctvData.length;
+  document.getElementById('cctvDone').textContent = cctvComplete;
+  document.getElementById('faTotal').textContent = faData.length;
+  document.getElementById('faDone').textContent = faComplete;
+  document.getElementById('upgradeTotal').textContent = upgradeData.length;
+  document.getElementById('upgradeDone').textContent = upgradeComplete;
+  
+  // Global counts
   const complete = allData.filter(r => r.status === 'complete' || r.survey_complete).length;
   const inProgress = allData.filter(r => r.status === 'inprogress').length;
   const scoutSub = allData.filter(r => r.scout_submitted).length;
@@ -513,7 +612,6 @@ function updateGlobalStats() {
   
   document.getElementById('totalComplete').textContent = complete;
   document.getElementById('totalInProgress').textContent = inProgress;
-  document.getElementById('totalSites').textContent = allData.length;
   document.getElementById('scoutSubmitted').textContent = scoutSub;
   document.getElementById('vuesSubmitted').textContent = vuesSub;
 }

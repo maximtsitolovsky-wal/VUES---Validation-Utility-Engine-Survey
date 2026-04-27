@@ -1258,15 +1258,30 @@ async function saveChanges() {
   const scoutSubmitted = document.getElementById('editScout').value === 'true';
   const vuesSubmitted = document.getElementById('editVues').value === 'true';
   const notes = document.getElementById('editNotes').value;
+  const surveyType = document.getElementById('editSurveyType').value;
   
+  // Update local data
   row.status = status;
   row.survey_complete = status === 'complete';
   row.scout_submitted = scoutSubmitted;
   row.vues_submitted = vuesSubmitted;
   row.notes = notes;
+  row.survey_type = surveyType; // Update survey type
   
   closeModal();
   renderTables();
+  updateGlobalStats();
+  
+  // Save to backend (includes survey_type)
+  await saveToBackend(site, { 
+    status, 
+    survey_complete: row.survey_complete, 
+    scout_submitted: scoutSubmitted, 
+    vues_submitted: vuesSubmitted, 
+    notes,
+    survey_type: surveyType 
+  });
+}
   updateGlobalStats();
   
   await saveToBackend(site, {

@@ -355,7 +355,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="11" class="loading">Loading data...</td></tr>
+          <tr><td colspan="12" class="loading">Loading data...</td></tr>
         </tbody>
       </table>
     </div>
@@ -483,6 +483,7 @@ function clearFilters() {
   document.getElementById('filterUpgrade').value = '';
   document.getElementById('filterSchedule').value = '';
   document.getElementById('filterReady').value = '';
+  document.getElementById('filterComplete').value = '';
   applyFilters();
 }
 
@@ -495,7 +496,7 @@ function renderTable() {
   
   if (filteredData.length === 0) {
     tbody.innerHTML = `
-      <tr><td colspan="11" class="empty-state">
+      <tr><td colspan="12" class="empty-state">
         <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <div>No sites match the current filters</div>
       </td></tr>
@@ -510,6 +511,7 @@ function renderTable() {
       <td>${r.days_to_construction || '—'}</td>
       <td>${badge(r.survey_required, 'req')}</td>
       <td>${r.survey_type}</td>
+      <td>${r.survey_complete ? badge('COMPLETE', 'complete') : '<span style="color:var(--text-soft);">—</span>'}</td>
       <td>${r.upgrade_decision}</td>
       <td style="max-width:200px;font-size:11px;color:var(--text-soft);">${r.reason_for_decision}</td>
       <td>${badge(r.schedule_status, 'sched')}</td>
@@ -523,7 +525,7 @@ function renderTable() {
 // Export CSV
 function exportData() {
   const headers = [
-    'Site', 'Vendor', 'Survey Required', 'Survey Type', 'Upgrade Decision',
+    'Site', 'Vendor', 'Survey Required', 'Survey Type', 'Survey Complete', 'Upgrade Decision',
     'Schedule Status', 'Supplemental Flags', 'Vendor Instructions'
   ];
   
@@ -532,6 +534,7 @@ function exportData() {
     r.vendor,
     r.survey_required,
     r.survey_type,
+    r.survey_complete ? 'YES' : 'NO',
     r.upgrade_decision,
     r.schedule_status,
     `"${(r.supplemental_flags || '').replace(/"/g, '""')}"`,

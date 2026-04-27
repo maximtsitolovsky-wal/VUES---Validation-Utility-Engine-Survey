@@ -287,6 +287,7 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         return {
             "configured": False,
             "vendors": [],
+            "mesh": {"generated_at": "", "rows": [], "summary": {}},
             "error": "Vendor assignment file not found or not configured."
         }
     
@@ -299,6 +300,7 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
             return {
                 "configured": False,
                 "vendors": [],
+                "mesh": {"generated_at": "", "rows": [], "summary": {}},
                 "error": "Failed to load vendor assignments from Excel file."
             }
         
@@ -329,7 +331,9 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         
         # Calculate vendor stats
         vendor_stats = tracker.calculate_vendor_stats(completed_submissions)
+        mesh_payload = tracker.build_assignment_mesh(scout_payload.get("records", []))
         log.info("[VENDOR_ASSIGN] Calculated stats for %d vendors", len(vendor_stats))
+        log.info("[VENDOR_ASSIGN] Built %d mesh rows", len(mesh_payload.get("rows", [])))
         
         # Convert to list for JSON serialization
         vendors_list = [
@@ -343,6 +347,7 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         result = {
             "configured": True,
             "vendors": vendors_list,
+            "mesh": mesh_payload,
             "error": "",
             "total_assignments": sum(v["total_assigned"] for v in vendors_list),
             "total_completed": sum(v["completed"] for v in vendors_list),
@@ -359,5 +364,6 @@ def _build_vendor_assignments_payload(scout_payload: dict[str, Any]) -> dict[str
         return {
             "configured": False,
             "vendors": [],
+            "mesh": {"generated_at": "", "rows": [], "summary": {}},
             "error": f"Error loading vendor assignments: {exc}"
         }

@@ -41,9 +41,10 @@ Write-Host "[INFO] Workdir: $workdir"
 Write-Host "[INFO] Serve from: $serveDir"
 Write-Host "[INFO] Mode: $(if ($isAdmin) { 'Admin (pipeline)' } else { 'Viewer (read-only)' })"
 
-# Pre-flight dependency check
-Write-Host '[CHECK] Validating dependencies...'
-$checkCode = @"
+# Pre-flight dependency check (only for admin mode)
+if ($isAdmin) {
+    Write-Host '[CHECK] Validating dependencies...'
+    $checkCode = @"
 import sys
 sys.path.insert(0, 'src')
 try:
@@ -56,15 +57,18 @@ except ImportError as e:
     print(f'[FAIL] Missing: {e}')
     sys.exit(1)
 "@
-Push-Location $workdir
-$depCheck = & $python -c $checkCode 2>&1
-Pop-Location
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Dependencies missing! Run: cd $workdir; .venv\Scripts\pip install -r requirements.txt"
+    Push-Location $workdir
+    $depCheck = & $python -c $checkCode 2>&1
+    Pop-Location
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Dependencies missing! Run: cd $workdir; .venv\Scripts\pip install -r requirements.txt"
+        Write-Host $depCheck
+        exit 1
+    }
     Write-Host $depCheck
-    exit 1
+} else {
+    Write-Host '[OK] Viewer mode - skipping dependency check'
 }
-Write-Host $depCheck
 
 # Find first available port starting from preferred
 function Find-FreePort([int]$Preferred = 8765) {
@@ -105,31 +109,34 @@ if ($existingPort) {
     } catch { }
 }
 
-# Start pipeline
-Write-Host ''
-Write-Host 'Checking pipeline...'
-$startResult = (& $launcher | Select-Object -Last 1).ToString().Trim()
-switch ($startResult) {
-    'ALREADY_RUNNING' { Write-Host '[OK] Pipeline already running.' }
-    'STARTED'         { Write-Host '[OK] Pipeline started.' }
-    default           { Write-Warning "Unexpected launcher result: $startResult" }
+# Start pipeline (admin only)
+if ($isAdmin) {
+    Write-Host ''
+    Write-Host 'Checking pipeline...'
+    $startResult = (& $launcher | Select-Object -Last 1).ToString().Trim()
+    switch ($startResult) {
+        'ALREADY_RUNNING' { Write-Host '[OK] Pipeline already running.' }
+        'STARTED'         { Write-Host '[OK] Pipeline started.' }
+        default           { Write-Warning "Unexpected launcher result: $startResult" }
+    }
 }
 
-# Start git autopush (if not already running)
-$autopushScript = Join-Path $workdir 'scripts\git_autopush.py'
-if (Test-Path $autopushScript) {
-    $autopushRunning = Get-CimInstance Win32_Process | Where-Object {
-        $_.Name -match '^python(\.exe)?$' -and $_.CommandLine -like '*git_autopush.py*'
-    }
-    
-    if (-not $autopushRunning) {
-        Write-Host 'Starting git autopush...'
-        # Use cmd /k to force a visible console window that stays open
-        $cmdArgs = "/k title Git Autopush && cd /d `"$workdir`" && `"$python`" -u `"$autopushScript`""
-        Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs
-        Write-Host '[OK] Git autopush started (auto-commits changes).'
-    } else {
-        Write-Host '[OK] Git autopush already running.'
+# Start git autopush (admin only)
+if ($isAdmin) {
+    $autopushScript = Join-Path $workdir 'scripts\git_autopush.py'
+    if (Test-Path $autopushScript) {
+        $autopushRunning = Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -match '^python(\.exe)?$' -and $_.CommandLine -like '*git_autopush.py*'
+        }
+        
+        if (-not $autopushRunning) {
+            Write-Host 'Starting git autopush...'
+            $cmdArgs = "/k title Git Autopush && cd /d `"$workdir`" && `"$python`" -u `"$autopushScript`""
+            Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs
+            Write-Host '[OK] Git autopush started (auto-commits changes).'
+        } else {
+            Write-Host '[OK] Git autopush already running.'
+        }
     }
 }
 

@@ -91,17 +91,25 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
 // === FETCH POLYFILL: use embedded data when available ===
 (function() {
   const _origFetch = window.fetch;
+  function makeResponse(data) {
+    const json = JSON.stringify(data);
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: function() { return Promise.resolve(data); },
+      text: function() { return Promise.resolve(json); },
+      headers: { get: function() { return 'application/json'; } }
+    });
+  }
   window.fetch = function(url, opts) {
     const u = String(url).split('?')[0].split('/').pop();
     if (u === 'team_dashboard_data.json' && window.TEAM_DASHBOARD_DATA) {
-      return Promise.resolve(new Response(JSON.stringify(window.TEAM_DASHBOARD_DATA), {
-        status: 200, headers: { 'Content-Type': 'application/json' }
-      }));
+      console.log('[VUES] Serving team_dashboard_data.json from embedded data');
+      return makeResponse(window.TEAM_DASHBOARD_DATA);
     }
     if (u === 'survey_routing_data.json' && window.SURVEY_ROUTING_DATA) {
-      return Promise.resolve(new Response(JSON.stringify(window.SURVEY_ROUTING_DATA), {
-        status: 200, headers: { 'Content-Type': 'application/json' }
-      }));
+      console.log('[VUES] Serving survey_routing_data.json from embedded data');
+      return makeResponse(window.SURVEY_ROUTING_DATA);
     }
     return _origFetch.apply(this, arguments);
   };

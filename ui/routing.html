@@ -52,6 +52,8 @@
     .pill-green { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
     .pill-red { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
     .pill-yellow { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow); }
+    .pill-purple { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); color: var(--purple); }
+    .pill-orange { background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3); color: var(--orange); }
     
     .section-filters { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .section-filters input, .section-filters select {
@@ -631,6 +633,80 @@
       <div>Actions</div>
     </div>
     <div class="table-body" id="reviewBody"></div>
+  </div>
+
+  <!-- Awaiting Scout Section -->
+  <div class="section-card" id="scoutSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">📋</span>
+        Awaiting Scout Submission
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-purple" id="scoutCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="scoutSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="scoutVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('scout')">Export</button>
+      </div>
+    </div>
+    <div class="table-header scout-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="scoutBody"></div>
+  </div>
+
+  <!-- Completed Section -->
+  <div class="section-card" id="completeSection">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">✅</span>
+        Completed (Column V)
+      </div>
+      <div class="section-pills">
+        <span class="pill pill-green" id="completeCount">0</span>
+      </div>
+      <div class="section-filters">
+        <input type="text" id="completeSearch" placeholder="Site #" oninput="renderTables()">
+        <select id="completeVendor" onchange="renderTables()">
+          <option value="">All Vendors</option>
+          <option value="CEI">CEI</option>
+          <option value="Everon">Everon</option>
+          <option value="Wachter">Wachter</option>
+          <option value="Techwise">Techwise</option>
+          <option value="SAS">SAS</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportTable('complete')">Export</button>
+      </div>
+    </div>
+    <div class="table-header complete-grid">
+      <div>#</div>
+      <div>Site</div>
+      <div>Requirements</div>
+      <div>Vendor</div>
+      <div>Days</div>
+      <div>Status</div>
+      <div>Scout</div>
+      <div>VUES</div>
+      <div>Actions</div>
+    </div>
+    <div class="table-body" id="completeBody"></div>
   </div>
 
   <!-- Edit Modal -->

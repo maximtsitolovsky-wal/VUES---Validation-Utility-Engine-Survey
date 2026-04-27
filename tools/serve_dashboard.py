@@ -86,7 +86,7 @@ def main():
     # Check if already running - just open browser to existing server
     existing_port = is_server_running(output_dir)
     if existing_port:
-        webbrowser.open(f"http://localhost:{existing_port}/routing.html")
+        webbrowser.open(f"http://localhost:{existing_port}/index.html")
         return
     
     # Find a free port
@@ -106,7 +106,7 @@ def main():
     
     try:
         with socketserver.TCPServer(("", port), handler) as httpd:
-            url = f"http://localhost:{port}/routing.html"
+            url = f"http://localhost:{port}/index.html"
             
             # Open browser after short delay
             def open_browser():

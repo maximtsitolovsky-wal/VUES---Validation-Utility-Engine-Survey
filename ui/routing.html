@@ -866,7 +866,7 @@ async function loadData() {
 }
 
 function updateGlobalStats() {
-  // Per-tab counts
+  // Per-tab counts (only count done for active survey tabs, not scout/complete)
   const cctvComplete = cctvData.filter(r => getStatus(r) === 'complete').length;
   const faComplete = faData.filter(r => getStatus(r) === 'complete').length;
   const upgradeComplete = upgradeData.filter(r => getStatus(r) === 'complete').length;
@@ -880,10 +880,13 @@ function updateGlobalStats() {
   document.getElementById('upgradeDone').textContent = upgradeComplete;
   document.getElementById('reviewTotal').textContent = reviewData.length;
   document.getElementById('reviewDone').textContent = reviewComplete;
+  document.getElementById('scoutTotal').textContent = scoutData.length;
+  document.getElementById('completeTotal').textContent = completeData.length;
   
-  // Global counts
-  const complete = allData.filter(r => r.status === 'complete' || r.survey_complete).length;
-  const inProgress = allData.filter(r => r.status === 'inprogress').length;
+  // Global counts (across non-complete sites)
+  const activeSites = [...cctvData, ...faData, ...upgradeData, ...reviewData];
+  const complete = activeSites.filter(r => r.status === 'complete').length;
+  const inProgress = activeSites.filter(r => r.status === 'inprogress').length;
   const scoutSub = allData.filter(r => r.scout_submitted).length;
   const vuesSub = allData.filter(r => r.vues_submitted).length;
   
@@ -924,7 +927,10 @@ function renderRow(row, index, type) {
   const scoutChecked = row.scout_submitted ? 'checked' : '';
   const vuesChecked = row.vues_submitted ? 'checked' : '';
   
-  const gridClass = type === 'review' ? 'review-grid' : (type === 'upgrade' ? 'upgrade-grid' : (type === 'cctv' ? 'cctv-grid' : 'fa-grid'));
+  const gridClass = {
+    cctv: 'cctv-grid', fa: 'fa-grid', upgrade: 'upgrade-grid',
+    review: 'review-grid', scout: 'scout-grid', complete: 'complete-grid'
+  }[type] || 'cctv-grid';
   
   // Determine requirement type badge
   let reqTypeClass = 'cctv';

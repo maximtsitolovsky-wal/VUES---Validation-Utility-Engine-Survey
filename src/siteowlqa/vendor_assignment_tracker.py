@@ -12,10 +12,11 @@ Features:
 - Provide vendor performance insights for dashboard and weekly highlights
 """
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional
+from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import openpyxl
 

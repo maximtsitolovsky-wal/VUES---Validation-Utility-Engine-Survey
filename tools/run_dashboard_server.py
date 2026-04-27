@@ -36,6 +36,7 @@ _REBUILD_SCRIPT = _WORKDIR / "tools" / "rebuild_current_dashboard.py"
 _STALE_AFTER_MINUTES = 15
 _rebuild_lock = threading.Lock()
 _rebuild_in_progress = False
+_LIVE_RELOAD = os.environ.get("VUES_LIVE_RELOAD", "").strip().lower() in ("1", "true")
 _SURVEY_ROUTING_JSON = _OUTPUT_DIR / "survey_routing_data.json"
 _EXCEL_WORKBOOK = Path.home() / "OneDrive - Walmart Inc" / "Documents" / "BaselinePrinter" / "2027 Survey Lab.xlsm"
 
@@ -60,7 +61,37 @@ class NoCacheDashboardHandler(SimpleHTTPRequestHandler):
         if path == "/api/app/status":
             self._write_json(HTTPStatus.OK, _app_status_payload())
             return
+        if path == "/api/live-reload":
+            self._write_json(HTTPStatus.OK, _live_reload_payload())
+            return
+        if _LIVE_RELOAD and path.endswith(".html"):
+            self._serve_html_with_live_reload()
+            return
         super().do_GET()
+
+    def _serve_html_with_live_reload(self) -> None:
+        """Serve HTML file with live-reload script injected before </body>."""
+        # Translate URL path to filesystem path
+        rel = self._request_path().lstrip("/")
+        fpath = Path(self.directory) / rel  # type: ignore[attr-defined]
+        if not fpath.is_file():
+            super().do_GET()
+            return
+        try:
+            html = fpath.read_bytes()
+        except OSError:
+            super().do_GET()
+            return
+        # Inject live-reload poller before </body>
+        inject = _LIVE_RELOAD_SCRIPT.encode("utf-8")
+        marker = b"</body>"
+        if marker in html:
+            html = html.replace(marker, inject + marker, 1)
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(html)))
+        self.end_headers()
+        self.wfile.write(html)
 
     def do_POST(self) -> None:  # noqa: N802
         path = self._request_path()

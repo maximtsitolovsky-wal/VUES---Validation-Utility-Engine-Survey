@@ -8,23 +8,19 @@
 
 ## 🚀 Quick Start (Copy & Paste)
 
-**Open PowerShell and run these commands:**
+**Open PowerShell and paste this entire block:**
 
 ```powershell
-# 1. Clone the repo
+# Clone, setup, and launch VUES dashboard
 git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
 cd VUES---Validation-Utility-Engine-Survey
-
-# 2. Create virtual environment & install dependencies
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-
-# 3. Start the dashboard server
-python -m http.server 8765 --directory output
+python tools/serve_dashboard.py
 ```
 
-**Then open your browser to:** http://localhost:8765/routing.html
+The server automatically finds a free port and opens your browser to the dashboard!
 
 ---
 

@@ -14,6 +14,20 @@ import subprocess
 from pathlib import Path
 
 
+def get_desktop_path():
+    """Get the actual Desktop path (handles OneDrive redirection)."""
+    # Use PowerShell to get the real Desktop path
+    result = subprocess.run(
+        ["powershell", "-Command", "[Environment]::GetFolderPath('Desktop')"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode == 0 and result.stdout.strip():
+        return Path(result.stdout.strip())
+    # Fallback
+    return Path(os.environ.get("USERPROFILE", "~")) / "Desktop"
+
+
 def create_desktop_shortcut():
     """Create a desktop shortcut for VUES Dashboard."""
     
@@ -21,7 +35,7 @@ def create_desktop_shortcut():
     repo_root = Path(__file__).parent.parent.resolve()
     icon_path = repo_root / "assets" / "vues_icon.ico"
     target_script = repo_root / "tools" / "serve_dashboard.py"
-    desktop = Path(os.environ.get("USERPROFILE", "~")) / "Desktop"
+    desktop = get_desktop_path()
     shortcut_path = desktop / "VUES Dashboard.lnk"
     
     # Check if icon exists

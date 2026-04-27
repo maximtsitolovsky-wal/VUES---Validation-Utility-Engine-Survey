@@ -59,6 +59,7 @@ class SurveyRoutingRow:
     ready_to_assign: str  # YES, NO
     supplemental_flags: str
     vendor_instructions: str
+    survey_complete: bool = False  # Column V from Excel
 
 
 @dataclass
@@ -89,6 +90,7 @@ class ScheduleData:
     site: str
     vendor: str
     days_to_construction: int | None
+    survey_complete: bool = False  # Column V from Excel
     
 
 def _normalize_site(site: str | int | float | None) -> str:
@@ -225,8 +227,8 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
     data = []
     skipped = 0
     
-    # Column A = Site, Column X = Days to Construction, Column Y = Vendor
-    # openpyxl is 1-indexed, so A=1, X=24, Y=25
+    # Column A = Site, Column V = Survey Complete, Column X = Days to Construction, Column Y = Vendor
+    # openpyxl is 1-indexed, so A=1, V=22, X=24, Y=25
     for row in ws.iter_rows(min_row=2, values_only=True):  # Skip header
         if not row or len(row) < 25:
             continue
@@ -239,6 +241,10 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
         if site in INVALID_VALUES or site.startswith("#"):
             skipped += 1
             continue
+        
+        # Column V (0-indexed: 21) = Survey Complete checkbox
+        survey_complete_raw = row[21] if len(row) > 21 else None
+        survey_complete = _is_yes(survey_complete_raw)
             
         days_raw = row[23]  # Column X (0-indexed: 23)
         vendor = str(row[24] or "").strip()  # Column Y (0-indexed: 24)
@@ -256,7 +262,7 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
             except (ValueError, TypeError):
                 pass
         
-        data.append(ScheduleData(site=site, vendor=vendor, days_to_construction=days))
+        data.append(ScheduleData(site=site, vendor=vendor, days_to_construction=days, survey_complete=survey_complete))
     
     wb.close()
     if skipped > 0:

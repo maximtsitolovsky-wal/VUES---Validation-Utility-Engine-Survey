@@ -255,6 +255,34 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Legend */
+    .legend-btn {
+      position: relative;
+    }
+    .legend-popup {
+      position: absolute; top: 100%; right: 0; margin-top: 8px;
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 16px; width: 320px;
+      z-index: 100; display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .legend-popup.show { display: block; }
+    .legend-title { font-weight: 600; margin-bottom: 12px; font-size: 14px; }
+    .legend-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--card-border);
+    }
+    .legend-item:last-child { border-bottom: none; }
+    .legend-icon { font-size: 18px; width: 28px; text-align: center; }
+    .legend-text { flex: 1; }
+    .legend-label { font-weight: 600; font-size: 13px; }
+    .legend-desc { font-size: 11px; color: var(--muted-fg); margin-top: 2px; }
+    .legend-code { 
+      font-family: monospace; font-size: 10px; 
+      background: var(--bg); padding: 2px 6px; border-radius: 4px;
+      color: var(--blue); margin-top: 4px; display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -280,6 +308,39 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
         Refresh
       </button>
+      <div class="legend-btn">
+        <button class="btn btn-ghost" onclick="toggleLegend()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Legend
+        </button>
+        <div class="legend-popup" id="legendPopup">
+          <div class="legend-title">📋 Tab Logic</div>
+          <div class="legend-item">
+            <span class="legend-icon">📹</span>
+            <div class="legend-text">
+              <div class="legend-label">CCTV Surveys</div>
+              <div class="legend-desc">Sites needing CCTV survey only</div>
+              <code class="legend-code">survey_type = "CCTV"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🔔</span>
+            <div class="legend-text">
+              <div class="legend-label">FA/Intrusion Surveys</div>
+              <div class="legend-desc">Sites needing FA/Intrusion survey only</div>
+              <code class="legend-code">survey_type = "FA/INTRUSION"</code>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">⚡</span>
+            <div class="legend-text">
+              <div class="legend-label">Full Upgrades</div>
+              <div class="legend-desc">Sites needing both surveys OR full system upgrade</div>
+              <code class="legend-code">survey_type = "BOTH" OR upgrade_decision contains "FULL"</code>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -544,6 +605,19 @@
 let allData = [];
 let cctvData = [], faData = [], upgradeData = [];
 let currentTab = 'cctv';
+
+// Toggle legend popup
+function toggleLegend() {
+  document.getElementById('legendPopup').classList.toggle('show');
+}
+
+// Close legend when clicking outside
+document.addEventListener('click', (e) => {
+  const legendBtn = document.querySelector('.legend-btn');
+  if (!legendBtn.contains(e.target)) {
+    document.getElementById('legendPopup').classList.remove('show');
+  }
+});
 
 // Switch tabs
 function switchTab(tab) {

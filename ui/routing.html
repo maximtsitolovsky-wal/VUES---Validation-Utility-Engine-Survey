@@ -1220,8 +1220,9 @@ function openEditModal(site) {
   document.getElementById('editVues').value = row.vues_submitted ? 'true' : 'false';
   document.getElementById('editNotes').value = row.notes || '';
   
-  // Populate read-only details
-  document.getElementById('editSurveyType').textContent = row.survey_type || row.upgrade_decision || 'N/A';
+  // Populate editable fields
+  document.getElementById('editSectionOverride').value = row.section_override || '';
+  document.getElementById('editSurveyType').value = row.survey_type || row.upgrade_decision || 'NONE';
   document.getElementById('editReason').textContent = row.reason_for_decision || '';
   
   // Vendor instructions
@@ -1334,6 +1335,43 @@ function exportTable(type) {
     filename = 'needs_review';
   } else if (type === 'scout') {
     data = filterData(scoutData, 'scoutSearch', 'scoutVendor', null);
+    filename = 'awaiting_scout';
+  } else {
+    data = filterData(completeData, 'completeSearch', 'completeVendor', null);
+    filename = 'completed';
+  }
+  
+  const headers = ['Site','Vendor','Days','Survey Type','Upgrade Decision','Reason','Status','Scout','VUES','Notes'];
+  const rows = data.map(r => [
+    r.site, r.vendor || '', r.days_to_construction || '',
+    r.survey_type || '', `"${(r.upgrade_decision || '').replace(/"/g, '""')}"`,
+    `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`,
+    getStatus(r), r.scout_submitted ? 'YES' : 'NO', r.vues_submitted ? 'YES' : 'NO',
+    `"${(r.notes || '').replace(/"/g, '""')}"`
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
+  a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function refreshData() {
+  loadData();
+  showToast('Data refreshed');
+}
+
+// Initial load
+loadData();
+
+// Auto-refresh every 30 seconds
+setInterval(loadData, 30000);
+</script>
+
+</body>
+</html>
+dor', null);
     filename = 'awaiting_scout';
   } else {
     data = filterData(completeData, 'completeSearch', 'completeVendor', null);

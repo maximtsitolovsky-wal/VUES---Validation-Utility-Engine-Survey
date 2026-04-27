@@ -40,6 +40,38 @@ _LIVE_RELOAD = os.environ.get("VUES_LIVE_RELOAD", "").strip().lower() in ("1", "
 _SURVEY_ROUTING_JSON = _OUTPUT_DIR / "survey_routing_data.json"
 _EXCEL_WORKBOOK = Path.home() / "OneDrive - Walmart Inc" / "Documents" / "BaselinePrinter" / "2027 Survey Lab.xlsm"
 
+# ---------------------------------------------------------------------------
+# Live-reload: tiny JS poller injected into HTML when VUES_LIVE_RELOAD=1
+# Polls /api/live-reload every 3s; reloads the page when mtime changes.
+# Zero dependencies, zero build tools, zero npm install.
+# ---------------------------------------------------------------------------
+_LIVE_RELOAD_SCRIPT = """
+<script>
+(function(){
+  var _lr_ts = null;
+  setInterval(function(){
+    fetch('/api/live-reload').then(function(r){return r.json()}).then(function(d){
+      if(_lr_ts === null){ _lr_ts = d.mtime; return; }
+      if(d.mtime !== _lr_ts){ console.log('[live-reload] change detected, refreshing...'); location.reload(); }
+    }).catch(function(){});
+  }, 3000);
+})();
+</script>
+"""
+
+
+def _live_reload_payload() -> dict[str, Any]:
+    """Return the latest mtime of any HTML file in the output directory."""
+    latest = 0.0
+    for f in _OUTPUT_DIR.glob("*.html"):
+        try:
+            mt = f.stat().st_mtime
+            if mt > latest:
+                latest = mt
+        except OSError:
+            continue
+    return {"ok": True, "mtime": latest, "live_reload": _LIVE_RELOAD}
+
 
 class NoCacheDashboardHandler(SimpleHTTPRequestHandler):
     """Static-file handler tuned for regenerated dashboards."""

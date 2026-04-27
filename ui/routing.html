@@ -506,9 +506,8 @@
         </select>
         <select id="cctvStatus" onchange="renderTables()">
           <option value="">All Status</option>
-          <option value="not-begun">Not Begun</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="survey-needs-assignment">Needs Assign</option>
+          <option value="scout-completed">Scout Done</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -552,9 +551,8 @@
         </select>
         <select id="faStatus" onchange="renderTables()">
           <option value="">All Status</option>
-          <option value="not-begun">Not Begun</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="survey-needs-assignment">Needs Assign</option>
+          <option value="scout-completed">Scout Done</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -598,9 +596,8 @@
         </select>
         <select id="upgradeStatus" onchange="renderTables()">
           <option value="">All Status</option>
-          <option value="not-begun">Not Begun</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="survey-needs-assignment">Needs Assign</option>
+          <option value="scout-completed">Scout Done</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -681,9 +678,8 @@
         </select>
         <select id="reviewStatus" onchange="renderTables()">
           <option value="">All Status</option>
-          <option value="not-begun">Not Begun</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="survey-needs-assignment">Needs Assign</option>
+          <option value="scout-completed">Scout Done</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -808,10 +804,8 @@
         <div class="modal-field">
           <label>Status</label>
           <select id="editStatus">
-            <option value="not-begun">Not Begun</option>
             <option value="scout-in-progress">Scout in Progress</option>
             <option value="scout-completed">Scout Completed</option>
-            <option value="survey-needs-assignment">Survey Needs Assignment</option>
             <option value="survey-in-progress">Survey in Progress</option>
             <option value="survey-completed">Survey Completed</option>
           </select>
@@ -1009,10 +1003,8 @@ function getStatus(row) {
 
 function getStatusLabel(status) {
   const labels = {
-    'not-begun': '○ Not Begun',
     'scout-in-progress': '◐ Scout IP',
     'scout-completed': '✓ Scout Done',
-    'survey-needs-assignment': '📋 Needs Assign',
     'survey-in-progress': '◐ Survey IP',
     'survey-completed': '✓ Complete'
   };
@@ -1143,7 +1135,7 @@ async function cycleStatus(site) {
   if (!row) return;
   
   const current = getStatus(row);
-  const statusOrder = ['not-begun', 'scout-in-progress', 'scout-completed', 'survey-needs-assignment', 'survey-in-progress', 'survey-completed'];
+  const statusOrder = ['scout-in-progress', 'scout-completed', 'survey-in-progress', 'survey-completed'];
   const currentIdx = statusOrder.indexOf(current);
   const nextIdx = (currentIdx + 1) % statusOrder.length;
   const next = statusOrder[nextIdx];

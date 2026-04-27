@@ -452,6 +452,14 @@ window.SURVEY_ROUTING_DATA_FALLBACK = {"generated_at": "2026-04-27T14:17:51.9498
       }
     }).catch(() => {});
     
+    // Load routing data
+    fetch('survey_routing_data.json').then(r => r.json()).then(d => {
+      const s = d.summary || {};
+      document.getElementById('routingPill').textContent = `${s.surveys_required || 0} Surveys`;
+    }).catch(() => {
+      document.getElementById('routingPill').textContent = 'No Data';
+    });
+    
     // Generate stars
     const stars = document.getElementById('stars');
     for (let i = 0; i < 80; i++) {

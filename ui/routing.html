@@ -465,7 +465,7 @@
     <div class="summary-item">
       <span class="summary-dot" style="background: var(--blue);"></span>
       <span class="summary-value" id="statScoutDone">0</span>
-      <span>Scout Done</span>
+      <span>Ready to Assign</span>
     </div>
     <div class="summary-item">
       <span class="summary-dot" style="background: var(--yellow);"></span>
@@ -503,7 +503,7 @@
         <select id="cctvStatus" onchange="renderTables()">
           <option value="">All Status</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="scout-completed">Scout Done</option>
+          <option value="scout-completed">Ready to Assign</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -548,7 +548,7 @@
         <select id="faStatus" onchange="renderTables()">
           <option value="">All Status</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="scout-completed">Scout Done</option>
+          <option value="scout-completed">Ready to Assign</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -593,7 +593,7 @@
         <select id="upgradeStatus" onchange="renderTables()">
           <option value="">All Status</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="scout-completed">Scout Done</option>
+          <option value="scout-completed">Ready to Assign</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -675,7 +675,7 @@
         <select id="reviewStatus" onchange="renderTables()">
           <option value="">All Status</option>
           <option value="scout-in-progress">Scout IP</option>
-          <option value="scout-completed">Scout Done</option>
+          <option value="scout-completed">Ready to Assign</option>
           <option value="survey-in-progress">Survey IP</option>
           <option value="survey-completed">Completed</option>
         </select>
@@ -801,7 +801,7 @@
           <label>Status</label>
           <select id="editStatus">
             <option value="scout-in-progress">Scout in Progress</option>
-            <option value="scout-completed">Scout Completed</option>
+            <option value="scout-completed">Scout Done • Ready to Assign</option>
             <option value="survey-in-progress">Survey in Progress</option>
             <option value="survey-completed">Survey Completed</option>
           </select>
@@ -1000,7 +1000,7 @@ function getStatus(row) {
 function getStatusLabel(status) {
   const labels = {
     'scout-in-progress': '◐ Scout IP',
-    'scout-completed': '✓ Scout Done',
+    'scout-completed': '✓ Scout • Assign Survey',
     'survey-in-progress': '◐ Survey IP',
     'survey-completed': '✓ Complete'
   };

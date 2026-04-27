@@ -882,6 +882,9 @@ async function loadData() {
     const data = await resp.json();
     allData = data.rows || [];
     
+    // Filter out Test vendor
+    allData = allData.filter(r => r.vendor !== 'Test' && r.vendor !== 'TEST');
+    
     // Sort by days
     allData.sort((a, b) => {
       const da = a.days_to_construction === '' ? Infinity : parseInt(a.days_to_construction) || Infinity;
@@ -974,10 +977,19 @@ function filterData(data, searchId, vendorId, statusId) {
 
 function getStatus(row) {
   // Auto-derive status from actual data
-  if (row.survey_complete === true) return 'complete';  // Column V = done
-  if (row.scout_submitted === true) return 'inprogress'; // Has Scout submission = in progress
-  if (row.status && row.status !== 'pending') return row.status; // Manual override
-  return 'pending';
+  if (row.survey_complete === true) return 'survey-completed';  // Column V = done
+  
+  // Check if scout submission exists (not "No scout submission")
+  const hasScout = !row.reason_for_decision?.includes('No scout submission');
+  
+  if (!hasScout) return 'not-begun';  // No scout submission yet
+  
+  // Has scout data - check further
+  if (row.vues_submitted === true) return 'survey-in-progress';  // VUES submission = survey in progress
+  if (row.scout_submitted === true) return 'survey-needs-assignment';  // Scout done, needs survey assignment
+  
+  // Has scout data but no explicit tracking = scout in progress
+  return 'scout-in-progress';
 }
 
 function renderRow(row, index, type) {

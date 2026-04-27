@@ -54,8 +54,12 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
     content = html_path.read_text(encoding='utf-8')
     
     # Build the injection script
+    from datetime import datetime
+    version = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     inject_lines = ["<script>"]
     inject_lines.append("// === EMBEDDED DATA (auto-generated, do not edit) ===")
+    inject_lines.append(f"window.VUES_BAKED_VERSION = '{version}';")
+    inject_lines.append(f"console.log('[VUES] Baked data loaded:', '{version}');")
     for var_name, payload in data.items():
         # Use JSON.parse for performance with large objects
         json_str = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")

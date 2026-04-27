@@ -1067,6 +1067,13 @@ function renderTables() {
     ? upgradeFiltered.map((r, i) => renderRow(r, i, 'upgrade')).join('')
     : '<div class="empty-state">No sites needing both surveys match filters</div>';
   
+  // No Survey Needed (Full Upgrade)
+  const nosurveyFiltered = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+  document.getElementById('nosurveyCount').textContent = nosurveyFiltered.length;
+  document.getElementById('nosurveyBody').innerHTML = nosurveyFiltered.length
+    ? nosurveyFiltered.map((r, i) => renderRow(r, i, 'nosurvey')).join('')
+    : '<div class="empty-state">No full upgrade sites match filters</div>';
+  
   // Needs Review
   const reviewFiltered = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
   const reviewDone = reviewFiltered.filter(r => getStatus(r) === 'complete').length;
@@ -1223,6 +1230,9 @@ function exportTable(type) {
   } else if (type === 'upgrade') {
     data = filterData(upgradeData, 'upgradeSearch', 'upgradeVendor', 'upgradeStatus');
     filename = 'both_surveys';
+  } else if (type === 'nosurvey') {
+    data = filterData(noSurveyData, 'nosurveySearch', 'nosurveyVendor', null);
+    filename = 'no_survey_needed';
   } else if (type === 'review') {
     data = filterData(reviewData, 'reviewSearch', 'reviewVendor', 'reviewStatus');
     filename = 'needs_review';

@@ -78,9 +78,9 @@
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.05em; color: var(--muted-fg);
     }
-    .table-header.cctv-grid, .row.cctv-grid { grid-template-columns: 60px 1fr 140px 100px 100px 100px 100px 120px; }
-    .table-header.fa-grid, .row.fa-grid { grid-template-columns: 60px 1fr 140px 100px 100px 100px 100px 120px; }
-    .table-header.upgrade-grid, .row.upgrade-grid { grid-template-columns: 60px 1fr 140px 100px 180px 100px 100px 120px; }
+    .table-header.cctv-grid, .row.cctv-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.fa-grid, .row.fa-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
+    .table-header.upgrade-grid, .row.upgrade-grid { grid-template-columns: 50px 80px 1fr 120px 80px 100px 80px 80px 100px; }
 
     .table-body { display: flex; flex-direction: column; gap: 8px; }
 
@@ -101,11 +101,24 @@
       to { opacity: 1; transform: translateX(0); }
     }
 
-    .row-num { font-size: 20px; font-weight: 700; color: var(--muted-fg); }
-    .row-site { font-weight: 600; }
-    .row-vendor { color: var(--text-soft); font-size: 13px; }
-    .row-days { font-family: monospace; font-size: 14px; }
+    .row-num { font-size: 16px; font-weight: 700; color: var(--muted-fg); }
+    .row-site { font-weight: 600; font-size: 14px; }
+    .row-vendor { color: var(--text-soft); font-size: 12px; }
+    .row-days { font-family: monospace; font-size: 13px; }
     .row-days.urgent { color: var(--red); font-weight: 600; }
+
+    /* Requirements column */
+    .row-requirements { font-size: 12px; line-height: 1.4; }
+    .req-type {
+      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .req-type.cctv { background: rgba(59,130,246,0.2); color: var(--blue); }
+    .req-type.fa { background: rgba(239,68,68,0.2); color: var(--red); }
+    .req-type.both { background: rgba(168,85,247,0.2); color: var(--purple); }
+    .req-type.upgrade { background: rgba(234,179,8,0.2); color: var(--yellow); }
+    .req-reason { color: var(--muted-fg); font-size: 11px; margin-top: 2px; }
 
     /* Status Badge - Clickable */
     .status-badge {
@@ -357,6 +370,7 @@
     <div class="table-header cctv-grid">
       <div>#</div>
       <div>Site</div>
+      <div>Requirements</div>
       <div>Vendor</div>
       <div>Days</div>
       <div>Status</div>
@@ -400,6 +414,7 @@
     <div class="table-header fa-grid">
       <div>#</div>
       <div>Site</div>
+      <div>Requirements</div>
       <div>Vendor</div>
       <div>Days</div>
       <div>Status</div>
@@ -449,11 +464,12 @@
     <div class="table-header upgrade-grid">
       <div>#</div>
       <div>Site</div>
+      <div>Requirements</div>
       <div>Vendor</div>
       <div>Days</div>
-      <div>Upgrade Type</div>
       <div>Status</div>
-      <div>Submitted</div>
+      <div>Scout</div>
+      <div>VUES</div>
       <div>Actions</div>
     </div>
     <div class="table-body" id="upgradeBody"></div>

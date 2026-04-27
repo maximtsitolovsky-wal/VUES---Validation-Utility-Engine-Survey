@@ -311,6 +311,14 @@
         <option value="NO">No</option>
       </select>
     </div>
+    <div class="filter-group">
+      <label>Survey Complete</label>
+      <select id="filterComplete" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="true">Complete</option>
+        <option value="false">Not Complete</option>
+      </select>
+    </div>
     <div class="filter-group" style="display: flex; align-items: flex-end;">
       <button onclick="clearFilters()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--text); cursor: pointer; font-size: 13px;">Clear All</button>
     </div>
@@ -337,6 +345,7 @@
             <th>Days to Construction</th>
             <th>Survey Required</th>
             <th>Survey Type</th>
+            <th>Complete</th>
             <th>Upgrade Decision</th>
             <th>Reason</th>
             <th>Schedule Status</th>

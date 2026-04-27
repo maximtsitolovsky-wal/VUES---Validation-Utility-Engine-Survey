@@ -383,12 +383,13 @@ function badge(value, type) {
     'URGENT': 'badge-urgent',
     'ON TRACK': 'badge-ontrack',
     'NOT REQUIRED': 'badge-notrequired',
+    'COMPLETE': 'badge-yes',
   };
   const cls = classes[value] || 'badge-review';
   return `<span class="badge ${cls}">${value}</span>`;
 }
 
-// Load data
+// Load data - preserves filter state
 async function loadData() {
   try {
     const resp = await fetch('survey_routing_data.json');
@@ -403,8 +404,6 @@ async function loadData() {
       const daysB = b.days_to_construction === '' ? Infinity : parseInt(b.days_to_construction) || Infinity;
       return daysA - daysB;
     });
-    
-    filteredData = [...allData];
     
     // Update summary
     const s = data.summary || {};
@@ -431,11 +430,12 @@ async function loadData() {
       document.getElementById('lastUpdated').textContent = `Updated ${d.toLocaleTimeString()}`;
     }
     
-    renderTable();
+    // Re-apply filters (preserves filter state on refresh)
+    applyFilters();
   } catch (e) {
     console.error('Failed to load data:', e);
     document.getElementById('tableBody').innerHTML = `
-      <tr><td colspan="11" class="empty-state">
+      <tr><td colspan="12" class="empty-state">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
         <div>No data available. Survey routing data has not been generated yet.</div>
       </td></tr>
@@ -452,6 +452,7 @@ function applyFilters() {
   const upgrade = document.getElementById('filterUpgrade').value;
   const schedule = document.getElementById('filterSchedule').value;
   const ready = document.getElementById('filterReady').value;
+  const complete = document.getElementById('filterComplete').value;
   
   filteredData = allData.filter(r => {
     // Site search (partial match)
@@ -465,6 +466,9 @@ function applyFilters() {
     if (upgrade && !r.upgrade_decision.includes(upgrade)) return false;
     if (schedule && r.schedule_status !== schedule) return false;
     if (ready && r.ready_to_assign !== ready) return false;
+    // Survey Complete filter
+    if (complete === 'true' && !r.survey_complete) return false;
+    if (complete === 'false' && r.survey_complete) return false;
     return true;
   });
   

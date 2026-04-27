@@ -289,6 +289,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     vendor = schedule.vendor if schedule else ""
     days = schedule.days_to_construction if schedule else None
     days_str = str(days) if days is not None else ""
+    survey_complete = schedule.survey_complete if schedule else False
     
     # Handle missing scout data
     if scout is None:
@@ -304,6 +305,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
             ready_to_assign="NO",
             supplemental_flags="",
             vendor_instructions="Do not assign survey until internal review is completed.",
+            survey_complete=survey_complete,
         )
     
     if schedule is None:
@@ -481,6 +483,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         ready_to_assign=ready_to_assign,
         supplemental_flags="; ".join(supplemental_flags_list),
         vendor_instructions=vendor_instructions,
+        survey_complete=survey_complete,
     )
 
 

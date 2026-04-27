@@ -776,7 +776,7 @@
 
 <script>
 let allData = [];
-let cctvData = [], faData = [], upgradeData = [], reviewData = [];
+let cctvData = [], faData = [], upgradeData = [], reviewData = [], scoutData = [], completeData = [];
 let currentTab = 'cctv';
 
 // Toggle legend popup
@@ -802,7 +802,7 @@ function switchTab(tab) {
   
   // Update section visibility
   document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
-  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', review: 'reviewSection' };
+  const sectionMap = { cctv: 'cctvSection', fa: 'faSection', upgrade: 'upgradeSection', review: 'reviewSection', scout: 'scoutSection', complete: 'completeSection' };
   document.getElementById(sectionMap[tab]).classList.add('active');
 }
 
@@ -834,15 +834,22 @@ async function loadData() {
       return da - db;
     });
     
-    // Split into categories
+    // Split into categories - COMPLETED first (Column V = true)
+    completeData = allData.filter(r => r.survey_complete === true);
+    const notComplete = allData.filter(r => r.survey_complete !== true);
+    
+    // Awaiting Scout - no scout submission yet
+    scoutData = notComplete.filter(r => r.reason_for_decision?.includes('No scout submission'));
+    const hasScout = notComplete.filter(r => !r.reason_for_decision?.includes('No scout submission'));
+    
     // CCTV: only CCTV survey type
-    cctvData = allData.filter(r => r.survey_type === 'CCTV');
+    cctvData = hasScout.filter(r => r.survey_type === 'CCTV');
     // FA: only FA/INTRUSION survey type
-    faData = allData.filter(r => r.survey_type === 'FA/INTRUSION');
+    faData = hasScout.filter(r => r.survey_type === 'FA/INTRUSION');
     // Both Surveys: survey_type is BOTH
-    upgradeData = allData.filter(r => r.survey_type === 'BOTH');
-    // Needs Review: survey_type is REVIEW
-    reviewData = allData.filter(r => r.survey_type === 'REVIEW' || r.survey_type === 'NONE');
+    upgradeData = hasScout.filter(r => r.survey_type === 'BOTH');
+    // Needs Review: survey_type is REVIEW (actual ambiguous cases)
+    reviewData = hasScout.filter(r => r.survey_type === 'REVIEW' || r.survey_type === 'NONE');
     
     // Update global stats
     updateGlobalStats();

@@ -179,18 +179,25 @@ def main():
     print("  ============================================")
     print("")
     
+    # Check Git is properly set up
+    print("  [1/4] Checking Git setup...")
+    if not check_git_setup():
+        print("  Installation aborted. Please clone with Git.")
+        sys.exit(1)
+    
     # Check for data files
-    print("  [1/3] Checking dashboard data...")
+    print("")
+    print("  [2/4] Checking dashboard data...")
     check_data_files()
     
     # Install dependencies (only for admin/full install)
     print("")
-    print("  [2/3] Checking dependencies...")
+    print("  [3/4] Checking dependencies...")
     install_dependencies()
     
     # Create desktop shortcut
     print("")
-    print("  [3/3] Creating desktop shortcut...")
+    print("  [4/4] Creating desktop shortcut...")
     create_desktop_shortcut()
     
     print("")
@@ -199,6 +206,9 @@ def main():
     print("  ============================================")
     print("")
     print("  Double-click 'VUES Dashboard' on your desktop to launch.")
+    print("")
+    print("  The dashboard auto-syncs with admin's latest data")
+    print("  every time you open it. No manual updates needed!")
     print("")
 
 

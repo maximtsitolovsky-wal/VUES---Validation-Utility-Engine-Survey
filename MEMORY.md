@@ -1,3 +1,12 @@
+### 2026-04-27 — Git Required for Viewer Distribution (ZIP Deprecated)
+- **Decision:** Viewers MUST use Git clone, not ZIP download. Install.py now checks for `.git` folder and exits with instructions if missing.
+- **Rationale:**
+  - **Auto-sync**: `tools/serve_dashboard.py` runs `git pull` on every launch, ensuring viewers always see admin's latest data.
+  - **Baked HTML**: Data is baked directly into HTML files with a fetch polyfill + fallback auto-render, so dashboard works even offline after initial pull.
+  - **No manual updates**: Click shortcut → auto-pull → fresh data.
+- **Impact:** `README.md` (removed ZIP option, added Git prereq), `tools/install.py` (new `check_git_setup()` that blocks install on ZIP downloads), `tools/serve_dashboard.py` (auto-pull before serving), `tools/bake_data_into_html.py` (embeds JSON + polyfill + fallback renderer).
+- **Closed:** Yes.
+
 ### 2026-04-27 — Scout Airtable Config & Viewer Distribution Fixed
 - **Scout Config:**
   - Base ID: `appAwgaX89x0JxG3Z`
@@ -107,9 +116,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-24** — Per-Row Conditional Name: Name checked per-row based on condition column (CCTV=MAC Address, FA/Intrusion=Abbreviated Name).
-2. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
-3. **2026-04-23** — BigQuery-with-Fallback: Added `bigquery_with_fallback` reference source. BQ is primary; Excel workbook is automatic backup when BQ fails.
+1. **2026-04-27** — Git Required for Viewers: ZIP deprecated, install.py blocks non-Git installs, auto-sync on every launch.
+2. **2026-04-24** — Per-Row Conditional Name: Name checked per-row based on condition column (CCTV=MAC Address, FA/Intrusion=Abbreviated Name).
+3. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
 
 ---
 

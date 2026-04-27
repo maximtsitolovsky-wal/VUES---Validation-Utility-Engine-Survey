@@ -22,13 +22,15 @@ python tools/install.py
 
 1. Download the ZIP from the repo link provided by your admin
 2. Click the green **"Code"** button → **"Download ZIP"**
-3. Extract the ZIP anywhere (e.g., your Downloads folder)
-4. Open **PowerShell**, then run:
+3. **Right-click** the ZIP → **Extract All** → Extract to Downloads
+4. Open **PowerShell** and run:
 
 ```powershell
-cd "$env:USERPROFILE\Downloads\VUES-main"
+cd ~\Downloads\VUES---Validation-Utility-Engine-Survey-main
 python tools/install.py
 ```
+
+> **Tip:** If the path doesn't work, open the extracted folder in File Explorer, click the address bar, copy the path, then in PowerShell type `cd "` paste the path and add `"`
 
 ### What the installer does:
 - 📦 Installs Python dependencies

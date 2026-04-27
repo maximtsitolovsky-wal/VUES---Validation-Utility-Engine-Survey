@@ -46,7 +46,7 @@ def load_data():
 
 
 def inject_data_into_html(html_path: Path, data: dict) -> bool:
-    """Inject JSON data as window.* globals before any fetch calls."""
+    """Inject JSON data as window.* globals WITH fetch-first-fallback logic."""
     if not html_path.exists():
         print(f"  [SKIP] {html_path.name} not found")
         return False
@@ -57,13 +57,13 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
     from datetime import datetime
     version = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     inject_lines = ["<script>"]
-    inject_lines.append("// === EMBEDDED DATA (auto-generated, do not edit) ===")
+    inject_lines.append("// === EMBEDDED DATA (FALLBACK for offline viewing, auto-generated) ===")
     inject_lines.append(f"window.VUES_BAKED_VERSION = '{version}';")
-    inject_lines.append(f"console.log('[VUES] Baked data loaded:', '{version}');")
+    inject_lines.append(f"console.log('[VUES] Fallback data available:', '{version}');")
     for var_name, payload in data.items():
-        # Use JSON.parse for performance with large objects
+        # Store as _FALLBACK to make it clear this is backup data
         json_str = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
-        inject_lines.append(f"window.{var_name} = {json_str};")
+        inject_lines.append(f"window.{var_name}_FALLBACK = {json_str};")
     inject_lines.append("// === END EMBEDDED DATA ===")
     inject_lines.append("</script>")
     inject_block = "\n".join(inject_lines)

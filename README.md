@@ -6,9 +6,14 @@
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Viewers)
 
-### Option 1: If you have Git installed
+### Prerequisites
+
+1. **Git** - Required for auto-updates. Install from: https://git-scm.com/download/win
+2. **Python 3.11+** - Install from Microsoft Store or python.org
+
+### Installation (One-Time)
 
 Open **PowerShell** (not CMD!) and run:
 
@@ -18,26 +23,18 @@ cd VUES---Validation-Utility-Engine-Survey
 python tools/install.py
 ```
 
-### Option 2: No Git? Download ZIP instead
-
-1. Download the ZIP from the repo link provided by your admin
-2. Click the green **"Code"** button → **"Download ZIP"**
-3. **Right-click** the ZIP → **Extract All** → Extract to Downloads
-4. Open **PowerShell** and run:
-
-```powershell
-cd ~\Downloads\VUES---Validation-Utility-Engine-Survey-main
-python tools/install.py
-```
-
-> **Tip:** If the path doesn't work, open the extracted folder in File Explorer, click the address bar, copy the path, then in PowerShell type `cd "` paste the path and add `"`
-
 ### What the installer does:
 - 📦 Installs Python dependencies
 - 🖥️ Creates a **VUES Dashboard** shortcut on your desktop
-- 🎨 Uses the custom VUES icon
+- 🔄 Enables auto-sync with admin's latest data on every launch
 
 > ⚠️ **Must use PowerShell**, not Command Prompt (CMD). Right-click Start → "Windows PowerShell"
+
+### Why Git is Required
+
+- **Auto-updates**: Dashboard auto-pulls latest data every time you open it
+- **Always in sync**: See exactly what the admin sees, in real-time
+- **No manual downloads**: Just click the shortcut - data updates automatically
 
 ---
 
@@ -53,21 +50,26 @@ This checks all required files exist and your data is valid. Common fixes:
 
 | Problem | Fix |
 |---------|-----|
-| Dashboard shows "Loading..." forever | Run `git pull` then click shortcut again |
+| Dashboard shows "Loading..." forever | Run `git pull` then Ctrl+Shift+R in browser |
 | Browser doesn't open | Check Python is in PATH: `python --version` |
-| Old data showing | Delete `ui\dashboard.port` and `output\dashboard.port`, then re-launch |
+| Old data showing | Run `git pull` then click shortcut again |
 | Shortcut does nothing | Re-run `python tools/install.py` |
+| Git not found | Install Git from https://git-scm.com/download/win |
 
 ---
 
 ## 🔄 Updating Your Data
 
-The dashboard shows live data from the VUES pipeline. To get the latest:
+The dashboard **auto-updates** every time you launch it! Just click the **VUES Dashboard** shortcut.
 
-- **Git users:** Run `git pull`
-- **ZIP users:** Re-download from GitHub
+If you need to manually refresh:
 
-Data is refreshed automatically by the pipeline admin.
+```powershell
+cd VUES---Validation-Utility-Engine-Survey
+git pull
+```
+
+Then click the shortcut again.
 
 ---
 

@@ -21,6 +21,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
+import openpyxl
 
 _WORKDIR = Path(__file__).resolve().parents[1]
 _START_SCRIPT = _WORKDIR / "ops" / "windows" / "start_siteowlqa_background.ps1"
@@ -35,6 +36,8 @@ _REBUILD_SCRIPT = _WORKDIR / "tools" / "rebuild_current_dashboard.py"
 _STALE_AFTER_MINUTES = 15
 _rebuild_lock = threading.Lock()
 _rebuild_in_progress = False
+_SURVEY_ROUTING_JSON = _OUTPUT_DIR / "survey_routing_data.json"
+_EXCEL_WORKBOOK = Path.home() / "OneDrive - Walmart Inc" / "Documents" / "BaselinePrinter" / "2027 Survey Lab.xlsm"
 
 
 class NoCacheDashboardHandler(SimpleHTTPRequestHandler):
@@ -70,7 +73,29 @@ class NoCacheDashboardHandler(SimpleHTTPRequestHandler):
         if path == "/api/app/rebuild":
             self._write_json(HTTPStatus.ACCEPTED, _request_dashboard_rebuild(reason="manual"))
             return
+        if path == "/api/survey-routing/update":
+            self._handle_survey_routing_update()
+            return
         self._write_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Not found", "path": path})
+
+    def _handle_survey_routing_update(self) -> None:
+        """Handle survey routing status updates - save to JSON and optionally Excel."""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body)
+            
+            site = data.get('site')
+            updates = data.get('updates', {})
+            
+            if not site:
+                self._write_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Missing site"})
+                return
+            
+            result = _update_survey_routing(site, updates)
+            self._write_json(HTTPStatus.OK, result)
+        except Exception as e:
+            self._write_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": str(e)})
 
     def _write_json(self, status: HTTPStatus, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")

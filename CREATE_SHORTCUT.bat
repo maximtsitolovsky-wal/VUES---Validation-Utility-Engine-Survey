@@ -22,28 +22,37 @@ if %ERRORLEVEL% neq 0 (
 
 echo  Creating shortcut...
 
-:: Get paths
-set SCRIPT_DIR=%~dp0
-set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+:: Get script directory (remove trailing backslash)
+set "SCRIPT_DIR=%~dp0"
+set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-:: Use PowerShell to create shortcut
-powershell -ExecutionPolicy Bypass -Command ^
-  "$desktop = [Environment]::GetFolderPath('Desktop'); ^
-   $ws = New-Object -ComObject WScript.Shell; ^
-   $shortcut = $ws.CreateShortcut(\"$desktop\VUES Dashboard.lnk\"); ^
-   $shortcut.TargetPath = 'pythonw'; ^
-   $shortcut.Arguments = '\"%SCRIPT_DIR%\tools\serve_dashboard.py\"'; ^
-   $shortcut.WorkingDirectory = '%SCRIPT_DIR%'; ^
-   $shortcut.Description = 'VUES Dashboard'; ^
-   if (Test-Path '%SCRIPT_DIR%\assets\vues_icon.ico') { $shortcut.IconLocation = '%SCRIPT_DIR%\assets\vues_icon.ico' }; ^
-   $shortcut.Save(); ^
-   Write-Host '  [OK] Shortcut created on Desktop!'"
+:: Write PowerShell script to temp file
+set "PS_SCRIPT=%TEMP%\create_vues_shortcut.ps1"
+
+echo $desktop = [Environment]::GetFolderPath('Desktop') > "%PS_SCRIPT%"
+echo $ws = New-Object -ComObject WScript.Shell >> "%PS_SCRIPT%"
+echo $shortcut = $ws.CreateShortcut("$desktop\VUES Dashboard.lnk") >> "%PS_SCRIPT%"
+echo $shortcut.TargetPath = 'pythonw' >> "%PS_SCRIPT%"
+echo $shortcut.Arguments = '"%SCRIPT_DIR%\tools\serve_dashboard.py"' >> "%PS_SCRIPT%"
+echo $shortcut.WorkingDirectory = '%SCRIPT_DIR%' >> "%PS_SCRIPT%"
+echo $shortcut.Description = 'VUES Dashboard' >> "%PS_SCRIPT%"
+echo $iconPath = '%SCRIPT_DIR%\assets\vues_icon.ico' >> "%PS_SCRIPT%"
+echo if (Test-Path $iconPath) { $shortcut.IconLocation = $iconPath } >> "%PS_SCRIPT%"
+echo $shortcut.Save() >> "%PS_SCRIPT%"
+echo Write-Host '  [OK] Shortcut created on Desktop!' >> "%PS_SCRIPT%"
+
+:: Run the PowerShell script
+powershell -ExecutionPolicy Bypass -File "%PS_SCRIPT%"
 
 if %ERRORLEVEL% neq 0 (
     echo  [ERROR] Failed to create shortcut
+    del "%PS_SCRIPT%" 2>nul
     pause
     exit /b 1
 )
+
+:: Cleanup
+del "%PS_SCRIPT%" 2>nul
 
 echo.
 echo  ==========================================

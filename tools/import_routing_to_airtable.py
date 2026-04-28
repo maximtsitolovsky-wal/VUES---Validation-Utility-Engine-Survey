@@ -61,26 +61,33 @@ def map_row(row):
         else:
             status = 'Needs Review'
     
-    # Map survey type
-    survey_type = row.get('survey_type', '')
-    if 'BOTH' in survey_type.upper():
-        survey_type = 'BOTH'
-    elif 'CCTV' in survey_type.upper():
-        survey_type = 'CCTV'
-    elif 'FA' in survey_type.upper() or 'INTRUSION' in survey_type.upper():
-        survey_type = 'FA/INTRUSION'
-    else:
-        survey_type = 'NONE'
+    # Get survey type as-is (text field now)
+    survey_type = row.get('survey_type', '') or 'NONE'
     
-    return {
+    # Build fields dict - only include non-empty values
+    fields = {
         'Site': str(row.get('site', '')),
-        'Vendor': row.get('vendor', ''),
-        'Status': status,
-        'Survey Type': survey_type,
-        'Survey Required': row.get('survey_required', '').upper() == 'YES',
-        'Notes': row.get('notes', '') or row.get('reason_for_decision', ''),
-        'Days to Construction': int(row.get('days_to_construction', 0) or 0) if str(row.get('days_to_construction', '')).isdigit() else None,
     }
+    
+    # Add optional fields only if they have values
+    if row.get('vendor'):
+        fields['Vendor'] = row.get('vendor')
+    if status:
+        fields['Status'] = status
+    if survey_type:
+        fields['Survey Type'] = survey_type
+    if row.get('survey_required', '').upper() == 'YES':
+        fields['Survey Required'] = True
+    
+    notes = row.get('notes', '') or row.get('reason_for_decision', '')
+    if notes:
+        fields['Notes'] = notes
+    
+    days = row.get('days_to_construction', '')
+    if days and str(days).isdigit():
+        fields['Days to Construction'] = int(days)
+    
+    return fields
 
 # Import in batches of 10 (Airtable limit)
 BATCH_SIZE = 10

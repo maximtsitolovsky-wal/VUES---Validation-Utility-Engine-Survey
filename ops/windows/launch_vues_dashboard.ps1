@@ -14,6 +14,25 @@ $rebuildScript = Join-Path $workdir  'tools\rebuild_current_dashboard.py'
 $maxWaitSeconds = 30
 $launchStartUtc = [DateTime]::UtcNow
 
+# === AUTO-SYNC: Pull latest from git (viewers get admin's latest data) ===
+$isAdmin = Test-Path $launcher
+if (-not $isAdmin) {
+    Write-Host '[SYNC] Pulling latest data from admin...'
+    Push-Location $workdir
+    try {
+        $pullResult = git pull --ff-only 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host '[SYNC] OK - Got latest data'
+        } else {
+            Write-Host "[SYNC] Warning: git pull failed - using cached data"
+            Write-Host $pullResult
+        }
+    } catch {
+        Write-Host '[SYNC] Warning: git not available - using cached data'
+    }
+    Pop-Location
+}
+
 # Determine serve directory: output/ for admin, ui/ for viewers
 if (Test-Path (Join-Path $outputDir 'team_dashboard_data.json')) {
     $serveDir = $outputDir

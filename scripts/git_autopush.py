@@ -88,9 +88,12 @@ def _do_commit_and_push(remotes: list[str], branch: str, dry_run: bool) -> None:
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     msg = f"auto: {stamp} | {summary}"
 
-    _log(f"Staging all changes ...")
+    _log(f"Staging all changes (excluding ui/)...")
     if not dry_run:
+        # IMPORTANT: Exclude ui/ from auto-commits!
+        # ui/ files must only be committed after explicit baking via publish_viewer_data.py
         _run(["git", "add", "-A"])
+        _run(["git", "reset", "HEAD", "--", "ui/"], check=False)  # Unstage ui/ files
 
     _log(f"Committing: {msg!r}")
     if not dry_run:

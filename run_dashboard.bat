@@ -1,20 +1,28 @@
 @echo off
+setlocal EnableDelayedExpansion
 title VUES Dashboard
-echo.
-echo  ========================================
-echo   VUES Dashboard - Starting...
-echo  ========================================
-echo.
-
 cd /d "%~dp0"
 
-:: Check if Python is available
-where python >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo  [ERROR] Python not found!
+:: Determine which Python to use
+set PYTHON=
+if exist ".venv\Scripts\python.exe" (
+    set PYTHON=.venv\Scripts\python.exe
+) else (
+    where python >nul 2>nul
+    if !ERRORLEVEL! equ 0 (
+        set PYTHON=python
+    )
+)
+
+:: Check if we found Python
+if "!PYTHON!"=="" (
     echo.
-    echo  Please install Python from Software Center
-    echo  or Microsoft Store (search "Python 3.11")
+    echo  ============================================
+    echo   ERROR: Python not found!
+    echo  ============================================
+    echo.
+    echo   Please run INSTALL.bat first
+    echo   OR install Python from Microsoft Store
     echo.
     pause
     exit /b 1
@@ -22,21 +30,39 @@ if %ERRORLEVEL% neq 0 (
 
 :: Check if serve_dashboard.py exists
 if not exist "tools\serve_dashboard.py" (
-    echo  [ERROR] serve_dashboard.py not found!
     echo.
-    echo  Make sure you extracted the ZIP completely.
+    echo  ============================================
+    echo   ERROR: Dashboard files not found!
+    echo  ============================================
+    echo.
+    echo   Make sure you extracted the full ZIP file.
+    echo   The "tools" folder should exist.
     echo.
     pause
     exit /b 1
 )
 
-echo  Starting dashboard server...
+:: Run the dashboard (this will open the browser)
 echo.
-python tools\serve_dashboard.py
+echo  Starting VUES Dashboard...
+echo  (Browser will open automatically)
+echo.
+echo  Keep this window open while using the dashboard.
+echo  Press Ctrl+C to stop the server.
+echo.
 
-:: If we get here, something went wrong
-echo.
-echo  [ERROR] Dashboard failed to start.
-echo  Check that Python is installed correctly.
-echo.
-pause
+"!PYTHON!" tools\serve_dashboard.py
+
+:: If we get here, server stopped or errored
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo  ============================================
+    echo   Dashboard stopped or encountered an error
+    echo  ============================================
+    echo.
+    echo   If the browser didn't open, try:
+    echo   1. Run INSTALL.bat first
+    echo   2. Make sure Python is installed
+    echo.
+    pause
+)

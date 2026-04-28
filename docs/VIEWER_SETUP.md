@@ -69,7 +69,66 @@ Since you don't have Git, you'll need to **re-download the ZIP** to get updates:
 
 ---
 
-# Option B: Git Clone (Recommended)
+# Option B: Git Clone (Recommended - Auto Updates)
+
+## Step 1: Install Git (if needed)
+
+### Check if Git is Already Installed
+
+Open **Command Prompt** or **PowerShell** and type:
+
+```bash
+git --version
+```
+
+If you see something like `git version 2.40.0`, skip to Step 2. If you get an error, install Git below.
+
+### Install Git on Windows (Walmart)
+
+**Option A: Software Center (Recommended)**
+
+1. Open **Software Center** (search in Start menu)
+2. Search for **"Git"**
+3. Click **Install**
+4. Wait for installation to complete
+5. Restart your terminal
+
+**Option B: Manual Download**
+
+1. Go to: https://git-scm.com/download/win
+2. Run the installer
+3. Click **Next** through all prompts (defaults are fine)
+4. Restart your terminal
+
+## Step 2: Clone the Repository
+
+Open **PowerShell** and run:
+
+```bash
+cd $HOME\Documents
+git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
+cd VUES---Validation-Utility-Engine-Survey
+```
+
+**If prompted for credentials:**
+- Username: Your Walmart ID (e.g., `vn59j7j`)
+- Password: Your Walmart password (or GitHub token)
+
+## Step 3: Run the Installer (REQUIRED)
+
+```bash
+python tools/install.py
+```
+
+**This creates a "VUES Dashboard" shortcut on your Desktop!**
+
+## Step 4: Launch the Dashboard
+
+Double-click **"VUES Dashboard"** on your Desktop!
+
+**Browser opens → You'll see ALL dashboard pages with data!**
+
+---
 
 ## Quick Start (3 Steps)
 

@@ -105,12 +105,12 @@ def show_error(msg: str):
             pass
 
 
-def auto_pull_latest(repo_root: Path) -> bool:
-    """Auto-pull latest data from git. Silent failure - won't block dashboard."""
+def auto_pull_latest(repo_root: Path) -> tuple[bool, str]:
+    """Auto-pull latest data from git. Returns (success, message)."""
     import subprocess
     git_dir = repo_root / '.git'
     if not git_dir.exists():
-        return False  # Not a git repo (ZIP user)
+        return False, "Not a git clone - auto-updates disabled"
     
     try:
         # Quick pull with timeout - don't hang the dashboard
@@ -119,12 +119,19 @@ def auto_pull_latest(repo_root: Path) -> bool:
             cwd=repo_root,
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=15,
             creationflags=0x08000000 if sys.platform == 'win32' else 0,  # CREATE_NO_WINDOW
         )
-        return result.returncode == 0
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return False
+        if result.returncode == 0:
+            return True, "Updated to latest"
+        else:
+            return False, f"Pull failed: {result.stderr[:100] if result.stderr else 'unknown error'}"
+    except subprocess.TimeoutExpired:
+        return False, "Git pull timed out (network issue?)"
+    except FileNotFoundError:
+        return False, "Git not installed"
+    except OSError as e:
+        return False, f"OS error: {e}"
 
 
 def start_background_sync(repo_root: Path, interval: int = AUTO_SYNC_INTERVAL):

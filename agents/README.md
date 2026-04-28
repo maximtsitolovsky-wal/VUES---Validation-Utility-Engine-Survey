@@ -15,6 +15,8 @@ Invoked during dev sessions via `/agent <name>`. No footprint in the app's sourc
 | `chiefmaxim` | `chiefmaxim.md` | Cross-project governance, meta-level decisions above this project |
 | `airtable` | `airtable.md` | Airtable API operations — inspect base, patch records, debug field mapping |
 | `share-puppy` | `share-puppy.md` | Publishes HTML reports + dashboards to puppy.walmart.com/sharing |
+| `integrity-marshal` | `Integrity_Marshal.md` | Audits agents for truthfulness, memory compliance, stale-state, evidence-backed completion |
+| `relayops-coordinator` | `relayops-coordinator.md` | Multi-agent coordination — message passing, task claiming, conflict detection, handoffs |
 
 ---
 
@@ -105,6 +107,8 @@ agents/
 ├── chiefmaxim.md
 ├── airtable.md
 ├── share-puppy.md
+├── Integrity_Marshal.md
+├── relayops-coordinator.md
 │
 ├── [Category 2 — Session Role Personas]
 ├── architect.md

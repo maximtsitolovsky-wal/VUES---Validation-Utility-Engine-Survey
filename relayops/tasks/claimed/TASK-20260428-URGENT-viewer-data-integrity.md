@@ -35,6 +35,26 @@ Fix viewer data loading so cross-functional teams can access shared VUES dashboa
 2. Auto-pull in serve_dashboard.py is silently failing
 3. Viewer may have network/auth issues with git
 
+## CRITICAL ROOT CAUSE FOUND (10:58 AM)
+
+**The `git_autopush.py` script was overwriting baked ui/ files!**
+
+How it happened:
+1. Autopush watches for file changes (excluding ui/)
+2. When ANY file changes (scripts, relayops, etc.), it triggers a commit
+3. BUT it runs `git add -A` which stages EVERYTHING including ui/
+4. If ui/ files happened to be in an unbaked state, they got committed that way
+5. Viewer pulls → gets unbaked HTML → dashboard empty
+
+**Fix applied:**
+- Modified `git_autopush.py` to run `git reset HEAD -- ui/` after `git add -A`
+- This unstages ui/ files so they're never auto-committed
+- ui/ files must only be committed via `publish_viewer_data.py` after baking
+
+**Commit:** `73dae97` — `fix(CRITICAL): stop autopush from overwriting baked ui/ files`
+
+---
+
 ## Integrity Marshal Violations
 
 Per Integrity Marshal rules:

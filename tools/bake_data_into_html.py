@@ -8,6 +8,7 @@ After running this, viewers can even double-click the HTML files directly.
 import sys
 import json
 import re
+import shutil
 from pathlib import Path
 
 # Fix Windows console encoding
@@ -19,6 +20,7 @@ if sys.platform == 'win32':
 
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 UI_DIR = REPO_ROOT / "ui"
+OUTPUT_DIR = REPO_ROOT / "output"
 
 # JSON files to embed
 DATA_FILES = {
@@ -30,6 +32,24 @@ DATA_FILES = {
 HTML_FILES = ["index.html", "survey.html", "scout.html", "summary.html",
               "analytics.html", "routing.html", "howitworks.html", "diagnostic.html", 
               "minimal_test.html", "ultra_simple_test.html"]
+
+
+def sync_data_from_output():
+    """Copy fresh data from output/ to ui/ if output has newer files."""
+    synced = []
+    for fname in DATA_FILES.keys():
+        output_file = OUTPUT_DIR / fname
+        ui_file = UI_DIR / fname
+        
+        if output_file.exists():
+            # Copy if ui file doesn't exist or output is newer
+            if not ui_file.exists() or output_file.stat().st_mtime > ui_file.stat().st_mtime:
+                shutil.copy2(output_file, ui_file)
+                synced.append(fname)
+    
+    if synced:
+        print(f"  [SYNC] Copied from output/: {', '.join(synced)}")
+    return synced
 
 
 def load_data():

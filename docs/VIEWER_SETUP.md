@@ -16,35 +16,54 @@
 1. Go to: **https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey**
 2. Click the green **"Code"** button
 3. Click **"Download ZIP"**
-4. Save to your Documents folder
+4. Save to your Downloads folder
 
 ## Step 2: Extract the ZIP
 
 1. Go to your Downloads folder
 2. Right-click the ZIP file → **"Extract All..."**
-3. Extract to: `C:\Users\YourName\Documents\VUES`
+3. Extract to: `C:\Users\YourName\Documents\`
 4. Click **Extract**
 
-## Step 3: Run the Dashboard
+## Step 3: Run the Installer (First Time Only)
 
-1. Open the extracted folder
-2. Double-click: **`run_dashboard.bat`** (if available)
+1. Open the extracted folder: `VUES---Validation-Utility-Engine-Survey-main`
+2. Double-click: **`INSTALL.bat`**
+3. Follow the prompts
+4. A desktop shortcut will be created
 
-**OR** open Command Prompt and run:
-```bash
-cd %USERPROFILE%\Documents\VUES---Validation-Utility-Engine-Survey-main
-python tools\serve_dashboard.py
-```
+**What INSTALL.bat does:**
+- ✅ Checks if Python is installed
+- ✅ Creates a virtual environment
+- ✅ Installs required packages
+- ✅ Creates a "VUES Dashboard" shortcut on your Desktop
+- ✅ Launches the dashboard
+
+## Step 4: Run the Dashboard (Every Time)
+
+**Option A:** Double-click **"VUES Dashboard"** shortcut on your Desktop
+
+**Option B:** Double-click **`run_dashboard.bat`** in the VUES folder
 
 **Browser opens → You'll see the VUES Dashboard!**
+
+## If Python is Not Installed
+
+The installer will tell you if Python is missing. To install:
+
+1. Open **Microsoft Store** (search in Start menu)
+2. Search for **"Python 3.11"**
+3. Click **"Get"** or **"Install"**
+4. Wait for installation to complete
+5. Run **INSTALL.bat** again
 
 ## Updating (ZIP Method)
 
 Since you don't have Git, you'll need to **re-download the ZIP** to get updates:
 
-1. Delete your old VUES folder
-2. Download fresh ZIP from GitHub
-3. Extract and run again
+1. Download fresh ZIP from GitHub
+2. Extract to the same location (overwrite old files)
+3. Run the dashboard as usual
 
 **Tip:** Bookmark the GitHub page for easy re-downloading.
 

@@ -12,8 +12,10 @@
 
 1. Click **[Download ZIP](https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey/archive/refs/heads/main.zip)**
 2. Extract to your Documents folder
-3. Double-click **`run_dashboard.bat`**
-4. Browser opens → Done!
+3. Double-click **`INSTALL.bat`** (first time only)
+4. Then use the **"VUES Dashboard"** shortcut on your Desktop!
+
+> **Note:** Requires Python. INSTALL.bat will guide you if Python is missing.
 
 ### Option B: Have Git? Clone (Best for Updates)
 

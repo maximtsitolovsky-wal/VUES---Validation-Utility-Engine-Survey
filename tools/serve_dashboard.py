@@ -127,6 +127,26 @@ def auto_pull_latest(repo_root: Path) -> bool:
         return False
 
 
+def start_background_sync(repo_root: Path, interval: int = AUTO_SYNC_INTERVAL):
+    """Start a background thread that syncs from git every hour.
+    
+    This ensures viewers who leave the dashboard open always see fresh data.
+    """
+    def sync_loop():
+        while True:
+            time.sleep(interval)
+            try:
+                if auto_pull_latest(repo_root):
+                    # Log silently (no console in pythonw)
+                    pass
+            except Exception:
+                pass  # Silent failure - don't crash the server
+    
+    sync_thread = threading.Thread(target=sync_loop, daemon=True)
+    sync_thread.start()
+    return sync_thread
+
+
 def main():
     # Find UI directory (relative to script location)
     # UI folder is tracked in git - viewers can use it directly
@@ -136,6 +156,10 @@ def main():
     # AUTO-SYNC: Pull latest data from git before showing dashboard
     # This ensures viewers always see the freshest data
     auto_pull_latest(script_dir)
+    
+    # Start background sync thread (pulls from git every hour)
+    # Viewers who leave the dashboard open will get fresh data automatically
+    start_background_sync(script_dir)
     
     # For viewers: serve from ui/ (tracked in git)
     # For admin: if output/ exists with data, prefer that for freshest data

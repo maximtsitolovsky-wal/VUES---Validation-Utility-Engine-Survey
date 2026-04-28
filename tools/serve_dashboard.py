@@ -143,9 +143,7 @@ def start_background_sync(repo_root: Path, interval: int = AUTO_SYNC_INTERVAL):
         while True:
             time.sleep(interval)
             try:
-                if auto_pull_latest(repo_root):
-                    # Log silently (no console in pythonw)
-                    pass
+                auto_pull_latest(repo_root)  # Returns tuple, we ignore result
             except Exception:
                 pass  # Silent failure - don't crash the server
     
@@ -162,7 +160,23 @@ def main():
     
     # AUTO-SYNC: Pull latest data from git before showing dashboard
     # This ensures viewers always see the freshest data
-    auto_pull_latest(script_dir)
+    pull_success, pull_msg = auto_pull_latest(script_dir)
+    
+    # Show warning if pull failed (viewers need to know their data may be stale)
+    if not pull_success and (script_dir / '.git').exists():
+        # Only warn for git users, not ZIP users
+        import ctypes
+        try:
+            ctypes.windll.user32.MessageBoxW(
+                0, 
+                f"Could not update dashboard data:\n{pull_msg}\n\n"
+                f"You may be viewing stale data. Check your network connection "
+                f"and try running 'git pull' manually.",
+                "VUES Dashboard - Update Warning", 
+                0x30  # MB_ICONWARNING
+            )
+        except Exception:
+            pass  # Silent fail if no GUI
     
     # Start background sync thread (pulls from git every hour)
     # Viewers who leave the dashboard open will get fresh data automatically

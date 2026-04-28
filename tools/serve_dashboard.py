@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-"""VUES Dashboard Server - Single instance, auto-finds port, opens browser."""
+"""VUES Dashboard Server - Single instance, auto-finds port, opens browser.
+
+Features:
+- Auto-pulls from git on launch (viewers get latest data)
+- Auto-syncs every hour (continuous updates while running)
+- Single instance per machine (reuses existing server)
+"""
 
 import http.server
 import os
 import socket
 import socketserver
 import sys
+import time
 import webbrowser
 import threading
 from pathlib import Path
+from datetime import datetime
 
 PORT_FILE = "dashboard.port"
 PID_FILE = "dashboard.pid"
 PREFERRED_PORT = 8765
+AUTO_SYNC_INTERVAL = 3600  # Sync every hour (in seconds)
 
 
 def find_free_port():

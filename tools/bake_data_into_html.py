@@ -94,10 +94,15 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
         return False
     
     # Patch fetch() calls to try live data first, fall back to embedded
+    # CRITICAL: On file:// protocol, fetch() is completely blocked by browsers!
+    # We must detect file:// and use embedded data immediately.
     fetch_polyfill = """
-// === FETCH POLYFILL: try live data first, fallback to embedded ===
+// === FETCH POLYFILL: detect file:// protocol and use embedded fallback ===
 (function() {
   const _origFetch = window.fetch;
+  const isFileProtocol = window.location.protocol === 'file:';
+  console.log('[VUES] Protocol:', window.location.protocol, isFileProtocol ? '(using embedded data)' : '(trying live fetch)');
+  
   function makeResponse(data, source) {
     console.log('[VUES] Serving from ' + source);
     const json = JSON.stringify(data);
@@ -109,15 +114,47 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
       headers: { get: function() { return 'application/json'; } }
     });
   }
+  
+  function getFallback(filename) {
+    if (filename === 'team_dashboard_data.json' && window.TEAM_DASHBOARD_DATA_FALLBACK) {
+      return makeResponse(window.TEAM_DASHBOARD_DATA_FALLBACK, 'embedded data (baked ' + window.VUES_BAKED_VERSION + ')');
+    }
+    if (filename === 'survey_routing_data.json' && window.SURVEY_ROUTING_DATA_FALLBACK) {
+      return makeResponse(window.SURVEY_ROUTING_DATA_FALLBACK, 'embedded data (baked ' + window.VUES_BAKED_VERSION + ')');
+    }
+    return null;
+  }
+  
   window.fetch = function(url, opts) {
     const u = String(url).split('?')[0].split('/').pop();
     const isFetchingData = (u === 'team_dashboard_data.json' || u === 'survey_routing_data.json');
+    
+    // On file:// protocol, IMMEDIATELY return fallback - don't even try fetch
+    if (isFileProtocol && isFetchingData) {
+      const fallback = getFallback(u);
+      if (fallback) {
+        console.log('[VUES] file:// detected, using embedded data for:', u);
+        return fallback;
+      }
+    }
+    
+    // For API calls on file://, return a mock 404 to trigger the JSON fallback path
+    if (isFileProtocol && String(url).startsWith('/api/')) {
+      console.log('[VUES] file:// API call blocked, returning mock 404:', url);
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'File protocol - API unavailable',
+        json: function() { return Promise.reject(new Error('No server')); },
+        text: function() { return Promise.resolve(''); }
+      });
+    }
     
     if (!isFetchingData) {
       return _origFetch.apply(this, arguments);
     }
     
-    // Try live fetch first
+    // On http/https, try live fetch first
     return _origFetch.apply(this, arguments)
       .then(function(resp) {
         if (resp.ok) {
@@ -127,15 +164,9 @@ def inject_data_into_html(html_path: Path, data: dict) -> bool:
         throw new Error('HTTP ' + resp.status);
       })
       .catch(function(err) {
-        // Fetch failed - use fallback data
-        console.warn('[VUES] Fetch failed (' + err.message + '), using fallback data for', u);
-        if (u === 'team_dashboard_data.json' && window.TEAM_DASHBOARD_DATA_FALLBACK) {
-          return makeResponse(window.TEAM_DASHBOARD_DATA_FALLBACK, 'embedded fallback (baked ' + window.VUES_BAKED_VERSION + ')');
-        }
-        if (u === 'survey_routing_data.json' && window.SURVEY_ROUTING_DATA_FALLBACK) {
-          return makeResponse(window.SURVEY_ROUTING_DATA_FALLBACK, 'embedded fallback (baked ' + window.VUES_BAKED_VERSION + ')');
-        }
-        // No fallback available - re-throw error
+        console.warn('[VUES] Fetch failed (' + err.message + '), using fallback for:', u);
+        const fallback = getFallback(u);
+        if (fallback) return fallback;
         console.error('[VUES] No fallback data available for', u);
         throw err;
       });

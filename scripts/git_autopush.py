@@ -32,7 +32,7 @@ _IGNORE_DIRS = {
     "__pycache__", ".git", "output", "logs", "temp",
     ".venv", "venv", "node_modules", "archive", "share",
     "served_dashboard", "VUES---Validation-Utility-Engine-Survey",
-    "ui",  # generated HTML — data gets rebaked by the pipeline, don't auto-commit churn
+    # NOTE: ui/ is NOT ignored - baked HTML files need to sync to viewers!
 }
 _IGNORE_SUFFIXES = {".pyc", ".pyo", ".pyd", ".log", ".tmp", ".sqlite-journal"}
 

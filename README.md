@@ -8,16 +8,24 @@
 
 ## 📥 New Here? Start Here!
 
-**👉 [Complete Viewer Setup Guide](docs/VIEWER_SETUP.md)** - Step-by-step instructions to install Git, clone the repo, and run the dashboard.
+### Option A: No Git? Download ZIP (Easiest)
 
-**Quick version (if you already have Git and Python):**
+1. Click **[Download ZIP](https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey/archive/refs/heads/main.zip)**
+2. Extract to your Documents folder
+3. Double-click **`run_dashboard.bat`**
+4. Browser opens → Done!
+
+### Option B: Have Git? Clone (Best for Updates)
+
 ```bash
 git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
 cd VUES---Validation-Utility-Engine-Survey
 python tools/serve_dashboard.py
 ```
 
-**Dashboard auto-syncs every hour** - leave it open and see live updates!
+**👉 [Complete Setup Guide](docs/VIEWER_SETUP.md)** - Detailed instructions for both methods.
+
+**Dashboard auto-syncs every hour** (Git users only) - leave it open and see live updates!
 
 ---
 

@@ -1,5 +1,57 @@
 # VUES Dashboard - Viewer Setup Guide
 
+## Choose Your Setup Method
+
+| Method | Best For | Time |
+|--------|----------|------|
+| **Option A: ZIP Download** | Can't install Git, quick setup | 2 min |
+| **Option B: Git Clone** | Regular updates, auto-sync | 5 min |
+
+---
+
+# Option A: ZIP Download (No Git Required)
+
+## Step 1: Download the ZIP
+
+1. Go to: **https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey**
+2. Click the green **"Code"** button
+3. Click **"Download ZIP"**
+4. Save to your Documents folder
+
+## Step 2: Extract the ZIP
+
+1. Go to your Downloads folder
+2. Right-click the ZIP file → **"Extract All..."**
+3. Extract to: `C:\Users\YourName\Documents\VUES`
+4. Click **Extract**
+
+## Step 3: Run the Dashboard
+
+1. Open the extracted folder
+2. Double-click: **`run_dashboard.bat`** (if available)
+
+**OR** open Command Prompt and run:
+```bash
+cd %USERPROFILE%\Documents\VUES---Validation-Utility-Engine-Survey-main
+python tools\serve_dashboard.py
+```
+
+**Browser opens → You'll see the VUES Dashboard!**
+
+## Updating (ZIP Method)
+
+Since you don't have Git, you'll need to **re-download the ZIP** to get updates:
+
+1. Delete your old VUES folder
+2. Download fresh ZIP from GitHub
+3. Extract and run again
+
+**Tip:** Bookmark the GitHub page for easy re-downloading.
+
+---
+
+# Option B: Git Clone (Recommended)
+
 ## Quick Start (3 Steps)
 
 1. **Install Git** (if you don't have it)

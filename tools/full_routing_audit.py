@@ -59,9 +59,9 @@ print(f"  CCTV:            {len(cctv_data):>4}")
 print(f"  FA/Intrusion:    {len(fa_data):>4}")
 print(f"  Both Surveys:    {len(upgrade_data):>4}")
 print(f"  Needs Review:    {len(review_data):>4}")
-print(f"  ─────────────────────")
+print(f"  ---------------------")
 total = len(complete_data) + len(no_survey_data) + len(scout_data) + len(cctv_data) + len(fa_data) + len(upgrade_data) + len(review_data)
-print(f"  TOTAL:           {total:>4} {'✓' if total == len(rows) else '✗ MISMATCH!'}")
+print(f"  TOTAL:           {total:>4} {'OK' if total == len(rows) else 'MISMATCH!'}")
 
 # === STATUS BAR BREAKDOWN ===
 print("\n" + "=" * 60)
@@ -84,7 +84,7 @@ print(f"  Full Upgrade:       {full_upgrade:>4}")
 print(f"  Completed:          {completed:>4}")
 print(f"  ─────────────────────")
 status_total = scout_ip + scout_done + survey_ip + full_upgrade + completed
-print(f"  TOTAL:              {status_total:>4} {'✓' if status_total == len(rows) else '✗ MISMATCH!'}")
+print(f"  TOTAL:              {status_total:>4} {'OK' if status_total == len(rows) else 'MISMATCH!'}")
 
 # === "DONE" COUNTS PER TAB ===
 print("\n" + "=" * 60)

@@ -22,8 +22,12 @@
 ```bash
 git clone https://gecgithub01.walmart.com/vn59j7j/VUES---Validation-Utility-Engine-Survey.git
 cd VUES---Validation-Utility-Engine-Survey
-python tools/serve_dashboard.py
+python tools/install.py
 ```
+
+**This creates a "VUES Dashboard" shortcut on your Desktop!**
+
+> **Important:** You MUST run `python tools/install.py` after cloning to create the shortcut and enable auto-sync.
 
 **👉 [Complete Setup Guide](docs/VIEWER_SETUP.md)** - Detailed instructions for both methods.
 

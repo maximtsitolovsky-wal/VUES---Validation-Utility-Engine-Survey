@@ -9,7 +9,7 @@
 - status: claimed
 - priority: urgent
 - created_at: 2026-04-28T10:45:00Z
-- updated_at: 2026-04-28T10:45:00Z
+- updated_at: 2026-04-28T10:50:00Z
 - expires_at: 2026-04-28T12:00:00Z
 
 ## Objective
@@ -44,12 +44,13 @@ Per Integrity Marshal rules:
 
 ## Required Fix
 
-### Immediate Actions (Agent)
-1. Verify baked data is in git remote (DONE - confirmed)
-2. Create foolproof data loading that works even with stale HTML
-3. Make loadData() use fetch FIRST, only fallback if fetch fails
-4. Add visible "STALE DATA" warning if fallback is used
-5. Push fixes and verify on viewer machine
+### Immediate Actions (Agent) — COMPLETED
+1. ✅ Verified baked data is in git remote
+2. ✅ Created bulletproof loadData() with visible error handling
+3. ✅ loadData() tries fetch first, shows warning if using fallback
+4. ✅ Added visible error banners and stale data warnings
+5. ✅ Pushed fixes (commit `98b2894`)
+6. ⏳ Awaiting viewer verification
 
 ### Viewer Actions Required
 1. Run `git pull` and report output

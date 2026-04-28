@@ -28,7 +28,8 @@ DATA_FILES = {
 
 # HTML files to update
 HTML_FILES = ["index.html", "survey.html", "scout.html", "summary.html",
-              "analytics.html", "routing.html", "howitworks.html", "diagnostic.html", "minimal_test.html"]
+              "analytics.html", "routing.html", "howitworks.html", "diagnostic.html", 
+              "minimal_test.html", "ultra_simple_test.html"]
 
 
 def load_data():

@@ -1,6 +1,6 @@
 # RelayOps Registry
 
-last_updated: 2026-04-27T15:20:00Z
+last_updated: 2026-04-28T11:22:00Z
 freshness: current
 
 ## Known Actors
@@ -11,6 +11,8 @@ freshness: current
 | human:maxim | human | Maxim (User) | verify_browser, report_issues, approve_changes | active | 2026-04-27T15:20:00Z |
 | terminal:vues | terminal | VUES Dev Environment | shell_execution, file_ops, server_control | active | 2026-04-27T15:20:00Z |
 | agent:relayops | agent | RelayOps Coordinator | routing, task_control, conflict_detection, verification_enforcement | active | 2026-04-27T15:20:00Z |
+| agent:code-puppy-a89dc6 | agent | Code Puppy (Terminal 1) | read_files, write_files, run_commands, edit_code, review_code, generate_docs | active | 2026-04-28T11:22:00Z |
+| terminal:3 | terminal | Terminal 3 | shell_execution, file_ops, code_puppy_session | awaiting | 2026-04-28T11:22:00Z |
 
 ## Capability Labels
 

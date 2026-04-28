@@ -1,69 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>VUES Data Loading Diagnostic</title>
+  <title>VUES Data Loading Diagnostic v2</title>
   <style>
     body { font-family: system-ui; padding: 40px; background: #1a1a2e; color: #eee; }
     .test { padding: 15px; margin: 10px 0; border-radius: 8px; }
     .pass { background: #1d4e1d; }
     .fail { background: #4e1d1d; }
     .pending { background: #4e4e1d; }
-    pre { background: #0a0a1a; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    .info { background: #1d3d4e; }
+    pre { background: #0a0a1a; padding: 10px; border-radius: 4px; overflow-x: auto; max-height: 200px; }
     h1 { color: #ffc220; }
     button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    .action-box { background: #2a2a4e; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    code { background: #333; padding: 2px 6px; border-radius: 3px; }
   </style>
 </head>
 <body>
-  <h1>🐕 VUES Data Loading Diagnostic</h1>
+  <h1>🐕 VUES Data Loading Diagnostic v2</h1>
   <p>This page tests each step of data loading to find where it breaks.</p>
   
   <div id="results"></div>
   
-  <h2>Actions</h2>
-  <button onclick="runAllTests()">Run All Tests</button>
-  <button onclick="location.reload()">Refresh Page</button>
-  <button onclick="window.location='index.html'">Go to Dashboard</button>
+  <div class="action-box">
+    <h2>Quick Fix Actions</h2>
+    <button onclick="runAllTests()">🔄 Run All Tests</button>
+    <button onclick="location.reload(true)">🔃 Hard Refresh</button>
+    <button onclick="window.location='index.html'">📊 Go to Dashboard</button>
+    <button onclick="copyResults()">📋 Copy Results</button>
+  </div>
+  
+  <div class="action-box">
+    <h3>If tests fail, tell the viewer to run:</h3>
+    <pre>cd VUES---Validation-Utility-Engine-Survey
+git pull
+# Then restart the dashboard</pre>
+  </div>
   
   <script>
     const results = document.getElementById('results');
+    
+    // Catch any global errors
+    window.onerror = function(msg, url, line, col, error) {
+      log('JAVASCRIPT ERROR', 'fail', `${msg}\nFile: ${url}\nLine: ${line}:${col}\n${error?.stack || ''}`);
+      return false;
+    };
     
     function log(name, status, details = '') {
       const div = document.createElement('div');
       div.className = 'test ' + status;
       div.innerHTML = `<strong>${status.toUpperCase()}: ${name}</strong>` + 
-        (details ? `<pre>${details}</pre>` : '');
+        (details ? `<pre>${escapeHtml(String(details))}</pre>` : '');
       results.appendChild(div);
+    }
+    
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    
+    function copyResults() {
+      const text = Array.from(document.querySelectorAll('.test'))
+        .map(el => el.innerText).join('\n\n');
+      navigator.clipboard.writeText(text);
+      alert('Results copied to clipboard!');
     }
     
     async function runAllTests() {
       results.innerHTML = '<div class="test pending">Running tests...</div>';
+      await new Promise(r => setTimeout(r, 100));
       results.innerHTML = '';
       
+      // Test 0: Check URL and location
+      log('Current Location', 'info',
+        `URL: ${window.location.href}\n` +
+        `Protocol: ${window.location.protocol}\n` +
+        `Port: ${window.location.port || '(default)'}`);
+      
       // Test 1: Check if fallback data exists
-      log('Fallback Data Variable', 
-        window.TEAM_DASHBOARD_DATA_FALLBACK ? 'pass' : 'fail',
-        window.TEAM_DASHBOARD_DATA_FALLBACK 
-          ? `Found! Keys: ${Object.keys(window.TEAM_DASHBOARD_DATA_FALLBACK).join(', ')}`
-          : 'window.TEAM_DASHBOARD_DATA_FALLBACK is undefined');
+      const hasFallback = typeof window.TEAM_DASHBOARD_DATA_FALLBACK !== 'undefined';
+      log('Fallback Data Variable', hasFallback ? 'pass' : 'fail',
+        hasFallback 
+          ? `Found! Keys: ${Object.keys(window.TEAM_DASHBOARD_DATA_FALLBACK).join(', ')}\n` +
+            `Scout records: ${window.TEAM_DASHBOARD_DATA_FALLBACK?.scout?.records?.length || 0}\n` +
+            `Survey records: ${window.TEAM_DASHBOARD_DATA_FALLBACK?.survey?.records?.length || 0}`
+          : 'window.TEAM_DASHBOARD_DATA_FALLBACK is undefined.\n\n' +
+            '⚠️ This means the HTML files are NOT baked with data.\n' +
+            'The viewer needs to run: git pull');
       
       // Test 2: Check baked version
-      log('Baked Version',
-        window.VUES_BAKED_VERSION ? 'pass' : 'fail',
-        window.VUES_BAKED_VERSION || 'Not set');
+      const hasVersion = typeof window.VUES_BAKED_VERSION !== 'undefined';
+      log('Baked Version', hasVersion ? 'pass' : 'fail',
+        hasVersion ? window.VUES_BAKED_VERSION : 'Not set - HTML not baked');
       
       // Test 3: Try fetching JSON
       try {
+        const startTime = Date.now();
         const resp = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
+        const elapsed = Date.now() - startTime;
+        
         if (resp.ok) {
           const data = await resp.json();
           const keys = Object.keys(data);
-          log('Fetch JSON', 'pass', 
-            `HTTP ${resp.status}, Keys: ${keys.join(', ')}\nScout records: ${data.scout?.records?.length || 'N/A'}`);
+          const scoutCount = data.scout?.records?.length || 0;
+          const surveyCount = data.survey?.records?.length || 0;
+          
+          log('Fetch team_dashboard_data.json', 'pass', 
+            `HTTP ${resp.status} in ${elapsed}ms\n` +
+            `Keys: ${keys.join(', ')}\n` +
+            `Scout records: ${scoutCount}\n` +
+            `Survey records: ${surveyCount}`);
+          
+          // Check if data looks valid
+          if (scoutCount === 0 && surveyCount === 0) {
+            log('Data Validity Check', 'fail', 
+              'JSON fetched but contains 0 records!\nThe data file may be empty or corrupted.');
+          } else if (scoutCount < 100) {
+            log('Data Validity Check', 'pending', 
+              `Only ${scoutCount} scout records - seems low. Expected 300+`);
+          } else {
+            log('Data Validity Check', 'pass', `${scoutCount} scout records looks good!`);
+          }
         } else {
-          log('Fetch JSON', 'fail', `HTTP ${resp.status} ${resp.statusText}`);
+          log('Fetch team_dashboard_data.json', 'fail', `HTTP ${resp.status} ${resp.statusText}`);
         }
       } catch (e) {
-        log('Fetch JSON', 'fail', `Error: ${e.message}`);
+        log('Fetch team_dashboard_data.json', 'fail', `Error: ${e.message}\n${e.stack || ''}`);
       }
       
       // Test 4: Check routing data
@@ -71,33 +132,55 @@
         const resp = await fetch('survey_routing_data.json?t=' + Date.now(), { cache: 'no-store' });
         if (resp.ok) {
           const data = await resp.json();
-          log('Fetch Routing JSON', 'pass', 
-            `HTTP ${resp.status}, Sites: ${Object.keys(data).length}`);
+          const siteCount = Object.keys(data).length;
+          log('Fetch survey_routing_data.json', siteCount > 100 ? 'pass' : 'pending', 
+            `HTTP ${resp.status}, Sites: ${siteCount}` + 
+            (siteCount < 100 ? '\n⚠️ Expected 700+ sites' : ''));
         } else {
-          log('Fetch Routing JSON', 'fail', `HTTP ${resp.status}`);
+          log('Fetch survey_routing_data.json', 'fail', `HTTP ${resp.status}`);
         }
       } catch (e) {
-        log('Fetch Routing JSON', 'fail', `Error: ${e.message}`);
+        log('Fetch survey_routing_data.json', 'fail', `Error: ${e.message}`);
       }
       
-      // Test 5: Check if we're being served from output/ or ui/
-      log('Server Info', 'pass', 
-        `URL: ${window.location.href}\nPort: ${window.location.port || '80'}`);
+      // Test 5: Check git info (if available via a marker file)
+      try {
+        const resp = await fetch('.git/HEAD', { cache: 'no-store' });
+        log('Git Repository', resp.ok ? 'pass' : 'info',
+          resp.ok ? 'This is a git clone (good!)' : 'Not a git repo or .git not accessible');
+      } catch (e) {
+        log('Git Repository', 'info', 'Cannot check .git (normal for served files)');
+      }
       
-      // Test 6: Check fallback data structure
-      if (window.TEAM_DASHBOARD_DATA_FALLBACK) {
-        const fb = window.TEAM_DASHBOARD_DATA_FALLBACK;
-        log('Fallback Data Structure', 'pass',
-          `Survey records: ${fb.survey?.records?.length || 0}\n` +
-          `Scout records: ${fb.scout?.records?.length || 0}\n` +
-          `Mesh rows: ${fb.mesh?.rows?.length || 0}`);
+      // Test 6: Check file sizes by trying to get content-length
+      try {
+        const resp = await fetch('index.html', { method: 'HEAD', cache: 'no-store' });
+        const size = resp.headers.get('content-length');
+        const sizeKB = size ? Math.round(parseInt(size) / 1024) : 'unknown';
+        const isBaked = size && parseInt(size) > 1000000; // >1MB means baked
+        
+        log('index.html Size', isBaked ? 'pass' : 'fail',
+          `Size: ${sizeKB} KB\n` +
+          (isBaked 
+            ? '✅ File is large enough to contain baked data' 
+            : '❌ File too small - data NOT baked!\nViewer needs to: git pull'));
+      } catch (e) {
+        log('index.html Size', 'info', 'Could not check file size');
       }
       
       // Summary
       const passes = document.querySelectorAll('.pass').length;
       const fails = document.querySelectorAll('.fail').length;
+      const warnings = document.querySelectorAll('.pending').length;
+      
       log('SUMMARY', fails === 0 ? 'pass' : 'fail',
-        `${passes} passed, ${fails} failed`);
+        `${passes} passed, ${fails} failed, ${warnings} warnings\n\n` +
+        (fails > 0 
+          ? '⚠️ RECOMMENDED ACTION:\n' +
+            '1. Open PowerShell in the VUES folder\n' +
+            '2. Run: git pull\n' +
+            '3. Restart the dashboard'
+          : '✅ All critical tests passed!'));
     }
     
     // Auto-run on load

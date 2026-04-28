@@ -212,6 +212,9 @@ def main():
     print("  ============================================")
     print("")
     
+    # Sync fresh data from output/ to ui/ (if admin has newer data)
+    sync_data_from_output()
+    
     # Load all data
     print("  Loading data files...")
     data = load_data()

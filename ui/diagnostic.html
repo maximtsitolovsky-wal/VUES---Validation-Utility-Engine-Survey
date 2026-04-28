@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VUES Data Loading Diagnostic</title>
+  <style>
+    body { font-family: system-ui; padding: 40px; background: #1a1a2e; color: #eee; }
+    .test { padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .pass { background: #1d4e1d; }
+    .fail { background: #4e1d1d; }
+    .pending { background: #4e4e1d; }
+    pre { background: #0a0a1a; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    h1 { color: #ffc220; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🐕 VUES Data Loading Diagnostic</h1>
+  <p>This page tests each step of data loading to find where it breaks.</p>
+  
+  <div id="results"></div>
+  
+  <h2>Actions</h2>
+  <button onclick="runAllTests()">Run All Tests</button>
+  <button onclick="location.reload()">Refresh Page</button>
+  <button onclick="window.location='index.html'">Go to Dashboard</button>
+  
+  <script>
+    const results = document.getElementById('results');
+    
+    function log(name, status, details = '') {
+      const div = document.createElement('div');
+      div.className = 'test ' + status;
+      div.innerHTML = `<strong>${status.toUpperCase()}: ${name}</strong>` + 
+        (details ? `<pre>${details}</pre>` : '');
+      results.appendChild(div);
+    }
+    
+    async function runAllTests() {
+      results.innerHTML = '<div class="test pending">Running tests...</div>';
+      results.innerHTML = '';
+      
+      // Test 1: Check if fallback data exists
+      log('Fallback Data Variable', 
+        window.TEAM_DASHBOARD_DATA_FALLBACK ? 'pass' : 'fail',
+        window.TEAM_DASHBOARD_DATA_FALLBACK 
+          ? `Found! Keys: ${Object.keys(window.TEAM_DASHBOARD_DATA_FALLBACK).join(', ')}`
+          : 'window.TEAM_DASHBOARD_DATA_FALLBACK is undefined');
+      
+      // Test 2: Check baked version
+      log('Baked Version',
+        window.VUES_BAKED_VERSION ? 'pass' : 'fail',
+        window.VUES_BAKED_VERSION || 'Not set');
+      
+      // Test 3: Try fetching JSON
+      try {
+        const resp = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          const keys = Object.keys(data);
+          log('Fetch JSON', 'pass', 
+            `HTTP ${resp.status}, Keys: ${keys.join(', ')}\nScout records: ${data.scout?.records?.length || 'N/A'}`);
+        } else {
+          log('Fetch JSON', 'fail', `HTTP ${resp.status} ${resp.statusText}`);
+        }
+      } catch (e) {
+        log('Fetch JSON', 'fail', `Error: ${e.message}`);
+      }
+      
+      // Test 4: Check routing data
+      try {
+        const resp = await fetch('survey_routing_data.json?t=' + Date.now(), { cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          log('Fetch Routing JSON', 'pass', 
+            `HTTP ${resp.status}, Sites: ${Object.keys(data).length}`);
+        } else {
+          log('Fetch Routing JSON', 'fail', `HTTP ${resp.status}`);
+        }
+      } catch (e) {
+        log('Fetch Routing JSON', 'fail', `Error: ${e.message}`);
+      }
+      
+      // Test 5: Check if we're being served from output/ or ui/
+      log('Server Info', 'pass', 
+        `URL: ${window.location.href}\nPort: ${window.location.port || '80'}`);
+      
+      // Test 6: Check fallback data structure
+      if (window.TEAM_DASHBOARD_DATA_FALLBACK) {
+        const fb = window.TEAM_DASHBOARD_DATA_FALLBACK;
+        log('Fallback Data Structure', 'pass',
+          `Survey records: ${fb.survey?.records?.length || 0}\n` +
+          `Scout records: ${fb.scout?.records?.length || 0}\n` +
+          `Mesh rows: ${fb.mesh?.rows?.length || 0}`);
+      }
+      
+      // Summary
+      const passes = document.querySelectorAll('.pass').length;
+      const fails = document.querySelectorAll('.fail').length;
+      log('SUMMARY', fails === 0 ? 'pass' : 'fail',
+        `${passes} passed, ${fails} failed`);
+    }
+    
+    // Auto-run on load
+    runAllTests();
+  </script>
+</body>
+</html>

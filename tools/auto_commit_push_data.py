@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Auto-commit + push data changes to git (for truly live viewer experience)."""
+"""Auto-publish viewer data to git (for truly live viewer experience).
+
+This script monitors output/team_dashboard_data.json and when it changes:
+1. Copies data from output/ to ui/ (what viewers get)
+2. Bakes data into HTML files
+3. Commits and pushes to git
+
+Viewers will see updates within ~30 seconds of data changing.
+"""
 
 import subprocess
 import json
@@ -53,8 +61,40 @@ def get_scout_count() -> int:
     except Exception:
         return 0
 
+def publish_to_viewers() -> bool:
+    """Run publish_viewer_data.py to sync output/ -> ui/ and push."""
+    publish_script = REPO_ROOT / 'tools' / 'publish_viewer_data.py'
+    if not publish_script.exists():
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ERROR: publish_viewer_data.py not found")
+        return False
+    
+    try:
+        result = subprocess.run(
+            ['python', str(publish_script)],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+        return 'pushed to repository' in result.stdout.lower() or 'already up to date' in result.stdout.lower()
+    except Exception as e:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Publish error: {e}")
+        return False
+
 def push_changes(count: int) -> bool:
-    """Commit and push data + compiled changes."""
+    """Publish viewer data (copies output/ -> ui/, bakes HTML, commits, pushes)."""
+    try:
+        # Use the proper publish script instead of direct git commands
+        if publish_to_viewers():
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] PUBLISHED: {count} submissions to viewers")
+            return True
+        return False
+    except Exception as e:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Error: {e}")
+        return False
+
+def push_changes_OLD(count: int) -> bool:
+    """OLD: Commit and push data + compiled changes (doesn't work because output/ is gitignored)."""
     try:
         # Stage files
         subprocess.run(

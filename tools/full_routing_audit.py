@@ -52,16 +52,16 @@ fa_data = [r for r in has_scout if r.get('survey_type') == 'FA/INTRUSION']
 upgrade_data = [r for r in has_scout if r.get('survey_type') == 'BOTH']
 review_data = [r for r in has_scout if r.get('survey_type') in ['REVIEW', 'NONE', None, '']]
 
-print(f"  Completed:       {len(complete_data):>4}")
-print(f"  No Survey:       {len(no_survey_data):>4}")
-print(f"  Awaiting Scout:  {len(scout_data):>4}")
-print(f"  CCTV:            {len(cctv_data):>4}")
-print(f"  FA/Intrusion:    {len(fa_data):>4}")
-print(f"  Both Surveys:    {len(upgrade_data):>4}")
-print(f"  Needs Review:    {len(review_data):>4}")
+print(f"  Completed:         {len(complete_data):>4}")
+print(f"  No Survey:         {len(no_survey_data):>4}")
+print(f"  Awaiting Scout:    {len(scout_data):>4}")
+print(f"  CCTV:              {len(cctv_data):>4}")
+print(f"  FA/Intrusion:      {len(fa_data):>4}")
+print(f"  Both Surveys:      {len(upgrade_data):>4}")
+print(f"  Needs Review:      {len(review_data):>4}")
 print(f"  ---------------------")
 total = len(complete_data) + len(no_survey_data) + len(scout_data) + len(cctv_data) + len(fa_data) + len(upgrade_data) + len(review_data)
-print(f"  TOTAL:           {total:>4} {'OK' if total == len(rows) else 'MISMATCH!'}")
+print(f"  TOTAL:             {total:>4} {'OK' if total == len(rows) else 'MISMATCH!'}")
 
 # === STATUS BAR BREAKDOWN ===
 print("\n" + "=" * 60)
@@ -72,19 +72,19 @@ from collections import Counter
 statuses = Counter(get_status(r) for r in rows)
 
 scout_ip = statuses.get('scout-in-progress', 0)
-scout_done = statuses.get('scout-completed', 0)  # "Ready to Assign"
+scout_done = statuses.get('scout-completed', 0)
 survey_ip = statuses.get('survey-in-progress', 0)
 full_upgrade = statuses.get('full-upgrade', 0)
 completed = statuses.get('survey-completed', 0)
 
-print(f"  Scout In Progress:  {scout_ip:>4}")
-print(f"  Ready to Assign:    {scout_done:>4}  (scout done, needs survey)")
-print(f"  Survey In Progress: {survey_ip:>4}")
-print(f"  Full Upgrade:       {full_upgrade:>4}")
-print(f"  Completed:          {completed:>4}")
-print(f"  ─────────────────────")
+print(f"  Scout In Progress:   {scout_ip:>4}")
+print(f"  Ready to Assign:     {scout_done:>4}  (scout done, needs survey)")
+print(f"  Survey In Progress:  {survey_ip:>4}")
+print(f"  Full Upgrade:        {full_upgrade:>4}")
+print(f"  Completed:           {completed:>4}")
+print(f"  ---------------------")
 status_total = scout_ip + scout_done + survey_ip + full_upgrade + completed
-print(f"  TOTAL:              {status_total:>4} {'OK' if status_total == len(rows) else 'MISMATCH!'}")
+print(f"  TOTAL:               {status_total:>4} {'OK' if status_total == len(rows) else 'MISMATCH!'}")
 
 # === "DONE" COUNTS PER TAB ===
 print("\n" + "=" * 60)

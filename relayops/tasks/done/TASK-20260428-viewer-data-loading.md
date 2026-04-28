@@ -6,17 +6,41 @@
 - title: Viewer version not loading data
 - created_by: human:maxim
 - owner: agent:code-puppy-4192f5
-- status: claimed
+- status: done
 - priority: high
 - created_at: 2026-04-28T10:05:00Z
-- updated_at: 2026-04-28T10:05:00Z
+- updated_at: 2026-04-28T10:20:00Z
 - expires_at: none
 
 ## Objective
 
 Fix data loading issue in the viewer version of VUES dashboard.
 
-## Context
+## Resolution (2026-04-28)
+
+**Root Cause:** Viewer's HTML files didn't have baked fallback data. Their `git pull` was silently failing.
+
+**Evidence from diagnostic:**
+- ❌ `window.TEAM_DASHBOARD_DATA_FALLBACK` = undefined
+- ❌ `VUES_BAKED_VERSION` = not set  
+- ✅ Fetch worked but returned stale data (only 3 sites instead of 700+)
+
+**Fixes Applied:**
+1. Re-baked all HTML files with latest data (4.4MB each)
+2. Pushed baked HTML to git (`b1da203`)
+3. Updated `serve_dashboard.py` to show warning popup when git pull fails
+4. Added `diagnostic.html` page for future troubleshooting
+
+**Viewer Action Required:**
+```bash
+cd VUES---Validation-Utility-Engine-Survey
+git pull
+```
+Then restart the dashboard.
+
+---
+
+## Original Context
 
 User reports "not having data loaded into the viewer version". Need to diagnose:
 1. What exactly is broken (which data, which page, what error)

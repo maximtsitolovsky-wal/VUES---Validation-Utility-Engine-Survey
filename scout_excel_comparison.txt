@@ -1,0 +1,40 @@
+======================================================================
+ SCOUT: AIRTABLE vs EXCEL COMPARISON
+======================================================================
+
+Total Airtable records: 512
+Unique sites in Airtable: 501
+Total sites in Excel scope: 765
+Sites in BOTH (completed): 499
+
+----------------------------------------------------------------------
+ SITES IN AIRTABLE BUT NOT IN EXCEL (2)
+ (These are submitted but NOT counted as 'completed')
+----------------------------------------------------------------------
+  Site 1980 | Vendor: techwiseis.com | Submitted: 
+  Site 4146 | Vendor: techwiseis.com | Submitted: 
+
+----------------------------------------------------------------------
+ DUPLICATE SUBMISSIONS (11 sites with multiple submissions)
+----------------------------------------------------------------------
+  Site 1322: 2 submissions
+  Site 2913: 2 submissions
+  Site 3483: 2 submissions
+  Site 3741: 2 submissions
+  Site 386: 2 submissions
+  Site 4417: 2 submissions
+  Site 492: 2 submissions
+  Site 531: 2 submissions
+  Site 5319: 2 submissions
+  Site 540: 2 submissions
+  Site 5963: 2 submissions
+
+======================================================================
+ SUMMARY
+======================================================================
+  Total Airtable records:     512
+  Duplicate records:          11
+  Unique sites submitted:     501
+  In Excel scope (completed): 499
+  NOT in Excel (out of scope):2
+  Excel sites remaining:      266

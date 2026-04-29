@@ -12,8 +12,8 @@ airtable_sites = set(
     for r in records if r.get('site_number')
 )
 
-# Load Excel reference
-reference_path = r"C:\Users\vn59j7j\OneDrive - Walmart Inc\SQL DB MASTER.xlsx"
+# Load Excel reference (ScoutSurveyLab.xlsm)
+reference_path = r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\ScoutSurveyLab.xlsm"
 wb = openpyxl.load_workbook(reference_path, read_only=True, data_only=True)
 ws = wb["Scout Map Data"]
 excel_sites = set(

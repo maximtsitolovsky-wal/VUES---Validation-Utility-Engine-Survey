@@ -319,7 +319,6 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     
     supplemental_flags_list = []
     reasons = []
-    needs_review = False
     
     # === STEP 1: Check Full Upgrade Triggers ===
     # These determine if a survey is NOT needed for that category
@@ -335,9 +334,9 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         if scout.ap_office_moving == "YES":
             cctv_full_upgrade = True
         elif _is_blank(scout.ap_office_moving):
-            # Homerun present but AP office status unknown - needs review
-            needs_review = True
-            supplemental_flags_list.append("AP office move status missing — internal review required.")
+            # AP status unknown - note it but don't block routing
+            # Homerun cabling will trigger CCTV survey below
+            supplemental_flags_list.append("AP office move status unknown — will be determined during survey.")
     
     # === STEP 2: Check Survey Triggers for categories WITHOUT full upgrade ===
     fa_survey_needed = False
@@ -372,8 +371,8 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         if scout.cable_condition:
             cctv_survey_needed = True
             supplemental_flags_list.append(f"Cable condition: {scout.cable_condition}")
-        if scout.homerun_cabling_present and not needs_review:
-            # Only add as trigger if not already flagged for review
+        if scout.homerun_cabling_present:
+            # Homerun cabling triggers CCTV survey need (AP status determined during survey)
             cctv_survey_needed = True
             supplemental_flags_list.append("Homerun cabling present")
     

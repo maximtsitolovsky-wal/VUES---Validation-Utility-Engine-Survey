@@ -14,22 +14,26 @@ if sys.platform == 'win32':
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.siteowlqa.survey_routing import refresh_survey_routing
-from src.siteowlqa.config import AppConfig
+from src.siteowlqa.config import load_config
 
 def main():
     print("=" * 50)
     print(" Regenerating Survey Routing Data")
     print("=" * 50)
     
-    config = AppConfig()
+    config = load_config()
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
     
-    print(f"Workbook: {config.workbook_path}")
-    print(f"API key present: {bool(config.airtable_api_key)}")
+    print(f"Workbook: {config.reference_workbook_path}")
+    print(f"API key present: {bool(config.airtable_token)}")
     
     print("\nFetching data from Airtable and Excel...")
-    refresh_survey_routing(config.airtable_api_key, output_dir, config.workbook_path)
+    refresh_survey_routing(
+        token=config.scout_airtable_token or config.airtable_token,
+        output_dir=output_dir,
+        workbook_path=config.reference_workbook_path
+    )
     
     # Read and display summary
     with open(output_dir / 'survey_routing_data.json') as f:

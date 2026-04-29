@@ -378,15 +378,8 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     
     # === STEP 3: Determine Final Survey Type and Decision ===
     
-    # Handle review case first
-    if needs_review:
-        survey_required = "REVIEW"
-        survey_type = "REVIEW"
-        upgrade_decision = "REVIEW REQUIRED"
-        reason = "Homerun cabling is present, but AP office move status is unknown."
-    
     # Both full upgrades - no survey at all
-    elif fa_full_upgrade and cctv_full_upgrade:
+    if fa_full_upgrade and cctv_full_upgrade:
         survey_required = "NO"
         survey_type = "NONE"
         upgrade_decision = "FULL BOTH UPGRADE"
@@ -435,11 +428,11 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         upgrade_decision = "SURVEY REQUIRED"
         reason = "CCTV survey triggers present."
     else:
-        # No triggers at all
-        survey_required = "REVIEW"
-        survey_type = "REVIEW"
-        upgrade_decision = "REVIEW REQUIRED"
-        reason = "No clear survey or upgrade triggers found. Manual review required."
+        # No survey triggers and no full upgrade triggers - no survey needed
+        survey_required = "NO"
+        survey_type = "NONE"
+        upgrade_decision = "NO TRIGGERS FOUND"
+        reason = "Scout data present. No survey or upgrade triggers found."
     
     # === STEP 4: Scheduling Logic ===
     if survey_required == "NO":

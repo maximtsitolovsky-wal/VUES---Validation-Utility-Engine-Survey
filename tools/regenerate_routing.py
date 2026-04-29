@@ -14,14 +14,14 @@ if sys.platform == 'win32':
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.siteowlqa.survey_routing import refresh_survey_routing
-from src.siteowlqa.config import Config
+from src.siteowlqa.config import AppConfig
 
 def main():
     print("=" * 50)
     print(" Regenerating Survey Routing Data")
     print("=" * 50)
     
-    config = Config()
+    config = AppConfig()
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
     

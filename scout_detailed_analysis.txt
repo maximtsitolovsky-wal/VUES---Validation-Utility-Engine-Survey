@@ -1,0 +1,61 @@
+======================================================================
+ SCOUT COMPLETION ANALYSIS
+======================================================================
+
+Total Airtable records: 512
+Unique site numbers: 502
+Sites with duplicates: 10
+Extra records (duplicates): 10
+
+----------------------------------------------------------------------
+ CHECKING FOR INCOMPLETE SUBMISSIONS
+----------------------------------------------------------------------
+
+Records with Complete? = True: 512
+Records without Complete? = True: 0
+
+
+----------------------------------------------------------------------
+ DUPLICATE SITES (multiple submissions)
+----------------------------------------------------------------------
+
+Site 1322: 2 submissions
+     | techwiseis.com | recdQIyV6EZN | Complete?=1
+     | techwiseis.com | reciJHdhup3C | Complete?=1
+
+Site 2913: 2 submissions
+     | customelectronics.co | recKixRr1a5r | Complete?=1
+     | customelectronics.co | recv9U7kTmzh | Complete?=1
+
+Site 3483: 2 submissions
+     | customelectronics.co | recXN9LKtEOh | Complete?=1
+     | customelectronics.co | recQiwTWp7GY | Complete?=1
+
+Site 3741: 2 submissions
+     | customelectronics.co | reciS2RaybE5 | Complete?=1
+     | customelectronics.co | recz9cXp9I2e | Complete?=1
+
+Site 386: 2 submissions
+     | customelectronics.co | reccp7siykzv | Complete?=1
+     | customelectronics.co | rec4rcLNmzrd | Complete?=1
+
+Site 4417: 2 submissions
+     | wachter.com | rec5irsbSSAc | Complete?=1
+     | wachter.com | recXl7pSyVq3 | Complete?=1
+
+Site 531: 2 submissions
+     | customelectronics.co | recNZQCnEUPf | Complete?=1
+     | customelectronics.co | rec8kkqJdKWq | Complete?=1
+
+Site 5319: 2 submissions
+     | safeandsoundsecurity | recgLVXYUZnp | Complete?=1
+     | safeandsoundsecurity | reciO7M6MSVA | Complete?=1
+
+Site 540: 2 submissions
+     | customelectronics.co | reci1jMpWLfF | Complete?=1
+     | customelectronics.co | reclu2PzqEOL | Complete?=1
+
+Site 5963: 2 submissions
+     | customelectronics.co | reckIKPIqOR9 | Complete?=1
+     | customelectronics.co | recQVzFXEzFY | Complete?=1
+

@@ -563,6 +563,10 @@ def main() -> int:
     log.info("  [x] Column BB: (10.00, 30.00)")
     log.info("  [x] Headers: Abbreviated Names, MAC Address")
     log.info("  [x] Project ID and Plan ID: NOT overwritten")
+    log.info("-" * 70)
+    log.info("FA/Intrusion Worksheet Structure Applied:")
+    log.info("  [x] Column BB: (10.00, 50.00)")
+    log.info("  [x] Headers: Abbreviated Names, MAC Address")
     log.info("=" * 70)
     
     return 0

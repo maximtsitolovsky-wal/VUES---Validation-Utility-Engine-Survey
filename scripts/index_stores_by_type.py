@@ -83,7 +83,8 @@ HEADER_CORRECTIONS = {
 DEVICE_TASK_VALUE = "Device"
 SYSTEM_TYPE_VALUE = "Video Surveillance"
 DEVICE_TYPE_VALUE = "Fixed Camera"
-COORDINATES_VALUE = "(10.00, 30.00)"  # Will be quoted in CSV output
+COORDINATES_VALUE = "(10.00, 30.00)"  # CCTV coordinate
+FA_COORDINATES_VALUE = "(10.00, 50.00)"  # FA/Intrusion coordinate
 
 
 # =============================================================================

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 """Index stores by survey type - split the reference workbook into individual store CSVs.
 
+OPTIMIZED VERSION - uses vectorized pandas operations for 1M+ row datasets.
+
 This script:
-1. Loads the entire SQL DB MASTER workbook
-2. Extracts unique store numbers (SelectedSiteID)
+1. Loads the entire Camera&Alarm Ref Data workbook (1M+ rows)
+2. Extracts unique store numbers (SelectedSiteID)  
 3. For each store, splits rows into CCTV vs FA/Intrusion:
    - CCTV: Abbreviated Name AND Description are EMPTY
    - FA/Intrusion: Abbreviated Name OR Description have CONTENT
@@ -33,34 +35,9 @@ log = logging.getLogger(__name__)
 # Paths - using Camera&Alarm Ref Data from Teams Chat Files (most recent local copy)
 WORKBOOK_PATH = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Microsoft Teams Chat Files\Camera&Alarm Ref Data 1.xlsx")
 SHEET_NAME = 0  # First sheet (index 0)
-SITE_ID_COLUMN = "SelectedSiteID"  # Will try common aliases if not found
 
 CCTV_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\CCTV STORES DATA - Survey")
 FA_INTRUSION_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\FA&Intrusion STORES DATA - Survey")
-
-# The columns that determine CCTV vs FA/Intrusion split
-# Based on VUES grading logic:
-#   CCTV = rows WHERE Abbreviated Name AND Description are EMPTY
-#   FA/Intrusion = rows WHERE Abbreviated Name OR Description have CONTENT
-ABBREV_NAME_COL = "Abreviated_"  # BQ naming from the workbook
-DESCRIPTION_COL = "Description"
-
-
-def has_content(value) -> bool:
-    """Check if a cell has meaningful content (not empty/whitespace/nan)."""
-    if pd.isna(value):
-        return False
-    return bool(str(value).strip())
-
-
-def is_cctv_row(row: pd.Series) -> bool:
-    """CCTV row = Abbreviated Name AND Description are EMPTY."""
-    return not has_content(row.get(ABBREV_NAME_COL, "")) and not has_content(row.get(DESCRIPTION_COL, ""))
-
-
-def is_fa_intrusion_row(row: pd.Series) -> bool:
-    """FA/Intrusion row = Abbreviated Name OR Description have CONTENT."""
-    return has_content(row.get(ABBREV_NAME_COL, "")) or has_content(row.get(DESCRIPTION_COL, ""))
 
 
 def clean_site_id(site_id) -> str:
@@ -74,9 +51,19 @@ def clean_site_id(site_id) -> str:
     return s
 
 
+def find_column(df: pd.DataFrame, candidates: list[str]) -> str | None:
+    """Find a column by trying multiple candidate names (case-insensitive, strip whitespace)."""
+    col_map = {col.strip().lower(): col for col in df.columns}
+    for candidate in candidates:
+        actual = col_map.get(candidate.strip().lower())
+        if actual is not None:
+            return actual
+    return None
+
+
 def main() -> int:
     log.info("=" * 70)
-    log.info("Store Indexing Script - Splitting Reference Data by Survey Type")
+    log.info("Store Indexing Script - OPTIMIZED for 1M+ rows")
     log.info("=" * 70)
     
     # Validate paths
@@ -89,7 +76,7 @@ def main() -> int:
     
     # Load the workbook
     log.info("Loading workbook: %s", WORKBOOK_PATH.name)
-    log.info("Sheet: %s", SHEET_NAME if isinstance(SHEET_NAME, str) else "<first sheet>")
+    log.info("This may take ~1 minute for large files...")
     
     try:
         # Try calamine first (fast Rust engine), fallback to openpyxl
@@ -114,147 +101,120 @@ def main() -> int:
         return 1
     
     log.info("Loaded %d rows, %d columns", len(df), len(df.columns))
-    log.info("Columns: %s", list(df.columns))
     
-    # Find the site ID column (case-insensitive search)
-    site_col = None
-    for col in df.columns:
-        if col.strip().lower() == SITE_ID_COLUMN.lower():
-            site_col = col
-            break
-    
+    # Find required columns
+    site_col = find_column(df, ["SelectedSiteID", "Selected Site ID", "SiteID", "Site ID", "Site Number"])
     if site_col is None:
-        # Try common aliases
-        aliases = ["SelectedSiteID", "Selected Site ID", "SiteID", "Site ID", "Site Number"]
-        for alias in aliases:
-            for col in df.columns:
-                if col.strip().lower() == alias.lower():
-                    site_col = col
-                    log.info("Using alias '%s' for site ID column", col)
-                    break
-            if site_col:
-                break
-    
-    if site_col is None:
-        log.error("Could not find site ID column. Available: %s", list(df.columns))
+        log.error("Could not find site ID column. Available: %s", list(df.columns)[:20])
         return 1
+    log.info("Site ID column: %s", site_col)
     
-    # Find the split columns
-    abbrev_col = None
-    desc_col = None
-    
-    for col in df.columns:
-        col_lower = col.strip().lower()
-        if col_lower in ["abreviated_", "abbreviated name", "abbreviatedname"]:
-            abbrev_col = col
-        if col_lower == "description":
-            desc_col = col
+    # Find split columns - note the typo in the actual data: "Abreviated " with trailing space
+    abbrev_col = find_column(df, ["Abreviated ", "Abreviated", "Abbreviated Name", "AbbreviatedName", "Abbreviated"])
+    desc_col = find_column(df, ["Description"])
     
     if abbrev_col:
-        log.info("Abbreviated Name column: %s", abbrev_col)
+        log.info("Abbreviated column: '%s'", abbrev_col)
     else:
-        log.warning("No Abbreviated Name column found - treating ALL rows as CCTV")
+        log.warning("No Abbreviated column found")
         
     if desc_col:
-        log.info("Description column: %s", desc_col)
+        log.info("Description column: '%s'", desc_col)
     else:
-        log.warning("No Description column found - treating ALL rows as CCTV")
+        log.warning("No Description column found")
     
-    # Get unique site IDs
-    unique_sites = df[site_col].dropna().unique()
-    unique_sites = [clean_site_id(s) for s in unique_sites if clean_site_id(s)]
-    unique_sites = sorted(set(unique_sites))
+    # --- VECTORIZED SPLIT LOGIC ---
+    # Create boolean masks for the entire dataframe at once (FAST!)
+    
+    log.info("Computing CCTV/FA split masks (vectorized)...")
+    
+    # Helper: check if column has content (not empty/whitespace/nan)
+    def col_has_content(col_name: str | None) -> pd.Series:
+        if col_name is None or col_name not in df.columns:
+            return pd.Series([False] * len(df), index=df.index)
+        return df[col_name].fillna("").astype(str).str.strip().ne("")
+    
+    abbrev_has_content = col_has_content(abbrev_col)
+    desc_has_content = col_has_content(desc_col)
+    
+    # CCTV = Abbreviated AND Description are EMPTY
+    # FA/Intrusion = Abbreviated OR Description have CONTENT
+    cctv_mask = ~abbrev_has_content & ~desc_has_content
+    fa_mask = abbrev_has_content | desc_has_content
+    
+    log.info("Total CCTV rows: %d", cctv_mask.sum())
+    log.info("Total FA/Intrusion rows: %d", fa_mask.sum())
+    
+    # Clean site IDs and create lookup column
+    log.info("Normalizing site IDs...")
+    df["__clean_site__"] = df[site_col].apply(clean_site_id)
+    
+    # Get unique sites
+    unique_sites = df["__clean_site__"].loc[df["__clean_site__"].ne("")].unique()
+    unique_sites = sorted(unique_sites)
     
     log.info("-" * 70)
     log.info("Found %d unique stores to process", len(unique_sites))
     log.info("-" * 70)
     
+    # Pre-split dataframes for efficiency
+    cctv_df = df[cctv_mask].copy()
+    fa_df = df[fa_mask].copy()
+    
+    # Group by site for fast iteration
+    log.info("Grouping by site (this is the fast part)...")
+    cctv_grouped = cctv_df.groupby("__clean_site__", sort=False)
+    fa_grouped = fa_df.groupby("__clean_site__", sort=False)
+    
+    # Get the groups as dicts for O(1) lookup
+    cctv_groups = {name: group.drop(columns=["__clean_site__"]) for name, group in cctv_grouped}
+    fa_groups = {name: group.drop(columns=["__clean_site__"]) for name, group in fa_grouped}
+    
+    log.info("Writing individual store CSVs...")
+    
     # Stats
     cctv_files = 0
-    fa_intrusion_files = 0
+    fa_files = 0
     cctv_total_rows = 0
-    fa_intrusion_total_rows = 0
-    empty_cctv = 0
-    empty_fa = 0
+    fa_total_rows = 0
     
     for i, site_id in enumerate(unique_sites, 1):
-        if i % 100 == 0:
-            log.info("Progress: %d / %d stores...", i, len(unique_sites))
+        if i % 500 == 0:
+            log.info("Progress: %d / %d stores... (CCTV: %d files, FA: %d files)", 
+                     i, len(unique_sites), cctv_files, fa_files)
         
-        # Filter rows for this site
-        site_mask = df[site_col].apply(lambda x: clean_site_id(x) == site_id)
-        site_df = df[site_mask].copy()
+        # Write CCTV file
+        if site_id in cctv_groups:
+            site_cctv = cctv_groups[site_id]
+            if not site_cctv.empty:
+                cctv_path = CCTV_OUTPUT_DIR / f"Store_{site_id}_CCTV.csv"
+                site_cctv.to_csv(cctv_path, index=False)
+                cctv_files += 1
+                cctv_total_rows += len(site_cctv)
         
-        if site_df.empty:
-            continue
-        
-        # Split into CCTV and FA/Intrusion
-        if abbrev_col and desc_col:
-            # Both columns exist - apply full split logic
-            cctv_mask = site_df.apply(
-                lambda row: (
-                    not has_content(row.get(abbrev_col, "")) and 
-                    not has_content(row.get(desc_col, ""))
-                ),
-                axis=1
-            )
-            fa_mask = site_df.apply(
-                lambda row: (
-                    has_content(row.get(abbrev_col, "")) or 
-                    has_content(row.get(desc_col, ""))
-                ),
-                axis=1
-            )
-        elif abbrev_col:
-            # Only abbreviated name column
-            cctv_mask = site_df[abbrev_col].apply(lambda x: not has_content(x))
-            fa_mask = site_df[abbrev_col].apply(has_content)
-        elif desc_col:
-            # Only description column
-            cctv_mask = site_df[desc_col].apply(lambda x: not has_content(x))
-            fa_mask = site_df[desc_col].apply(has_content)
-        else:
-            # No split columns - all goes to CCTV
-            cctv_mask = pd.Series([True] * len(site_df), index=site_df.index)
-            fa_mask = pd.Series([False] * len(site_df), index=site_df.index)
-        
-        cctv_df = site_df[cctv_mask]
-        fa_df = site_df[fa_mask]
-        
-        # Write CCTV file (only if there are rows)
-        if not cctv_df.empty:
-            cctv_path = CCTV_OUTPUT_DIR / f"Store_{site_id}_CCTV.csv"
-            cctv_df.to_csv(cctv_path, index=False)
-            cctv_files += 1
-            cctv_total_rows += len(cctv_df)
-        else:
-            empty_cctv += 1
-        
-        # Write FA/Intrusion file (only if there are rows)
-        if not fa_df.empty:
-            fa_path = FA_INTRUSION_OUTPUT_DIR / f"Store_{site_id}_FA_Intrusion.csv"
-            fa_df.to_csv(fa_path, index=False)
-            fa_intrusion_files += 1
-            fa_intrusion_total_rows += len(fa_df)
-        else:
-            empty_fa += 1
+        # Write FA/Intrusion file
+        if site_id in fa_groups:
+            site_fa = fa_groups[site_id]
+            if not site_fa.empty:
+                fa_path = FA_INTRUSION_OUTPUT_DIR / f"Store_{site_id}_FA_Intrusion.csv"
+                site_fa.to_csv(fa_path, index=False)
+                fa_files += 1
+                fa_total_rows += len(site_fa)
     
     # Final report
     log.info("=" * 70)
     log.info("INDEXING COMPLETE")
     log.info("=" * 70)
-    log.info("Total unique stores processed: %d", len(unique_sites))
+    log.info("Total unique stores: %d", len(unique_sites))
     log.info("-" * 70)
     log.info("CCTV:")
     log.info("  Files created: %d", cctv_files)
     log.info("  Total rows: %d", cctv_total_rows)
-    log.info("  Stores with no CCTV data: %d", empty_cctv)
     log.info("  Output: %s", CCTV_OUTPUT_DIR)
     log.info("-" * 70)
     log.info("FA/Intrusion:")
-    log.info("  Files created: %d", fa_intrusion_files)
-    log.info("  Total rows: %d", fa_intrusion_total_rows)
-    log.info("  Stores with no FA/Intrusion data: %d", empty_fa)
+    log.info("  Files created: %d", fa_files)
+    log.info("  Total rows: %d", fa_total_rows)
     log.info("  Output: %s", FA_INTRUSION_OUTPUT_DIR)
     log.info("=" * 70)
     

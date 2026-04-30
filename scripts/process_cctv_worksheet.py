@@ -19,7 +19,6 @@ from pathlib import Path
 # CONFIGURATION
 # =============================================================================
 
-# Target directories
 CCTV_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\CCTV STORES DATA - Survey")
 
 # Column indices (0-based)
@@ -33,6 +32,7 @@ COL_SYSTEM_TYPE = 8      # I - Populate: "Video Surveillance"
 COL_DEVICE_TYPE = 9      # J - Populate: "Fixed Camera"
 COL_MAC_ADDRESS = 26     # AA - Header rename: "MAC Address"
 COL_COORDINATES = 53     # BB - Populate: "(10.00, 30.00)"
+COL_ARCHIVED = 54        # BC - Clean up leftover coordinate artifact
 
 # Header corrections (old -> new)
 HEADER_CORRECTIONS = {
@@ -51,6 +51,10 @@ SYSTEM_TYPE_VALUE = "Video Surveillance"
 DEVICE_TYPE_VALUE = "Fixed Camera"
 COORDINATES_VALUE = "(10.00, 30.00)"
 
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
 
 def is_valid_device_row(row: list[str], name_col: int) -> bool:
     """Check if a row is a valid device row (has content in Name column)."""
@@ -77,6 +81,50 @@ def ensure_row_length(row: list[str], min_length: int) -> list[str]:
     return row
 
 
+def csv_escape(value: str) -> str:
+    """Escape a value for CSV output (quote if contains comma or quotes)."""
+    if ',' in value or '"' in value or '\n' in value:
+        value = value.replace('"', '""')
+        return f'"{value}"'
+    return value
+
+
+def row_to_csv_line(row: list[str]) -> str:
+    """Convert a row to a properly escaped CSV line."""
+    return ','.join(csv_escape(cell) for cell in row)
+
+
+def parse_csv_line(line: str) -> list[str]:
+    """Parse a CSV line properly handling quoted fields."""
+    row = []
+    current = ""
+    in_quotes = False
+    i = 0
+    chars = line.rstrip("\r\n")
+    
+    while i < len(chars):
+        char = chars[i]
+        if char == '"':
+            if in_quotes and i + 1 < len(chars) and chars[i + 1] == '"':
+                current += '"'
+                i += 1
+            else:
+                in_quotes = not in_quotes
+        elif char == ',' and not in_quotes:
+            row.append(current)
+            current = ""
+        else:
+            current += char
+        i += 1
+    
+    row.append(current)
+    return row
+
+
+# =============================================================================
+# MAIN PROCESSING
+# =============================================================================
+
 def process_file(filepath: Path) -> dict:
     """Process a single CCTV CSV file.
     
@@ -90,7 +138,6 @@ def process_file(filepath: Path) -> dict:
     }
     
     try:
-        # Read file
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
         
@@ -98,12 +145,7 @@ def process_file(filepath: Path) -> dict:
             stats["error"] = "Empty file"
             return stats
         
-        # Parse into rows
-        rows = []
-        for line in lines:
-            # Handle CSV parsing (basic - assumes no commas in values)
-            row = line.rstrip("\r\n").split(",")
-            rows.append(row)
+        rows = [parse_csv_line(line) for line in lines]
         
         if not rows:
             stats["error"] = "No rows"
@@ -111,7 +153,7 @@ def process_file(filepath: Path) -> dict:
         
         # --- Step 1: Correct header names ---
         header = rows[0]
-        header = ensure_row_length(header, COL_COORDINATES + 1)
+        header = ensure_row_length(header, COL_ARCHIVED + 1)
         
         for i, col_name in enumerate(header):
             col_stripped = col_name.strip()
@@ -123,23 +165,20 @@ def process_file(filepath: Path) -> dict:
         rows[0] = header
         
         # --- Step 2: Process device rows ---
-        device_seq = 0  # Sequential counter for Device ID
+        device_seq = 0
         
-        for row_idx in range(1, len(rows)):  # Skip header row
+        for row_idx in range(1, len(rows)):
             row = rows[row_idx]
             
-            # Skip blank rows entirely
             if is_blank_row(row):
                 continue
             
-            # Check if valid device row
             if not is_valid_device_row(row, COL_NAME):
                 continue
             
             stats["rows_processed"] += 1
             
-            # Ensure row has enough columns
-            row = ensure_row_length(row, COL_COORDINATES + 1)
+            row = ensure_row_length(row, COL_ARCHIVED + 1)
             
             # --- Populate required fields ---
             
@@ -160,14 +199,18 @@ def process_file(filepath: Path) -> dict:
             # Column BB: Coordinates = "(10.00, 30.00)"
             row[COL_COORDINATES] = COORDINATES_VALUE
             
+            # Clean up BC column if it has leftover coordinate artifact
+            if row[COL_ARCHIVED].strip() in [" 30.00)", "30.00)", " 30.00", "30.00"]:
+                row[COL_ARCHIVED] = ""
+            
             # NOTE: Project ID (A) and Plan ID (B) are NOT touched
             
             rows[row_idx] = row
         
-        # --- Step 3: Write back ---
+        # --- Step 3: Write back with proper CSV escaping ---
         with open(filepath, "w", encoding="utf-8", newline="") as f:
             for row in rows:
-                f.write(",".join(row) + "\n")
+                f.write(row_to_csv_line(row) + "\n")
         
     except Exception as e:
         stats["error"] = str(e)

@@ -82,7 +82,7 @@ HEADER_CORRECTIONS = {
 DEVICE_TASK_VALUE = "Device"
 SYSTEM_TYPE_VALUE = "Video Surveillance"
 DEVICE_TYPE_VALUE = "Fixed Camera"
-COORDINATES_VALUE = "(10.00, 30.00)"
+COORDINATES_VALUE = "(10.00, 30.00)"  # Will be quoted in CSV output
 
 
 # =============================================================================
@@ -131,6 +131,20 @@ def ensure_row_length(row: list[str], min_length: int) -> list[str]:
     while len(row) < min_length:
         row.append("")
     return row
+
+
+def csv_escape(value: str) -> str:
+    """Escape a value for CSV output (quote if contains comma or quotes)."""
+    if ',' in value or '"' in value or '\n' in value:
+        # Escape internal quotes by doubling them
+        value = value.replace('"', '""')
+        return f'"{value}"'
+    return value
+
+
+def row_to_csv_line(row: list[str]) -> str:
+    """Convert a row to a properly escaped CSV line."""
+    return ','.join(csv_escape(cell) for cell in row)
 
 
 # =============================================================================
@@ -221,10 +235,10 @@ def apply_cctv_worksheet_structure(filepath: Path) -> dict:
             stats["devices_numbered"] += 1
             rows[row_idx] = row
         
-        # Write back
+        # Write back with proper CSV escaping
         with open(filepath, "w", encoding="utf-8", newline="") as f:
             for row in rows:
-                f.write(",".join(row) + "\n")
+                f.write(row_to_csv_line(row) + "\n")
         
     except Exception as e:
         stats["error"] = str(e)

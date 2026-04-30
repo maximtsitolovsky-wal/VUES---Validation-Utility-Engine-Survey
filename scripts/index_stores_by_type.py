@@ -280,6 +280,70 @@ def apply_cctv_worksheet_structure(filepath: Path) -> dict:
 
 
 # =============================================================================
+# POST-PROCESSING: FA/INTRUSION WORKSHEET STRUCTURE
+# =============================================================================
+def apply_fa_intrusion_worksheet_structure(filepath: Path) -> dict:
+    """Apply FA/Intrusion Worksheet structure to a CSV file.
+    
+    Returns dict with processing stats.
+    """
+    stats = {"rows_processed": 0, "headers_corrected": 0, "error": None}
+    
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+        
+        if not lines:
+            return stats
+        
+        rows = [parse_csv_line(line) for line in lines]
+        
+        # --- Correct header names ---
+        header = rows[0]
+        header = ensure_row_length(header, COL_ARCHIVED + 1)
+        
+        for i, col_name in enumerate(header):
+            col_stripped = col_name.strip()
+            if col_stripped in HEADER_CORRECTIONS:
+                header[i] = HEADER_CORRECTIONS[col_stripped]
+                stats["headers_corrected"] += 1
+        
+        rows[0] = header
+        
+        # --- Process device rows ---
+        for row_idx in range(1, len(rows)):
+            row = rows[row_idx]
+            
+            if is_blank_row(row):
+                continue
+            
+            if not is_valid_device_row(row, COL_NAME):
+                continue
+            
+            row = ensure_row_length(row, COL_ARCHIVED + 1)
+            
+            # Column BB: Coordinates = "(10.00, 50.00)"
+            row[COL_COORDINATES] = FA_COORDINATES_VALUE
+            
+            # Clean up BC column if it has leftover coordinate artifact
+            if row[COL_ARCHIVED].strip() in [" 50.00)", "50.00)", " 50.00", "50.00", " 30.00)", "30.00)", " 30.00", "30.00"]:
+                row[COL_ARCHIVED] = ""
+            
+            stats["rows_processed"] += 1
+            rows[row_idx] = row
+        
+        # Write back with proper CSV escaping
+        with open(filepath, "w", encoding="utf-8", newline="") as f:
+            for row in rows:
+                f.write(row_to_csv_line(row) + "\n")
+        
+    except Exception as e:
+        stats["error"] = str(e)
+    
+    return stats
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 def main() -> int:
@@ -446,6 +510,30 @@ def main() -> int:
     log.info("CCTV worksheet processing complete")
     log.info("  Devices numbered: %d", total_devices)
     log.info("  Headers corrected: %d", total_headers)
+    
+    # =========================================================================
+    # PHASE 5: Apply FA/Intrusion Worksheet structure
+    # =========================================================================
+    log.info("-" * 70)
+    log.info("PHASE 5: Applying FA/Intrusion Worksheet structure")
+    log.info("-" * 70)
+    log.info("  - Header corrections: Abbreviated Names, MAC Address")
+    log.info("  - Column BB: (10.00, 50.00)")
+    
+    fa_file_list = list(FA_INTRUSION_OUTPUT_DIR.glob("*.csv"))
+    fa_total_updated = 0
+    fa_headers = 0
+    
+    for i, filepath in enumerate(fa_file_list):
+        if (i + 1) % 500 == 0:
+            log.info("Processing FA/Intrusion worksheets: %d / %d files...", i + 1, len(fa_file_list))
+        stats = apply_fa_intrusion_worksheet_structure(filepath)
+        fa_total_updated += stats["rows_processed"]
+        fa_headers += stats["headers_corrected"]
+    
+    log.info("FA/Intrusion worksheet processing complete")
+    log.info("  Rows updated: %d", fa_total_updated)
+    log.info("  Headers corrected: %d", fa_headers)
     
     # =========================================================================
     # FINAL REPORT

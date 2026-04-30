@@ -30,10 +30,10 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# Paths
-WORKBOOK_PATH = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\SQL DB MASTER.xlsx")
-SHEET_NAME = "SQL DB MASTER"
-SITE_ID_COLUMN = "SelectedSiteID"
+# Paths - using Camera&Alarm Ref Data from Teams Chat Files (most recent local copy)
+WORKBOOK_PATH = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Microsoft Teams Chat Files\Camera&Alarm Ref Data 1.xlsx")
+SHEET_NAME = 0  # First sheet (index 0)
+SITE_ID_COLUMN = "SelectedSiteID"  # Will try common aliases if not found
 
 CCTV_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\CCTV STORES DATA - Survey")
 FA_INTRUSION_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\FA&Intrusion STORES DATA - Survey")
@@ -89,7 +89,7 @@ def main() -> int:
     
     # Load the workbook
     log.info("Loading workbook: %s", WORKBOOK_PATH.name)
-    log.info("Sheet: %s", SHEET_NAME)
+    log.info("Sheet: %s", SHEET_NAME if isinstance(SHEET_NAME, str) else "<first sheet>")
     
     try:
         # Try calamine first (fast Rust engine), fallback to openpyxl

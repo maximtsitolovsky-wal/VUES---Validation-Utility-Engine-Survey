@@ -157,6 +157,55 @@ def load_device_type_mapping(ref_file: Path, sheet_name: str) -> dict[str, str]:
     return mapping
 
 
+import re
+
+def normalize_name_for_matching(name: str) -> list[str]:
+    """Generate potential matching keys from a device name.
+    
+    Returns a list of candidates to try, from most specific to least:
+    1. Exact name (uppercase)
+    2. Name with trailing numbers stripped
+    3. Name with trailing numbers and zone indicators stripped
+    """
+    if not name:
+        return []
+    
+    name = name.strip().upper()
+    candidates = [name]
+    
+    # Pattern: trailing space + digits (e.g., "HIRING CENTER 3" -> "HIRING CENTER")
+    stripped = re.sub(r'\s+\d+$', '', name).strip()
+    if stripped and stripped != name:
+        candidates.append(stripped)
+    
+    # Pattern: trailing space + digits + parenthetical (e.g., "HIRING CENTER 1 (DELAY)" -> "HIRING CENTER (DELAY)")
+    stripped2 = re.sub(r'\s+\d+\s+(\([^)]+\))$', r' \1', name).strip()
+    if stripped2 and stripped2 not in candidates:
+        candidates.append(stripped2)
+    
+    # Pattern: remove all trailing numbers before parenthetical
+    stripped3 = re.sub(r'\s+\d+\s*$', '', name).strip()
+    if stripped3 and stripped3 not in candidates:
+        candidates.append(stripped3)
+    
+    return candidates
+
+
+def find_device_type(name: str, mapping: dict[str, str]) -> str | None:
+    """Find device type for a name using smart matching.
+    
+    Tries exact match first, then progressively less specific matches.
+    Returns None if no match found.
+    """
+    candidates = normalize_name_for_matching(name)
+    
+    for candidate in candidates:
+        if candidate in mapping:
+            return mapping[candidate]
+    
+    return None
+
+
 # =============================================================================
 # MAIN PROCESSING
 # =============================================================================
@@ -225,11 +274,11 @@ def process_file(filepath: Path, device_mapping: dict[str, str]) -> dict:
             row[COL_DEVICE_TASK] = "Device"
             
             # --- Match Name (Column F) against RAW NAME ---
-            name_value = row[COL_NAME].strip().upper() if row[COL_NAME] else ""
+            name_value = row[COL_NAME].strip() if row[COL_NAME] else ""
             
-            if name_value in device_mapping:
-                device_type = device_mapping[name_value]
-                
+            device_type = find_device_type(name_value, device_mapping)
+            
+            if device_type:
                 # Column I: System Type = matched device type
                 row[COL_SYSTEM_TYPE] = device_type
                 stats["types_matched"] += 1
@@ -237,9 +286,6 @@ def process_file(filepath: Path, device_mapping: dict[str, str]) -> dict:
                 # Column BB: Coordinate based on device type
                 if device_type in DEVICE_TYPE_COORDINATES:
                     row[COL_COORDINATES] = DEVICE_TYPE_COORDINATES[device_type]
-                else:
-                    # Unknown device type - leave coordinate as is
-                    pass
             else:
                 # No match found - DO NOT guess, leave existing value
                 stats["types_unmatched"] += 1

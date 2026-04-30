@@ -66,6 +66,7 @@ COL_SYSTEM_TYPE = 8      # I - Populate: "Video Surveillance"
 COL_DEVICE_TYPE = 9      # J - Populate: "Fixed Camera"
 COL_MAC_ADDRESS = 26     # AA - Header rename: "MAC Address"
 COL_COORDINATES = 53     # BB - Populate: "(10.00, 30.00)"
+COL_ARCHIVED = 54        # BC - Clean up leftover coordinate artifact
 
 # Header corrections (old -> new)
 HEADER_CORRECTIONS = {
@@ -147,6 +148,33 @@ def row_to_csv_line(row: list[str]) -> str:
     return ','.join(csv_escape(cell) for cell in row)
 
 
+def parse_csv_line(line: str) -> list[str]:
+    """Parse a CSV line properly handling quoted fields."""
+    row = []
+    current = ""
+    in_quotes = False
+    i = 0
+    chars = line.rstrip("\r\n")
+    
+    while i < len(chars):
+        char = chars[i]
+        if char == '"':
+            if in_quotes and i + 1 < len(chars) and chars[i + 1] == '"':
+                current += '"'
+                i += 1
+            else:
+                in_quotes = not in_quotes
+        elif char == ',' and not in_quotes:
+            row.append(current)
+            current = ""
+        else:
+            current += char
+        i += 1
+    
+    row.append(current)
+    return row
+
+
 # =============================================================================
 # POST-PROCESSING: REMOVE COLUMNS
 # =============================================================================
@@ -196,11 +224,11 @@ def apply_cctv_worksheet_structure(filepath: Path) -> dict:
         if not lines:
             return stats
         
-        rows = [line.rstrip("\r\n").split(",") for line in lines]
+        rows = [parse_csv_line(line) for line in lines]
         
         # --- Correct header names ---
         header = rows[0]
-        header = ensure_row_length(header, COL_COORDINATES + 1)
+        header = ensure_row_length(header, COL_ARCHIVED + 1)
         
         for i, col_name in enumerate(header):
             col_stripped = col_name.strip()
@@ -222,7 +250,7 @@ def apply_cctv_worksheet_structure(filepath: Path) -> dict:
             if not is_valid_device_row(row, COL_NAME):
                 continue
             
-            row = ensure_row_length(row, COL_COORDINATES + 1)
+            row = ensure_row_length(row, COL_ARCHIVED + 1)
             
             # Populate required fields
             device_seq += 1
@@ -231,6 +259,10 @@ def apply_cctv_worksheet_structure(filepath: Path) -> dict:
             row[COL_SYSTEM_TYPE] = SYSTEM_TYPE_VALUE
             row[COL_DEVICE_TYPE] = DEVICE_TYPE_VALUE
             row[COL_COORDINATES] = COORDINATES_VALUE
+            
+            # Clean up BC column if it has leftover coordinate artifact
+            if row[COL_ARCHIVED].strip() in [" 30.00)", "30.00)", " 30.00", "30.00"]:
+                row[COL_ARCHIVED] = ""
             
             stats["devices_numbered"] += 1
             rows[row_idx] = row

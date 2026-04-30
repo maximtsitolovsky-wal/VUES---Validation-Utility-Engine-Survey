@@ -2,9 +2,10 @@
 """Index stores by survey type - split the reference workbook into individual store CSVs.
 
 OPTIMIZED VERSION - uses vectorized pandas operations for 1M+ row datasets.
+NOW PROCESSES ALL SHEETS!
 
 This script:
-1. Loads the entire Camera&Alarm Ref Data workbook (1M+ rows)
+1. Loads ALL sheets from Camera&Alarm Ref Data workbook
 2. Extracts unique store numbers (SelectedSiteID)  
 3. For each store, splits rows into CCTV vs FA/Intrusion:
    - CCTV: Abbreviated Name AND Description are EMPTY
@@ -32,9 +33,8 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# Paths - using Camera&Alarm Ref Data from Teams Chat Files (most recent local copy)
+# Paths
 WORKBOOK_PATH = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Microsoft Teams Chat Files\Camera&Alarm Ref Data 1.xlsx")
-SHEET_NAME = 0  # First sheet (index 0)
 
 CCTV_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\CCTV STORES DATA - Survey")
 FA_INTRUSION_OUTPUT_DIR = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Master Excel Pathing\FA&Intrusion STORES DATA - Survey")
@@ -45,7 +45,6 @@ def clean_site_id(site_id) -> str:
     if pd.isna(site_id):
         return ""
     s = str(site_id).strip()
-    # Remove .0 suffix if it came from numeric conversion
     if s.endswith(".0"):
         s = s[:-2]
     return s
@@ -64,9 +63,9 @@ def find_column(df: pd.DataFrame, candidates: list[str]) -> str | None:
 def main() -> int:
     log.info("=" * 70)
     log.info("Store Indexing Script - OPTIMIZED for 1M+ rows")
+    log.info("Processing ALL SHEETS")
     log.info("=" * 70)
     
-    # Validate paths
     if not WORKBOOK_PATH.exists():
         log.error("Workbook not found: %s", WORKBOOK_PATH)
         return 1
@@ -74,33 +73,23 @@ def main() -> int:
     CCTV_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     FA_INTRUSION_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Load the workbook
+    # Get sheet names
     log.info("Loading workbook: %s", WORKBOOK_PATH.name)
-    log.info("This may take ~1 minute for large files...")
+    xl = pd.ExcelFile(WORKBOOK_PATH, engine="calamine")
+    sheet_names = xl.sheet_names
+    log.info("Found %d sheets: %s", len(sheet_names), sheet_names)
     
-    try:
-        # Try calamine first (fast Rust engine), fallback to openpyxl
-        try:
-            df = pd.read_excel(
-                WORKBOOK_PATH,
-                sheet_name=SHEET_NAME,
-                dtype=str,
-                engine="calamine",
-            )
-            log.info("Using calamine engine (fast)")
-        except Exception:
-            df = pd.read_excel(
-                WORKBOOK_PATH,
-                sheet_name=SHEET_NAME,
-                dtype=str,
-                engine="openpyxl",
-            )
-            log.info("Using openpyxl engine")
-    except Exception as e:
-        log.error("Failed to load workbook: %s", e)
-        return 1
+    # Load and combine all sheets
+    all_dfs = []
+    for sheet_name in sheet_names:
+        log.info("Loading sheet: %s ...", sheet_name)
+        df = pd.read_excel(xl, sheet_name=sheet_name, dtype=str)
+        log.info("  -> %d rows, %d columns", len(df), len(df.columns))
+        all_dfs.append(df)
     
-    log.info("Loaded %d rows, %d columns", len(df), len(df.columns))
+    # Combine all sheets
+    df = pd.concat(all_dfs, ignore_index=True)
+    log.info("Combined total: %d rows", len(df))
     
     # Find required columns
     site_col = find_column(df, ["SelectedSiteID", "Selected Site ID", "SiteID", "Site ID", "Site Number"])
@@ -109,7 +98,7 @@ def main() -> int:
         return 1
     log.info("Site ID column: %s", site_col)
     
-    # Find split columns - note the typo in the actual data: "Abreviated " with trailing space
+    # Find split columns
     abbrev_col = find_column(df, ["Abreviated ", "Abreviated", "Abbreviated Name", "AbbreviatedName", "Abbreviated"])
     desc_col = find_column(df, ["Description"])
     
@@ -124,11 +113,8 @@ def main() -> int:
         log.warning("No Description column found")
     
     # --- VECTORIZED SPLIT LOGIC ---
-    # Create boolean masks for the entire dataframe at once (FAST!)
-    
     log.info("Computing CCTV/FA split masks (vectorized)...")
     
-    # Helper: check if column has content (not empty/whitespace/nan)
     def col_has_content(col_name: str | None) -> pd.Series:
         if col_name is None or col_name not in df.columns:
             return pd.Series([False] * len(df), index=df.index)
@@ -145,7 +131,7 @@ def main() -> int:
     log.info("Total CCTV rows: %d", cctv_mask.sum())
     log.info("Total FA/Intrusion rows: %d", fa_mask.sum())
     
-    # Clean site IDs and create lookup column
+    # Clean site IDs
     log.info("Normalizing site IDs...")
     df["__clean_site__"] = df[site_col].apply(clean_site_id)
     
@@ -157,22 +143,20 @@ def main() -> int:
     log.info("Found %d unique stores to process", len(unique_sites))
     log.info("-" * 70)
     
-    # Pre-split dataframes for efficiency
+    # Pre-split dataframes
     cctv_df = df[cctv_mask].copy()
     fa_df = df[fa_mask].copy()
     
-    # Group by site for fast iteration
-    log.info("Grouping by site (this is the fast part)...")
+    # Group by site
+    log.info("Grouping by site...")
     cctv_grouped = cctv_df.groupby("__clean_site__", sort=False)
     fa_grouped = fa_df.groupby("__clean_site__", sort=False)
     
-    # Get the groups as dicts for O(1) lookup
     cctv_groups = {name: group.drop(columns=["__clean_site__"]) for name, group in cctv_grouped}
     fa_groups = {name: group.drop(columns=["__clean_site__"]) for name, group in fa_grouped}
     
     log.info("Writing individual store CSVs...")
     
-    # Stats
     cctv_files = 0
     fa_files = 0
     cctv_total_rows = 0
@@ -180,7 +164,7 @@ def main() -> int:
     
     for i, site_id in enumerate(unique_sites, 1):
         if i % 500 == 0:
-            log.info("Progress: %d / %d stores... (CCTV: %d files, FA: %d files)", 
+            log.info("Progress: %d / %d stores... (CCTV: %d, FA: %d)", 
                      i, len(unique_sites), cctv_files, fa_files)
         
         # Write CCTV file
@@ -203,8 +187,9 @@ def main() -> int:
     
     # Final report
     log.info("=" * 70)
-    log.info("INDEXING COMPLETE")
+    log.info("INDEXING COMPLETE - ALL SHEETS PROCESSED")
     log.info("=" * 70)
+    log.info("Sheets processed: %s", sheet_names)
     log.info("Total unique stores: %d", len(unique_sites))
     log.info("-" * 70)
     log.info("CCTV:")

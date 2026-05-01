@@ -1,6 +1,7 @@
 """Fetch a specific Airtable record by ID and display all its fields."""
 
 import sys
+import json
 from pathlib import Path
 
 # Add src to path so we can import siteowlqa modules
@@ -68,15 +69,23 @@ def display_record(record_id: str):
     print("-" * 80)
     for field_name in sorted(fields.keys()):
         value = fields[field_name]
-        # Truncate long values for readability
-        if isinstance(value, str) and len(value) > 200:
-            display_value = value[:200] + "..."
-        elif isinstance(value, list) and len(value) > 0:
-            # Handle attachment arrays
-            display_value = f"[Array with {len(value)} items] - {value}"
+        # Handle different types appropriately
+        if isinstance(value, list):
+            # Handle attachment arrays - show each attachment detail
+            print(f"  {field_name:30s}:")
+            for i, item in enumerate(value):
+                if isinstance(item, dict):
+                    print(f"    [{i}]: {json.dumps(item, indent=6)}")
+                else:
+                    print(f"    [{i}]: {item}")
+        elif isinstance(value, dict):
+            print(f"  {field_name:30s}: {json.dumps(value, indent=4)}")
+        elif isinstance(value, str) and len(value) > 500:
+            # Only truncate very long strings
+            display_value = value[:500] + "..."
+            print(f"  {field_name:30s}: {display_value}")
         else:
-            display_value = value
-        print(f"  {field_name:30s}: {display_value}")
+            print(f"  {field_name:30s}: {value}")
     
     print(f"\n{'='*80}")
     print(f"Total fields: {len(fields)}")

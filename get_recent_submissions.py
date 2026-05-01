@@ -12,8 +12,7 @@ from typing import Any
 # Add src to path so we can import siteowlqa modules
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from siteowlqa.user_config import load_user_config
-from siteowlqa.config import AppConfig, ATAIRTABLE_FIELDS as FIELDS
+from siteowlqa.config import load_config, ATAIRTABLE_FIELDS as FIELDS
 from siteowlqa.airtable_client import AirtableClient
 
 
@@ -43,30 +42,16 @@ def parse_date(date_str: str) -> datetime:
 def main():
     """Fetch and display the 5 most recent survey submissions."""
     
-    # Load user configuration
-    user_config = load_user_config()
-    if not user_config:
-        print("❌ ERROR: User configuration not found!")
-        print("Please run: python -m siteowlqa.setup_config")
-        print("Or ensure ~/.siteowlqa/config.json exists with Airtable credentials.")
+    # Load app configuration (handles user config + .env)
+    try:
+        app_config = load_config()
+    except EnvironmentError as e:
+        print(f"❌ ERROR: {e}")
         return 1
     
-    # Create app config (need to load .env for other settings)
-    from dotenv import load_dotenv
-    env_path = Path(__file__).parent / ".env"
-    if env_path.exists():
-        load_dotenv(dotenv_path=env_path, override=True)
-    
-    # Create minimal AppConfig just for Airtable access
-    app_config = AppConfig(
-        airtable_token=user_config.airtable_token,
-        airtable_base_id=user_config.airtable_base_id,
-        airtable_table_name=user_config.airtable_table_name,
-    )
-    
     # Create Airtable client
-    print(f"📡 Connecting to Airtable base: {user_config.airtable_base_id}")
-    print(f"   Table: {user_config.airtable_table_name}")
+    print(f"📡 Connecting to Airtable base: {app_config.airtable_base_id}")
+    print(f"   Table: {app_config.airtable_table_name}")
     print()
     
     client = AirtableClient(app_config)

@@ -435,8 +435,11 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         reason = "Scout data present. No survey or upgrade triggers found."
     
     # === STEP 4: Scheduling Logic ===
+    # If survey is already complete, it's not urgent anymore
     if survey_required == "NO":
         schedule_status = "NOT REQUIRED"
+    elif survey_complete:
+        schedule_status = "COMPLETE"
     elif days is None:
         schedule_status = "REVIEW"
     elif days > CONSTRUCTION_DEADLINE_DAYS:

@@ -50,16 +50,16 @@ def main():
         return 1
     
     # Create Airtable client
-    print(f"📡 Connecting to Airtable base: {app_config.airtable_base_id}")
+    print(f"Connecting to Airtable base: {app_config.airtable_base_id}")
     print(f"   Table: {app_config.airtable_table_name}")
     print()
     
     client = AirtableClient(app_config)
     
     # Fetch all raw records
-    print("⏳ Fetching all records...")
+    print("Fetching all records...")
     raw_records = client.list_all_raw_records()
-    print(f"✅ Retrieved {len(raw_records)} total records")
+    print(f"Retrieved {len(raw_records)} total records")
     print()
     
     # Sort records by date (try submitted_at first, fall back to createdTime)
@@ -81,7 +81,7 @@ def main():
     
     # Display top 5
     print("=" * 80)
-    print("📊 5 MOST RECENT SURVEY SUBMISSIONS")
+    print("5 MOST RECENT SURVEY SUBMISSIONS")
     print("=" * 80)
     print()
     
@@ -111,7 +111,7 @@ def main():
         print()
     
     print("=" * 80)
-    print(f"✅ Done! Showing {min(5, len(sorted_records))} of {len(sorted_records)} total records")
+    print(f"Done! Showing {min(5, len(sorted_records))} of {len(sorted_records)} total records")
     print("=" * 80)
     
     return 0

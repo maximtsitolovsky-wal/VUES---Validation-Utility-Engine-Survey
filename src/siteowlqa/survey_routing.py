@@ -51,20 +51,29 @@ class SurveyRoutingRow:
     site: str
     vendor: str
     days_to_construction: str
-    survey_required: str  # YES, NO, REVIEW
-    survey_type: str  # CCTV, FA/INTRUSION, BOTH, NONE, REVIEW
+    survey_required: str  # YES, NO, PENDING, REVIEW
+    survey_type: str  # CCTV, FA/INTRUSION, BOTH, NONE, PENDING, REVIEW
     upgrade_decision: str
     reason_for_decision: str
-    schedule_status: str  # NOT REQUIRED, ON TRACK, URGENT, REVIEW
+    schedule_status: str  # NOT REQUIRED, ON TRACK, URGENT, COMPLETE, PENDING, REVIEW
     ready_to_assign: str  # YES, NO
     supplemental_flags: str
     vendor_instructions: str
-    survey_complete: bool = False  # Column V from Excel
-    # Tracking fields (editable from UI)
-    status: str = "pending"  # pending, inprogress, complete
-    scout_submitted: bool = False  # Submitted in Airtable Scout
-    vues_submitted: bool = False  # Submitted in VUES
-    notes: str = ""  # Free-form notes
+    survey_complete: bool = False
+    # Progress tracking from Excel
+    assigned: bool = False
+    assigned_vendor: str = ""
+    survey_returned_qa: bool = False
+    passes_at_qa: bool = False
+    survey_returned_date: str = ""
+    in_siteowl_design: bool = False
+    in_siteowl_installation: bool = False
+    in_siteowl_live: bool = False
+    percentage_complete: float = 0.0
+    on_project_tracking: bool = True
+    # Tracking fields
+    scout_submitted: bool = False
+    notes: str = ""
 
 
 @dataclass
@@ -91,12 +100,22 @@ class ScoutAnswers:
 
 @dataclass
 class ScheduleData:
-    """Data from Excel workbook."""
+    """Data from Excel workbook - Project Tracking + MAP DATA."""
     site: str
-    vendor: str
+    vendor: str  # From MAP DATA Vendor_Final
     days_to_construction: int | None
-    survey_complete: bool = False  # Column V from Excel
-    
+    # Progress tracking from Project Tracking
+    assigned: bool = False  # Col 6
+    assigned_vendor: str = ""  # Col 8
+    survey_returned_qa: bool = False  # Col 12
+    passes_at_qa: bool = False  # Col 13
+    survey_returned_date: str = ""  # Col 14
+    in_siteowl_design: bool = False  # Col 16
+    in_siteowl_installation: bool = False  # Col 17
+    in_siteowl_live: bool = False  # Col 21
+    percentage_complete: float = 0.0  # Col 22
+    survey_complete: bool = False  # Derived from progress columns
+    on_project_tracking: bool = True  # Is this site on the Project Tracking sheet?
 
 def _normalize_site(site: str | int | float | None) -> str:
     """Normalize site ID for consistent joining.
@@ -200,11 +219,92 @@ def fetch_scout_data(token: str) -> list[ScoutAnswers]:
     return parsed
 
 
-def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
-    """Load vendor and timing data from Excel workbook.
+def _normalize_vendor(vendor: str | None) -> str:
+    """Normalize vendor name - case insensitive, trim whitespace."""
+    if not vendor:
+        return ""
+    v = str(vendor).strip()
+    if v in INVALID_VALUES or v.startswith("#"):
+        return ""
+    # Case-insensitive match against valid vendors
+    v_lower = v.lower()
+    for valid in VALID_SURVEY_VENDORS:
+        if v_lower == valid.lower():
+            return valid  # Return canonical casing
+    return ""  # Not a valid survey vendor
+
+
+def load_map_data(workbook_path: str | Path) -> dict[str, str]:
+    """Load vendor assignments from MAP DATA sheet.
     
-    Only includes rows with valid survey vendors (Wachter, CEI, Everon).
-    Filters out #REF!, MAXIM, and other invalid values.
+    Returns dict mapping site -> vendor.
+    """
+    try:
+        import openpyxl
+    except ImportError:
+        log.error("openpyxl not installed")
+        return {}
+    
+    path = Path(workbook_path)
+    if not path.exists():
+        return {}
+    
+    try:
+        wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+    except Exception as e:
+        log.error(f"Failed to open workbook {path}: {e}")
+        return {}
+    
+    if "MAP DATA" not in wb.sheetnames:
+        log.warning(f"Sheet 'MAP DATA' not found in {path}")
+        wb.close()
+        return {}
+    
+    ws = wb["MAP DATA"]
+    vendor_map = {}
+    skipped_short = 0
+    
+    # Col 0 = Store Number, Col 12 = Vendor_Final, Col 15 = Vendor_Assigned
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row:
+            continue
+        
+        # RO-002 FIX: Allow short rows, just check what we need
+        site = _normalize_site(row[0]) if len(row) > 0 else ""
+        if not site:
+            continue
+        
+        # Prefer Vendor_Final (col 12), fallback to Vendor_Assigned (col 15)
+        vendor = ""
+        if len(row) > 12:
+            vendor = _normalize_vendor(row[12])
+        if not vendor and len(row) > 15:
+            vendor = _normalize_vendor(row[15])
+        
+        if vendor:
+            vendor_map[site] = vendor
+    
+    wb.close()
+    log.info(f"Loaded {len(vendor_map)} vendor assignments from MAP DATA")
+    return vendor_map
+
+
+def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
+    """Load progress tracking data from Project Tracking sheet.
+    
+    Columns:
+    - 0: StoreId
+    - 6: Assigned (Y/N)
+    - 8: Assigned Vendor (QB)
+    - 12: Survey Returned for QA (AT) (Y/N)
+    - 13: Passes AT QA (Y/N)
+    - 14: Site Survey Returned Date (QB)
+    - 16: Survey in Siteowl (Design)?(Y/N)
+    - 17: Survey in Siteowl (Installation)?(Y/N)
+    - 21: Survey in SiteOwl (Live Sites)
+    - 22: Percentage to Complete
+    - 23: Days to Construction Count Down
+    - 24: Map Data Vendor Survey
     """
     try:
         import openpyxl
@@ -216,6 +316,9 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
     if not path.exists():
         log.warning(f"Workbook not found: {path}")
         return []
+    
+    # Load MAP DATA vendors first
+    vendor_map = load_map_data(workbook_path)
     
     try:
         wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
@@ -232,13 +335,13 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
     data = []
     skipped = 0
     
-    # Column A = Site, Column V = Survey Complete, Column X = Days to Construction, Column Y = Vendor
-    # openpyxl is 1-indexed, so A=1, V=22, X=24, Y=25
     for row in ws.iter_rows(min_row=2, values_only=True):  # Skip header
-        if not row or len(row) < 25:
+        if not row:
             continue
-            
-        site = _normalize_site(row[0])  # Column A
+        
+        # RO-001 FIX: Don't skip short rows - openpyxl read_only mode
+        # doesn't append trailing empty cells. Check each column individually.
+        site = _normalize_site(row[0]) if len(row) > 0 else ""  # Column A = StoreId
         if not site:
             continue
         
@@ -247,32 +350,63 @@ def load_schedule_data(workbook_path: str | Path) -> list[ScheduleData]:
             skipped += 1
             continue
         
-        # Column V (0-indexed: 21) = Survey Complete checkbox
-        survey_complete_raw = row[21] if len(row) > 21 else None
-        survey_complete = _is_yes(survey_complete_raw)
-            
-        days_raw = row[23]  # Column X (0-indexed: 23)
-        vendor = str(row[24] or "").strip()  # Column Y (0-indexed: 24)
+        # Get vendor from MAP DATA (preferred) or fallback to col 24
+        vendor = vendor_map.get(site, "")
+        if not vendor and len(row) > 24:
+            vendor = _normalize_vendor(row[24])
         
-        # Skip invalid vendor values and non-survey vendors
-        if vendor in INVALID_VALUES or vendor.startswith("#"):
-            vendor = ""  # Clear invalid vendor
-        elif vendor and vendor not in VALID_SURVEY_VENDORS:
-            vendor = ""  # Not a survey vendor - clear it
+        # Parse all tracking columns
+        assigned = _is_yes(row[6]) if len(row) > 6 else False
+        assigned_vendor = str(row[8] or "").strip() if len(row) > 8 else ""
+        survey_returned_qa = _is_yes(row[12]) if len(row) > 12 else False
+        passes_at_qa = _is_yes(row[13]) if len(row) > 13 else False
+        survey_returned_date = str(row[14] or "")[:10] if len(row) > 14 else ""
+        in_siteowl_design = _is_yes(row[16]) if len(row) > 16 else False
+        in_siteowl_installation = _is_yes(row[17]) if len(row) > 17 else False
+        in_siteowl_live = _is_yes(row[21]) if len(row) > 21 else False
         
-        days = None
-        if days_raw is not None:
+        # Percentage complete
+        pct = 0.0
+        if len(row) > 22 and row[22] is not None:
             try:
-                days = int(float(days_raw))
+                pct = float(row[22])
+                if pct > 1:  # Handle 0-100 vs 0-1 format
+                    pct = pct / 100
             except (ValueError, TypeError):
                 pass
         
-        data.append(ScheduleData(site=site, vendor=vendor, days_to_construction=days, survey_complete=survey_complete))
+        # Days to construction
+        days = None
+        if len(row) > 23 and row[23] is not None:
+            try:
+                days = int(float(row[23]))
+            except (ValueError, TypeError):
+                pass
+        
+        # Survey is complete if it passes AT QA or is in SiteOwl Live
+        survey_complete = passes_at_qa or in_siteowl_live
+        
+        data.append(ScheduleData(
+            site=site,
+            vendor=vendor,
+            days_to_construction=days,
+            assigned=assigned,
+            assigned_vendor=assigned_vendor,
+            survey_returned_qa=survey_returned_qa,
+            passes_at_qa=passes_at_qa,
+            survey_returned_date=survey_returned_date,
+            in_siteowl_design=in_siteowl_design,
+            in_siteowl_installation=in_siteowl_installation,
+            in_siteowl_live=in_siteowl_live,
+            percentage_complete=pct,
+            survey_complete=survey_complete,
+            on_project_tracking=True,
+        ))
     
     wb.close()
     if skipped > 0:
         log.info(f"Skipped {skipped} invalid rows from Excel")
-    log.info(f"Loaded {len(data)} schedule rows from {path}")
+    log.info(f"Loaded {len(data)} schedule rows from Project Tracking")
     return data
 
 
@@ -296,21 +430,33 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     days_str = str(days) if days is not None else ""
     survey_complete = schedule.survey_complete if schedule else False
     
-    # Handle missing scout data
+    # Handle missing scout data - can't make a routing decision yet
     if scout is None:
         return SurveyRoutingRow(
             site=site,
             vendor=vendor,
             days_to_construction=days_str,
-            survey_required="REVIEW",
-            survey_type="REVIEW",
-            upgrade_decision="REVIEW REQUIRED",
-            reason_for_decision="No scout submission found.",
-            schedule_status="REVIEW",
+            survey_required="PENDING",
+            survey_type="PENDING",
+            upgrade_decision="AWAITING SCOUT",
+            reason_for_decision="Scout not submitted. Cannot determine survey requirement.",
+            schedule_status="PENDING",
             ready_to_assign="NO",
             supplemental_flags="",
-            vendor_instructions="Do not assign survey until internal review is completed.",
+            vendor_instructions="Scout submission required before survey routing decision.",
             survey_complete=survey_complete,
+            # Progress tracking from schedule
+            assigned=schedule.assigned if schedule else False,
+            assigned_vendor=schedule.assigned_vendor if schedule else "",
+            survey_returned_qa=schedule.survey_returned_qa if schedule else False,
+            passes_at_qa=schedule.passes_at_qa if schedule else False,
+            survey_returned_date=schedule.survey_returned_date if schedule else "",
+            in_siteowl_design=schedule.in_siteowl_design if schedule else False,
+            in_siteowl_installation=schedule.in_siteowl_installation if schedule else False,
+            in_siteowl_live=schedule.in_siteowl_live if schedule else False,
+            percentage_complete=schedule.percentage_complete if schedule else 0.0,
+            on_project_tracking=schedule.on_project_tracking if schedule else False,
+            scout_submitted=False,  # Scout NOT submitted
         )
     
     if schedule is None:
@@ -448,9 +594,11 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         schedule_status = "URGENT"
     
     # === STEP 5: Ready to Assign ===
-    # If scout data exists and a decision is made (not REVIEW), ready to assign
-    if survey_required in ("YES", "NO"):
+    # RO-007 FIX: Site needs both a routing decision AND a vendor to be ready
+    if survey_required == "YES" and vendor:
         ready_to_assign = "YES"
+    elif survey_required == "NO":
+        ready_to_assign = "YES"  # No survey needed, so "ready" is N/A but mark YES
     else:
         ready_to_assign = "NO"
     
@@ -484,6 +632,18 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         supplemental_flags="; ".join(supplemental_flags_list),
         vendor_instructions=vendor_instructions,
         survey_complete=survey_complete,
+        # Progress tracking from schedule
+        assigned=schedule.assigned if schedule else False,
+        assigned_vendor=schedule.assigned_vendor if schedule else "",
+        survey_returned_qa=schedule.survey_returned_qa if schedule else False,
+        passes_at_qa=schedule.passes_at_qa if schedule else False,
+        survey_returned_date=schedule.survey_returned_date if schedule else "",
+        in_siteowl_design=schedule.in_siteowl_design if schedule else False,
+        in_siteowl_installation=schedule.in_siteowl_installation if schedule else False,
+        in_siteowl_live=schedule.in_siteowl_live if schedule else False,
+        percentage_complete=schedule.percentage_complete if schedule else 0.0,
+        on_project_tracking=schedule.on_project_tracking if schedule else False,
+        scout_submitted=True,  # Scout was submitted (we have scout data)
     )
 
 
@@ -518,21 +678,47 @@ def build_survey_routing_data(
     surveys_complete = sum(1 for r in rows if r["survey_complete"])
     full_upgrades = sum(1 for r in rows if "FULL" in r["upgrade_decision"])
     review_required = sum(1 for r in rows if r["survey_required"] == "REVIEW")
-    urgent_sites = sum(1 for r in rows if r["schedule_status"] == "URGENT")
+    # Urgent = schedule says urgent AND not already complete
+    urgent_sites = sum(1 for r in rows if r["schedule_status"] == "URGENT" and not r["survey_complete"])
     ready_to_assign = sum(1 for r in rows if r["ready_to_assign"] == "YES")
+    
+    # NEW: Pending scout (can't make routing decision)
+    pending_scout = sum(1 for r in rows if r["survey_required"] == "PENDING")
+    
+    # NEW: Sites without vendor assigned
+    no_vendor = sum(1 for r in rows if not r["vendor"] and r["survey_required"] == "YES")
+    
+    # NEW: Sites not on Project Tracking sheet
+    not_on_tracking = sum(1 for r in rows if not r["on_project_tracking"])
+    
+    # NEW: Completed but not on tracking (like site 5027)
+    completed_not_listed = sum(1 for r in rows if r["survey_complete"] and not r["on_project_tracking"])
     
     # Survey type breakdown (only for sites that need surveys)
     cctv_surveys = sum(1 for r in rows if r["survey_type"] == "CCTV")
     fa_surveys = sum(1 for r in rows if r["survey_type"] == "FA/INTRUSION")
     both_surveys = sum(1 for r in rows if r["survey_type"] == "BOTH")
+    pending_type = sum(1 for r in rows if r["survey_type"] == "PENDING")
     
     # Full upgrade breakdown
-    # CCTV full upgrade = no CCTV survey needed (coax/siamese cable)
     full_cctv = sum(1 for r in rows if "FULL CCTV" in r["upgrade_decision"] or "FULL BOTH" in r["upgrade_decision"])
-    # FA full upgrade = no FA survey needed (one notification device)
     full_fa = sum(1 for r in rows if "FULL FA" in r["upgrade_decision"] or "FULL BOTH" in r["upgrade_decision"])
-    # Both full upgrade = no survey at all
     full_both = sum(1 for r in rows if "FULL BOTH" in r["upgrade_decision"])
+    
+    # RO-006: Vendor breakdown for auditability
+    # Completed sites are excluded from "pending" surveys (they're done!)
+    vendor_breakdown = {}
+    for r in rows:
+        v = r["vendor"] or "unassigned"
+        if v not in vendor_breakdown:
+            vendor_breakdown[v] = {"total": 0, "survey_required": 0, "pending": 0, "complete": 0}
+        vendor_breakdown[v]["total"] += 1
+        if r["survey_required"] == "YES":
+            vendor_breakdown[v]["survey_required"] += 1
+            if r["survey_complete"]:
+                vendor_breakdown[v]["complete"] += 1
+            else:
+                vendor_breakdown[v]["pending"] += 1  # Still needs to be done
     
     return {
         "generated_at": datetime.now().isoformat(),
@@ -543,6 +729,8 @@ def build_survey_routing_data(
             "cctv_surveys": cctv_surveys,
             "fa_surveys": fa_surveys,
             "both_surveys": both_surveys,
+            "pending_scout": pending_scout,
+            "pending_type": pending_type,
             "full_upgrades": full_upgrades,
             "full_cctv": full_cctv,
             "full_fa": full_fa,
@@ -550,6 +738,10 @@ def build_survey_routing_data(
             "review_required": review_required,
             "urgent_sites": urgent_sites,
             "ready_to_assign": ready_to_assign,
+            "no_vendor": no_vendor,
+            "not_on_tracking": not_on_tracking,
+            "completed_not_listed": completed_not_listed,
+            "vendor_breakdown": vendor_breakdown,
         },
         "rows": rows,
     }

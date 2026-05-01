@@ -13,7 +13,7 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.siteowlqa.survey_routing import refresh_survey_routing
+from src.siteowlqa.survey_routing import refresh_survey_routing, DEFAULT_WORKBOOK_PATH
 from src.siteowlqa.config import load_config
 
 def main():
@@ -25,14 +25,17 @@ def main():
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
     
-    print(f"Workbook: {config.reference_workbook_path}")
+    # Use the Survey Lab workbook for routing (has MAP DATA + Project Tracking)
+    workbook_path = DEFAULT_WORKBOOK_PATH
+    
+    print(f"Workbook: {workbook_path}")
     print(f"API key present: {bool(config.airtable_token)}")
     
     print("\nFetching data from Airtable and Excel...")
     refresh_survey_routing(
         token=config.scout_airtable_token or config.airtable_token,
         output_dir=output_dir,
-        workbook_path=config.reference_workbook_path
+        workbook_path=workbook_path
     )
     
     # Read and display summary
@@ -51,7 +54,21 @@ def main():
     print(f"  Full upgrades:    {summary.get('full_upgrades', 0)}")
     print(f"  Review required:  {summary.get('review_required', 0)}")
     print(f"  Surveys complete: {summary.get('surveys_complete', 0)}")
+    print(f"  Pending scout:    {summary.get('pending_scout', 0)}")
+    print(f"  No vendor:        {summary.get('no_vendor', 0)}")
+    print(f"  Not on tracking:  {summary.get('not_on_tracking', 0)}")
     print("=" * 50)
+    
+    # Vendor breakdown
+    vb = summary.get('vendor_breakdown', {})
+    if vb:
+        print("\n  VENDOR BREAKDOWN:")
+        for vendor, counts in sorted(vb.items(), key=lambda x: x[1].get('total', 0), reverse=True):
+            t = counts.get('total', 0)
+            s = counts.get('survey_required', 0)
+            c = counts.get('complete', 0)
+            print(f"    {vendor:12} | Total: {t:3} | Surveys: {s:3} | Complete: {c:3}")
+        print("=" * 50)
     
     # Count REVIEW types in rows
     rows = data.get('rows', [])

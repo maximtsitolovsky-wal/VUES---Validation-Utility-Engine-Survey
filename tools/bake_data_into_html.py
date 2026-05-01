@@ -31,7 +31,7 @@ DATA_FILES = {
 # HTML files to update
 HTML_FILES = ["index.html", "survey.html", "scout.html", "summary.html",
               "analytics.html", "routing.html", "howitworks.html", "diagnostic.html", 
-              "minimal_test.html", "ultra_simple_test.html", "survey_program.html"]
+              "minimal_test.html", "ultra_simple_test.html"]
 
 
 def sync_data_from_output():

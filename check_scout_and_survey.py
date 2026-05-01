@@ -72,7 +72,7 @@ def fetch_all_records(token: str, base_id: str, table_name: str) -> list[dict[st
                 break
                 
         except requests.exceptions.RequestException as e:
-            print(f"❌ ERROR fetching records: {e}")
+            print(f"[ERROR] Fetching records: {e}")
             if hasattr(e, 'response') and e.response:
                 print(f"   Response: {e.response.text}")
             return []
@@ -96,7 +96,7 @@ def find_record_by_id(token: str, base_id: str, table_name: str, record_id: str)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"⚠️  Could not fetch record {record_id} from {table_name}: {e}")
+        print(f"[!] Could not fetch record {record_id} from {table_name}: {e}")
         return None
 
 
@@ -119,7 +119,7 @@ def display_record_summary(record: dict[str, Any], index: int = None):
     if index is not None:
         print(f"[{index}] {submission_id}")
     else:
-        print(f"📄 {submission_id}")
+        print(f"Record: {submission_id}")
     
     print(f"    Record ID:     {record_id}")
     print(f"    Site Number:   {site_number}")
@@ -171,7 +171,7 @@ def main():
         user_cfg = load_user_config()
         app_cfg = load_config()
     except Exception as e:
-        print(f"❌ ERROR: Failed to load configuration: {e}")
+        print(f"[ERROR] Failed to load configuration: {e}")
         print("\nMake sure you have run: python -m siteowlqa.setup_config")
         print("Or ensure ~/.siteowlqa/config.json exists with valid Airtable credentials.")
         return 1
@@ -192,7 +192,7 @@ def main():
     
     # Check if Scout is configured
     if not scout_base_id or not scout_table_name:
-        print("⚠️  WARNING: Scout table not configured!")
+        print("[!] WARNING: Scout table not configured!")
         print("   Scout base_id or table_name is missing from user config.")
         print()
     
@@ -240,7 +240,7 @@ def main():
             print("=" * 80)
             print()
         else:
-            print("⚠️  No records found in Scout table.")
+            print("[!] No records found in Scout table.")
             print()
     
     # ========================================================================
@@ -256,28 +256,28 @@ def main():
     found_in_scout = False
     
     # Search in Survey table
-    print(f"🔍 Searching in Survey table...")
+    print(f"[*] Searching in Survey table...")
     survey_record = find_record_by_id(survey_token, survey_base_id, survey_table_name, TARGET_RECORD_ID)
     if survey_record:
         found_in_survey = True
-        print(f"✅ FOUND in Survey table!")
+        print(f"[+] FOUND in Survey table!")
         print()
         display_full_record(survey_record, "Survey")
     else:
-        print(f"❌ NOT FOUND in Survey table")
+        print(f"[-] NOT FOUND in Survey table")
         print()
     
     # Search in Scout table (if configured)
     if scout_base_id and scout_table_name:
-        print(f"🔍 Searching in Scout table...")
+        print(f"[*] Searching in Scout table...")
         scout_record = find_record_by_id(scout_token, scout_base_id, scout_table_name, TARGET_RECORD_ID)
         if scout_record:
             found_in_scout = True
-            print(f"✅ FOUND in Scout table!")
+            print(f"[+] FOUND in Scout table!")
             print()
             display_full_record(scout_record, "Scout")
         else:
-            print(f"❌ NOT FOUND in Scout table")
+            print(f"[-] NOT FOUND in Scout table")
             print()
     
     # Summary
@@ -285,8 +285,8 @@ def main():
     print("SEARCH SUMMARY")
     print("=" * 80)
     print(f"Record ID:        {TARGET_RECORD_ID}")
-    print(f"Found in Survey:  {'✅ YES' if found_in_survey else '❌ NO'}")
-    print(f"Found in Scout:   {'✅ YES' if found_in_scout else '❌ NO'}")
+    print(f"Found in Survey:  {'YES' if found_in_survey else 'NO'}")
+    print(f"Found in Scout:   {'YES' if found_in_scout else 'NO'}")
     
     if found_in_survey or found_in_scout:
         print()

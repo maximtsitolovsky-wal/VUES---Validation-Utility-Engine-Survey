@@ -6,7 +6,7 @@ from pathlib import Path
 # Add src to path so we can import siteowlqa modules
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from siteowlqa.config import AppConfig
+from siteowlqa.config import load_config
 from siteowlqa.airtable_client import AirtableClient
 
 def display_record(record_id: str):
@@ -15,7 +15,7 @@ def display_record(record_id: str):
     # Load configuration (includes Airtable credentials)
     print(f"Loading configuration...")
     try:
-        cfg = AppConfig.from_env()
+        cfg = load_config()
     except Exception as e:
         print(f"ERROR: Failed to load configuration: {e}")
         print("\nMake sure you have run: python -m siteowlqa.setup_config")

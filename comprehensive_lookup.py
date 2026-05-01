@@ -40,21 +40,21 @@ def comprehensive_record_lookup(record_id: str):
     print("PART 1: AIRTABLE RECORD FIELDS")
     print("="*80 + "\n")
     
-    print("⏳ Connecting to Airtable...")
+    print("[*] Connecting to Airtable...")
     client = AirtableClient(cfg)
     
-    print(f"⏳ Fetching record from Airtable...")
+    print(f"[*] Fetching record from Airtable...")
     try:
         fields = client.get_record_fields(record_id)
     except Exception as e:
-        print(f"❌ ERROR: Failed to fetch record: {e}")
+        print(f"[ERROR] Failed to fetch record: {e}")
         return
     
     if not fields:
-        print(f"❌ No fields found for record {record_id}")
+        print(f"[ERROR] No fields found for record {record_id}")
         return
     
-    print(f"✅ Found {len(fields)} fields\n")
+    print(f"[OK] Found {len(fields)} fields\n")
     
     # Display key fields first
     key_fields = [
@@ -73,7 +73,7 @@ def comprehensive_record_lookup(record_id: str):
         ("Fail Summary", "Failure reasons if FAIL"),
     ]
     
-    print("🔑 KEY FIELDS:")
+    print("KEY FIELDS:")
     print("-" * 80)
     for field_name, description in key_fields:
         if field_name in fields:
@@ -89,7 +89,7 @@ def comprehensive_record_lookup(record_id: str):
     
     # Display attachment details
     if "Upload File" in fields:
-        print(f"\n📎 ATTACHMENT DETAILS:")
+        print(f"\nATTACHMENT DETAILS:")
         print("-" * 80)
         attachments = fields["Upload File"]
         if isinstance(attachments, list):
@@ -106,7 +106,7 @@ def comprehensive_record_lookup(record_id: str):
                         print(f"    URL:      {url[:100]}...")
     
     # Display all other fields
-    print(f"\n📋 ALL AIRTABLE FIELDS:")
+    print(f"\nALL AIRTABLE FIELDS:")
     print("-" * 80)
     for field_name in sorted(fields.keys()):
         value = fields[field_name]
@@ -129,13 +129,13 @@ def comprehensive_record_lookup(record_id: str):
     print("PART 2: LOCAL ARCHIVE SYSTEM")
     print("="*80 + "\n")
     
-    print("⏳ Searching local archive for this submission...")
+    print("[*] Searching local archive for this submission...")
     archive = Archive(cfg.archive_dir)
     
     archived_file_path = archive.find_archived_file_by_record_id(record_id)
     
     if archived_file_path:
-        print(f"✅ FOUND ARCHIVED FILE!")
+        print(f"[OK] FOUND ARCHIVED FILE!")
         print("-" * 80)
         print(f"  Path:     {archived_file_path}")
         print(f"  Exists:   {archived_file_path.exists()}")
@@ -144,18 +144,18 @@ def comprehensive_record_lookup(record_id: str):
             print(f"  Size:     {size:,} bytes ({size / 1024:.1f} KB)")
             print(f"  Modified: {archived_file_path.stat().st_mtime}")
     else:
-        print("⚠️  NO ARCHIVED FILE FOUND in local archive")
+        print("[WARNING] NO ARCHIVED FILE FOUND in local archive")
         print("    This could mean:")
         print("    - The submission is new and hasn't been archived yet")
         print("    - The submission predates the archive system")
         print("    - The archive file was moved or deleted")
     
     # Search for metadata file
-    print("\n⏳ Searching for submission metadata...")
+    print("\n[*] Searching for submission metadata...")
     meta_files = list(cfg.archive_dir.rglob(f"{record_id}*_meta.json"))
     
     if meta_files:
-        print(f"✅ FOUND METADATA FILE(S):")
+        print(f"[OK] FOUND METADATA FILE(S):")
         print("-" * 80)
         for meta_file in meta_files:
             print(f"  Metadata: {meta_file}")
@@ -170,9 +170,9 @@ def comprehensive_record_lookup(record_id: str):
                     else:
                         print(f"    {key:25s}: {val}")
             except Exception as e:
-                print(f"  ⚠️  Could not read metadata: {e}")
+                print(f"  [WARNING] Could not read metadata: {e}")
     else:
-        print("⚠️  NO METADATA FILE FOUND")
+        print("[WARNING] NO METADATA FILE FOUND")
     
     # ========================================================================
     # Summary

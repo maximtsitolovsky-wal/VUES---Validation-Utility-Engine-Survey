@@ -25,11 +25,11 @@ def comprehensive_record_lookup(record_id: str):
     print(f"{'='*80}\n")
     
     # Load configuration
-    print("⏳ Loading configuration...")
+    print("Loading configuration...")
     try:
         cfg = load_config()
     except Exception as e:
-        print(f"❌ ERROR: Failed to load configuration: {e}")
+        print(f"ERROR: Failed to load configuration: {e}")
         print("\nMake sure you have run: python -m siteowlqa.setup_config")
         return
     

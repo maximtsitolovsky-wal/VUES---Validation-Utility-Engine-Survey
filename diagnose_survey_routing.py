@@ -205,6 +205,7 @@ def main():
     print("="*80)
     print(f"Base ID: {BASE_ID}")
     print(f"Table ID: {TABLE_ID}")
+    print(f"Table Name: {TABLE_NAME}")
     print(f"View ID: {VIEW_ID}")
     
     # Load token
@@ -215,30 +216,75 @@ def main():
         print(f"\n[ERROR] Error loading token: {e}")
         return 1
     
+    # Fetch base metadata to see available tables
+    print("\n" + "-"*80)
+    print("PART 0: BASE METADATA")
+    print("-"*80)
+    metadata = fetch_base_metadata(token, BASE_ID)
+    if metadata and "tables" in metadata:
+        print(f"\nFound {len(metadata['tables'])} tables in base:")
+        for table in metadata["tables"]:
+            print(f"  - {table['name']} (ID: {table['id']})")
+            if table['id'] == TABLE_ID or table['name'] == TABLE_NAME:
+                print(f"    ^^ THIS IS OUR TARGET TABLE")
+    else:
+        print("\n[WARNING] Could not fetch base metadata")
+    
+    # Try to determine the correct table identifier
+    table_identifier = TABLE_ID
+    if metadata and "tables" in metadata:
+        # Check if our table ID or name exists
+        found_table = None
+        for table in metadata["tables"]:
+            if table['id'] == TABLE_ID:
+                found_table = table
+                table_identifier = TABLE_ID
+                break
+            elif table['name'] == TABLE_NAME:
+                found_table = table
+                table_identifier = TABLE_NAME
+        
+        if found_table:
+            print(f"\n[OK] Found table: {found_table['name']} (ID: {found_table['id']})")
+            print(f"Using identifier: {table_identifier}")
+        else:
+            print(f"\n[WARNING] Table '{TABLE_NAME}' (ID: {TABLE_ID}) not found in base")
+            print("Will try both ID and name...")
+    
     # Fetch all records (no view filter)
     print("\n" + "-"*80)
     print("PART 1: ALL RECORDS IN TABLE")
     print("-"*80)
-    try:
-        all_records = fetch_records(token, BASE_ID, TABLE_ID, view_id="", max_records=1000)
-        print(f"\n[OK] Successfully fetched {len(all_records)} records")
-        
-        if all_records:
-            field_analysis = analyze_fields(all_records)
-            print_field_analysis(field_analysis)
-            print_record_summary(all_records)
-        else:
-            print("\n[WARNING] No records found in table!")
-    except Exception as e:
-        print(f"\n[ERROR] Error fetching all records: {e}")
-        return 1
+    
+    all_records = []
+    # Try table ID first, then table name
+    for identifier in [TABLE_ID, TABLE_NAME]:
+        try:
+            print(f"\nTrying with identifier: {identifier}")
+            all_records = fetch_records(token, BASE_ID, identifier, view_id="", max_records=1000)
+            print(f"\n[OK] Successfully fetched {len(all_records)} records")
+            table_identifier = identifier
+            break
+        except Exception as e:
+            print(f"\n[ERROR] Failed with {identifier}: {e}")
+            if identifier == TABLE_NAME:
+                print("\nCould not access table with either ID or name")
+                return 1
+    
+    if all_records:
+    if all_records:
+        field_analysis = analyze_fields(all_records)
+        print_field_analysis(field_analysis)
+        print_record_summary(all_records)
+    else:
+        print("\n[WARNING] No records found in table!")
     
     # Fetch records from specific view
     print("\n" + "-"*80)
     print(f"PART 2: RECORDS IN VIEW {VIEW_ID}")
     print("-"*80)
     try:
-        view_records = fetch_records(token, BASE_ID, TABLE_ID, view_id=VIEW_ID, max_records=1000)
+        view_records = fetch_records(token, BASE_ID, table_identifier, view_id=VIEW_ID, max_records=1000)
         print(f"\n[OK] Successfully fetched {len(view_records)} records from view")
         
         if view_records:

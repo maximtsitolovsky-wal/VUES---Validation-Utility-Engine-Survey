@@ -171,13 +171,25 @@
           <div class="ring-container" id="surveyRingContainer"></div>
         </div>
         <div class="panel">
-          <div class="panel-header"><span class="panel-title">📊 Metrics</span></div>
+          <div class="panel-header"><span class="panel-title">📊 Survey Type Breakdown</span></div>
           <div class="panel-body"><div class="metrics-grid" id="surveyMetrics"></div></div>
         </div>
       </div>
+      <!-- Survey Type Distribution + QA Stats -->
+      <div class="main-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🎯 Survey Type Distribution</span></div>
+          <div class="panel-body"><div class="chart-container" style="height:220px;"><canvas id="surveyTypeChart"></canvas></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">✅ QA Submission Stats</span></div>
+          <div class="panel-body"><div class="metrics-grid" id="surveyQAMetrics"></div></div>
+        </div>
+      </div>
+      <!-- Vendor Velocity Table -->
       <div class="panel" style="margin-bottom:20px;">
-        <div class="panel-header"><span class="panel-title">📉 Submissions — 14 Days</span></div>
-        <div class="panel-body"><div class="chart-container"><canvas id="surveyChart"></canvas></div></div>
+        <div class="panel-header"><span class="panel-title">🚀 Vendor Survey Velocity</span><a href="routing.html" style="color:var(--cyan);font-size:12px;text-decoration:none;">View Routing →</a></div>
+        <div class="panel-body"><table class="vendor-table" id="surveyVendorTable"></table></div>
       </div>
     </div>
 
@@ -225,10 +237,14 @@
     <section class="ai-section">
       <div class="ai-header">
         <div class="ai-title">🤖 AI Executive Intelligence</div>
-        <button class="btn btn-primary" id="generateBtn">✨ Generate Reports</button>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" id="generateBtn">✨ Generate Reports</button>
+          <button class="btn" id="exportBtn" style="display:none;">📄 Export PDF</button>
+          <button class="btn" id="copyBtn" style="display:none;">📋 Copy to Clipboard</button>
+        </div>
       </div>
-      <div class="report-grid" id="reportGrid">
-        <div class="report-card" id="reportSurvey"><div class="loading"><div class="spinner"></div>Click Generate for AI insights</div></div>
+      <div id="reportGrid">
+        <div class="report-card" id="reportSurvey" style="margin-bottom:16px;"><div class="loading"><div class="spinner"></div>Click Generate for AI insights</div></div>
         <div class="report-card" id="reportScout"><div class="loading"><div class="spinner"></div>Click Generate for AI insights</div></div>
       </div>
     </section>
@@ -250,10 +266,17 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+let routingData = null;
+
 async function loadData() {
   try {
-    const response = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
-    programData = await response.json();
+    // Load both data sources in parallel
+    const [teamResp, routingResp] = await Promise.all([
+      fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' }),
+      fetch('survey_routing_data.json?t=' + Date.now(), { cache: 'no-store' })
+    ]);
+    programData = await teamResp.json();
+    routingData = await routingResp.json();
     renderAll();
   } catch (error) {
     console.error('Load error:', error);
@@ -273,14 +296,41 @@ function renderAll() {
   const vendors = va.vendors || [];
   const scoutRecords = scout.records || [];
   
-  // Survey calculations
+  // Survey calculations - use routing data for accurate target/completed
+  const routingSummary = routingData?.summary || {};
+  const routingRows = routingData?.rows || [];
+  
+  // Target = all scout sites - no survey sites (from routing.html logic)
+  const surveyTarget = routingSummary.surveys_required || 635;
+  // Completed = from routing completed tab (survey_complete === true)
+  const surveyCompleted = routingSummary.surveys_complete || routingRows.filter(r => r.survey_complete === true).length;
+  const surveyRemaining = Math.max(surveyTarget - surveyCompleted, 0);
+  const surveyCompletionRate = surveyTarget ? Math.round(surveyCompleted / surveyTarget * 100) : 0;
+  
+  // Survey type breakdown (percentages)
+  const cctvCount = routingSummary.cctv_surveys || routingRows.filter(r => r.survey_type === 'CCTV').length;
+  const faCount = routingSummary.fa_surveys || routingRows.filter(r => r.survey_type === 'FA/INTRUSION').length;
+  const bothCount = routingSummary.both_surveys || routingRows.filter(r => r.survey_type === 'BOTH').length;
+  const totalSurveyTypes = cctvCount + faCount + bothCount;
+  const cctvPct = totalSurveyTypes ? Math.round(cctvCount / totalSurveyTypes * 100) : 0;
+  const faPct = totalSurveyTypes ? Math.round(faCount / totalSurveyTypes * 100) : 0;
+  const bothPct = totalSurveyTypes ? Math.round(bothCount / totalSurveyTypes * 100) : 0;
+  
+  // No survey (full upgrade) breakdown
+  const fullUpgrades = routingSummary.full_upgrades || 0;
+  const fullCctv = routingSummary.full_cctv || 0;
+  const fullFa = routingSummary.full_fa || 0;
+  const fullBoth = routingSummary.full_both || 0;
+  
+  // QA pass/fail from survey submissions (team_dashboard_data)
   const surveyTotal = survey.length;
   const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
   const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
   const surveyPending = surveyTotal - surveyPass - surveyFail;
-  const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
-  const surveyTarget = 548;
-  const surveyRemaining = Math.max(surveyTarget - surveyPass, 0);
+  const surveyQARate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
+  
+  // Vendor velocity from routing data
+  const vendorBreakdown = routingSummary.vendor_breakdown || {};
   
   // Scout calculations
   const scoutSubmissions = scout.total_submissions || scoutRecords.length;
@@ -297,33 +347,71 @@ function renderAll() {
   const scoutThisWeek = scoutRecords.filter(r => new Date(r.raw_fields?.['Scout Date'] || r.submitted_at) >= weekAgo).length;
   const surveyThisWeek = survey.filter(r => new Date(r.submitted_at || '') >= weekAgo).length;
   
-  // SURVEY TAB
+  // SURVEY TAB - Updated with correct target/completed from routing data
   document.getElementById('surveyStats').innerHTML = [
-    { label: 'Total Submissions', value: surveyTotal, color: 'var(--cyan)' },
-    { label: 'Passed', value: surveyPass, color: 'var(--green)' },
-    { label: 'Failed', value: surveyFail, color: 'var(--red)' },
-    { label: 'Pass Rate', value: surveyRate + '%', color: surveyRate >= 80 ? 'var(--green)' : 'var(--amber)' },
-    { label: 'This Week', value: surveyThisWeek, color: 'var(--purple)' },
+    { label: 'Target (Need Survey)', value: surveyTarget, color: 'var(--cyan)' },
+    { label: 'Completed', value: surveyCompleted, color: 'var(--green)' },
+    { label: 'Remaining', value: surveyRemaining, color: 'var(--amber)' },
+    { label: 'Completion', value: surveyCompletionRate + '%', color: surveyCompletionRate >= 50 ? 'var(--green)' : 'var(--amber)' },
+    { label: 'No Survey Needed', value: fullUpgrades, color: 'var(--purple)' },
   ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value" style="color:${s.color}">${s.value}</div></div>`).join('');
   
   document.getElementById('surveyRingContainer').innerHTML = `
     <div class="ring-wrap">
       <div class="ring-bg"></div>
-      <div class="ring-fill" style="--pct:${surveyRate};--ring-color:var(--cyan)"></div>
-      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyRate}%</span><span class="ring-label">Pass Rate</span></div>
+      <div class="ring-fill" style="--pct:${surveyCompletionRate};--ring-color:var(--cyan)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyCompletionRate}%</span><span class="ring-label">Complete</span></div>
     </div>
     <div class="ring-stats">
       <div><div class="ring-stat-value" style="color:var(--cyan)">${surveyTarget}</div><div class="ring-stat-label">Target</div></div>
-      <div><div class="ring-stat-value" style="color:var(--green)">${surveyPass}</div><div class="ring-stat-label">Passed</div></div>
-      <div><div class="ring-stat-value" style="color:var(--amber)">${surveyRemaining}</div><div class="ring-stat-label">Remaining</div></div>
+      <div><div class="ring-stat-value" style="color:var(--green)">${surveyCompleted}</div><div class="ring-stat-label">Done</div></div>
+      <div><div class="ring-stat-value" style="color:var(--amber)">${surveyRemaining}</div><div class="ring-stat-label">Left</div></div>
     </div>`;
   
   document.getElementById('surveyMetrics').innerHTML = [
-    { label: 'Passed', value: surveyPass, sub: 'QA Approved', color: 'var(--green)' },
-    { label: 'Failed', value: surveyFail, sub: 'Needs Revision', color: 'var(--red)' },
-    { label: 'Pending', value: surveyPending, sub: 'In Queue', color: 'var(--amber)' },
-    { label: 'Velocity', value: (surveyPass / PROGRAM_WEEK).toFixed(1) + '/wk', sub: 'Avg Output', color: 'var(--purple)' },
+    { label: 'CCTV Only', value: cctvCount, sub: `${cctvPct}% of surveys`, color: 'var(--blue)' },
+    { label: 'FA/Intrusion', value: faCount, sub: `${faPct}% of surveys`, color: 'var(--red)' },
+    { label: 'Both Types', value: bothCount, sub: `${bothPct}% of surveys`, color: 'var(--purple)' },
+    { label: 'Velocity', value: (surveyCompleted / PROGRAM_WEEK).toFixed(1) + '/wk', sub: 'Completions/Week', color: 'var(--cyan)' },
   ].map(m => `<div class="metric-card" style="--metric-color:${m.color}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+  
+  // QA Stats metrics
+  document.getElementById('surveyQAMetrics').innerHTML = [
+    { label: 'QA Submissions', value: surveyTotal, sub: 'Total Reviewed', color: 'var(--cyan)' },
+    { label: 'Passed', value: surveyPass, sub: `${surveyQARate}% pass rate`, color: 'var(--green)' },
+    { label: 'Failed', value: surveyFail, sub: 'Need Revision', color: 'var(--red)' },
+    { label: 'Pending', value: surveyPending, sub: 'In Queue', color: 'var(--amber)' },
+  ].map(m => `<div class="metric-card" style="--metric-color:${m.color}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+  
+  // Survey Vendor Velocity Table
+  const vendorRows = Object.entries(vendorBreakdown)
+    .filter(([name]) => name !== 'unassigned')
+    .map(([name, data]) => ({
+      name,
+      total: data.total || 0,
+      surveyReq: data.survey_required || 0,
+      pending: data.pending || 0,
+      complete: data.complete || 0,
+      velocity: (data.complete || 0) / PROGRAM_WEEK
+    }))
+    .sort((a, b) => b.velocity - a.velocity);
+  
+  document.getElementById('surveyVendorTable').innerHTML = `
+    <thead><tr><th>Vendor</th><th>Total Sites</th><th>Need Survey</th><th>Completed</th><th>Pending</th><th>Velocity</th><th>Progress</th></tr></thead>
+    <tbody>${vendorRows.map(v => {
+      const color = VENDOR_COLORS[v.name] || '#9B7CFF';
+      const pct = v.surveyReq ? Math.round(v.complete / v.surveyReq * 100) : 0;
+      const velColor = v.velocity >= 10 ? 'var(--green)' : v.velocity >= 5 ? 'var(--amber)' : 'var(--red)';
+      return `<tr>
+        <td><div class="vendor-name"><div class="vendor-avatar" style="background:${color}">${(v.name || '??').slice(0,2)}</div>${v.name}</div></td>
+        <td>${v.total}</td>
+        <td>${v.surveyReq}</td>
+        <td style="color:var(--green);font-weight:700">${v.complete}</td>
+        <td style="color:var(--amber)">${v.pending}</td>
+        <td><span style="color:${velColor};font-weight:700">${v.velocity.toFixed(1)}/wk</span></td>
+        <td><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div><span style="font-size:10px;color:var(--text-soft);margin-left:6px;">${pct}%</span></td>
+      </tr>`;
+    }).join('')}</tbody>`;
   
   // SCOUT TAB
   document.getElementById('scoutStats').innerHTML = [
@@ -373,22 +461,22 @@ function renderAll() {
   
   // COMBINED TAB
   document.getElementById('bothStats').innerHTML = [
-    { label: 'Survey Pass Rate', value: surveyRate + '%', color: 'var(--cyan)' },
+    { label: 'Survey Completion', value: surveyCompletionRate + '%', color: 'var(--cyan)' },
     { label: 'Scout Completion', value: scoutRate + '%', color: 'var(--purple)' },
-    { label: 'Survey Remaining', value: surveyRemaining, color: 'var(--amber)' },
+    { label: 'Surveys Remaining', value: surveyRemaining, color: 'var(--amber)' },
     { label: 'Scout Remaining', value: scoutRemaining, color: 'var(--amber)' },
-    { label: 'Active Vendors', value: vendors.length, color: 'var(--green)' },
+    { label: 'No Survey Needed', value: fullUpgrades, color: 'var(--green)' },
   ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value" style="color:${s.color}">${s.value}</div></div>`).join('');
   
   document.getElementById('bothSurveyRing').innerHTML = `
     <div class="ring-wrap">
       <div class="ring-bg"></div>
-      <div class="ring-fill" style="--pct:${surveyRate};--ring-color:var(--cyan)"></div>
-      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyRate}%</span><span class="ring-label">Survey</span></div>
+      <div class="ring-fill" style="--pct:${surveyCompletionRate};--ring-color:var(--cyan)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyCompletionRate}%</span><span class="ring-label">Survey</span></div>
     </div>
     <div class="ring-stats">
-      <div><div class="ring-stat-value" style="color:var(--green)">${surveyPass}</div><div class="ring-stat-label">Passed</div></div>
-      <div><div class="ring-stat-value" style="color:var(--red)">${surveyFail}</div><div class="ring-stat-label">Failed</div></div>
+      <div><div class="ring-stat-value" style="color:var(--cyan)">${surveyTarget}</div><div class="ring-stat-label">Target</div></div>
+      <div><div class="ring-stat-value" style="color:var(--green)">${surveyCompleted}</div><div class="ring-stat-label">Done</div></div>
       <div><div class="ring-stat-value" style="color:var(--amber)">${surveyRemaining}</div><div class="ring-stat-label">Left</div></div>
     </div>`;
   
@@ -405,10 +493,10 @@ function renderAll() {
     </div>`;
   
   // Charts
-  renderCharts(survey, scoutRecords);
+  renderCharts(survey, scoutRecords, cctvCount, faCount, bothCount);
 }
 
-function renderCharts(surveyRecords, scoutRecords) {
+function renderCharts(surveyRecords, scoutRecords, cctvCount, faCount, bothCount) {
   const dates = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
@@ -431,15 +519,45 @@ function renderCharts(surveyRecords, scoutRecords) {
   
   const labels = dates.map(d => d.slice(5));
   
+  // Destroy existing charts
   if (charts.survey) charts.survey.destroy();
   if (charts.scout) charts.scout.destroy();
+  if (charts.surveyType) charts.surveyType.destroy();
   
-  const surveyCtx = document.getElementById('surveyChart');
-  if (surveyCtx) {
-    charts.survey = new Chart(surveyCtx, {
-      type: 'bar',
-      data: { labels, datasets: [{ data: dates.map(d => surveyByDay[d]), backgroundColor: 'rgba(90,228,255,0.6)', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9EB1D4' } }, x: { grid: { display: false }, ticks: { color: '#9EB1D4' } } } }
+  // Survey Type Distribution Doughnut Chart
+  const surveyTypeCtx = document.getElementById('surveyTypeChart');
+  if (surveyTypeCtx) {
+    charts.surveyType = new Chart(surveyTypeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['CCTV Only', 'FA/Intrusion', 'Both Types'],
+        datasets: [{
+          data: [cctvCount || 0, faCount || 0, bothCount || 0],
+          backgroundColor: ['#4D8DFF', '#FF6B81', '#9B7CFF'],
+          borderColor: 'rgba(9, 16, 31, 0.9)',
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#9EB1D4', font: { size: 11, weight: 600 }, padding: 12 }
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = total ? Math.round(ctx.raw / total * 100) : 0;
+                return `${ctx.label}: ${ctx.raw} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
     });
   }
   
@@ -464,28 +582,46 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     const scout = programData?.scout || {};
     const va = programData?.vendor_assignments || {};
     const vendors = va.vendors || [];
+    const routing = routingData?.summary || {};
     
-    const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
-    const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
-    const surveyRate = survey.length ? Math.round(surveyPass / survey.length * 100) : 0;
+    // Use routing data for survey stats
+    const surveyTarget = routing.surveys_required || 635;
+    const surveyCompleted = routing.surveys_complete || 0;
+    const surveyRate = surveyTarget ? Math.round(surveyCompleted / surveyTarget * 100) : 0;
+    const surveyRemaining = surveyTarget - surveyCompleted;
+    const cctvCount = routing.cctv_surveys || 0;
+    const faCount = routing.fa_surveys || 0;
+    const bothCount = routing.both_surveys || 0;
+    const fullUpgrades = routing.full_upgrades || 0;
+    
+    // QA stats from survey submissions
+    const surveyQAPass = survey.filter(r => r.processing_status === 'PASS').length;
+    const surveyQAFail = survey.filter(r => r.processing_status === 'FAIL').length;
+    const surveyQARate = survey.length ? Math.round(surveyQAPass / survey.length * 100) : 0;
+    
     const scoutRate = scout.completion_rate || 0;
     const scoutRemaining = va.total_remaining || scout.remaining || 0;
     const topVendor = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0))[0];
     
-    const surveyRisk = surveyRate < 50 ? 'High Risk' : surveyRate < 80 ? 'Moderate' : 'On Track';
-    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--amber)' : 'var(--green)';
+    const surveyRisk = surveyRate < 20 ? 'High Risk' : surveyRate < 50 ? 'Moderate' : 'On Track';
+    const surveyRiskColor = surveyRate < 20 ? 'var(--red)' : surveyRate < 50 ? 'var(--amber)' : 'var(--green)';
     const scoutRisk = scoutRate >= 80 ? 'Closeout' : scoutRate >= 50 ? 'On Track' : 'Building';
     const scoutRiskColor = scoutRate >= 50 ? 'var(--green)' : 'var(--amber)';
     
+    // Find dominant survey type
+    const dominantType = cctvCount >= faCount && cctvCount >= bothCount ? 'CCTV' : 
+                         faCount >= bothCount ? 'FA/Intrusion' : 'Both';
+    const dominantPct = Math.round(Math.max(cctvCount, faCount, bothCount) / (cctvCount + faCount + bothCount) * 100);
+    
     document.getElementById('reportSurvey').innerHTML = `
       <div class="report-header">
-        <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Report</strong><div style="font-size:11px;color:var(--text-soft)">Recovery Analysis</div></div></div>
+        <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Report</strong><div style="font-size:11px;color:var(--text-soft)">Program Analysis</div></div></div>
         <span class="risk-badge" style="background:${surveyRiskColor}20;color:${surveyRiskColor}">${surveyRisk}</span>
       </div>
       <div class="report-body">
-        <div class="report-section"><h4>Executive Summary</h4><p>Survey is at <strong>${surveyRate}%</strong> pass rate with <strong>${surveyFail}</strong> failed records. ${surveyFail > surveyPass ? 'Quality is the primary constraint.' : 'Volume is building steadily.'}</p></div>
-        <div class="report-section"><h4>Decision Snapshot</h4><div class="decision-grid"><div class="decision-item"><div class="decision-label">Risk</div><div class="decision-value" style="color:${surveyRiskColor}">${surveyRisk.split(' ')[0]}</div></div><div class="decision-item"><div class="decision-label">Constraint</div><div class="decision-value" style="color:var(--amber)">${surveyFail > surveyPass ? 'Quality' : 'Volume'}</div></div><div class="decision-item"><div class="decision-label">Mode</div><div class="decision-value" style="color:var(--cyan)">${surveyRate < 50 ? 'Recover' : 'Scale'}</div></div></div></div>
-        <div class="report-section"><h4>Actions</h4><ul class="insights-list" style="--color:var(--cyan)"><li style="color:var(--text-soft)">Run vendor QA triage before scaling volume</li><li style="color:var(--text-soft)">${surveyRate < 50 ? 'Move to twice-weekly recovery cadence' : 'Maintain current quality monitoring'}</li><li style="color:var(--text-soft)">Focus on highest-yielding vendors first</li></ul></div>
+        <div class="report-section"><h4>Executive Summary</h4><p>Survey is at <strong>${surveyRate}%</strong> completion (${surveyCompleted}/${surveyTarget}). ${fullUpgrades} sites need <strong>no survey</strong> (full upgrade). Dominant survey type: <strong>${dominantType}</strong> (${dominantPct}%). QA pass rate: ${surveyQARate}%.</p></div>
+        <div class="report-section"><h4>Decision Snapshot</h4><div class="decision-grid"><div class="decision-item"><div class="decision-label">Completion</div><div class="decision-value" style="color:${surveyRiskColor}">${surveyRate}%</div></div><div class="decision-item"><div class="decision-label">Remaining</div><div class="decision-value" style="color:var(--amber)">${surveyRemaining}</div></div><div class="decision-item"><div class="decision-label">QA Rate</div><div class="decision-value" style="color:${surveyQARate >= 80 ? 'var(--green)' : 'var(--amber)'}">${surveyQARate}%</div></div></div></div>
+        <div class="report-section"><h4>Actions</h4><ul class="insights-list" style="--color:var(--cyan)"><li style="color:var(--text-soft)">Focus on ${dominantType} surveys (${dominantPct}% of workload)</li><li style="color:var(--text-soft)">${surveyQARate < 80 ? 'Improve QA pass rate before scaling volume' : 'Maintain current quality standards'}</li><li style="color:var(--text-soft)">${fullUpgrades} sites skip survey → direct to construction</li></ul></div>
       </div>`;
     
     document.getElementById('reportScout').innerHTML = `

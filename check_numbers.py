@@ -3,6 +3,8 @@ import json
 with open('output/team_dashboard_data.json') as f:
     data = json.load(f)
 
+print('Top-level keys:', list(data.keys()))
+
 scout = data.get('scout', {})
 vendors = data.get('vendors', [])
 

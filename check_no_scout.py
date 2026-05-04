@@ -1,32 +1,26 @@
-"""Check the 107 sites only in Excel (no scout)."""
+"""Check sites WITHOUT completed scouts."""
+import json
 import sys
 sys.path.insert(0, 'src')
+from siteowlqa.survey_routing import _derive_status
 
-import json
-from siteowlqa.config import load_config
-from siteowlqa.survey_routing import fetch_scout_data, load_schedule_data, DEFAULT_WORKBOOK_PATH
+data = json.load(open('ui/survey_routing_data.json'))
+no_scout = [r for r in data['rows'] if not r['scout_submitted']]
 
-config = load_config()
-token = config.scout_airtable_token or config.airtable_token
+statuses = {}
+for r in no_scout:
+    s = _derive_status(r)
+    statuses[s] = statuses.get(s, 0) + 1
 
-scout_records = fetch_scout_data(token)
-scout_sites = {s.site for s in scout_records}
+print(f'Total sites WITHOUT completed scouts: {len(no_scout)}')
+print('\nDerived statuses for these sites:')
+for status, count in sorted(statuses.items(), key=lambda x: x[1], reverse=True):
+    print(f'  {status}: {count}')
 
-schedule_records = load_schedule_data(DEFAULT_WORKBOOK_PATH)
-schedule_sites = {s.site for s in schedule_records}
-
-only_excel = schedule_sites - scout_sites
-print(f"Sites only in Excel (no scout): {len(only_excel)}")
-print(f"Sample sites: {sorted(list(only_excel))[:15]}...")
-
-# Now check what status these get in the routing data
-with open('output/survey_routing_data.json') as f:
-    routing = json.load(f)
-
-rows_by_site = {r['site']: r for r in routing['rows']}
-
-# Check status of sites with no scout
-for site in sorted(list(only_excel))[:10]:
-    row = rows_by_site.get(site)
-    if row:
-        print(f"  {site}: survey_required={row['survey_required']}, ready={row['ready_to_assign']}, vendor={row.get('vendor','')}")
+# Show examples
+print('\n--- EXAMPLES ---')
+for status in sorted(set(statuses.keys())):
+    examples = [r for r in no_scout if _derive_status(r) == status][:2]
+    print(f'\n{status} examples:')
+    for ex in examples:
+        print(f"  Site {ex['site']}: vendor={ex['vendor']}, survey_req={ex['survey_required']}, schedule={ex['schedule_status']}, ready={ex['ready_to_assign']}")

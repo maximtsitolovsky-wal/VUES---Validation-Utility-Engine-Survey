@@ -26,6 +26,11 @@
     .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
     .back-link:hover { background: rgba(90,228,255,0.15); border-color: var(--cyan); }
     
+    .zoom-controls { position: absolute; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 4px; }
+    .zoom-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .zoom-btn:hover { background: rgba(90,228,255,0.2); border-color: var(--cyan); }
+    .zoom-level { text-align: center; font-size: 11px; color: var(--text-soft); padding: 4px 0; }
+    
     .mode-toggle { position: absolute; top: 20px; right: 360px; display: flex; gap: 4px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); padding: 5px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); }
     .mode-btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; background: transparent; color: var(--text-soft); transition: all 0.2s; }
     .mode-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
@@ -73,6 +78,11 @@
       <div class="globe-overlay">
         <a href="routing.html" class="back-link">← Back to Routing</a>
       </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" id="zoomOut">−</button>
+      </div>
       <div class="mode-toggle">
         <button class="mode-btn scout active" data-mode="scout">☄ Scout</button>
         <button class="mode-btn survey" data-mode="survey">📋 Survey</button>
@@ -101,6 +111,28 @@
 const VENDOR_HEX = { 'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Techwise': '#FF5FD2', 'Everon': '#45E6A5', 'SAS': '#FFC857' };
 const STATUS_HEX = { 'Complete': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#FF6B81' };
 
+// Simplified world country outlines (lat/lon paths) - Major landmasses
+const COUNTRY_PATHS = [
+  // North America outline (simplified)
+  [[71,-170],[70,-141],[69,-141],[68,-136],[70,-128],[60,-141],[60,-139],[55,-131],[54,-130],[50,-128],[49,-125],[48,-124],[46,-124],[43,-124],[40,-124],[38,-123],[35,-121],[33,-118],[32,-117],[31,-114],[29,-114],[26,-111],[25,-108],[27,-105],[26,-99],[26,-97],[28,-97],[29,-95],[30,-94],[30,-91],[30,-88],[30,-85],[31,-82],[27,-80],[25,-80],[25,-81],[26,-82],[28,-83],[29,-84],[30,-85],[30,-89],[29,-89],[30,-90],[29,-91],[27,-93],[26,-97],[25,-97],[23,-98],[20,-97],[18,-95],[16,-93],[15,-88],[17,-88],[18,-88],[21,-87],[22,-90],[24,-90],[26,-90],[27,-89],[29,-89],[30,-88],[31,-85],[31,-81],[32,-81],[34,-77],[35,-75],[37,-76],[37,-75],[39,-75],[39,-74],[41,-74],[41,-71],[42,-70],[43,-70],[44,-68],[45,-67],[47,-68],[47,-65],[46,-61],[44,-63],[43,-66],[44,-66],[45,-64],[46,-60],[49,-64],[47,-53],[52,-56],[51,-57],[47,-59],[46,-64],[45,-66],[47,-70],[50,-65],[52,-60],[52,-56],[55,-60],[60,-64],[66,-62],[70,-56],[76,-68],[83,-62],[83,-95],[71,-156],[71,-170]],
+  // South America outline (simplified)
+  [[-5,-81],[-5,-79],[-3,-80],[0,-80],[2,-77],[6,-77],[11,-75],[12,-72],[12,-68],[10,-67],[10,-62],[8,-60],[7,-55],[5,-52],[2,-50],[0,-50],[-3,-41],[-7,-35],[-12,-37],[-18,-39],[-23,-41],[-25,-48],[-30,-51],[-33,-53],[-38,-57],[-41,-63],[-46,-67],[-52,-69],[-54,-65],[-55,-67],[-55,-70],[-52,-75],[-46,-76],[-42,-73],[-37,-73],[-33,-72],[-27,-71],[-24,-70],[-19,-70],[-14,-76],[-10,-78],[-5,-81]],
+  // Europe outline (simplified)
+  [[36,-10],[37,-7],[37,-5],[38,-1],[41,0],[43,3],[43,8],[45,10],[44,12],[45,14],[41,14],[40,18],[39,20],[35,25],[36,28],[40,26],[42,28],[41,29],[43,40],[47,40],[50,40],[52,40],[55,38],[57,40],[60,30],[63,25],[66,25],[70,28],[71,25],[70,20],[65,14],[60,5],[55,8],[54,10],[53,7],[51,4],[51,2],[50,-5],[48,-5],[44,-2],[42,-9],[36,-10]],
+  // Africa outline (simplified)
+  [[36,-10],[35,-5],[33,0],[32,10],[31,32],[27,34],[22,37],[12,44],[10,51],[-3,40],[-12,44],[-17,43],[-25,35],[-34,18],[-35,20],[-30,30],[-25,32],[-15,12],[-5,12],[5,0],[5,-5],[10,-15],[15,-17],[20,-17],[28,-13],[33,-8],[36,-10]],
+  // Asia outline (simplified)
+  [[40,26],[42,45],[37,55],[25,57],[23,60],[25,66],[22,70],[18,73],[8,77],[5,80],[8,95],[15,100],[22,106],[28,122],[35,129],[39,122],[45,135],[50,140],[55,137],[60,150],[65,170],[70,180],[75,140],[77,105],[73,80],[68,60],[55,55],[50,50],[45,40],[40,26]],
+  // Australia outline (simplified)
+  [[-12,130],[-10,142],[-15,145],[-20,149],[-25,153],[-30,153],[-35,151],[-38,145],[-39,144],[-38,140],[-35,137],[-32,134],[-32,127],[-25,114],[-22,114],[-20,119],[-15,125],[-12,130]]
+];
+
+// US States outline (more detailed for USA focus)
+const US_OUTLINE = [
+  // Continental US border (simplified but recognizable)
+  [49,-125],[49,-123],[48,-123],[46,-124],[43,-124],[42,-124],[40,-124],[38,-123],[37,-122],[35,-121],[34,-120],[33,-117],[32,-117],[32,-114],[31,-111],[32,-108],[31,-106],[32,-104],[29,-103],[29,-100],[26,-97],[28,-97],[29,-94],[30,-93],[30,-90],[29,-89],[30,-88],[31,-85],[30,-84],[32,-81],[33,-79],[35,-76],[37,-76],[38,-75],[39,-75],[40,-74],[41,-73],[42,-71],[42,-70],[43,-70],[45,-67],[47,-68],[47,-70],[45,-70],[44,-69],[45,-67],[47,-69],[49,-68],[49,-67],[47,-65],[46,-64],[45,-64],[44,-66],[43,-70],[45,-71],[49,-65]
+];
+
 // US State centroids
 const STATE_COORDS = {
   'AL':[32.8,-86.8],'AK':[61.4,-152.4],'AZ':[33.7,-111.4],'AR':[35,-92.4],'CA':[36.1,-119.7],
@@ -120,12 +152,13 @@ const STATE_COORDS = {
 let canvas, ctx, width, height;
 let rotation = { x: 0.4, y: -1.8 }; // Start focused on US
 let targetRotation = { ...rotation };
+let zoom = 1.0;
+let targetZoom = 1.0;
 let isDragging = false, lastMouse = { x: 0, y: 0 };
 let activeMode = 'scout', activeFilter = null;
 let scoutData = null, surveyData = null;
 let markers = [];
 let hoveredMarker = null;
-let animationId = null;
 
 // === INIT ===
 async function init() {
@@ -139,7 +172,11 @@ async function init() {
   canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener('mouseup', onMouseUp);
   canvas.addEventListener('mouseleave', onMouseUp);
-  canvas.addEventListener('wheel', onWheel);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  
+  // Zoom buttons
+  document.getElementById('zoomIn').onclick = () => { targetZoom = Math.min(3, targetZoom + 0.25); };
+  document.getElementById('zoomOut').onclick = () => { targetZoom = Math.max(0.5, targetZoom - 0.25); };
   
   // Mode toggle
   document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -154,7 +191,6 @@ async function init() {
     };
   });
   
-  // Load data
   await loadData();
   buildMarkers();
   updateUI();
@@ -193,7 +229,7 @@ function buildMarkers() {
       markers.push({
         lat: m.location[0] * Math.PI / 180,
         lon: m.location[1] * Math.PI / 180,
-        size: Math.min(12, 4 + Math.sqrt(m.count) * 1.5),
+        size: Math.min(14, 5 + Math.sqrt(m.count) * 1.8),
         color: m.color || VENDOR_HEX[m.vendor] || '#ffffff',
         vendor: m.vendor,
         state: m.state,
@@ -202,12 +238,10 @@ function buildMarkers() {
       });
     });
   } else if (activeMode === 'survey' && surveyData?.summary?.vendor_breakdown) {
-    // Create markers from vendor breakdown
     const vb = surveyData.summary.vendor_breakdown;
     Object.entries(vb).forEach(([vendor, data]) => {
       if (vendor === 'unassigned' || !data.total) return;
-      // Spread markers across states for this vendor
-      const states = Object.keys(STATE_COORDS).slice(0, Math.min(10, data.total / 20));
+      const states = Object.keys(STATE_COORDS).slice(0, Math.min(12, Math.ceil(data.total / 15)));
       states.forEach((state, i) => {
         const coords = STATE_COORDS[state];
         if (!coords) return;
@@ -216,12 +250,9 @@ function buildMarkers() {
         markers.push({
           lat: coords[0] * Math.PI / 180,
           lon: coords[1] * Math.PI / 180,
-          size: Math.min(10, 4 + Math.sqrt(count) * 0.8),
+          size: Math.min(12, 5 + Math.sqrt(count) * 0.9),
           color: complete > 0 ? STATUS_HEX['Complete'] : STATUS_HEX['Pending'],
-          vendor,
-          state,
-          count,
-          complete,
+          vendor, state, count, complete,
           label: `${vendor}: ${complete}/${count}`
         });
       });
@@ -231,24 +262,18 @@ function buildMarkers() {
 
 // === 3D PROJECTION ===
 function project(lat, lon, radius) {
-  // Apply rotation
   const cosY = Math.cos(rotation.y), sinY = Math.sin(rotation.y);
   const cosX = Math.cos(rotation.x), sinX = Math.sin(rotation.x);
   
-  // Spherical to Cartesian
   let x = Math.cos(lat) * Math.sin(lon);
   let y = Math.sin(lat);
   let z = Math.cos(lat) * Math.cos(lon);
   
-  // Rotate Y (horizontal)
   let x1 = x * cosY - z * sinY;
   let z1 = x * sinY + z * cosY;
-  
-  // Rotate X (vertical)
   let y2 = y * cosX - z1 * sinX;
   let z2 = y * sinX + z1 * cosX;
   
-  // Project to 2D
   const scale = 1 / (1 + z2 * 0.3);
   return {
     x: width / 2 + x1 * radius * scale,
@@ -262,105 +287,146 @@ function project(lat, lon, radius) {
 function draw() {
   ctx.clearRect(0, 0, width, height);
   
-  const radius = Math.min(width, height) * 0.38;
+  const baseRadius = Math.min(width, height) * 0.36;
+  const radius = baseRadius * zoom;
   const cx = width / 2, cy = height / 2;
   
+  // Update zoom display
+  document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+  
   // Globe glow
-  const glow = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, 0, cx, cy, radius * 1.5);
-  glow.addColorStop(0, 'rgba(90, 228, 255, 0.15)');
-  glow.addColorStop(0.5, 'rgba(90, 228, 255, 0.05)');
+  const glow = ctx.createRadialGradient(cx - radius * 0.25, cy - radius * 0.25, 0, cx, cy, radius * 1.4);
+  glow.addColorStop(0, 'rgba(90, 228, 255, 0.12)');
+  glow.addColorStop(0.6, 'rgba(90, 228, 255, 0.04)');
   glow.addColorStop(1, 'transparent');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(cx, cy, radius * 1.5, 0, Math.PI * 2);
+  ctx.arc(cx, cy, radius * 1.4, 0, Math.PI * 2);
   ctx.fill();
   
-  // Globe body
-  const gradient = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, 0, cx, cy, radius);
-  gradient.addColorStop(0, '#1a2a4a');
-  gradient.addColorStop(0.7, '#0a1525');
-  gradient.addColorStop(1, '#050a15');
-  ctx.fillStyle = gradient;
+  // Globe body - ocean
+  const ocean = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, 0, cx, cy, radius);
+  ocean.addColorStop(0, '#1a3050');
+  ocean.addColorStop(0.6, '#0d1f35');
+  ocean.addColorStop(1, '#081525');
+  ctx.fillStyle = ocean;
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Globe edge highlight
-  ctx.strokeStyle = 'rgba(90, 228, 255, 0.2)';
+  // Globe edge
+  ctx.strokeStyle = 'rgba(90, 228, 255, 0.25)';
   ctx.lineWidth = 2;
   ctx.stroke();
   
-  // Latitude lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+  // Draw latitude lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
   ctx.lineWidth = 0.5;
   for (let lat = -60; lat <= 60; lat += 30) {
     ctx.beginPath();
-    for (let lon = 0; lon <= 360; lon += 5) {
+    let started = false;
+    for (let lon = 0; lon <= 360; lon += 3) {
       const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-      if (p.z < 0) continue;
-      if (lon === 0) ctx.moveTo(p.x, p.y);
+      if (p.z < -0.1) { started = false; continue; }
+      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
       else ctx.lineTo(p.x, p.y);
     }
     ctx.stroke();
   }
   
-  // Longitude lines
+  // Draw longitude lines
   for (let lon = 0; lon < 360; lon += 30) {
     ctx.beginPath();
-    for (let lat = -90; lat <= 90; lat += 5) {
+    let started = false;
+    for (let lat = -90; lat <= 90; lat += 3) {
       const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-      if (p.z < 0) continue;
-      if (lat === -90) ctx.moveTo(p.x, p.y);
+      if (p.z < -0.1) { started = false; continue; }
+      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
       else ctx.lineTo(p.x, p.y);
     }
     ctx.stroke();
   }
+  
+  // Draw country outlines
+  ctx.strokeStyle = 'rgba(90, 228, 255, 0.35)';
+  ctx.lineWidth = 1.2;
+  COUNTRY_PATHS.forEach(path => {
+    ctx.beginPath();
+    let started = false;
+    path.forEach(([lat, lon]) => {
+      const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
+      if (p.z < -0.15) { started = false; return; }
+      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+  });
+  
+  // Draw US outline (highlighted)
+  ctx.strokeStyle = 'rgba(155, 124, 255, 0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let started = false;
+  US_OUTLINE.forEach(([lat, lon]) => {
+    const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
+    if (p.z < -0.15) { started = false; return; }
+    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.stroke();
+  
+  // Fill US with subtle color
+  ctx.fillStyle = 'rgba(155, 124, 255, 0.08)';
+  ctx.fill();
   
   // Sort markers by z (back to front)
   const sortedMarkers = markers
     .map(m => ({ ...m, proj: project(m.lat, m.lon, radius) }))
-    .filter(m => m.proj.z > -0.2)
+    .filter(m => m.proj.z > -0.15)
     .sort((a, b) => a.proj.z - b.proj.z);
   
   // Draw markers
   hoveredMarker = null;
   sortedMarkers.forEach(m => {
     const { x, y, z, scale } = m.proj;
-    const size = m.size * scale * (0.6 + z * 0.4);
-    const alpha = Math.max(0.3, 0.5 + z * 0.5);
+    const size = m.size * scale * zoom * (0.5 + z * 0.5);
+    const alpha = Math.max(0.4, 0.5 + z * 0.5);
     
-    // Check if filtered
     if (activeFilter && m.vendor !== activeFilter) {
-      ctx.globalAlpha = 0.15;
+      ctx.globalAlpha = 0.12;
     } else {
       ctx.globalAlpha = alpha;
     }
     
-    // Glow
-    const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
-    glowGrad.addColorStop(0, m.color + '60');
+    // Outer glow
+    const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 4);
+    glowGrad.addColorStop(0, m.color + '50');
     glowGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
-    ctx.arc(x, y, size * 3, 0, Math.PI * 2);
+    ctx.arc(x, y, size * 4, 0, Math.PI * 2);
     ctx.fill();
     
-    // Marker
+    // Inner marker
     ctx.fillStyle = m.color;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
     
-    // Check hover
+    // White center dot
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Hover detection
     const dx = lastMouse.x - x, dy = lastMouse.y - y;
-    if (Math.sqrt(dx*dx + dy*dy) < size + 5) {
+    if (Math.sqrt(dx*dx + dy*dy) < size + 8) {
       hoveredMarker = m;
     }
   });
   
   ctx.globalAlpha = 1;
-  
-  // Update tooltip
   updateTooltip();
 }
 
@@ -368,8 +434,8 @@ function updateTooltip() {
   const tooltip = document.getElementById('tooltip');
   if (hoveredMarker && !isDragging) {
     tooltip.classList.add('visible');
-    tooltip.style.left = (lastMouse.x + 15) + 'px';
-    tooltip.style.top = (lastMouse.y + 15) + 'px';
+    tooltip.style.left = (lastMouse.x + 18) + 'px';
+    tooltip.style.top = (lastMouse.y + 18) + 'px';
     
     if (activeMode === 'scout') {
       tooltip.innerHTML = `
@@ -388,17 +454,14 @@ function updateTooltip() {
 
 // === ANIMATION ===
 function animate() {
-  // Auto-rotate if not dragging
-  if (!isDragging) {
-    rotation.y += 0.002;
-  }
+  if (!isDragging) rotation.y += 0.0015;
   
-  // Smooth rotation
-  rotation.x += (targetRotation.x - rotation.x) * 0.1;
-  rotation.y += (targetRotation.y - rotation.y) * 0.1;
+  rotation.x += (targetRotation.x - rotation.x) * 0.08;
+  rotation.y += (targetRotation.y - rotation.y) * 0.08;
+  zoom += (targetZoom - zoom) * 0.1;
   
   draw();
-  animationId = requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 }
 
 // === MOUSE EVENTS ===
@@ -414,7 +477,7 @@ function onMouseMove(e) {
   if (isDragging) {
     const dx = x - lastMouse.x, dy = y - lastMouse.y;
     targetRotation.y += dx * 0.005;
-    targetRotation.x = Math.max(-1, Math.min(1, targetRotation.x + dy * 0.005));
+    targetRotation.x = Math.max(-1.2, Math.min(1.2, targetRotation.x + dy * 0.005));
   }
   
   lastMouse = { x, y };
@@ -427,7 +490,8 @@ function onMouseUp() {
 
 function onWheel(e) {
   e.preventDefault();
-  // Could add zoom here
+  const delta = e.deltaY > 0 ? -0.1 : 0.1;
+  targetZoom = Math.max(0.5, Math.min(3, targetZoom + delta));
 }
 
 // === UI ===

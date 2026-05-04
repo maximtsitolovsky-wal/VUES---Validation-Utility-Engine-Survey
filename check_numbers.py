@@ -3,25 +3,19 @@ import json
 with open('output/team_dashboard_data.json') as f:
     data = json.load(f)
 
-print('Top-level keys:', list(data.keys()))
+# Check vendor_assignments structure
+va = data.get('vendor_assignments', {})
+print('=== VENDOR_ASSIGNMENTS ===')
+print(f'Keys: {list(va.keys())}')
 
-scout = data.get('scout', {})
-print('\n=== SCOUT STATS ===')
-for k, v in scout.items():
-    if k != 'records':
-        print(f'  {k}: {v}')
-
-print(f'\n  records count: {len(scout.get("records", []))}')
-
-# Check vendor_stats
-vendor_stats = data.get('vendor_stats', [])
-print(f'\n=== VENDOR_STATS ({len(vendor_stats)} vendors) ===')
+stats = va.get('stats', [])
+print(f'\nStats ({len(stats)} vendors):')
 total_assigned = 0
 total_completed = 0
 total_remaining = 0
-for v in vendor_stats:
-    name = v.get('vendor_name', v.get('name', '?'))
-    assigned = v.get('total_assigned', v.get('assigned', 0))
+for v in stats:
+    name = v.get('vendor_name', '?')
+    assigned = v.get('total_assigned', 0)
     completed = v.get('completed', 0)
     remaining = v.get('remaining', 0)
     total_assigned += assigned
@@ -29,33 +23,27 @@ for v in vendor_stats:
     total_remaining += remaining
     print(f'  {name}: assigned={assigned}, completed={completed}, remaining={remaining}')
 
-print(f'\n  TOTALS: assigned={total_assigned}, completed={total_completed}, remaining={total_remaining}')
+print(f'\n  VENDOR TOTALS: assigned={total_assigned}, completed={total_completed}, remaining={total_remaining}')
 
-# Check vendor_mesh for losses
-vendor_mesh = data.get('vendor_mesh', [])
-print(f'\n=== VENDOR_MESH ({len(vendor_mesh)} rows) ===')
-if vendor_mesh:
+mesh = va.get('mesh', [])
+print(f'\nMesh ({len(mesh)} rows):')
+if mesh:
     # Count by status
     statuses = {}
-    for m in vendor_mesh:
+    for m in mesh:
         status = m.get('status', 'unknown')
         statuses[status] = statuses.get(status, 0) + 1
     print('  Status breakdown:')
     for status, count in sorted(statuses.items()):
         print(f'    {status}: {count}')
+    
+    # Check for "loss" or similar
+    loss_keywords = ['loss', 'lost', 'removed', 'cancelled', 'dropped']
+    for keyword in loss_keywords:
+        matches = [m for m in mesh if keyword.lower() in str(m.get('status', '')).lower()]
+        if matches:
+            print(f'\n  Found "{keyword}" in status: {len(matches)} rows')
 
-# The key question: why 110 remaining vs 103?
-print('\n=== THE MATH ===')
-excel_total = scout.get('excel_total', 0)
-completed = scout.get('completed', 0)
-remaining = scout.get('remaining', 0)
-print(f'Excel total: {excel_total}')
-print(f'Completed (from scout stats): {completed}')
-print(f'Remaining (from scout stats): {remaining}')
-print(f'Excel - Completed = {excel_total} - {completed} = {excel_total - completed}')
-
-# Count unique completed sites from records
-scout_recs = scout.get('records', [])
-completed_sites = set(r.get('site_number') for r in scout_recs if r.get('site_number'))
-print(f'\nUnique sites in scout records: {len(completed_sites)}')
-print(f'Difference (records vs completed stat): {len(completed_sites)} vs {completed} = {len(completed_sites) - completed}')
+# Summary stats from vendor_assignments
+summary = va.get('summary', {})
+print(f'\nSummary: {summary}')

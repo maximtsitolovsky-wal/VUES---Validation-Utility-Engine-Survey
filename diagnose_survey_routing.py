@@ -145,7 +145,7 @@ def print_field_analysis(field_analysis: dict):
     
     for field_name in sorted(field_analysis.keys()):
         info = field_analysis[field_name]
-        print(f"\n📋 {field_name}")
+        print(f"\n[FIELD] {field_name}")
         print(f"   Type(s): {', '.join(info['types']) if info['types'] else 'N/A'}")
         print(f"   Records: {info['total_count']} total, {info['null_count']} empty")
         if info['sample_values']:
@@ -188,9 +188,9 @@ def main():
     # Load token
     try:
         token = load_token()
-        print("\n✓ Airtable token loaded successfully")
+        print("\n[OK] Airtable token loaded successfully")
     except Exception as e:
-        print(f"\n✗ Error loading token: {e}")
+        print(f"\n[ERROR] Error loading token: {e}")
         return 1
     
     # Fetch all records (no view filter)
@@ -199,16 +199,16 @@ def main():
     print("-"*80)
     try:
         all_records = fetch_records(token, BASE_ID, TABLE_ID, view_id="", max_records=1000)
-        print(f"\n✓ Successfully fetched {len(all_records)} records")
+        print(f"\n[OK] Successfully fetched {len(all_records)} records")
         
         if all_records:
             field_analysis = analyze_fields(all_records)
             print_field_analysis(field_analysis)
             print_record_summary(all_records)
         else:
-            print("\n⚠️  No records found in table!")
+            print("\n[WARNING] No records found in table!")
     except Exception as e:
-        print(f"\n✗ Error fetching all records: {e}")
+        print(f"\n[ERROR] Error fetching all records: {e}")
         return 1
     
     # Fetch records from specific view
@@ -217,7 +217,7 @@ def main():
     print("-"*80)
     try:
         view_records = fetch_records(token, BASE_ID, TABLE_ID, view_id=VIEW_ID, max_records=1000)
-        print(f"\n✓ Successfully fetched {len(view_records)} records from view")
+        print(f"\n[OK] Successfully fetched {len(view_records)} records from view")
         
         if view_records:
             print(f"\nView contains {len(view_records)} out of {len(all_records)} total records")
@@ -237,11 +237,11 @@ def main():
                 if len(filtered_out) > 5:
                     print(f"  ... and {len(filtered_out) - 5} more")
         else:
-            print("\n⚠️  No records found in this view!")
+            print("\n[WARNING] No records found in this view!")
             if all_records:
                 print("   (But table has records - view filter may be excluding everything)")
     except Exception as e:
-        print(f"\n✗ Error fetching view records: {e}")
+        print(f"\n[ERROR] Error fetching view records: {e}")
         return 1
     
     print("\n" + "="*80)

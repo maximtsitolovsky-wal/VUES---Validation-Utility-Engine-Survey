@@ -332,12 +332,14 @@ function buildRecordIndex(records) {
   state.recordById = new Map(records.map((record) => [record.record_id, record]));
 }
 
-function renderProgress(scout, vendors) {
+function renderProgress(scout, vendors, vendorAssignments) {
   const totalSubmissions = scout.total_submissions || (scout.records || []).length;
   const uniqueSubmissions = scout.unique_submissions || 0;
   const completed = scout.completed || 0;
   const excelTotal = scout.excel_total || 0;
-  const remaining = scout.remaining || Math.max(excelTotal - completed, 0);
+  // Use vendor assignments remaining (actual work left) instead of Excel remaining
+  const vendorRemaining = vendorAssignments?.total_remaining || 0;
+  const remaining = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || Math.max(excelTotal - completed, 0));
   const rate = scout.completion_rate || 0;
 
   document.getElementById('statTotal').textContent = totalSubmissions;
@@ -548,7 +550,7 @@ function renderAll(data) {
 
   buildRecordIndex(scout.records || []);
   destroyCharts();
-  renderProgress(scout, vendors);
+  renderProgress(scout, vendors, data.vendor_assignments);
   renderCharts(vendors);
   renderAlerts(vendors, mesh.summary || {});
   renderVendorTable(vendors);

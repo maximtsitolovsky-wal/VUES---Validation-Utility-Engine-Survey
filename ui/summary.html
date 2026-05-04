@@ -531,7 +531,10 @@ function renderAll() {
   const scoutUniqueSubmissions = scout.unique_submissions || 0;
   const scoutCompleted = scout.completed || 0;  // Sites matching Excel reference
   const scoutExcelTotal = scout.excel_total || 0;  // Total sites in Excel scope
-  const scoutRemaining = scout.remaining || (scoutExcelTotal - scoutCompleted);
+  // Use vendor assignments remaining (actual work left) instead of Excel remaining
+  const vendorAssignments = programData.vendor_assignments || {};
+  const vendorRemaining = vendorAssignments.total_remaining || 0;
+  const scoutRemaining = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || (scoutExcelTotal - scoutCompleted));
   const scoutRate = scout.completion_rate || (scoutExcelTotal > 0 ? (scoutCompleted / scoutExcelTotal * 100).toFixed(1) : 0);
   
   // Update date
@@ -812,7 +815,8 @@ function regenerateReport() {
 
 function generateLocalReport(type) {
   const survey = programData.survey?.records || [];
-  const vendors = programData.vendor_assignments?.vendors || [];
+  const vendorAssignments = programData.vendor_assignments || {};
+  const vendors = vendorAssignments.vendors || [];
   const scout = programData.scout || {};
   
   // Survey stats
@@ -826,7 +830,9 @@ function generateLocalReport(type) {
   const scoutUniqueSubmissions = scout.unique_submissions || 0;
   const scoutCompleted = scout.completed || 0;  // Sites matching Excel
   const scoutExcelTotal = scout.excel_total || 0;  // Target sites from Excel
-  const scoutRemaining = scout.remaining || 0;
+  // Use vendor assignments remaining (actual work left)
+  const vendorRemaining = vendorAssignments.total_remaining || 0;
+  const scoutRemaining = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || 0);
   const scoutRate = scout.completion_rate || 0;
   
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });

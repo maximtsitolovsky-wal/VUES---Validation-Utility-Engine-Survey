@@ -461,7 +461,7 @@ function renderCharts(surveyRecords, scoutRecords) {
   }
 }
 
-// AI Report Generation - Deep Analysis
+// AI Report Generation - Deep Analysis with 5 Sections
 let generatedReports = {};
 
 document.getElementById('generateBtn').addEventListener('click', () => {
@@ -475,57 +475,130 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     const va = programData?.vendor_assignments || {};
     const vendors = va.vendors || [];
     
+    // Survey metrics
     const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
     const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
     const surveyPending = survey.length - surveyPass - surveyFail;
     const surveyRate = survey.length ? Math.round(surveyPass / survey.length * 100) : 0;
+    
+    // Scout metrics
     const scoutRate = scout.completion_rate || 0;
     const scoutCompleted = scout.completed || 0;
     const scoutTarget = scout.excel_total || 765;
     const scoutRemaining = va.total_remaining || scout.remaining || 0;
-    const scoutDupes = (scout.total_submissions || 0) - (scout.unique_submissions || 0);
-    const topVendor = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0))[0];
-    const bottomVendor = [...vendors].filter(v => v.remaining > 0).sort((a, b) => (a.completion_rate || 0) - (b.completion_rate || 0))[0];
+    const scoutSubmissions = scout.total_submissions || 0;
+    const scoutUnique = scout.unique_submissions || 0;
+    const scoutDupes = scoutSubmissions - scoutUnique;
+    const dupeRate = scoutSubmissions ? Math.round(scoutDupes / scoutSubmissions * 100) : 0;
     
-    const surveyRisk = surveyRate < 50 ? 'HIGH' : surveyRate < 80 ? 'MODERATE' : 'LOW';
-    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--amber)' : 'var(--green)';
-    const scoutRisk = scoutRate >= 80 ? 'LOW' : scoutRate >= 50 ? 'MODERATE' : 'HIGH';
-    const scoutRiskColor = scoutRate >= 80 ? 'var(--green)' : scoutRate >= 50 ? 'var(--amber)' : 'var(--red)';
+    // Vendor analysis
+    const sortedVendors = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0));
+    const topVendor = sortedVendors[0];
+    const bottomVendor = sortedVendors.filter(v => v.remaining > 0).pop();
+    const totalAssigned = vendors.reduce((sum, v) => sum + (v.total_assigned || 0), 0);
+    
+    // Velocity & forecast
     const velocity = (scoutCompleted / PROGRAM_WEEK).toFixed(1);
     const weeksLeft = Math.ceil(scoutRemaining / (scoutCompleted / PROGRAM_WEEK || 1));
+    const etaWeek = PROGRAM_WEEK + weeksLeft;
+    
+    // Risk assessment
+    const surveyRisk = surveyRate < 50 ? 'HIGH' : surveyRate < 80 ? 'MODERATE' : 'LOW';
+    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--amber)' : 'var(--green)';
+    const scoutRisk = scoutRate >= 85 ? 'LOW' : scoutRate >= 70 ? 'MODERATE' : 'HIGH';
+    const scoutRiskColor = scoutRate >= 85 ? 'var(--green)' : scoutRate >= 70 ? 'var(--amber)' : 'var(--red)';
     
     generatedReports.survey = { risk: surveyRisk, rate: surveyRate, pass: surveyPass, fail: surveyFail, pending: surveyPending };
     generatedReports.scout = { risk: scoutRisk, rate: scoutRate, completed: scoutCompleted, remaining: scoutRemaining, velocity, weeksLeft };
     
+    // SURVEY REPORT - 5 Sections
     document.getElementById('reportSurvey').innerHTML = `
       <div class="report-header">
-        <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">QA Performance Report</div></div></div>
+        <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">Detailed QA Report</div></div></div>
         <span class="risk-badge" style="background:${surveyRiskColor}20;color:${surveyRiskColor}">● ${surveyRisk} RISK</span>
       </div>
       <div class="report-body">
-        <div class="report-section"><h4>1. Executive Summary</h4><p>Survey QA is at <strong>${surveyRate}%</strong> pass rate across <strong>${survey.length}</strong> submissions. ${surveyFail > surveyPass ? 'Quality issues are the primary constraint — failure rate exceeds pass rate.' : surveyRate >= 80 ? 'Quality is strong — maintain current vendor discipline.' : 'Quality is building — focus on reducing failure rate.'}</p></div>
-        <div class="report-section"><h4>2. Key Metrics</h4><div class="metrics-mini"><div class="metric-mini"><span class="metric-mini-value" style="color:var(--green)">${surveyPass}</span><span class="metric-mini-label">Passed</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--red)">${surveyFail}</span><span class="metric-mini-label">Failed</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--amber)">${surveyPending}</span><span class="metric-mini-label">Pending</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--cyan)">${surveyRate}%</span><span class="metric-mini-label">Pass Rate</span></div></div></div>
-        <div class="report-section"><h4>3. Vendor Performance</h4><p>${topVendor ? `<strong>${topVendor.vendor_name}</strong> leads with ${topVendor.completion_rate || 0}% completion.` : 'No vendor data.'} ${bottomVendor && bottomVendor.remaining > 10 ? `<strong>${bottomVendor.vendor_name}</strong> needs attention with ${bottomVendor.remaining} sites remaining.` : ''}</p></div>
-        <div class="report-section"><h4>4. Recommendations</h4><ul class="insights-list" style="--color:var(--cyan)"><li>Run vendor QA triage for failed submissions</li><li>${surveyRate < 50 ? 'Implement twice-weekly review cadence' : 'Continue current quality monitoring'}</li><li>Prioritize high-yield vendors for volume</li><li>Track failure patterns by vendor</li></ul></div>
+        <div class="report-section">
+          <h4>1. Executive Summary</h4>
+          <div class="metrics-mini"><div class="metric-mini"><span class="metric-mini-value" style="color:var(--cyan)">${surveyRate}%</span><span class="metric-mini-label">Pass Rate</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--green)">${surveyPass}</span><span class="metric-mini-label">Passed</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--red)">${surveyFail}</span><span class="metric-mini-label">Failed</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--amber)">${surveyPending}</span><span class="metric-mini-label">Pending</span></div></div>
+          <p>Survey QA processing <strong>${survey.length}</strong> submissions with <strong>${surveyRate}%</strong> pass rate. ${surveyFail > surveyPass ? 'Quality issues exceed passes — requires immediate triage.' : surveyRate >= 80 ? 'Quality metrics are strong — ready for volume scaling.' : 'Quality is stabilizing — continue monitoring.'}</p>
+        </div>
+        <div class="report-section">
+          <h4>2. Quality Analysis</h4>
+          <p><strong>Pass/Fail Ratio:</strong> ${surveyPass}:${surveyFail} (${surveyFail > 0 ? (surveyPass/surveyFail).toFixed(1) : '∞'}:1)</p>
+          <p><strong>Failure Rate:</strong> ${survey.length ? Math.round(surveyFail/survey.length*100) : 0}% of submissions fail QA</p>
+          <p><strong>Quality Trend:</strong> ${surveyRate >= 80 ? '🟢 Strong' : surveyRate >= 60 ? '🟡 Building' : '🔴 Needs Attention'}</p>
+        </div>
+        <div class="report-section">
+          <h4>3. Vendor Performance</h4>
+          <p>${topVendor ? `🏆 <strong>${topVendor.vendor_name}</strong> leads with ${topVendor.completion_rate || 0}% completion rate.` : 'No vendor data available.'}</p>
+          <p>${bottomVendor && bottomVendor.remaining > 5 ? `⚠️ <strong>${bottomVendor.vendor_name}</strong> has ${bottomVendor.remaining} sites remaining — may need support.` : 'All vendors performing within targets.'}</p>
+        </div>
+        <div class="report-section">
+          <h4>4. Timeline Impact</h4>
+          <p><strong>Current Week:</strong> W${PROGRAM_WEEK}</p>
+          <p><strong>Pending Items:</strong> ${surveyPending} submissions awaiting review</p>
+          <p><strong>Constraint:</strong> ${surveyFail > surveyPass ? 'Quality (high failure rate)' : surveyPending > surveyPass ? 'Processing (backlog)' : 'None identified'}</p>
+        </div>
+        <div class="report-section">
+          <h4>5. Recommendations</h4>
+          <ul class="insights-list" style="--color:var(--cyan)">
+            <li>${surveyFail > 10 ? 'Conduct failure pattern analysis by vendor' : 'Maintain current QA standards'}</li>
+            <li>${surveyRate < 70 ? 'Implement vendor training on common failures' : 'Document successful vendor practices'}</li>
+            <li>${surveyPending > 20 ? 'Clear pending backlog before accepting new submissions' : 'Continue normal processing cadence'}</li>
+            <li>Track weekly pass rate trend for early warning</li>
+            <li>${bottomVendor ? `Schedule check-in with ${bottomVendor.vendor_name}` : 'All vendors on track'}</li>
+          </ul>
+        </div>
       </div>`;
     
+    // SCOUT REPORT - 5 Sections  
     document.getElementById('reportScout').innerHTML = `
       <div class="report-header">
-        <div class="report-title"><div class="report-icon" style="background:rgba(155,124,255,0.15);color:var(--purple)">☄</div><div><strong>Scout Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">Completion Report</div></div></div>
+        <div class="report-title"><div class="report-icon" style="background:rgba(155,124,255,0.15);color:var(--purple)">☄</div><div><strong>Scout Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">Detailed Completion Report</div></div></div>
         <span class="risk-badge" style="background:${scoutRiskColor}20;color:${scoutRiskColor}">● ${scoutRisk} RISK</span>
       </div>
       <div class="report-body">
-        <div class="report-section"><h4>1. Executive Summary</h4><p>Scout is at <strong>${scoutRate}%</strong> completion with <strong>${scoutRemaining}</strong> sites remaining. ${scoutRate >= 85 ? 'Program is in closeout mode — focus on quality and final validation.' : scoutRate >= 70 ? 'Strong trajectory — maintain velocity and protect top performers.' : 'Building phase — prioritize volume while monitoring quality.'}</p></div>
-        <div class="report-section"><h4>2. Key Metrics</h4><div class="metrics-mini"><div class="metric-mini"><span class="metric-mini-value" style="color:var(--green)">${scoutCompleted}</span><span class="metric-mini-label">Completed</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--amber)">${scoutRemaining}</span><span class="metric-mini-label">Remaining</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--cyan)">${velocity}/wk</span><span class="metric-mini-label">Velocity</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--purple)">W${PROGRAM_WEEK + weeksLeft}</span><span class="metric-mini-label">ETA</span></div></div></div>
-        <div class="report-section"><h4>3. Quality Check</h4><p>Duplicate rate: <strong>${scoutDupes}</strong> duplicates detected. ${scoutDupes < 20 ? 'Low duplicate rate — data quality is strong.' : scoutDupes < 50 ? 'Moderate duplicates — review before closeout.' : 'High duplicate rate — immediate dedup required.'}</p></div>
-        <div class="report-section"><h4>4. Recommendations</h4><ul class="insights-list" style="--color:var(--purple)"><li>Protect ${topVendor?.vendor_name || 'top vendor'} allocation through closeout</li><li>${scoutRate >= 80 ? 'Begin final validation and duplicate review' : 'Maintain current velocity targets'}</li><li>Use Scout discipline as model for Survey</li><li>Prepare transition plan for remaining ${scoutRemaining} sites</li></ul></div>
+        <div class="report-section">
+          <h4>1. Executive Summary</h4>
+          <div class="metrics-mini"><div class="metric-mini"><span class="metric-mini-value" style="color:var(--purple)">${scoutRate}%</span><span class="metric-mini-label">Complete</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--green)">${scoutCompleted}</span><span class="metric-mini-label">Done</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--amber)">${scoutRemaining}</span><span class="metric-mini-label">Remaining</span></div><div class="metric-mini"><span class="metric-mini-value" style="color:var(--cyan)">${velocity}/wk</span><span class="metric-mini-label">Velocity</span></div></div>
+          <p>Scout program at <strong>${scoutRate}%</strong> completion. ${scoutRate >= 85 ? 'Entering closeout phase — focus shifts to quality and validation.' : scoutRate >= 70 ? 'Strong execution phase — maintain velocity.' : 'Building phase — prioritize volume.'}</p>
+        </div>
+        <div class="report-section">
+          <h4>2. Quality & Duplicates</h4>
+          <p><strong>Total Submissions:</strong> ${scoutSubmissions}</p>
+          <p><strong>Unique Sites:</strong> ${scoutUnique} (${100 - dupeRate}% clean)</p>
+          <p><strong>Duplicates:</strong> ${scoutDupes} (${dupeRate}% dupe rate) ${dupeRate < 5 ? '🟢 Excellent' : dupeRate < 15 ? '🟡 Acceptable' : '🔴 Review Required'}</p>
+        </div>
+        <div class="report-section">
+          <h4>3. Vendor Performance</h4>
+          ${sortedVendors.slice(0, 3).map((v, i) => `<p>${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} <strong>${v.vendor_name}</strong>: ${v.completed || 0}/${v.total_assigned || 0} (${v.completion_rate || 0}%)</p>`).join('')}
+          <p><strong>Total Assigned:</strong> ${totalAssigned} sites across ${vendors.length} vendors</p>
+        </div>
+        <div class="report-section">
+          <h4>4. Velocity & Forecast</h4>
+          <p><strong>Current Velocity:</strong> ${velocity} sites/week</p>
+          <p><strong>Weeks Remaining:</strong> ~${weeksLeft} weeks at current pace</p>
+          <p><strong>Projected Completion:</strong> Week ${etaWeek} ${etaWeek <= PROGRAM_WEEK + 2 ? '🟢 On Track' : etaWeek <= PROGRAM_WEEK + 4 ? '🟡 Watch' : '🔴 At Risk'}</p>
+        </div>
+        <div class="report-section">
+          <h4>5. Recommendations</h4>
+          <ul class="insights-list" style="--color:var(--purple)">
+            <li>${scoutRate >= 85 ? 'Begin final validation and closeout procedures' : 'Maintain current velocity targets'}</li>
+            <li>${topVendor ? `Protect ${topVendor.vendor_name} capacity through completion` : 'Balance vendor workloads'}</li>
+            <li>${dupeRate > 10 ? 'Run duplicate cleanup before closeout' : 'Data quality is strong — proceed to validation'}</li>
+            <li>${scoutRemaining < 50 ? 'Assign remaining sites to highest performers' : 'Continue normal distribution'}</li>
+            <li>Use Scout discipline as template for Survey recovery</li>
+            <li>Document lessons learned for future programs</li>
+          </ul>
+        </div>
       </div>`;
     
     btn.disabled = false;
     btn.textContent = '🔄 Regenerate';
     document.getElementById('exportBtn').style.display = 'block';
     document.getElementById('copyBtn').style.display = 'block';
-  }, 600);
+  }, 800);
 });
 
 // Export PDF
@@ -535,7 +608,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 
 // Copy to Clipboard
 document.getElementById('copyBtn').addEventListener('click', () => {
-  const text = `VUES EXECUTIVE REPORT - ${new Date().toLocaleDateString()}\n\nSURVEY: ${generatedReports.survey?.rate || 0}% pass rate (${generatedReports.survey?.pass || 0} passed, ${generatedReports.survey?.fail || 0} failed) - Risk: ${generatedReports.survey?.risk || 'N/A'}\n\nSCOUT: ${generatedReports.scout?.rate || 0}% complete (${generatedReports.scout?.completed || 0} done, ${generatedReports.scout?.remaining || 0} remaining) - Risk: ${generatedReports.scout?.risk || 'N/A'}\nVelocity: ${generatedReports.scout?.velocity || 0}/week, ETA: Week ${PROGRAM_WEEK + (generatedReports.scout?.weeksLeft || 0)}`;
+  const text = `VUES EXECUTIVE REPORT - ${new Date().toLocaleDateString()}\n\n=== SURVEY PROGRAM ===\nRisk: ${generatedReports.survey?.risk || 'N/A'}\nPass Rate: ${generatedReports.survey?.rate || 0}%\nPassed: ${generatedReports.survey?.pass || 0} | Failed: ${generatedReports.survey?.fail || 0} | Pending: ${generatedReports.survey?.pending || 0}\n\n=== SCOUT PROGRAM ===\nRisk: ${generatedReports.scout?.risk || 'N/A'}\nCompletion: ${generatedReports.scout?.rate || 0}%\nCompleted: ${generatedReports.scout?.completed || 0} | Remaining: ${generatedReports.scout?.remaining || 0}\nVelocity: ${generatedReports.scout?.velocity || 0}/week\nETA: Week ${PROGRAM_WEEK + (generatedReports.scout?.weeksLeft || 0)}`;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = '✅ Copied!';

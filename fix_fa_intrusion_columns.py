@@ -99,7 +99,7 @@ def process_csv_file(filepath):
             system_type_idx = header.index("System Type")
             device_task_type_idx = header.index("Device/Task Type")
         except ValueError:
-            print(f"  ⚠️ Missing required columns, skipping: {filepath.name}")
+            print(f"  WARNING: Missing required columns, skipping: {filepath.name}")
             return False, 0
         
         # Find Description column for inference
@@ -140,7 +140,7 @@ def process_csv_file(filepath):
 
 
 def main():
-    print("🐕 FA&Intrusion Data Fix - System Type & Device/Task Type")
+    print("FA&Intrusion Data Fix - System Type & Device/Task Type")
     print("=" * 60)
     print(f"Directory: {DATA_DIR}")
     print()
@@ -158,9 +158,6 @@ def main():
             modified, undetermined = process_csv_file(filepath)
             if modified:
                 modified_count += 1
-                status = "✅ Modified"
-            else:
-                status = "⏭️ No changes"
             
             total_undetermined += undetermined
             
@@ -170,18 +167,18 @@ def main():
                 
         except Exception as e:
             error_count += 1
-            print(f"  ❌ Error processing {filepath.name}: {e}")
+            print(f"  ERROR processing {filepath.name}: {e}")
     
     print()
     print("=" * 60)
     print("Summary:")
-    print(f"  📁 Total files processed: {len(csv_files)}")
-    print(f"  ✅ Files modified: {modified_count}")
-    print(f"  ⏭️ Files unchanged: {len(csv_files) - modified_count - error_count}")
-    print(f"  ❌ Errors: {error_count}")
-    print(f"  ⚠️ Rows with undetermined System Type: {total_undetermined}")
+    print(f"  Total files processed: {len(csv_files)}")
+    print(f"  Files modified: {modified_count}")
+    print(f"  Files unchanged: {len(csv_files) - modified_count - error_count}")
+    print(f"  Errors: {error_count}")
+    print(f"  Rows with undetermined System Type: {total_undetermined}")
     print()
-    print("🐕 Done! Woof!")
+    print("Done! Woof!")
 
 
 if __name__ == "__main__":

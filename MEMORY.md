@@ -1,4 +1,4 @@
-### 2026-05-04 — TRULY LIVE Dashboard Deployed (BLOCKER Fixed)
+
 - **Problem:** Dashboard was loading 8 MB baked HTML snapshots from `ui/` instead of live data. `unbake_html.py` was built 2026-04-27 but never applied. User reported stale counts (696 vs actual 702).
 - **Root Cause:** Users hitting `file://ui/*.html` (frozen snapshots) instead of `http://localhost:8765` (live server).
 - **Fix Applied:**

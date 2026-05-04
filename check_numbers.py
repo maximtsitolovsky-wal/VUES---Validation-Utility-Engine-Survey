@@ -3,45 +3,46 @@ import json
 with open('output/team_dashboard_data.json') as f:
     data = json.load(f)
 
+# Get sites from vendor assignments mesh
 va = data.get('vendor_assignments', {})
-print('=== VENDOR_ASSIGNMENTS ===')
-print(f'configured: {va.get("configured")}')
-print(f'total_assignments: {va.get("total_assignments")}')
-print(f'total_completed: {va.get("total_completed")}')
-print(f'total_remaining: {va.get("total_remaining")}')
-print(f'error: {va.get("error")}')
+mesh_data = va.get('mesh', {})
+mesh_rows = mesh_data.get('rows', []) if isinstance(mesh_data, dict) else []
 
-vendors = va.get('vendors', [])
-print(f'\nVendors ({len(vendors)}):')
-total_assigned = 0
-total_completed = 0
-total_remaining = 0
-for v in vendors:
-    if isinstance(v, dict):
-        name = v.get('vendor_name', v.get('name', '?'))
-        assigned = v.get('total_assigned', v.get('assigned', 0))
-        completed = v.get('completed', 0)
-        remaining = v.get('remaining', 0)
-        total_assigned += assigned
-        total_completed += completed
-        total_remaining += remaining
-        print(f'  {name}: assigned={assigned}, completed={completed}, remaining={remaining}')
-    else:
-        print(f'  (not a dict): {v}')
+assigned_sites = set()
+for row in mesh_rows:
+    site = row.get('site_number')
+    if site:
+        assigned_sites.add(str(site))
 
-print(f'\n  VENDOR TOTALS: assigned={total_assigned}, completed={total_completed}, remaining={total_remaining}')
+print(f'Sites in vendor assignments: {len(assigned_sites)}')
 
-mesh = va.get('mesh', [])
-print(f'\nMesh: {mesh[:5]}...' if len(mesh) > 5 else f'Mesh: {mesh}')
-
-# Now the KEY question - what's shown in the UI?
+# Get sites from scout records (completed)
 scout = data.get('scout', {})
-print('\n=== SCOUT STATS (what UI should show) ===')
-print(f'Excel total: {scout.get("excel_total")}')
-print(f'Completed: {scout.get("completed")}')
-print(f'Remaining: {scout.get("remaining")}')
+scout_recs = scout.get('records', [])
+completed_sites = set()
+for rec in scout_recs:
+    site = rec.get('site_number')
+    if site:
+        completed_sites.add(str(site))
 
-print('\n=== THE DISCREPANCY ===')
-print(f'Scout remaining: {scout.get("remaining")}')
-print(f'Vendor total_remaining: {va.get("total_remaining")}')
-print(f'Difference: {scout.get("remaining", 0) - va.get("total_remaining", 0)}')
+print(f'Sites completed (scout records): {len(completed_sites)}')
+
+# Now we need to check the Excel master list
+# It should be in the routing data or somewhere
+routing = data.get('routing', {})
+if routing:
+    routing_rows = routing.get('rows', [])
+    excel_sites = set(str(r.get('site', r.get('site_number', ''))) for r in routing_rows if r.get('site') or r.get('site_number'))
+    print(f'Sites in routing data: {len(excel_sites)}')
+
+# Check what sites are NOT assigned
+not_assigned = completed_sites - assigned_sites
+print(f'\nCompleted but NOT in vendor assignments: {len(not_assigned)}')
+if not_assigned:
+    print(f'  Sites: {sorted(not_assigned)[:20]}...')
+
+# The 7 orphaned sites would be in Excel but not in vendor assignments
+print('\n=== SUMMARY ===')
+print(f'Excel total (from scout stats): {scout.get("excel_total")} sites')
+print(f'Vendor assignments total: {va.get("total_assignments")} sites')
+print(f'Gap: {scout.get("excel_total", 0) - va.get("total_assignments", 0)} sites NEVER ASSIGNED')

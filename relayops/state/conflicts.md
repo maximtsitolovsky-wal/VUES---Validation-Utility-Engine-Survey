@@ -25,6 +25,22 @@
 - root_cause: Duplicate code from bad merge caused JavaScript syntax error, preventing page from rendering
 - lesson_learned: Always ask for browser console errors FIRST before diagnosing infrastructure/cache issues
 
+## DATA-STALENESS-20260504-001 🔴 ACTIVE
+
+- id: DATA-STALENESS-20260504-001
+- detected_at: 2026-05-04T11:40:23Z
+- detected_by: relayops-coordinator-a5e5db
+- source: ui/vues_metrics_current.json
+- conflict_summary: vues_metrics_current.json is 3 days stale (generated 2026-05-01T12:38:53)
+- severity: HIGH
+- impact: analytics.html may display outdated vendor assignment metrics
+- proposed_resolution: Run `python tools/fetch_vues_metrics.py` to regenerate
+- status: 🔴 ACTIVE - Awaiting remediation
+- evidence:
+  - grep ui/vues_metrics_current.json shows generated_at: 2026-05-01T12:38:53
+  - Current system time: 2026-05-04T11:40:23
+  - Delta: 3 days, 0 hours stale
+
 ## CONFLICT-20260427-002 ✅ RESOLVED
 
 - id: CONFLICT-20260427-002  

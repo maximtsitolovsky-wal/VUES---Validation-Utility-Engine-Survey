@@ -16,32 +16,20 @@
     
     .container { display: grid; grid-template-columns: 1fr 340px; height: 100vh; }
     
-    .globe-section { position: relative; display: flex; align-items: center; justify-content: center; }
-    .globe-bg { position: absolute; inset: 0; background: radial-gradient(circle at 40% 40%, rgba(90,228,255,0.08) 0%, transparent 50%), radial-gradient(circle at 60% 60%, rgba(155,124,255,0.06) 0%, transparent 40%); }
+    .globe-section { position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 50%, rgba(90,228,255,0.06) 0%, transparent 60%); }
     
-    #globeCanvas { cursor: grab; }
+    #globeCanvas { cursor: grab; max-width: 100%; max-height: 100%; }
     #globeCanvas:active { cursor: grabbing; }
     
     .globe-overlay { position: absolute; top: 20px; left: 20px; }
     .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
     .back-link:hover { background: rgba(90,228,255,0.15); border-color: var(--cyan); }
     
-    .zoom-controls { position: absolute; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 4px; }
-    .zoom-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-    .zoom-btn:hover { background: rgba(90,228,255,0.2); border-color: var(--cyan); }
-    .zoom-level { text-align: center; font-size: 11px; color: var(--text-soft); padding: 4px 0; }
-    
     .mode-toggle { position: absolute; top: 20px; right: 360px; display: flex; gap: 4px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); padding: 5px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); }
     .mode-btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; background: transparent; color: var(--text-soft); transition: all 0.2s; }
     .mode-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
     .mode-btn.active.scout { background: rgba(155,124,255,0.3); color: var(--purple); }
     .mode-btn.active.survey { background: rgba(90,228,255,0.3); color: var(--cyan); }
-    
-    .tooltip { position: fixed; background: rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 18px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 1000; min-width: 180px; backdrop-filter: blur(10px); }
-    .tooltip.visible { opacity: 1; }
-    .tooltip-title { font-size: 16px; font-weight: 800; margin-bottom: 10px; }
-    .tooltip-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
-    .tooltip-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
     
     .sidebar { background: var(--panel); border-left: 1px solid var(--panel-border); display: flex; flex-direction: column; overflow-y: auto; }
     .sidebar-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -73,21 +61,14 @@
 <body>
   <div class="container">
     <div class="globe-section">
-      <div class="globe-bg"></div>
       <canvas id="globeCanvas"></canvas>
       <div class="globe-overlay">
         <a href="routing.html" class="back-link">← Back to Routing</a>
-      </div>
-      <div class="zoom-controls">
-        <button class="zoom-btn" id="zoomIn">+</button>
-        <div class="zoom-level" id="zoomLevel">100%</div>
-        <button class="zoom-btn" id="zoomOut">−</button>
       </div>
       <div class="mode-toggle">
         <button class="mode-btn scout active" data-mode="scout">☄ Scout</button>
         <button class="mode-btn survey" data-mode="survey">📋 Survey</button>
       </div>
-      <div class="tooltip" id="tooltip"></div>
     </div>
     <div class="sidebar">
       <div class="sidebar-header">
@@ -106,77 +87,32 @@
     </div>
   </div>
 
-<script>
+<script type="module">
+import createGlobe from './cobe.esm.js';
+
 // === CONFIG ===
 const VENDOR_HEX = { 'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Techwise': '#FF5FD2', 'Everon': '#45E6A5', 'SAS': '#FFC857' };
-const STATUS_HEX = { 'Complete': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#FF6B81' };
-
-// Simplified world country outlines (lat/lon paths) - Major landmasses
-const COUNTRY_PATHS = [
-  // North America outline (simplified)
-  [[71,-170],[70,-141],[69,-141],[68,-136],[70,-128],[60,-141],[60,-139],[55,-131],[54,-130],[50,-128],[49,-125],[48,-124],[46,-124],[43,-124],[40,-124],[38,-123],[35,-121],[33,-118],[32,-117],[31,-114],[29,-114],[26,-111],[25,-108],[27,-105],[26,-99],[26,-97],[28,-97],[29,-95],[30,-94],[30,-91],[30,-88],[30,-85],[31,-82],[27,-80],[25,-80],[25,-81],[26,-82],[28,-83],[29,-84],[30,-85],[30,-89],[29,-89],[30,-90],[29,-91],[27,-93],[26,-97],[25,-97],[23,-98],[20,-97],[18,-95],[16,-93],[15,-88],[17,-88],[18,-88],[21,-87],[22,-90],[24,-90],[26,-90],[27,-89],[29,-89],[30,-88],[31,-85],[31,-81],[32,-81],[34,-77],[35,-75],[37,-76],[37,-75],[39,-75],[39,-74],[41,-74],[41,-71],[42,-70],[43,-70],[44,-68],[45,-67],[47,-68],[47,-65],[46,-61],[44,-63],[43,-66],[44,-66],[45,-64],[46,-60],[49,-64],[47,-53],[52,-56],[51,-57],[47,-59],[46,-64],[45,-66],[47,-70],[50,-65],[52,-60],[52,-56],[55,-60],[60,-64],[66,-62],[70,-56],[76,-68],[83,-62],[83,-95],[71,-156],[71,-170]],
-  // South America outline (simplified)
-  [[-5,-81],[-5,-79],[-3,-80],[0,-80],[2,-77],[6,-77],[11,-75],[12,-72],[12,-68],[10,-67],[10,-62],[8,-60],[7,-55],[5,-52],[2,-50],[0,-50],[-3,-41],[-7,-35],[-12,-37],[-18,-39],[-23,-41],[-25,-48],[-30,-51],[-33,-53],[-38,-57],[-41,-63],[-46,-67],[-52,-69],[-54,-65],[-55,-67],[-55,-70],[-52,-75],[-46,-76],[-42,-73],[-37,-73],[-33,-72],[-27,-71],[-24,-70],[-19,-70],[-14,-76],[-10,-78],[-5,-81]],
-  // Europe outline (simplified)
-  [[36,-10],[37,-7],[37,-5],[38,-1],[41,0],[43,3],[43,8],[45,10],[44,12],[45,14],[41,14],[40,18],[39,20],[35,25],[36,28],[40,26],[42,28],[41,29],[43,40],[47,40],[50,40],[52,40],[55,38],[57,40],[60,30],[63,25],[66,25],[70,28],[71,25],[70,20],[65,14],[60,5],[55,8],[54,10],[53,7],[51,4],[51,2],[50,-5],[48,-5],[44,-2],[42,-9],[36,-10]],
-  // Africa outline (simplified)
-  [[36,-10],[35,-5],[33,0],[32,10],[31,32],[27,34],[22,37],[12,44],[10,51],[-3,40],[-12,44],[-17,43],[-25,35],[-34,18],[-35,20],[-30,30],[-25,32],[-15,12],[-5,12],[5,0],[5,-5],[10,-15],[15,-17],[20,-17],[28,-13],[33,-8],[36,-10]],
-  // Asia outline (simplified)
-  [[40,26],[42,45],[37,55],[25,57],[23,60],[25,66],[22,70],[18,73],[8,77],[5,80],[8,95],[15,100],[22,106],[28,122],[35,129],[39,122],[45,135],[50,140],[55,137],[60,150],[65,170],[70,180],[75,140],[77,105],[73,80],[68,60],[55,55],[50,50],[45,40],[40,26]],
-  // Australia outline (simplified)
-  [[-12,130],[-10,142],[-15,145],[-20,149],[-25,153],[-30,153],[-35,151],[-38,145],[-39,144],[-38,140],[-35,137],[-32,134],[-32,127],[-25,114],[-22,114],[-20,119],[-15,125],[-12,130]]
-];
-
-// US States outline (more detailed for USA focus)
-const US_OUTLINE = [
-  // Continental US border (simplified but recognizable)
-  [49,-125],[49,-123],[48,-123],[46,-124],[43,-124],[42,-124],[40,-124],[38,-123],[37,-122],[35,-121],[34,-120],[33,-117],[32,-117],[32,-114],[31,-111],[32,-108],[31,-106],[32,-104],[29,-103],[29,-100],[26,-97],[28,-97],[29,-94],[30,-93],[30,-90],[29,-89],[30,-88],[31,-85],[30,-84],[32,-81],[33,-79],[35,-76],[37,-76],[38,-75],[39,-75],[40,-74],[41,-73],[42,-71],[42,-70],[43,-70],[45,-67],[47,-68],[47,-70],[45,-70],[44,-69],[45,-67],[47,-69],[49,-68],[49,-67],[47,-65],[46,-64],[45,-64],[44,-66],[43,-70],[45,-71],[49,-65]
-];
-
-// US State centroids
-const STATE_COORDS = {
-  'AL':[32.8,-86.8],'AK':[61.4,-152.4],'AZ':[33.7,-111.4],'AR':[35,-92.4],'CA':[36.1,-119.7],
-  'CO':[39.1,-105.3],'CT':[41.6,-72.8],'DE':[39.3,-75.5],'FL':[27.8,-81.7],'GA':[33,-83.6],
-  'HI':[21.1,-157.5],'ID':[44.2,-114.5],'IL':[40.3,-89],'IN':[39.8,-86.3],'IA':[42,-93.2],
-  'KS':[38.5,-96.7],'KY':[37.7,-84.7],'LA':[31.2,-91.9],'ME':[44.7,-69.4],'MD':[39.1,-76.8],
-  'MA':[42.2,-71.5],'MI':[43.3,-84.5],'MN':[45.7,-93.9],'MS':[32.7,-89.7],'MO':[38.5,-92.3],
-  'MT':[46.9,-110.5],'NE':[41.1,-98.3],'NV':[38.3,-117.1],'NH':[43.5,-71.6],'NJ':[40.3,-74.5],
-  'NM':[34.8,-106.2],'NY':[42.2,-75],'NC':[35.6,-79.8],'ND':[47.5,-99.8],'OH':[40.4,-82.8],
-  'OK':[35.6,-96.9],'OR':[44.6,-122.1],'PA':[40.6,-77.2],'RI':[41.7,-71.5],'SC':[33.9,-80.9],
-  'SD':[44.3,-99.4],'TN':[35.7,-86.7],'TX':[31.1,-97.6],'UT':[40.2,-111.9],'VT':[44,-72.7],
-  'VA':[37.8,-78.2],'WA':[47.4,-121.5],'WV':[38.5,-81],'WI':[44.3,-89.6],'WY':[42.8,-107.3],
-  'DC':[38.9,-77],'PR':[18.2,-66.6]
+const VENDOR_RGB = { 
+  'CEI': [0.35, 0.89, 1], 
+  'Wachter': [0.61, 0.49, 1], 
+  'Techwise': [1, 0.37, 0.82], 
+  'Everon': [0.27, 0.9, 0.65], 
+  'SAS': [1, 0.78, 0.34] 
 };
+const STATUS_HEX = { 'Complete': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#FF6B81' };
+const STATUS_RGB = { 'Complete': [0.27, 0.9, 0.65], 'Pending': [1, 0.78, 0.34], 'No Survey': [1, 0.42, 0.51] };
 
-// === STATE ===
-let canvas, ctx, width, height;
-let rotation = { x: 0.4, y: -1.8 }; // Start focused on US
-let targetRotation = { ...rotation };
-let zoom = 1.0;
-let targetZoom = 1.0;
-let isDragging = false, lastMouse = { x: 0, y: 0 };
+// State
 let activeMode = 'scout', activeFilter = null;
 let scoutData = null, surveyData = null;
-let markers = [];
-let hoveredMarker = null;
+let globe = null;
+let phi = 0;
 
 // === INIT ===
 async function init() {
-  canvas = document.getElementById('globeCanvas');
-  ctx = canvas.getContext('2d');
-  resize();
-  window.addEventListener('resize', resize);
-  
-  // Mouse events
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', onMouseUp);
-  canvas.addEventListener('mouseleave', onMouseUp);
-  canvas.addEventListener('wheel', onWheel, { passive: false });
-  
-  // Zoom buttons
-  document.getElementById('zoomIn').onclick = () => { targetZoom = Math.min(3, targetZoom + 0.25); };
-  document.getElementById('zoomOut').onclick = () => { targetZoom = Math.max(0.5, targetZoom - 0.25); };
+  await loadData();
+  createGlobeViz();
+  updateUI();
   
   // Mode toggle
   document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -187,25 +123,9 @@ async function init() {
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       updateUI();
-      buildMarkers();
+      updateGlobeMarkers();
     };
   });
-  
-  await loadData();
-  buildMarkers();
-  updateUI();
-  animate();
-}
-
-function resize() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  width = rect.width;
-  height = rect.height;
-  canvas.width = width * devicePixelRatio;
-  canvas.height = height * devicePixelRatio;
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  ctx.scale(devicePixelRatio, devicePixelRatio);
 }
 
 async function loadData() {
@@ -219,279 +139,111 @@ async function loadData() {
   } catch (e) { console.error('Load error:', e); }
 }
 
-// === MARKERS ===
-function buildMarkers() {
-  markers = [];
+function getMarkers() {
+  const markers = [];
   
   if (activeMode === 'scout' && scoutData?.markers) {
     scoutData.markers.forEach(m => {
       if (!m.location || m.location.length < 2) return;
+      if (activeFilter && m.vendor !== activeFilter) return;
+      const rgb = VENDOR_RGB[m.vendor] || [1, 1, 1];
       markers.push({
-        lat: m.location[0] * Math.PI / 180,
-        lon: m.location[1] * Math.PI / 180,
-        size: Math.min(14, 5 + Math.sqrt(m.count) * 1.8),
-        color: m.color || VENDOR_HEX[m.vendor] || '#ffffff',
-        vendor: m.vendor,
-        state: m.state,
-        count: m.count,
-        label: `${m.state}: ${m.vendor}`
+        location: [m.location[0], m.location[1]],
+        size: Math.min(0.12, 0.03 + Math.sqrt(m.count) * 0.012),
+        color: rgb
       });
     });
   } else if (activeMode === 'survey' && surveyData?.summary?.vendor_breakdown) {
     const vb = surveyData.summary.vendor_breakdown;
+    // Create markers for each vendor based on their totals
+    const STATE_COORDS = {
+      'TX': [31.1, -97.6], 'CA': [36.1, -119.7], 'FL': [27.8, -81.7], 
+      'NY': [42.2, -75], 'PA': [40.6, -77.2], 'OH': [40.4, -82.8],
+      'IL': [40.3, -89], 'GA': [33, -83.6], 'NC': [35.6, -79.8],
+      'MI': [43.3, -84.5], 'NJ': [40.3, -74.5], 'VA': [37.8, -78.2]
+    };
     Object.entries(vb).forEach(([vendor, data]) => {
       if (vendor === 'unassigned' || !data.total) return;
-      const states = Object.keys(STATE_COORDS).slice(0, Math.min(12, Math.ceil(data.total / 15)));
-      states.forEach((state, i) => {
+      if (activeFilter && vendor !== activeFilter) return;
+      const states = Object.keys(STATE_COORDS).slice(0, Math.min(6, Math.ceil(data.total / 30)));
+      states.forEach(state => {
         const coords = STATE_COORDS[state];
-        if (!coords) return;
-        const count = Math.floor(data.total / states.length);
-        const complete = Math.floor(data.complete / states.length);
+        const isComplete = data.complete > 0;
+        const rgb = isComplete ? STATUS_RGB['Complete'] : STATUS_RGB['Pending'];
         markers.push({
-          lat: coords[0] * Math.PI / 180,
-          lon: coords[1] * Math.PI / 180,
-          size: Math.min(12, 5 + Math.sqrt(count) * 0.9),
-          color: complete > 0 ? STATUS_HEX['Complete'] : STATUS_HEX['Pending'],
-          vendor, state, count, complete,
-          label: `${vendor}: ${complete}/${count}`
+          location: coords,
+          size: 0.05 + Math.sqrt(data.total / states.length) * 0.008,
+          color: rgb
         });
       });
     });
   }
+  
+  return markers;
 }
 
-// === 3D PROJECTION ===
-function project(lat, lon, radius) {
-  const cosY = Math.cos(rotation.y), sinY = Math.sin(rotation.y);
-  const cosX = Math.cos(rotation.x), sinX = Math.sin(rotation.x);
+function createGlobeViz() {
+  const canvas = document.getElementById('globeCanvas');
+  const section = canvas.parentElement;
+  const size = Math.min(section.clientWidth, section.clientHeight) - 40;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
   
-  let x = Math.cos(lat) * Math.sin(lon);
-  let y = Math.sin(lat);
-  let z = Math.cos(lat) * Math.cos(lon);
+  let pointerInteracting = null;
+  let pointerInteractionMovement = 0;
   
-  let x1 = x * cosY - z * sinY;
-  let z1 = x * sinY + z * cosY;
-  let y2 = y * cosX - z1 * sinX;
-  let z2 = y * sinX + z1 * cosX;
-  
-  const scale = 1 / (1 + z2 * 0.3);
-  return {
-    x: width / 2 + x1 * radius * scale,
-    y: height / 2 - y2 * radius * scale,
-    z: z2,
-    scale
-  };
-}
-
-// === DRAWING ===
-function draw() {
-  ctx.clearRect(0, 0, width, height);
-  
-  const baseRadius = Math.min(width, height) * 0.36;
-  const radius = baseRadius * zoom;
-  const cx = width / 2, cy = height / 2;
-  
-  // Update zoom display
-  document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
-  
-  // Globe glow
-  const glow = ctx.createRadialGradient(cx - radius * 0.25, cy - radius * 0.25, 0, cx, cy, radius * 1.4);
-  glow.addColorStop(0, 'rgba(90, 228, 255, 0.12)');
-  glow.addColorStop(0.6, 'rgba(90, 228, 255, 0.04)');
-  glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius * 1.4, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Globe body - ocean
-  const ocean = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, 0, cx, cy, radius);
-  ocean.addColorStop(0, '#1a3050');
-  ocean.addColorStop(0.6, '#0d1f35');
-  ocean.addColorStop(1, '#081525');
-  ctx.fillStyle = ocean;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Globe edge
-  ctx.strokeStyle = 'rgba(90, 228, 255, 0.25)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Draw latitude lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-  ctx.lineWidth = 0.5;
-  for (let lat = -60; lat <= 60; lat += 30) {
-    ctx.beginPath();
-    let started = false;
-    for (let lon = 0; lon <= 360; lon += 3) {
-      const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-      if (p.z < -0.1) { started = false; continue; }
-      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  }
-  
-  // Draw longitude lines
-  for (let lon = 0; lon < 360; lon += 30) {
-    ctx.beginPath();
-    let started = false;
-    for (let lat = -90; lat <= 90; lat += 3) {
-      const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-      if (p.z < -0.1) { started = false; continue; }
-      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  }
-  
-  // Draw country outlines
-  ctx.strokeStyle = 'rgba(90, 228, 255, 0.35)';
-  ctx.lineWidth = 1.2;
-  COUNTRY_PATHS.forEach(path => {
-    ctx.beginPath();
-    let started = false;
-    path.forEach(([lat, lon]) => {
-      const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-      if (p.z < -0.15) { started = false; return; }
-      if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-      else ctx.lineTo(p.x, p.y);
-    });
-    ctx.stroke();
-  });
-  
-  // Draw US outline (highlighted)
-  ctx.strokeStyle = 'rgba(155, 124, 255, 0.6)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  let started = false;
-  US_OUTLINE.forEach(([lat, lon]) => {
-    const p = project(lat * Math.PI / 180, lon * Math.PI / 180, radius);
-    if (p.z < -0.15) { started = false; return; }
-    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-    else ctx.lineTo(p.x, p.y);
-  });
-  ctx.stroke();
-  
-  // Fill US with subtle color
-  ctx.fillStyle = 'rgba(155, 124, 255, 0.08)';
-  ctx.fill();
-  
-  // Sort markers by z (back to front)
-  const sortedMarkers = markers
-    .map(m => ({ ...m, proj: project(m.lat, m.lon, radius) }))
-    .filter(m => m.proj.z > -0.15)
-    .sort((a, b) => a.proj.z - b.proj.z);
-  
-  // Draw markers
-  hoveredMarker = null;
-  sortedMarkers.forEach(m => {
-    const { x, y, z, scale } = m.proj;
-    const size = m.size * scale * zoom * (0.5 + z * 0.5);
-    const alpha = Math.max(0.4, 0.5 + z * 0.5);
-    
-    if (activeFilter && m.vendor !== activeFilter) {
-      ctx.globalAlpha = 0.12;
-    } else {
-      ctx.globalAlpha = alpha;
-    }
-    
-    // Outer glow
-    const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 4);
-    glowGrad.addColorStop(0, m.color + '50');
-    glowGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(x, y, size * 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Inner marker
-    ctx.fillStyle = m.color;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // White center dot
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.beginPath();
-    ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Hover detection
-    const dx = lastMouse.x - x, dy = lastMouse.y - y;
-    if (Math.sqrt(dx*dx + dy*dy) < size + 8) {
-      hoveredMarker = m;
+  globe = createGlobe(canvas, {
+    devicePixelRatio: 2,
+    width: size * 2,
+    height: size * 2,
+    phi: 0,
+    theta: 0.3,
+    dark: 1,
+    diffuse: 1.2,
+    mapSamples: 16000,
+    mapBrightness: 6,
+    baseColor: [0.3, 0.3, 0.3],
+    markerColor: [0.35, 0.89, 1],
+    glowColor: [0.2, 0.5, 0.8],
+    markers: getMarkers(),
+    onRender: (state) => {
+      if (!pointerInteracting) {
+        phi += 0.003;
+      }
+      state.phi = phi;
     }
   });
   
-  ctx.globalAlpha = 1;
-  updateTooltip();
-}
-
-function updateTooltip() {
-  const tooltip = document.getElementById('tooltip');
-  if (hoveredMarker && !isDragging) {
-    tooltip.classList.add('visible');
-    tooltip.style.left = (lastMouse.x + 18) + 'px';
-    tooltip.style.top = (lastMouse.y + 18) + 'px';
-    
-    if (activeMode === 'scout') {
-      tooltip.innerHTML = `
-        <div class="tooltip-title">${hoveredMarker.state}</div>
-        <div class="tooltip-row"><span><span class="tooltip-dot" style="background:${hoveredMarker.color}"></span>${hoveredMarker.vendor}</span><span style="font-weight:700">${hoveredMarker.count}</span></div>`;
-    } else {
-      tooltip.innerHTML = `
-        <div class="tooltip-title">${hoveredMarker.vendor}</div>
-        <div class="tooltip-row"><span>Complete</span><span style="font-weight:700;color:var(--green)">${hoveredMarker.complete || 0}</span></div>
-        <div class="tooltip-row"><span>Total</span><span style="font-weight:700">${hoveredMarker.count}</span></div>`;
+  canvas.addEventListener('pointerdown', (e) => {
+    pointerInteracting = e.clientX - pointerInteractionMovement;
+    canvas.style.cursor = 'grabbing';
+  });
+  
+  canvas.addEventListener('pointerup', () => {
+    pointerInteracting = null;
+    canvas.style.cursor = 'grab';
+  });
+  
+  canvas.addEventListener('pointerout', () => {
+    pointerInteracting = null;
+    canvas.style.cursor = 'grab';
+  });
+  
+  canvas.addEventListener('pointermove', (e) => {
+    if (pointerInteracting !== null) {
+      const delta = e.clientX - pointerInteracting;
+      pointerInteractionMovement = delta;
+      phi = delta / 200;
     }
-  } else {
-    tooltip.classList.remove('visible');
+  });
+}
+
+function updateGlobeMarkers() {
+  if (globe) {
+    globe.update({ markers: getMarkers() });
   }
-}
-
-// === ANIMATION ===
-function animate() {
-  if (!isDragging) rotation.y += 0.0015;
-  
-  rotation.x += (targetRotation.x - rotation.x) * 0.08;
-  rotation.y += (targetRotation.y - rotation.y) * 0.08;
-  zoom += (targetZoom - zoom) * 0.1;
-  
-  draw();
-  requestAnimationFrame(animate);
-}
-
-// === MOUSE EVENTS ===
-function onMouseDown(e) {
-  isDragging = true;
-  lastMouse = { x: e.offsetX, y: e.offsetY };
-  canvas.style.cursor = 'grabbing';
-}
-
-function onMouseMove(e) {
-  const x = e.offsetX, y = e.offsetY;
-  
-  if (isDragging) {
-    const dx = x - lastMouse.x, dy = y - lastMouse.y;
-    targetRotation.y += dx * 0.005;
-    targetRotation.x = Math.max(-1.2, Math.min(1.2, targetRotation.x + dy * 0.005));
-  }
-  
-  lastMouse = { x, y };
-}
-
-function onMouseUp() {
-  isDragging = false;
-  canvas.style.cursor = 'grab';
-}
-
-function onWheel(e) {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.1 : 0.1;
-  targetZoom = Math.max(0.5, Math.min(3, targetZoom + delta));
 }
 
 // === UI ===
@@ -573,7 +325,7 @@ function bindVendorClicks() {
       const vendor = el.dataset.vendor;
       activeFilter = activeFilter === vendor ? null : vendor;
       updateUI();
-      buildMarkers();
+      updateGlobeMarkers();
     };
   });
 }

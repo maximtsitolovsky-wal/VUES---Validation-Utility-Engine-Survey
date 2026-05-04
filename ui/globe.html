@@ -18,6 +18,11 @@
     
     .globe-section { position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 50%, rgba(90,228,255,0.06) 0%, transparent 60%); }
     
+    .zoom-controls { position: absolute; bottom: 24px; left: 24px; display: flex; flex-direction: column; gap: 6px; }
+    .zoom-btn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); color: var(--text); font-size: 22px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .zoom-btn:hover { background: rgba(90,228,255,0.2); border-color: var(--cyan); }
+    .zoom-level { text-align: center; font-size: 12px; color: var(--text-soft); padding: 6px 0; font-weight: 600; }
+    
     #globeCanvas { cursor: grab; max-width: 100%; max-height: 100%; }
     #globeCanvas:active { cursor: grabbing; }
     
@@ -62,6 +67,11 @@
   <div class="container">
     <div class="globe-section">
       <canvas id="globeCanvas"></canvas>
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" id="zoomOut">−</button>
+      </div>
       <div class="globe-overlay">
         <a href="routing.html" class="back-link">← Back to Routing</a>
       </div>
@@ -109,6 +119,8 @@ let activeMode = 'scout', activeFilter = null;
 let scoutData = null, surveyData = null;
 let globe = null;
 let phi = 0;
+let scale = 1;
+let targetScale = 1;
 
 async function init() {
   await loadData();
@@ -137,6 +149,48 @@ async function loadData() {
     if (scoutRes.ok) scoutData = await scoutRes.json();
     if (surveyRes.ok) surveyData = await surveyRes.json();
   } catch (e) { console.error('Load error:', e); }
+  
+  // Fallback data if fetch fails
+  if (!scoutData) {
+    scoutData = {
+      vendor_totals: { 'CEI': 342, 'Wachter': 176, 'Everon': 154, 'Techwise': 78, 'SAS': 8 },
+      state_totals: { 'TX': { 'CEI': 69 }, 'FL': { 'CEI': 52 }, 'CA': { 'CEI': 21, 'Everon': 18 }, 'PA': { 'Wachter': 38 }, 'NC': { 'Techwise': 33 }, 'OH': { 'Wachter': 31 }, 'NY': { 'Wachter': 24 }, 'GA': { 'CEI': 23 }, 'IL': { 'Everon': 22, 'CEI': 7 }, 'AR': { 'CEI': 21 } },
+      markers: [
+        { location: [31.1, -97.6], vendor: 'CEI', state: 'TX', count: 69 },
+        { location: [27.8, -81.7], vendor: 'CEI', state: 'FL', count: 52 },
+        { location: [36.1, -119.7], vendor: 'Everon', state: 'CA', count: 18 },
+        { location: [40.6, -77.2], vendor: 'Wachter', state: 'PA', count: 38 },
+        { location: [35.6, -79.8], vendor: 'Techwise', state: 'NC', count: 33 },
+        { location: [40.4, -82.8], vendor: 'Wachter', state: 'OH', count: 31 },
+        { location: [42.2, -75], vendor: 'Wachter', state: 'NY', count: 24 },
+        { location: [33, -83.6], vendor: 'CEI', state: 'GA', count: 23 },
+        { location: [40.3, -89], vendor: 'Everon', state: 'IL', count: 22 },
+        { location: [35, -92.4], vendor: 'CEI', state: 'AR', count: 21 },
+        { location: [38.5, -96.7], vendor: 'CEI', state: 'KS', count: 19 },
+        { location: [33.7, -111.4], vendor: 'CEI', state: 'AZ', count: 18 },
+        { location: [37.8, -78.2], vendor: 'Techwise', state: 'VA', count: 17 },
+        { location: [38.5, -92.3], vendor: 'CEI', state: 'MO', count: 15 },
+        { location: [31.2, -91.9], vendor: 'CEI', state: 'LA', count: 15 },
+        { location: [33.9, -80.9], vendor: 'Techwise', state: 'SC', count: 14 },
+        { location: [41.1, -98.3], vendor: 'Everon', state: 'NE', count: 13 },
+        { location: [39.1, -76.8], vendor: 'Techwise', state: 'MD', count: 13 },
+        { location: [44.3, -89.6], vendor: 'Everon', state: 'WI', count: 11 },
+        { location: [47.4, -121.5], vendor: 'Everon', state: 'WA', count: 11 }
+      ]
+    };
+  }
+  if (!surveyData) {
+    surveyData = {
+      summary: {
+        total_sites: 768, surveys_required: 529, surveys_complete: 63,
+        vendor_breakdown: {
+          'CEI': { total: 425, survey_required: 409, complete: 20 },
+          'Wachter': { total: 188, survey_required: 142, complete: 18 },
+          'Everon': { total: 150, survey_required: 86, complete: 10 }
+        }
+      }
+    };
+  }
 }
 
 function getMarkers() {
@@ -146,10 +200,11 @@ function getMarkers() {
     scoutData.markers.forEach(m => {
       if (!m.location || m.location.length < 2) return;
       if (activeFilter && m.vendor !== activeFilter) return;
+      const rgb = VENDOR_RGB[m.vendor] || [1, 1, 1];
       markers.push({
         location: [m.location[0], m.location[1]],
-        size: Math.min(0.1, 0.025 + Math.sqrt(m.count) * 0.01),
-        color: VENDOR_RGB[m.vendor] || [1, 1, 1]
+        size: Math.min(0.12, 0.03 + Math.sqrt(m.count) * 0.012),
+        color: rgb  // Each marker gets its vendor color
       });
     });
   } else if (activeMode === 'survey' && surveyData?.summary?.vendor_breakdown) {
@@ -192,18 +247,24 @@ function createGlobeViz() {
     width: size * 2,
     height: size * 2,
     phi: 0,
-    theta: 0.3,
+    theta: 0.25,
     dark: 1,
-    diffuse: 1.2,
-    mapSamples: 16000,
-    mapBrightness: 6,
-    baseColor: [0.3, 0.3, 0.3],
+    diffuse: 3,
+    mapSamples: 40000,
+    mapBrightness: 12,
+    mapBaseBrightness: 0.1,
+    baseColor: [0.4, 0.6, 1],
     markerColor: [0.35, 0.89, 1],
-    glowColor: [0.15, 0.4, 0.6],
+    glowColor: [0.1, 0.3, 0.5],
+    scale: scale,
     markers: getMarkers(),
     onRender: (state) => {
-      if (!pointerInteracting) phi += 0.003;
+      if (!pointerInteracting) phi += 0.004;
       state.phi = phi;
+      // Smooth zoom
+      scale += (targetScale - scale) * 0.1;
+      state.scale = scale;
+      document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
     }
   });
   
@@ -218,6 +279,14 @@ function createGlobeViz() {
       pointerInteractionMovement = e.clientX - pointerInteracting;
       phi = pointerInteractionMovement / 200;
     }
+  };
+  
+  // Zoom controls
+  document.getElementById('zoomIn').onclick = () => { targetScale = Math.min(3, targetScale + 0.25); };
+  document.getElementById('zoomOut').onclick = () => { targetScale = Math.max(0.5, targetScale - 0.25); };
+  canvas.onwheel = (e) => {
+    e.preventDefault();
+    targetScale = Math.max(0.5, Math.min(3, targetScale + (e.deltaY > 0 ? -0.15 : 0.15)));
   };
 }
 

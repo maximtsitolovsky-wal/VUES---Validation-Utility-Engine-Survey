@@ -14,7 +14,7 @@ if sys.platform == 'win32':
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from siteowlqa.survey_routing import refresh_survey_routing, build_survey_routing_data, DEFAULT_WORKBOOK_PATH
+from siteowlqa.survey_routing import refresh_survey_routing, DEFAULT_WORKBOOK_PATH
 from siteowlqa.config import load_config
 
 def main():
@@ -34,16 +34,18 @@ def main():
     
     print("\nFetching data from Airtable and Excel...")
     
-    # Build the data directly (ensures we use the fresh code)
-    data = build_survey_routing_data(
+    # Use refresh_survey_routing which now also syncs to Airtable
+    refresh_survey_routing(
         token=config.scout_airtable_token or config.airtable_token,
-        workbook_path=workbook_path
+        output_dir=output_dir,
+        workbook_path=workbook_path,
+        sync_to_airtable=True
     )
     
-    # Write to JSON
+    # Load the generated data for summary display
     output_file = output_dir / 'survey_routing_data.json'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2)
+    with open(output_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
     
     print(f"\nWrote {output_file}")
     

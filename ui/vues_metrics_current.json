@@ -1,0 +1,172 @@
+{
+  "survey": {
+    "total_records": 70,
+    "by_status": {
+      "FAIL": 48,
+      "PASS": 22
+    },
+    "by_vendor": {
+      "Walmart (Internal)": {
+        "total": 70,
+        "pass": 22,
+        "fail": 48,
+        "error": 0,
+        "pending": 0
+      }
+    },
+    "by_week": {
+      "2026-W11": 11,
+      "2026-W10": 15,
+      "2026-W12": 24,
+      "2026-W16": 12,
+      "2026-W14": 3,
+      "2026-W13": 3,
+      "2026-W09": 1,
+      "2026-W15": 1
+    },
+    "by_day": {
+      "2026-03-17": 10,
+      "2026-03-12": 7,
+      "2026-03-16": 1,
+      "2026-03-26": 11,
+      "2026-04-23": 4,
+      "2026-04-08": 1,
+      "2026-04-24": 8,
+      "2026-03-11": 6,
+      "2026-03-27": 6,
+      "2026-03-30": 3,
+      "2026-03-25": 7,
+      "2026-03-13": 2,
+      "2026-03-02": 1,
+      "2026-04-07": 2,
+      "2026-04-14": 1
+    },
+    "recent_7_days": 0,
+    "recent_30_days": 16,
+    "unique_sites": 20,
+    "unique_surveyors": 6,
+    "pass_rate": 31.4,
+    "fail_rate": 68.6,
+    "error_rate": 0.0,
+    "pending_rate": 0.0,
+    "avg_score": 61.1,
+    "min_score": 0.0,
+    "max_score": 100.0,
+    "perfect_scores": 11,
+    "avg_weekly_submissions": 8.8,
+    "peak_week": [
+      "2026-W12",
+      24
+    ]
+  },
+  "scout": {
+    "total_records": 579,
+    "by_status": {
+      "PENDING": 579
+    },
+    "by_vendor": {
+      "Everon": {
+        "total": 80,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 80
+      },
+      "Customelectronics": {
+        "total": 345,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 345
+      },
+      "Wachter": {
+        "total": 69,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 69
+      },
+      "Techwiseis": {
+        "total": 73,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 73
+      },
+      "Gmail": {
+        "total": 2,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 2
+      },
+      "Techwisis": {
+        "total": 1,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 1
+      },
+      "Safeandsoundsecurity": {
+        "total": 9,
+        "pass": 0,
+        "fail": 0,
+        "error": 0,
+        "pending": 9
+      }
+    },
+    "by_week": {
+      "2026-W17": 218,
+      "2026-W15": 270,
+      "2026-W14": 32,
+      "2026-W16": 59
+    },
+    "by_day": {
+      "2026-04-29": 56,
+      "2026-04-28": 94,
+      "2026-04-17": 62,
+      "2026-04-30": 39,
+      "2026-04-16": 75,
+      "2026-04-27": 14,
+      "2026-05-01": 15,
+      "2026-04-14": 47,
+      "2026-04-15": 66,
+      "2026-04-07": 7,
+      "2026-04-22": 10,
+      "2026-04-25": 13,
+      "2026-04-23": 16,
+      "2026-04-10": 17,
+      "2026-04-21": 5,
+      "2026-04-24": 12,
+      "2026-04-20": 3,
+      "2026-04-13": 20,
+      "2026-04-08": 6,
+      "2026-04-09": 2
+    },
+    "recent_7_days": 242,
+    "recent_30_days": 579,
+    "unique_sites": 568,
+    "unique_surveyors": 25,
+    "pass_rate": 0.0,
+    "fail_rate": 0.0,
+    "error_rate": 0.0,
+    "pending_rate": 100.0,
+    "avg_score": 0,
+    "min_score": 0,
+    "max_score": 0,
+    "perfect_scores": 0,
+    "avg_weekly_submissions": 144.8,
+    "peak_week": [
+      "2026-W15",
+      270
+    ]
+  },
+  "generated_at": "2026-05-01T12:38:53.079318",
+  "executive_summary": {
+    "total_submissions": 649,
+    "survey_submissions": 70,
+    "scout_submissions": 579,
+    "overall_pass_rate": 3.4,
+    "unique_sites": 588
+  }
+}

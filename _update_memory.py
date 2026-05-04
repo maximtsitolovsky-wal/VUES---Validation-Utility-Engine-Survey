@@ -37,4 +37,10 @@ with open("MEMORY.md", "w", encoding="utf-8") as f:
     f.write(new_entry)
     f.write(original)
 
-print("✅ MEMORY.md updated with new issue entry at top")
+print("[OK] MEMORY.md updated with new issue entry at top")
+print("Generated artifacts:")
+print("  - CEI_Survey_Report.xlsx")
+print("  - scripts/generate_cei_survey_report.py")
+print("")
+print("Issue details written to MEMORY.md")
+print("Status: OPEN - awaiting decision on Techwise/SAS survey scope")

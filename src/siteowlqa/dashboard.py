@@ -32,6 +32,11 @@ _UI_PAGES = [
     "summary.html",
     "orchestration_map.html",
     "howitworks.html",
+    "globe.html",
+]
+_UI_DATA_FILES = [
+    "vendor_locations.json",
+    "chart.min.js",
 ]
 _UI_ASSETS_DIR = "ui/assets"
 _OUTPUT_ASSETS_DIR = "assets"
@@ -40,6 +45,7 @@ _OUTPUT_ASSETS_DIR = "assets"
 def refresh_dashboards(output_dir: Path) -> None:
     """Copy UI pages from ui/ to output/ for serving."""
     _copy_ui_pages(output_dir)
+    _copy_ui_data_files(output_dir)
     _copy_assets(output_dir)
 
 
@@ -58,6 +64,21 @@ def _copy_ui_pages(output_dir: Path) -> None:
         log.debug("Copied %s to %s", page, dst)
     
     log.info("UI pages refreshed in %s", output_dir)
+
+
+def _copy_ui_data_files(output_dir: Path) -> None:
+    """Copy UI data files (JSON, JS) to output directory."""
+    root = Path(__file__).resolve().parents[2]
+    ui_dir = root / _UI_DIR
+    
+    for data_file in _UI_DATA_FILES:
+        src = ui_dir / data_file
+        if not src.exists():
+            log.debug("UI data file not found: %s", src)
+            continue
+        dst = output_dir / data_file
+        shutil.copy2(src, dst)
+        log.debug("Copied %s to %s", data_file, dst)
 
 
 def _copy_assets(output_dir: Path) -> None:

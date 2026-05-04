@@ -115,11 +115,11 @@ def analyze_status_field(records: list[dict[str, Any]]):
     for variation in awaiting_scout_variations:
         if variation in status_counts:
             found_variation = variation
-            print(f"\n✓ Found status '{variation}': {status_counts[variation]} records")
+            print(f"\n[FOUND] Status '{variation}': {status_counts[variation]} records")
             break
     
     if not found_variation:
-        print("\n✗ No 'Awaiting Scout' status found in any variation!")
+        print("\n[NOT FOUND] No 'Awaiting Scout' status found in any variation!")
         print("\n   Possible reasons:")
         print("   1. No records currently have this status")
         print("   2. The status might be set differently (check spelling)")

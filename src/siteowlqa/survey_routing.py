@@ -597,18 +597,27 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         schedule_status = "URGENT"
     
     # === STEP 5: Ready to Assign ===
-    # RO-007 FIX: Site needs both a routing decision AND a vendor to be ready
-    if survey_required == "YES" and vendor:
+    # RO-008 FIX: Scout-completed sites are ready_to_assign=YES
+    # The routing decision has been made (we have scout data), so it's ready.
+    # Vendor assignment is a separate workflow concern.
+    # 
+    # Logic:
+    # - Scout submitted + survey NOT required = YES (full upgrade path decided)
+    # - Scout submitted + survey required = YES (we know what survey type is needed)
+    # - Scout NOT submitted = NO (can't make routing decision yet)
+    #
+    # NOTE: We already returned early if scout is None, so reaching here means scout exists.
+    if survey_required in ("YES", "NO"):
+        # Scout submitted, routing decision made - ready to assign
         ready_to_assign = "YES"
-    elif survey_required == "NO":
-        ready_to_assign = "YES"  # No survey needed, so "ready" is N/A but mark YES
     else:
+        # survey_required is PENDING or REVIEW - needs attention
         ready_to_assign = "NO"
     
-    # Handle missing schedule data
+    # Handle missing schedule data - affects schedule_status, NOT ready_to_assign
+    # Sites without schedule data can still be ready if scout is submitted
     if schedule is None:
         schedule_status = "REVIEW"
-        ready_to_assign = "NO"
     
     # === STEP 6: Vendor Instructions ===
     if survey_type == "CCTV":

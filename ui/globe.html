@@ -61,6 +61,23 @@
     
     .pill { padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; }
     .pill-green { background: rgba(69,230,165,0.12); border: 1px solid rgba(69,230,165,0.35); color: #D9FFE8; }
+
+    /* Mode Tabs */
+    .mode-tabs {
+      display: flex; gap: 4px;
+      background: rgba(255,255,255,0.04);
+      padding: 4px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .mode-tab {
+      padding: 10px 20px; border-radius: 10px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--text-soft); background: transparent; border: none;
+    }
+    .mode-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .mode-tab.active.scout { background: rgba(155,124,255,0.2); color: var(--purple); }
+    .mode-tab.active.survey { background: rgba(90,228,255,0.2); color: var(--cyan); }
     
     .btn { 
       padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 700; 
@@ -263,13 +280,16 @@
 
     <header class="header">
       <div class="header-left">
-        <h1>🌍 Global Vendor Coverage</h1>
-        <p>Interactive 3D visualization of scout program distribution</p>
+        <h1 id="pageTitle">🌍 Scout Coverage</h1>
+        <p id="pageSubtitle">Interactive 3D visualization of scout program distribution</p>
       </div>
       <div class="header-right">
+        <div class="mode-tabs">
+          <button class="mode-tab scout active" data-mode="scout">☄ Scout</button>
+          <button class="mode-tab survey" data-mode="survey">✈ Survey</button>
+        </div>
         <span class="pill pill-green" id="statusPill">● Live</span>
-        <button class="btn" id="resetBtn">🔄 Reset View</button>
-        <a href="routing.html" class="btn">📋 Table View</a>
+        <button class="btn" id="resetBtn">🔄 Reset</button>
       </div>
     </header>
 
@@ -284,8 +304,8 @@
     <div class="main-grid">
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">🌐 3D Coverage Globe</span>
-          <span style="color:var(--text-soft);font-size:11px;">Drag to rotate • Markers show vendor locations</span>
+          <span class="panel-title" id="globeTitle">🌐 Scout Distribution</span>
+          <span style="color:var(--text-soft);font-size:11px;">Drag to rotate • Click vendors to filter</span>
         </div>
         <div class="globe-container">
           <div class="loading-state" id="loadingState">
@@ -305,14 +325,14 @@
 
       <div style="display:flex;flex-direction:column;gap:16px;">
         <div class="panel">
-          <div class="panel-header"><span class="panel-title">◈ Vendors</span></div>
+          <div class="panel-header"><span class="panel-title" id="legendTitle">◈ Vendors</span></div>
           <div class="panel-body">
             <div class="vendor-legend" id="vendorLegend"></div>
           </div>
         </div>
         
         <div class="panel">
-          <div class="panel-header"><span class="panel-title">🚀 Velocity Metrics</span></div>
+          <div class="panel-header"><span class="panel-title" id="velocityTitle">🚀 Velocity</span></div>
           <div class="panel-body">
             <div class="velocity-grid" id="velocityGrid"></div>
           </div>
@@ -329,36 +349,48 @@
   </div>
 
 <script>
+// === COLOR SCHEMES ===
 const VENDOR_COLORS = {
-  'CEI': [0.18, 0.84, 1],      // Cyan
-  'Wachter': [0.65, 0.47, 1],  // Purple
-  'Techwise': [1, 0.37, 0.82], // Pink
-  'Everon': [0.27, 0.90, 0.63],// Green
-  'SAS': [1, 0.78, 0.34]       // Amber
+  'CEI': [0.18, 0.84, 1], 'Wachter': [0.65, 0.47, 1], 'Techwise': [1, 0.37, 0.82],
+  'Everon': [0.27, 0.90, 0.63], 'SAS': [1, 0.78, 0.34]
 };
-
 const VENDOR_HEX = {
-  'CEI': '#5AE4FF',
-  'Wachter': '#9B7CFF',
-  'Techwise': '#FF5FD2',
-  'Everon': '#45E6A5',
-  'SAS': '#FFC857'
+  'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Techwise': '#FF5FD2', 'Everon': '#45E6A5', 'SAS': '#FFC857'
+};
+const SURVEY_COLORS = {
+  'Completed': [0.27, 0.90, 0.63], 'Pending': [1, 0.78, 0.34], 'No Survey': [0.5, 0.5, 0.55]
+};
+const SURVEY_HEX = {
+  'Completed': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#888899'
 };
 
+// === STATE ===
 const PROGRAM_WEEK = 3;
 let globe = null;
-let locationData = null;
-let activeVendor = null;
-let phi = 0;
-let theta = 0.3;
-let isDragging = false;
-let dragStart = { x: 0, y: 0 };
-let dragOffset = { phi: 0, theta: 0 };
-let phiOffset = 0;
-let thetaOffset = 0;
+let scoutData = null;
+let surveyData = null;
+let activeMode = 'scout'; // 'scout' or 'survey'
+let activeFilter = null;
+let phi = 0, theta = 0.3;
+let isDragging = false, dragStart = { x: 0, y: 0 };
+let dragOffset = { phi: 0, theta: 0 }, phiOffset = 0, thetaOffset = 0;
 
-// Embedded fallback data for file:// protocol
-const FALLBACK_DATA = {
+// State coordinates for survey markers
+const STATE_COORDS = {
+  'AL':[32.81,-86.79],'AK':[64.07,-152.28],'AZ':[33.73,-111.43],'AR':[34.97,-92.37],'CA':[36.62,-119.38],
+  'CO':[39.06,-105.31],'CT':[41.60,-72.76],'DE':[39.32,-75.51],'FL':[27.77,-81.69],'GA':[33.04,-83.64],
+  'HI':[19.74,-155.84],'ID':[44.24,-114.48],'IL':[40.85,-88.69],'IN':[39.85,-86.26],'IA':[42.01,-93.21],
+  'KS':[38.53,-96.73],'KY':[37.84,-84.27],'LA':[31.17,-91.87],'ME':[44.69,-69.38],'MD':[39.06,-76.80],
+  'MA':[42.23,-71.53],'MI':[43.33,-84.54],'MN':[45.69,-93.90],'MS':[32.74,-89.68],'MO':[38.46,-92.29],
+  'MT':[46.92,-110.45],'NE':[41.13,-98.27],'NV':[38.31,-117.06],'NH':[43.45,-71.56],'NJ':[40.30,-74.52],
+  'NM':[34.84,-106.25],'NY':[42.17,-74.95],'NC':[35.63,-79.81],'ND':[47.53,-99.78],'OH':[40.39,-82.76],
+  'OK':[35.57,-96.93],'OR':[44.57,-122.07],'PA':[40.59,-77.21],'RI':[41.68,-71.51],'SC':[33.86,-80.95],
+  'SD':[44.30,-99.44],'TN':[35.75,-86.69],'TX':[31.05,-97.56],'UT':[40.15,-111.86],'VT':[44.05,-72.71],
+  'VA':[37.77,-78.17],'WA':[47.40,-121.49],'WV':[38.99,-80.65],'WI':[44.27,-89.62],'WY':[42.76,-107.30],'DC':[38.90,-77.04]
+};
+
+// Embedded fallback for Scout data (file:// protocol)
+const SCOUT_FALLBACK = {
   "markers": [
     {"id":"TX-CEI","vendor":"CEI","state":"TX","location":[31.05,-97.56],"count":69},
     {"id":"FL-CEI","vendor":"CEI","state":"FL","location":[27.77,-81.69],"count":52},
@@ -370,147 +402,223 @@ const FALLBACK_DATA = {
     {"id":"IL-Everon","vendor":"Everon","state":"IL","location":[40.85,-88.69],"count":22},
     {"id":"AL-CEI","vendor":"CEI","state":"AL","location":[32.81,-86.79],"count":22},
     {"id":"TN-CEI","vendor":"CEI","state":"TN","location":[35.75,-86.69],"count":22},
-    {"id":"AR-CEI","vendor":"CEI","state":"AR","location":[34.97,-92.37],"count":21},
     {"id":"CA-CEI","vendor":"CEI","state":"CA","location":[36.62,-119.38],"count":21},
     {"id":"IN-Wachter","vendor":"Wachter","state":"IN","location":[39.85,-86.26],"count":20},
     {"id":"NJ-Wachter","vendor":"Wachter","state":"NJ","location":[40.30,-74.52],"count":20},
     {"id":"OK-CEI","vendor":"CEI","state":"OK","location":[35.57,-96.93],"count":20},
-    {"id":"KS-CEI","vendor":"CEI","state":"KS","location":[38.53,-96.73],"count":19},
-    {"id":"CA-Everon","vendor":"Everon","state":"CA","location":[36.12,-119.68],"count":18},
     {"id":"AZ-CEI","vendor":"CEI","state":"AZ","location":[33.73,-111.43],"count":18},
     {"id":"VA-Techwise","vendor":"Techwise","state":"VA","location":[37.77,-78.17],"count":17},
-    {"id":"LA-CEI","vendor":"CEI","state":"LA","location":[31.17,-91.87],"count":15},
     {"id":"MO-CEI","vendor":"CEI","state":"MO","location":[38.46,-92.29],"count":15},
     {"id":"SC-Techwise","vendor":"Techwise","state":"SC","location":[33.86,-80.95],"count":14},
-    {"id":"NE-Everon","vendor":"Everon","state":"NE","location":[41.13,-98.27],"count":13},
     {"id":"MD-Techwise","vendor":"Techwise","state":"MD","location":[39.06,-76.80],"count":13},
-    {"id":"MS-CEI","vendor":"CEI","state":"MS","location":[32.74,-89.68],"count":12},
     {"id":"WA-Everon","vendor":"Everon","state":"WA","location":[47.40,-121.49],"count":11},
     {"id":"WI-Everon","vendor":"Everon","state":"WI","location":[44.27,-89.62],"count":11},
-    {"id":"IA-Everon","vendor":"Everon","state":"IA","location":[42.01,-93.21],"count":11},
     {"id":"CO-Everon","vendor":"Everon","state":"CO","location":[39.06,-105.31],"count":10},
     {"id":"OR-Everon","vendor":"Everon","state":"OR","location":[44.57,-122.07],"count":9},
-    {"id":"MN-Everon","vendor":"Everon","state":"MN","location":[45.69,-93.90],"count":9},
-    {"id":"CT-Wachter","vendor":"Wachter","state":"CT","location":[41.60,-72.76],"count":9},
-    {"id":"WV-SAS","vendor":"SAS","state":"WV","location":[38.99,-80.65],"count":7},
-    {"id":"MA-Wachter","vendor":"Wachter","state":"MA","location":[42.23,-71.53],"count":7},
-    {"id":"IL-CEI","vendor":"CEI","state":"IL","location":[41.35,-88.39],"count":7},
-    {"id":"NV-Everon","vendor":"Everon","state":"NV","location":[38.31,-117.06],"count":7},
-    {"id":"ME-Wachter","vendor":"Wachter","state":"ME","location":[44.69,-69.38],"count":6},
-    {"id":"UT-Everon","vendor":"Everon","state":"UT","location":[40.15,-111.86],"count":6},
-    {"id":"NM-Everon","vendor":"Everon","state":"NM","location":[34.84,-106.25],"count":6},
-    {"id":"MI-Wachter","vendor":"Wachter","state":"MI","location":[43.33,-84.54],"count":5},
-    {"id":"NH-Wachter","vendor":"Wachter","state":"NH","location":[43.45,-71.56],"count":5},
-    {"id":"KY-CEI","vendor":"CEI","state":"KY","location":[38.17,-84.37],"count":5},
-    {"id":"WY-Everon","vendor":"Everon","state":"WY","location":[42.76,-107.30],"count":5},
-    {"id":"SD-Everon","vendor":"Everon","state":"SD","location":[44.30,-99.44],"count":5},
-    {"id":"ID-Everon","vendor":"Everon","state":"ID","location":[44.24,-114.48],"count":4},
-    {"id":"ND-Everon","vendor":"Everon","state":"ND","location":[47.53,-99.78],"count":4},
-    {"id":"DE-Wachter","vendor":"Wachter","state":"DE","location":[39.32,-75.51],"count":3},
-    {"id":"RI-Wachter","vendor":"Wachter","state":"RI","location":[41.68,-71.51],"count":3},
-    {"id":"MT-Everon","vendor":"Everon","state":"MT","location":[46.92,-110.45],"count":2},
-    {"id":"KY-Wachter","vendor":"Wachter","state":"KY","location":[37.67,-84.67],"count":2}
+    {"id":"MN-Everon","vendor":"Everon","state":"MN","location":[45.69,-93.90],"count":9}
   ],
   "vendor_totals": {"CEI":342,"Wachter":176,"Everon":154,"Techwise":78,"SAS":8},
   "state_totals": {
-    "TX":{"CEI":69},"FL":{"CEI":52},"PA":{"Wachter":38},"NC":{"Techwise":33},
-    "OH":{"Wachter":31},"NY":{"Wachter":24},"GA":{"CEI":23},"IL":{"Everon":22,"CEI":7,"Wachter":1},
-    "AL":{"CEI":22},"TN":{"CEI":22},"AR":{"CEI":21},"CA":{"CEI":21,"Everon":18},
-    "IN":{"Wachter":20,"Everon":1},"NJ":{"Wachter":20},"OK":{"CEI":20},"KS":{"CEI":19},
-    "AZ":{"CEI":18},"VA":{"Techwise":17,"SAS":1},"LA":{"CEI":15},"MO":{"CEI":15},
-    "SC":{"Techwise":14},"NE":{"Everon":13},"MD":{"Techwise":13},"MS":{"CEI":12},
-    "WA":{"Everon":11},"WI":{"Everon":11},"IA":{"Everon":11},"CO":{"Everon":10},
-    "OR":{"Everon":9},"MN":{"Everon":9},"CT":{"Wachter":9},"WV":{"SAS":7,"Wachter":1},
-    "MA":{"Wachter":7},"NV":{"Everon":7},"ME":{"Wachter":6},"UT":{"Everon":6},
-    "NM":{"Everon":6,"CEI":1},"MI":{"Wachter":5},"NH":{"Wachter":5},"KY":{"CEI":5,"Wachter":2},
-    "WY":{"Everon":5},"SD":{"Everon":5},"ID":{"Everon":4},"ND":{"Everon":4},
-    "DE":{"Wachter":3},"RI":{"Wachter":3},"MT":{"Everon":2},"VT":{"Wachter":1},"DC":{"Techwise":1}
+    "TX":{"CEI":69},"FL":{"CEI":52},"PA":{"Wachter":38},"NC":{"Techwise":33},"OH":{"Wachter":31},
+    "NY":{"Wachter":24},"GA":{"CEI":23},"IL":{"Everon":22,"CEI":7},"AL":{"CEI":22},"TN":{"CEI":22},
+    "CA":{"CEI":21,"Everon":18},"IN":{"Wachter":20},"NJ":{"Wachter":20},"OK":{"CEI":20},
+    "AZ":{"CEI":18},"VA":{"Techwise":17},"MO":{"CEI":15},"SC":{"Techwise":14},"MD":{"Techwise":13},
+    "WA":{"Everon":11},"WI":{"Everon":11},"CO":{"Everon":10},"OR":{"Everon":9},"MN":{"Everon":9}
   }
 };
 
+// === DATA LOADING ===
 async function loadData() {
+  // Load Scout data
   try {
-    const response = await fetch('vendor_locations.json?t=' + Date.now());
-    if (!response.ok) throw new Error('Fetch failed');
-    locationData = await response.json();
-    console.log('[Globe] Loaded data via fetch');
-  } catch (error) {
-    console.warn('[Globe] Fetch failed, using embedded fallback:', error.message);
-    locationData = FALLBACK_DATA;
+    const res = await fetch('vendor_locations.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Fetch failed');
+    scoutData = await res.json();
+  } catch (e) {
+    console.warn('[Globe] Using scout fallback:', e.message);
+    scoutData = SCOUT_FALLBACK;
   }
+
+  // Load Survey data
+  try {
+    const res = await fetch('survey_routing_data.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Fetch failed');
+    const raw = await res.json();
+    surveyData = processSurveyData(raw);
+  } catch (e) {
+    console.warn('[Globe] Survey data unavailable:', e.message);
+    surveyData = buildFallbackSurveyData();
+  }
+
+  setupModeTabs();
   renderUI();
   initGlobe();
 }
 
+function processSurveyData(raw) {
+  const byState = {};
+  const byVendor = {};
+  const statusCounts = { 'Completed': 0, 'Pending': 0, 'No Survey': 0 };
+
+  raw.surveys.forEach(s => {
+    const state = s.state || 'Unknown';
+    const vendor = s.vendor || 'Unknown';
+    const status = s.survey_status === 'Completed' ? 'Completed' : 
+                   (s.survey_status === 'Not Started' || !s.survey_status) ? 'No Survey' : 'Pending';
+    
+    if (!byState[state]) byState[state] = { 'Completed': 0, 'Pending': 0, 'No Survey': 0, total: 0 };
+    byState[state][status]++;
+    byState[state].total++;
+
+    if (!byVendor[vendor]) byVendor[vendor] = { 'Completed': 0, 'Pending': 0, 'No Survey': 0, total: 0 };
+    byVendor[vendor][status]++;
+    byVendor[vendor].total++;
+
+    statusCounts[status]++;
+  });
+
+  // Build markers
+  const markers = [];
+  Object.entries(byState).forEach(([state, data]) => {
+    const coord = STATE_COORDS[state];
+    if (!coord) return;
+    ['Completed', 'Pending', 'No Survey'].forEach((status, i) => {
+      if (data[status] > 0) {
+        markers.push({
+          id: `${state}-${status}`,
+          status, state,
+          location: [coord[0] + (i - 1) * 0.8, coord[1] + (i - 1) * 0.5],
+          count: data[status]
+        });
+      }
+    });
+  });
+
+  return { markers, byState, byVendor, statusCounts, total: raw.surveys.length };
+}
+
+function buildFallbackSurveyData() {
+  // Fallback if survey data can't load
+  return {
+    markers: [
+      { id: 'TX-Completed', status: 'Completed', state: 'TX', location: [31.05, -97.56], count: 45 },
+      { id: 'TX-Pending', status: 'Pending', state: 'TX', location: [31.85, -97.06], count: 15 },
+      { id: 'FL-Completed', status: 'Completed', state: 'FL', location: [27.77, -81.69], count: 38 },
+      { id: 'CA-Completed', status: 'Completed', state: 'CA', location: [36.62, -119.38], count: 28 },
+      { id: 'PA-Completed', status: 'Completed', state: 'PA', location: [40.59, -77.21], count: 25 }
+    ],
+    byState: { 'TX': { 'Completed': 45, 'Pending': 15, 'No Survey': 9, total: 69 } },
+    byVendor: { 'CEI': { 'Completed': 200, 'Pending': 80, 'No Survey': 62, total: 342 } },
+    statusCounts: { 'Completed': 450, 'Pending': 180, 'No Survey': 128 },
+    total: 758
+  };
+}
+
+// === MODE TABS ===
+function setupModeTabs() {
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.mode;
+      if (mode === activeMode) return;
+      
+      activeMode = mode;
+      activeFilter = null;
+      
+      // Update tab styles
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Update page title
+      if (mode === 'scout') {
+        document.getElementById('pageTitle').innerHTML = '🌍 Scout Coverage';
+        document.getElementById('pageSubtitle').textContent = 'Interactive 3D visualization of scout program distribution';
+        document.getElementById('globeTitle').textContent = '🌐 Scout Distribution';
+        document.getElementById('legendTitle').textContent = '◈ Vendors';
+        document.getElementById('velocityTitle').textContent = '🚀 Velocity';
+      } else {
+        document.getElementById('pageTitle').innerHTML = '📊 Survey Status';
+        document.getElementById('pageSubtitle').textContent = 'Survey completion tracking across all scout locations';
+        document.getElementById('globeTitle').textContent = '🌐 Survey Distribution';
+        document.getElementById('legendTitle').textContent = '◈ Status';
+        document.getElementById('velocityTitle').textContent = '📈 Rates';
+      }
+      
+      renderUI();
+      initGlobe();
+    });
+  });
+}
+
+// === GLOBE ===
 function initGlobe() {
   const canvas = document.getElementById('globe-canvas');
-  if (!canvas || !locationData) return;
+  if (!canvas) return;
 
   const width = canvas.offsetWidth;
   if (width === 0) {
-    // Wait for container to have width
     requestAnimationFrame(initGlobe);
     return;
   }
 
-  // Build markers from vendor locations
-  const markers = locationData.markers
-    .filter(m => !activeVendor || m.vendor === activeVendor)
-    .map(m => ({
-      location: m.location,
-      size: Math.min(0.12, 0.03 + (m.count / 100) * 0.08),
-      color: VENDOR_COLORS[m.vendor] || [0.5, 0.5, 0.5]
-    }));
-
-  // Destroy existing globe
-  if (globe) {
-    globe.destroy();
-    globe = null;
+  // Build markers based on mode
+  let markers = [];
+  if (activeMode === 'scout' && scoutData) {
+    markers = scoutData.markers
+      .filter(m => !activeFilter || m.vendor === activeFilter)
+      .map(m => ({
+        location: m.location,
+        size: Math.min(0.12, 0.03 + (m.count / 100) * 0.08),
+        color: VENDOR_COLORS[m.vendor] || [0.5, 0.5, 0.5]
+      }));
+  } else if (activeMode === 'survey' && surveyData) {
+    markers = surveyData.markers
+      .filter(m => !activeFilter || m.status === activeFilter)
+      .map(m => ({
+        location: m.location,
+        size: Math.min(0.12, 0.025 + (m.count / 80) * 0.08),
+        color: SURVEY_COLORS[m.status] || [0.5, 0.5, 0.5]
+      }));
   }
 
+  if (globe) { globe.destroy(); globe = null; }
+
+  const glowColor = activeMode === 'scout' ? [0.08, 0.12, 0.2] : [0.05, 0.15, 0.12];
+  
   globe = createGlobe(canvas, {
     devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-    width: width * 2,
-    height: width * 2,
-    phi: 0,
-    theta: 0.3,
-    dark: 1,
-    diffuse: 1.2,
-    mapSamples: 16000,
-    mapBrightness: 6,
+    width: width * 2, height: width * 2,
+    phi: 0, theta: 0.3, dark: 1, diffuse: 1.2,
+    mapSamples: 16000, mapBrightness: 6,
     baseColor: [0.3, 0.3, 0.35],
-    markerColor: [0.35, 0.85, 0.5],
-    glowColor: [0.08, 0.12, 0.2],
+    markerColor: activeMode === 'scout' ? [0.35, 0.85, 0.5] : [0.27, 0.9, 0.63],
+    glowColor: glowColor,
     markers: markers,
     onRender: (state) => {
-      if (!isDragging) {
-        phi += 0.003;
-      }
+      if (!isDragging) phi += 0.003;
       state.phi = phi + phiOffset + dragOffset.phi;
       state.theta = theta + thetaOffset + dragOffset.theta;
     }
   });
 
-  // Hide loading, show canvas
   document.getElementById('loadingState').style.display = 'none';
   canvas.classList.add('loaded');
+  setupCanvasEvents(canvas);
+}
 
-  // Pointer events for dragging
-  canvas.addEventListener('pointerdown', (e) => {
+function setupCanvasEvents(canvas) {
+  canvas.onpointerdown = (e) => {
     isDragging = true;
     dragStart = { x: e.clientX, y: e.clientY };
     canvas.style.cursor = 'grabbing';
     canvas.setPointerCapture(e.pointerId);
-  });
-
-  canvas.addEventListener('pointermove', (e) => {
+  };
+  canvas.onpointermove = (e) => {
     if (isDragging) {
       dragOffset.phi = (e.clientX - dragStart.x) / 200;
       dragOffset.theta = (e.clientY - dragStart.y) / 400;
     }
-  });
-
-  canvas.addEventListener('pointerup', (e) => {
+  };
+  canvas.onpointerup = (e) => {
     if (isDragging) {
       phiOffset += dragOffset.phi;
       thetaOffset += dragOffset.theta;
@@ -519,37 +627,34 @@ function initGlobe() {
     isDragging = false;
     canvas.style.cursor = 'grab';
     canvas.releasePointerCapture(e.pointerId);
-  });
-
-  canvas.addEventListener('pointerleave', () => {
-    if (isDragging) {
-      phiOffset += dragOffset.phi;
-      thetaOffset += dragOffset.theta;
-      dragOffset = { phi: 0, theta: 0 };
-    }
-    isDragging = false;
-    canvas.style.cursor = 'grab';
-  });
+  };
 }
 
+// === UI RENDERING ===
 function renderUI() {
-  if (!locationData) return;
+  if (activeMode === 'scout') {
+    renderScoutUI();
+  } else {
+    renderSurveyUI();
+  }
+}
 
-  const vendorTotals = locationData.vendor_totals;
-  const stateTotals = locationData.state_totals;
+function renderScoutUI() {
+  if (!scoutData) return;
+
+  const vendorTotals = scoutData.vendor_totals;
+  const stateTotals = scoutData.state_totals;
   const total = Object.values(vendorTotals).reduce((a, b) => a + b, 0);
   const statesCount = Object.keys(stateTotals).length;
   const vendorCount = Object.keys(vendorTotals).length;
-  const avgPerVendor = Math.round(total / vendorCount);
-  const velocity = (total / PROGRAM_WEEK).toFixed(1);
 
   // Stats row
   document.getElementById('statsRow').innerHTML = `
     <div class="stat-card"><div class="stat-value" style="color:var(--cyan)">${total}</div><div class="stat-label">Total Sites</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--green)">${statesCount}</div><div class="stat-label">States</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--purple)">${vendorCount}</div><div class="stat-label">Vendors</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${avgPerVendor}</div><div class="stat-label">Avg/Vendor</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--pink)">${velocity}</div><div class="stat-label">Sites/Week</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${Math.round(total / vendorCount)}</div><div class="stat-label">Avg/Vendor</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--pink)">${(total / PROGRAM_WEEK).toFixed(0)}</div><div class="stat-label">Sites/Week</div></div>
   `;
 
   // Vendor legend
@@ -558,99 +663,140 @@ function renderUI() {
     .sort((a, b) => b[1] - a[1])
     .map(([vendor, count]) => {
       const pct = Math.round(count / total * 100);
-      const isActive = activeVendor === vendor;
+      const isActive = activeFilter === vendor;
       const color = VENDOR_HEX[vendor] || '#fff';
       return `
-        <div class="vendor-item ${isActive ? 'active' : ''}" data-vendor="${vendor}" style="--vendor-color: ${color}">
+        <div class="vendor-item ${isActive ? 'active' : ''}" data-filter="${vendor}" style="--vendor-color: ${color}">
           <div class="vendor-dot"></div>
-          <div class="vendor-info">
-            <div class="vendor-name-label">${vendor}</div>
-            <div class="vendor-sub">${pct}% coverage</div>
-          </div>
+          <div class="vendor-info"><div class="vendor-name-label">${vendor}</div><div class="vendor-sub">${pct}% coverage</div></div>
           <div class="vendor-count">${count}</div>
         </div>
       `;
     }).join('');
-
-  // Vendor click handlers
-  legend.querySelectorAll('.vendor-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const vendor = item.dataset.vendor;
-      activeVendor = activeVendor === vendor ? null : vendor;
-      renderUI();
-      initGlobe(); // Reinit with filtered markers
-    });
-  });
+  bindLegendClicks();
 
   // Velocity grid
-  const vendorVelocities = Object.entries(vendorTotals)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4)
-    .map(([vendor, count]) => ({
-      vendor,
-      velocity: (count / PROGRAM_WEEK).toFixed(1),
-      color: VENDOR_HEX[vendor] || '#fff'
-    }));
+  document.getElementById('velocityGrid').innerHTML = Object.entries(vendorTotals)
+    .sort((a, b) => b[1] - a[1]).slice(0, 4)
+    .map(([vendor, count]) => `
+      <div class="velocity-card">
+        <div class="velocity-value" style="color:${VENDOR_HEX[vendor]}">${(count / PROGRAM_WEEK).toFixed(0)}</div>
+        <div class="velocity-label">${vendor}/wk</div>
+      </div>
+    `).join('');
 
-  document.getElementById('velocityGrid').innerHTML = vendorVelocities.map(v => `
-    <div class="velocity-card">
-      <div class="velocity-value" style="color:${v.color}">${v.velocity}</div>
-      <div class="velocity-label">${v.vendor}/wk</div>
-    </div>
-  `).join('');
-
-  // Region list (top states)
+  // Region list
   const stateEntries = Object.entries(stateTotals)
-    .map(([state, vendors]) => ({
-      state,
-      total: Object.values(vendors).reduce((a, b) => a + b, 0),
-      dominant: Object.entries(vendors).sort((a, b) => b[1] - a[1])[0]
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
-
+    .map(([state, vendors]) => ({ state, total: Object.values(vendors).reduce((a, b) => a + b, 0), dominant: Object.entries(vendors).sort((a, b) => b[1] - a[1])[0] }))
+    .sort((a, b) => b.total - a.total).slice(0, 10);
   const maxState = stateEntries[0]?.total || 1;
 
   document.getElementById('regionList').innerHTML = stateEntries.map(({ state, total, dominant }) => {
     const color = VENDOR_HEX[dominant[0]] || '#fff';
-    const pct = Math.round((total / maxState) * 100);
     return `
       <div class="region-item">
         <span class="region-name">${state}</span>
-        <div class="region-bar">
-          <div class="region-bar-fill" style="width:${pct}%;background:${color}"></div>
-        </div>
+        <div class="region-bar"><div class="region-bar-fill" style="width:${Math.round((total / maxState) * 100)}%;background:${color}"></div></div>
         <span class="region-count" style="color:${color}">${total}</span>
       </div>
     `;
   }).join('');
 }
 
-// Reset button
+function renderSurveyUI() {
+  if (!surveyData) return;
+
+  const { statusCounts, total, byVendor, byState } = surveyData;
+  const completed = statusCounts['Completed'] || 0;
+  const pending = statusCounts['Pending'] || 0;
+  const noSurvey = statusCounts['No Survey'] || 0;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // Stats row
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-value" style="color:var(--cyan)">${total}</div><div class="stat-label">Total Sites</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${completed}</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${pending}</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--text-soft)">${noSurvey}</div><div class="stat-label">No Survey</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${completionRate}%</div><div class="stat-label">Complete Rate</div></div>
+  `;
+
+  // Status legend
+  const legend = document.getElementById('vendorLegend');
+  legend.innerHTML = ['Completed', 'Pending', 'No Survey'].map(status => {
+    const count = statusCounts[status] || 0;
+    const pct = total > 0 ? Math.round(count / total * 100) : 0;
+    const isActive = activeFilter === status;
+    const color = SURVEY_HEX[status];
+    return `
+      <div class="vendor-item ${isActive ? 'active' : ''}" data-filter="${status}" style="--vendor-color: ${color}">
+        <div class="vendor-dot"></div>
+        <div class="vendor-info"><div class="vendor-name-label">${status}</div><div class="vendor-sub">${pct}% of surveys</div></div>
+        <div class="vendor-count">${count}</div>
+      </div>
+    `;
+  }).join('');
+  bindLegendClicks();
+
+  // Velocity grid - show vendor completion rates
+  const vendorRates = Object.entries(byVendor)
+    .map(([vendor, data]) => ({ vendor, rate: data.total > 0 ? Math.round((data['Completed'] / data.total) * 100) : 0, total: data.total }))
+    .sort((a, b) => b.total - a.total).slice(0, 4);
+
+  document.getElementById('velocityGrid').innerHTML = vendorRates.map(v => `
+    <div class="velocity-card">
+      <div class="velocity-value" style="color:${v.rate >= 70 ? 'var(--green)' : v.rate >= 40 ? 'var(--amber)' : 'var(--red)'}">${v.rate}%</div>
+      <div class="velocity-label">${v.vendor}</div>
+    </div>
+  `).join('');
+
+  // Region list - top states by completion
+  const stateEntries = Object.entries(byState)
+    .map(([state, data]) => ({ state, total: data.total, completed: data['Completed'], rate: data.total > 0 ? Math.round((data['Completed'] / data.total) * 100) : 0 }))
+    .sort((a, b) => b.total - a.total).slice(0, 10);
+  const maxState = stateEntries[0]?.total || 1;
+
+  document.getElementById('regionList').innerHTML = stateEntries.map(({ state, total, completed, rate }) => {
+    const color = rate >= 70 ? 'var(--green)' : rate >= 40 ? 'var(--amber)' : 'var(--red)';
+    return `
+      <div class="region-item">
+        <span class="region-name">${state}</span>
+        <div class="region-bar"><div class="region-bar-fill" style="width:${Math.round((total / maxState) * 100)}%;background:${color}"></div></div>
+        <span class="region-count" style="color:${color}">${rate}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function bindLegendClicks() {
+  document.querySelectorAll('.vendor-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const filter = item.dataset.filter;
+      activeFilter = activeFilter === filter ? null : filter;
+      renderUI();
+      initGlobe();
+    });
+  });
+}
+
+// === RESET & RESIZE ===
 document.getElementById('resetBtn').addEventListener('click', () => {
-  phi = 0;
-  theta = 0.3;
-  phiOffset = 0;
-  thetaOffset = 0;
-  activeVendor = null;
+  phi = 0; theta = 0.3;
+  phiOffset = 0; thetaOffset = 0;
+  activeFilter = null;
   renderUI();
   initGlobe();
 });
 
-// Handle resize
 let resizeTimeout;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
-    if (globe) {
-      globe.destroy();
-      globe = null;
-      initGlobe();
-    }
+    if (globe) { globe.destroy(); globe = null; initGlobe(); }
   }, 200);
 });
 
-// Init
+// === INIT ===
 loadData();
 </script>
 </body>

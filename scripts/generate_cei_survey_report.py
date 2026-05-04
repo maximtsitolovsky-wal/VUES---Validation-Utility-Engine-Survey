@@ -68,14 +68,9 @@ def main():
     config = load_config()
     
     # Load assignment tracker
-    assignment_file = Path(os.getenv("VENDOR_ASSIGNMENT_FILE", "Vendor ASSIGN. 4.2.26.xlsx"))
-    if not assignment_file.exists():
-        logger.error(f"Assignment file not found: {assignment_file}")
-        # Try alternative path
-        assignment_file = Path(os.path.expanduser("~/OneDrive - Walmart Inc/Documents/BaselinePrinter")) / "Vendor ASSIGN. 4.2.26.xlsx"
-        if not assignment_file.exists():
-            logger.error(f"Assignment file also not found at: {assignment_file}")
-            return
+    assignment_file = Path(os.path.expanduser(
+        r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\Excel\Vendor ASSIGN. 4.2.26.xlsx"
+    ))
     
     tracker = VendorAssignmentTracker(str(assignment_file))
     tracker.load_assignments()

@@ -5,38 +5,40 @@ with open('output/team_dashboard_data.json') as f:
 
 va = data.get('vendor_assignments', {})
 mesh_data = va.get('mesh', {})
-mesh_rows = mesh_data.get('rows', []) if isinstance(mesh_data, dict) else []
+summary = mesh_data.get('summary', {}) if isinstance(mesh_data, dict) else {}
 
-print(f'Total mesh rows: {len(mesh_rows)}')
+print('=== MESH SUMMARY ===')
+for k, v in sorted(summary.items()):
+    print(f'  {k}: {v}')
 
-# Group by status
-statuses = {}
-for row in mesh_rows:
-    status = row.get('status_key', row.get('status', 'unknown'))
-    statuses[status] = statuses.get(status, 0) + 1
+print('\n=== THE TRUTH ===')
+scout = data.get('scout', {})
 
-print('\nStatus breakdown:')
-for status, count in sorted(statuses.items(), key=lambda x: -x[1]):
-    print(f'  {status}: {count}')
+print(f'''
+EXCEL PERSPECTIVE:
+  Total sites in Excel:     {scout.get('excel_total')}
+  Completed:                {scout.get('completed')}
+  Remaining:                {scout.get('remaining')}
 
-# Check for anything that looks like "loss"
-loss_rows = [r for r in mesh_rows if 'loss' in str(r).lower() or 'unassigned' in str(r).lower()]
-print(f'\nRows with "loss" or "unassigned" in data: {len(loss_rows)}')
+VENDOR ASSIGNMENT PERSPECTIVE:
+  Total assigned:           {va.get('total_assignments')}
+  Completed:                {va.get('total_completed')}
+  Remaining (pending):      {va.get('total_remaining')}
 
-# What about "pending" or "not completed"?
-pending = [r for r in mesh_rows if r.get('status_key') in ['pending', 'assigned_pending', 'not_started']]
-print(f'Pending/not started: {len(pending)}')
+THE GAP:
+  Excel total - Vendor assigned = {scout.get('excel_total', 0) - va.get('total_assignments', 0)} sites NEVER ASSIGNED
 
-# Check the actual remaining calculation
-completed_in_mesh = len([r for r in mesh_rows if 'complete' in str(r.get('status_key', '')).lower()])
-print(f'\nCompleted in mesh: {completed_in_mesh}')
-print(f'Not completed in mesh: {len(mesh_rows) - completed_in_mesh}')
+LOSSES BREAKDOWN:
+  matched_complete:         {summary.get('matched_complete', 0)} (wins)
+  pending_assignment:       {summary.get('pending_assignment', 0)} (still need to do)
+  started_not_complete:     {summary.get('started_not_complete', 0)} (in progress)
+  completed_by_other_vendor:{summary.get('completed_by_other_vendor', 0)} (wrong vendor)
+  unassigned_airtable:      {summary.get('unassigned_airtable', 0)} (not in Excel)
+  losses_total:             {summary.get('losses_total', 0)} (sum of non-wins)
 
-# ALSO check survey routing for "losses" concept
-survey_routing = data.get('survey_routing', {})
-if survey_routing:
-    rows = survey_routing.get('rows', [])
-    print(f'\n=== SURVEY ROUTING ({len(rows)} rows) ===')
-    # Check for loss-related fields
-    if rows:
-        print(f'Sample keys: {list(rows[0].keys())[:10]}')
+WHY THE NUMBERS DON'T MATCH:
+  - "110 remaining" = Excel perspective (765 - 655 = 110)
+  - "103 remaining" = Vendor perspective (758 - 655 = 103)
+  - "103 losses" = pending_assignment + other issues
+  - The 7-site gap = sites in Excel but NEVER assigned to vendors
+''')

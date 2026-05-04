@@ -357,16 +357,89 @@ let dragOffset = { phi: 0, theta: 0 };
 let phiOffset = 0;
 let thetaOffset = 0;
 
+// Embedded fallback data for file:// protocol
+const FALLBACK_DATA = {
+  "markers": [
+    {"id":"TX-CEI","vendor":"CEI","state":"TX","location":[31.05,-97.56],"count":69},
+    {"id":"FL-CEI","vendor":"CEI","state":"FL","location":[27.77,-81.69],"count":52},
+    {"id":"PA-Wachter","vendor":"Wachter","state":"PA","location":[40.59,-77.21],"count":38},
+    {"id":"NC-Techwise","vendor":"Techwise","state":"NC","location":[35.63,-79.81],"count":33},
+    {"id":"OH-Wachter","vendor":"Wachter","state":"OH","location":[40.39,-82.76],"count":31},
+    {"id":"NY-Wachter","vendor":"Wachter","state":"NY","location":[42.17,-74.95],"count":24},
+    {"id":"GA-CEI","vendor":"CEI","state":"GA","location":[33.04,-83.64],"count":23},
+    {"id":"IL-Everon","vendor":"Everon","state":"IL","location":[40.85,-88.69],"count":22},
+    {"id":"AL-CEI","vendor":"CEI","state":"AL","location":[32.81,-86.79],"count":22},
+    {"id":"TN-CEI","vendor":"CEI","state":"TN","location":[35.75,-86.69],"count":22},
+    {"id":"AR-CEI","vendor":"CEI","state":"AR","location":[34.97,-92.37],"count":21},
+    {"id":"CA-CEI","vendor":"CEI","state":"CA","location":[36.62,-119.38],"count":21},
+    {"id":"IN-Wachter","vendor":"Wachter","state":"IN","location":[39.85,-86.26],"count":20},
+    {"id":"NJ-Wachter","vendor":"Wachter","state":"NJ","location":[40.30,-74.52],"count":20},
+    {"id":"OK-CEI","vendor":"CEI","state":"OK","location":[35.57,-96.93],"count":20},
+    {"id":"KS-CEI","vendor":"CEI","state":"KS","location":[38.53,-96.73],"count":19},
+    {"id":"CA-Everon","vendor":"Everon","state":"CA","location":[36.12,-119.68],"count":18},
+    {"id":"AZ-CEI","vendor":"CEI","state":"AZ","location":[33.73,-111.43],"count":18},
+    {"id":"VA-Techwise","vendor":"Techwise","state":"VA","location":[37.77,-78.17],"count":17},
+    {"id":"LA-CEI","vendor":"CEI","state":"LA","location":[31.17,-91.87],"count":15},
+    {"id":"MO-CEI","vendor":"CEI","state":"MO","location":[38.46,-92.29],"count":15},
+    {"id":"SC-Techwise","vendor":"Techwise","state":"SC","location":[33.86,-80.95],"count":14},
+    {"id":"NE-Everon","vendor":"Everon","state":"NE","location":[41.13,-98.27],"count":13},
+    {"id":"MD-Techwise","vendor":"Techwise","state":"MD","location":[39.06,-76.80],"count":13},
+    {"id":"MS-CEI","vendor":"CEI","state":"MS","location":[32.74,-89.68],"count":12},
+    {"id":"WA-Everon","vendor":"Everon","state":"WA","location":[47.40,-121.49],"count":11},
+    {"id":"WI-Everon","vendor":"Everon","state":"WI","location":[44.27,-89.62],"count":11},
+    {"id":"IA-Everon","vendor":"Everon","state":"IA","location":[42.01,-93.21],"count":11},
+    {"id":"CO-Everon","vendor":"Everon","state":"CO","location":[39.06,-105.31],"count":10},
+    {"id":"OR-Everon","vendor":"Everon","state":"OR","location":[44.57,-122.07],"count":9},
+    {"id":"MN-Everon","vendor":"Everon","state":"MN","location":[45.69,-93.90],"count":9},
+    {"id":"CT-Wachter","vendor":"Wachter","state":"CT","location":[41.60,-72.76],"count":9},
+    {"id":"WV-SAS","vendor":"SAS","state":"WV","location":[38.99,-80.65],"count":7},
+    {"id":"MA-Wachter","vendor":"Wachter","state":"MA","location":[42.23,-71.53],"count":7},
+    {"id":"IL-CEI","vendor":"CEI","state":"IL","location":[41.35,-88.39],"count":7},
+    {"id":"NV-Everon","vendor":"Everon","state":"NV","location":[38.31,-117.06],"count":7},
+    {"id":"ME-Wachter","vendor":"Wachter","state":"ME","location":[44.69,-69.38],"count":6},
+    {"id":"UT-Everon","vendor":"Everon","state":"UT","location":[40.15,-111.86],"count":6},
+    {"id":"NM-Everon","vendor":"Everon","state":"NM","location":[34.84,-106.25],"count":6},
+    {"id":"MI-Wachter","vendor":"Wachter","state":"MI","location":[43.33,-84.54],"count":5},
+    {"id":"NH-Wachter","vendor":"Wachter","state":"NH","location":[43.45,-71.56],"count":5},
+    {"id":"KY-CEI","vendor":"CEI","state":"KY","location":[38.17,-84.37],"count":5},
+    {"id":"WY-Everon","vendor":"Everon","state":"WY","location":[42.76,-107.30],"count":5},
+    {"id":"SD-Everon","vendor":"Everon","state":"SD","location":[44.30,-99.44],"count":5},
+    {"id":"ID-Everon","vendor":"Everon","state":"ID","location":[44.24,-114.48],"count":4},
+    {"id":"ND-Everon","vendor":"Everon","state":"ND","location":[47.53,-99.78],"count":4},
+    {"id":"DE-Wachter","vendor":"Wachter","state":"DE","location":[39.32,-75.51],"count":3},
+    {"id":"RI-Wachter","vendor":"Wachter","state":"RI","location":[41.68,-71.51],"count":3},
+    {"id":"MT-Everon","vendor":"Everon","state":"MT","location":[46.92,-110.45],"count":2},
+    {"id":"KY-Wachter","vendor":"Wachter","state":"KY","location":[37.67,-84.67],"count":2}
+  ],
+  "vendor_totals": {"CEI":342,"Wachter":176,"Everon":154,"Techwise":78,"SAS":8},
+  "state_totals": {
+    "TX":{"CEI":69},"FL":{"CEI":52},"PA":{"Wachter":38},"NC":{"Techwise":33},
+    "OH":{"Wachter":31},"NY":{"Wachter":24},"GA":{"CEI":23},"IL":{"Everon":22,"CEI":7,"Wachter":1},
+    "AL":{"CEI":22},"TN":{"CEI":22},"AR":{"CEI":21},"CA":{"CEI":21,"Everon":18},
+    "IN":{"Wachter":20,"Everon":1},"NJ":{"Wachter":20},"OK":{"CEI":20},"KS":{"CEI":19},
+    "AZ":{"CEI":18},"VA":{"Techwise":17,"SAS":1},"LA":{"CEI":15},"MO":{"CEI":15},
+    "SC":{"Techwise":14},"NE":{"Everon":13},"MD":{"Techwise":13},"MS":{"CEI":12},
+    "WA":{"Everon":11},"WI":{"Everon":11},"IA":{"Everon":11},"CO":{"Everon":10},
+    "OR":{"Everon":9},"MN":{"Everon":9},"CT":{"Wachter":9},"WV":{"SAS":7,"Wachter":1},
+    "MA":{"Wachter":7},"NV":{"Everon":7},"ME":{"Wachter":6},"UT":{"Everon":6},
+    "NM":{"Everon":6,"CEI":1},"MI":{"Wachter":5},"NH":{"Wachter":5},"KY":{"CEI":5,"Wachter":2},
+    "WY":{"Everon":5},"SD":{"Everon":5},"ID":{"Everon":4},"ND":{"Everon":4},
+    "DE":{"Wachter":3},"RI":{"Wachter":3},"MT":{"Everon":2},"VT":{"Wachter":1},"DC":{"Techwise":1}
+  }
+};
+
 async function loadData() {
   try {
     const response = await fetch('vendor_locations.json?t=' + Date.now());
+    if (!response.ok) throw new Error('Fetch failed');
     locationData = await response.json();
-    renderUI();
-    initGlobe();
+    console.log('[Globe] Loaded data via fetch');
   } catch (error) {
-    console.error('Failed to load location data:', error);
-    document.getElementById('loadingState').innerHTML = '<span style="color:var(--red);">Failed to load data</span>';
+    console.warn('[Globe] Fetch failed, using embedded fallback:', error.message);
+    locationData = FALLBACK_DATA;
   }
+  renderUI();
+  initGlobe();
 }
 
 function initGlobe() {

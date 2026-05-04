@@ -30,6 +30,9 @@ log = logging.getLogger(__name__)
 SCOUT_BASE_ID = "appAwgaX89x0JxG3Z"
 SCOUT_TABLE_ID = "tblC4o9AvVulyxFMk"
 
+# Airtable Survey Routing Table (same base, different table)
+ROUTING_TABLE_ID = "tbl4LbgPUluSrbG2K"
+
 # Excel workbook path
 DEFAULT_WORKBOOK_PATH = (
     r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\2027 Survey Lab.xlsm"
@@ -747,8 +750,15 @@ def build_survey_routing_data(
     }
 
 
-def refresh_survey_routing(token: str, output_dir: Path | str, workbook_path: str | Path = DEFAULT_WORKBOOK_PATH) -> None:
-    """Refresh survey routing data and write to JSON."""
+def refresh_survey_routing(token: str, output_dir: Path | str, workbook_path: str | Path = DEFAULT_WORKBOOK_PATH, sync_to_airtable: bool = True) -> None:
+    """Refresh survey routing data and write to JSON.
+    
+    Args:
+        token: Airtable API token
+        output_dir: Directory to write JSON output
+        workbook_path: Path to Excel workbook with MAP DATA
+        sync_to_airtable: If True, also sync updates to Airtable Survey Routing table
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -763,3 +773,144 @@ def refresh_survey_routing(token: str, output_dir: Path | str, workbook_path: st
         f"{data['summary']['surveys_required']} surveys required, "
         f"{data['summary']['full_upgrades']} full upgrades"
     )
+    
+    # Sync to Airtable Survey Routing table
+    if sync_to_airtable:
+        try:
+            updated, errors = sync_routing_to_airtable(token, data["rows"])
+            log.info(f"Airtable Survey Routing sync: {updated} updated, {errors} errors")
+        except Exception as e:
+            log.error(f"Failed to sync to Airtable Survey Routing: {e}")
+
+
+def _derive_status(row: dict) -> str:
+    """Derive display status from routing row data."""
+    if row.get('survey_complete') is True:
+        return 'Completed'
+    
+    schedule = row.get('schedule_status', '')
+    ready = row.get('ready_to_assign', '')
+    survey_req = row.get('survey_required', '')
+    reason = row.get('reason_for_decision', '')
+    
+    if survey_req == 'NO':
+        return 'No Survey Needed'
+    if 'No scout submission' in str(reason):
+        return 'Awaiting Scout'
+    if schedule == 'REVIEW':
+        return 'Needs Review'
+    elif schedule == 'ON TRACK':
+        if ready == 'YES':
+            return 'Ready to Assign'
+        else:
+            return 'In Progress'
+    elif schedule == 'NOT REQUIRED':
+        return 'No Survey Needed'
+    
+    return 'Pending'
+
+
+def sync_routing_to_airtable(token: str, rows: list[dict]) -> tuple[int, int]:
+    """Sync routing data to Airtable Survey Routing table.
+    
+    Args:
+        token: Airtable API token
+        rows: List of routing row dicts from build_survey_routing_data
+        
+    Returns:
+        Tuple of (updated_count, error_count)
+    """
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+    
+    # Build lookup by site
+    site_data = {str(r.get('site', '')).strip(): r for r in rows}
+    
+    # Fetch all current Airtable records
+    all_records = []
+    offset = None
+    
+    while True:
+        url = f'https://api.airtable.com/v0/{SCOUT_BASE_ID}/{ROUTING_TABLE_ID}'
+        params = {'pageSize': 100}
+        if offset:
+            params['offset'] = offset
+        
+        try:
+            resp = requests.get(url, headers=headers, params=params, timeout=30)
+            resp.raise_for_status()
+        except Exception as e:
+            log.error(f"Failed to fetch Survey Routing records: {e}")
+            return (0, 0)
+        
+        result = resp.json()
+        all_records.extend(result.get('records', []))
+        offset = result.get('offset')
+        if not offset:
+            break
+    
+    log.info(f"Fetched {len(all_records)} records from Survey Routing table")
+    
+    # Build list of updates needed
+    updates = []
+    for rec in all_records:
+        site = str(rec['fields'].get('Site', '')).strip()
+        row = site_data.get(site)
+        
+        if not row:
+            continue
+        
+        new_status = _derive_status(row)
+        current_status = rec['fields'].get('Status', '')
+        
+        # Only update if status changed or survey type changed
+        new_survey_type = row.get('survey_type', '')
+        current_survey_type = rec['fields'].get('Survey Type', '')
+        
+        if new_status != current_status or new_survey_type != current_survey_type:
+            updates.append({
+                'id': rec['id'],
+                'fields': {
+                    'Status': new_status,
+                    'Survey Type': new_survey_type,
+                    'Notes': row.get('notes', '') or row.get('vendor_instructions', ''),
+                }
+            })
+    
+    if not updates:
+        log.info("No Survey Routing updates needed")
+        return (0, 0)
+    
+    log.info(f"Updating {len(updates)} Survey Routing records...")
+    
+    # Update in batches of 10 (Airtable limit)
+    import time
+    BATCH_SIZE = 10
+    updated = 0
+    errors = 0
+    
+    for i in range(0, len(updates), BATCH_SIZE):
+        batch = updates[i:i+BATCH_SIZE]
+        
+        try:
+            resp = requests.patch(
+                f'https://api.airtable.com/v0/{SCOUT_BASE_ID}/{ROUTING_TABLE_ID}',
+                headers=headers,
+                json={'records': batch},
+                timeout=30
+            )
+            if resp.ok:
+                updated += len(batch)
+            else:
+                errors += len(batch)
+                log.error(f"Batch update failed: {resp.text[:200]}")
+        except Exception as e:
+            errors += len(batch)
+            log.error(f"Batch update exception: {e}")
+        
+        # Rate limiting: max 5 requests per second
+        time.sleep(0.25)
+    
+    return (updated, errors)

@@ -96,6 +96,17 @@
 
     /* AI Report */
     .ai-section { margin-top: 20px; }
+    .settings-section { margin-top: 20px; margin-bottom: 16px; border-radius: 16px; border: 1px solid var(--panel-border); background: var(--panel); overflow: hidden; }
+    .settings-header { padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 14px; transition: background 0.2s; }
+    .settings-header:hover { background: rgba(255,255,255,0.03); }
+    .settings-toggle { font-size: 10px; color: var(--text-soft); transition: transform 0.2s; }
+    .settings-toggle.open { transform: rotate(180deg); }
+    .settings-body { padding: 16px 18px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .vendor-dates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .vendor-date-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .vendor-date-item label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .vendor-date-item input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text); font-size: 13px; }
+    .vendor-date-item input:focus { outline: none; border-color: var(--cyan); }
     .metrics-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
     .metric-mini { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center; }
     .metric-mini-value { display: block; font-size: 20px; font-weight: 800; }
@@ -225,6 +236,19 @@
       </div>
     </div>
 
+    <!-- VENDOR SETTINGS -->
+    <section class="settings-section" id="vendorSettings">
+      <div class="settings-header" onclick="toggleSettings()">
+        <span>⚙️ Vendor Program Settings</span>
+        <span class="settings-toggle" id="settingsToggle">▼</span>
+      </div>
+      <div class="settings-body" id="settingsBody" style="display:none;">
+        <p style="font-size:12px;color:var(--text-soft);margin-bottom:12px;">Set program start dates per vendor for accurate timeline analysis:</p>
+        <div class="vendor-dates-grid" id="vendorDatesGrid"></div>
+        <button class="btn" onclick="saveVendorSettings()" style="margin-top:12px;">💾 Save Settings</button>
+      </div>
+    </section>
+
     <!-- AI REPORTS (shown on all tabs) -->
     <section class="ai-section">
       <div class="ai-header">
@@ -247,6 +271,52 @@ const PROGRAM_WEEK = 3;
 const VENDOR_COLORS = { CEI: '#5AE4FF', Wachter: '#9B7CFF', Techwise: '#FF6B81', Everon: '#45E6A5', SAS: '#FFC857' };
 let programData = null;
 let charts = {};
+let vendorStartDates = JSON.parse(localStorage.getItem('vendorStartDates') || '{}');
+
+// Settings toggle
+function toggleSettings() {
+  const body = document.getElementById('settingsBody');
+  const toggle = document.getElementById('settingsToggle');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    toggle.classList.add('open');
+    renderVendorDatesGrid();
+  } else {
+    body.style.display = 'none';
+    toggle.classList.remove('open');
+  }
+}
+
+function renderVendorDatesGrid() {
+  const va = programData?.vendor_assignments || {};
+  const vendors = va.vendors || [];
+  const grid = document.getElementById('vendorDatesGrid');
+  grid.innerHTML = vendors.map(v => `
+    <div class="vendor-date-item">
+      <label style="color:${VENDOR_COLORS[v.vendor_name] || 'var(--text)'}">${v.vendor_name}</label>
+      <input type="date" id="startDate_${v.vendor_name}" value="${vendorStartDates[v.vendor_name] || ''}" />
+    </div>
+  `).join('');
+}
+
+function saveVendorSettings() {
+  const va = programData?.vendor_assignments || {};
+  const vendors = va.vendors || [];
+  vendors.forEach(v => {
+    const input = document.getElementById('startDate_' + v.vendor_name);
+    if (input && input.value) vendorStartDates[v.vendor_name] = input.value;
+  });
+  localStorage.setItem('vendorStartDates', JSON.stringify(vendorStartDates));
+  alert('✅ Vendor settings saved!');
+}
+
+function getVendorDaysActive(vendorName) {
+  const startDate = vendorStartDates[vendorName];
+  if (!startDate) return null;
+  const start = new Date(startDate);
+  const now = new Date();
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+}
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
@@ -511,7 +581,19 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     generatedReports.survey = { risk: surveyRisk, rate: surveyRate, pass: surveyPass, fail: surveyFail, pending: surveyPending };
     generatedReports.scout = { risk: scoutRisk, rate: scoutRate, completed: scoutCompleted, remaining: scoutRemaining, velocity, weeksLeft };
     
-    // SURVEY REPORT - 5 Sections
+    // Build vendor performance HTML for Survey
+    const surveyVendorPerf = sortedVendors.slice(0, 5).map((v, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '•';
+      const daysActive = getVendorDaysActive(v.vendor_name);
+      const dailyRate = daysActive ? ((v.completed || 0) / daysActive).toFixed(2) : 'N/A';
+      const color = VENDOR_COLORS[v.vendor_name] || 'var(--text)';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:6px;">
+        <span>${medal} <strong style="color:${color}">${v.vendor_name}</strong></span>
+        <span style="font-size:11px;color:var(--text-soft)">${v.completed || 0}/${v.total_assigned || 0} (${v.completion_rate || 0}%) ${daysActive ? `• ${dailyRate}/day • ${daysActive}d` : ''}</span>
+      </div>`;
+    }).join('');
+    
+    // SURVEY REPORT - 5 Sections with Full Vendor Performance
     document.getElementById('reportSurvey').innerHTML = `
       <div class="report-header">
         <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">Detailed QA Report</div></div></div>
@@ -531,8 +613,9 @@ document.getElementById('generateBtn').addEventListener('click', () => {
         </div>
         <div class="report-section">
           <h4>3. Vendor Performance</h4>
-          <p>${topVendor ? `🏆 <strong>${topVendor.vendor_name}</strong> leads with ${topVendor.completion_rate || 0}% completion rate.` : 'No vendor data available.'}</p>
-          <p>${bottomVendor && bottomVendor.remaining > 5 ? `⚠️ <strong>${bottomVendor.vendor_name}</strong> has ${bottomVendor.remaining} sites remaining — may need support.` : 'All vendors performing within targets.'}</p>
+          <p style="font-size:11px;color:var(--text-soft);margin-bottom:8px;">Ranked by completion rate • Click ⚙️ Settings above to set start dates for velocity tracking</p>
+          ${surveyVendorPerf || '<p>No vendor data available.</p>'}
+          <p style="margin-top:10px;"><strong>Total:</strong> ${totalAssigned} sites across ${vendors.length} vendors</p>
         </div>
         <div class="report-section">
           <h4>4. Timeline Impact</h4>
@@ -548,11 +631,25 @@ document.getElementById('generateBtn').addEventListener('click', () => {
             <li>${surveyPending > 20 ? 'Clear pending backlog before accepting new submissions' : 'Continue normal processing cadence'}</li>
             <li>Track weekly pass rate trend for early warning</li>
             <li>${bottomVendor ? `Schedule check-in with ${bottomVendor.vendor_name}` : 'All vendors on track'}</li>
+            <li>Set vendor start dates for accurate velocity tracking</li>
           </ul>
         </div>
       </div>`;
     
     // SCOUT REPORT - 5 Sections  
+    // Build vendor performance HTML for Scout (same format as Survey)
+    const scoutVendorPerf = sortedVendors.slice(0, 5).map((v, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '•';
+      const daysActive = getVendorDaysActive(v.vendor_name);
+      const dailyRate = daysActive ? ((v.completed || 0) / daysActive).toFixed(2) : 'N/A';
+      const color = VENDOR_COLORS[v.vendor_name] || 'var(--text)';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:6px;">
+        <span>${medal} <strong style="color:${color}">${v.vendor_name}</strong></span>
+        <span style="font-size:11px;color:var(--text-soft)">${v.completed || 0}/${v.total_assigned || 0} (${v.completion_rate || 0}%) ${daysActive ? `• ${dailyRate}/day • ${daysActive}d` : ''}</span>
+      </div>`;
+    }).join('');
+    
+    // SCOUT REPORT - 5 Sections
     document.getElementById('reportScout').innerHTML = `
       <div class="report-header">
         <div class="report-title"><div class="report-icon" style="background:rgba(155,124,255,0.15);color:var(--purple)">☄</div><div><strong>Scout Program Analysis</strong><div style="font-size:11px;color:var(--text-soft)">Detailed Completion Report</div></div></div>
@@ -572,8 +669,9 @@ document.getElementById('generateBtn').addEventListener('click', () => {
         </div>
         <div class="report-section">
           <h4>3. Vendor Performance</h4>
-          ${sortedVendors.slice(0, 3).map((v, i) => `<p>${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} <strong>${v.vendor_name}</strong>: ${v.completed || 0}/${v.total_assigned || 0} (${v.completion_rate || 0}%)</p>`).join('')}
-          <p><strong>Total Assigned:</strong> ${totalAssigned} sites across ${vendors.length} vendors</p>
+          <p style="font-size:11px;color:var(--text-soft);margin-bottom:8px;">Ranked by completion rate • Set start dates in ⚙️ Settings for velocity</p>
+          ${scoutVendorPerf || '<p>No vendor data available.</p>'}
+          <p style="margin-top:10px;"><strong>Total:</strong> ${totalAssigned} sites across ${vendors.length} vendors</p>
         </div>
         <div class="report-section">
           <h4>4. Velocity & Forecast</h4>

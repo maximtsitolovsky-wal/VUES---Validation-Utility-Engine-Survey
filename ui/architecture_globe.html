@@ -62,7 +62,7 @@
       gap: 18px;
       pointer-events: none;
     }
-    .brand, .toolbar, .panel, .legend, .breadcrumb, .prezi-controls { pointer-events: auto; }
+    .brand, .toolbar, .panel, .legend, .breadcrumb, .prezi-controls, .back-link { pointer-events: auto; }
     .brand {
       display: flex;
       gap: 14px;
@@ -142,8 +142,8 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="index.html" class="action-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;margin-right:12px;">
-        <span style="font-size:16px;">←</span> Command Center
+      <a href="index.html" class="action-btn back-link" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;margin-right:12px;pointer-events:auto !important;position:relative;z-index:100;cursor:pointer;">
+        <span style="font-size:16px;">&#8592;</span> Command Center
       </a>
       <div class="brand">
         <div class="brand-mark">V</div>

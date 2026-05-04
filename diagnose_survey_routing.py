@@ -18,8 +18,10 @@ from typing import Any
 
 # Constants
 AIRTABLE_API_BASE = "https://api.airtable.com/v0"
+AIRTABLE_META_API = "https://api.airtable.com/v0/meta"
 BASE_ID = "appAwgaX89x0JxG3Z"
 TABLE_ID = "tbl4LbgPUluSrbG2K"
+TABLE_NAME = "Survey Routing"  # Try name as well as ID
 VIEW_ID = "viw4ZoQPQr42IHZSw"
 
 
@@ -31,8 +33,10 @@ def load_token() -> str:
         try:
             with open(config_path, "r") as f:
                 config = json.load(f)
-                token = config.get("airtable_token") or config.get("scout_airtable_token")
+                # For Scout base, use scout_airtable_token
+                token = config.get("scout_airtable_token")
                 if token:
+                    print(f"Using scout_airtable_token from {config_path}")
                     return token
         except Exception as e:
             print(f"Warning: Could not load config from {config_path}: {e}")
@@ -46,6 +50,24 @@ def load_token() -> str:
         "No Airtable token found. Please set AIRTABLE_TOKEN environment variable "
         "or ensure ~/.siteowlqa/config.json exists with valid credentials."
     )
+
+
+def fetch_base_metadata(token: str, base_id: str) -> dict[str, Any]:
+    """Fetch base metadata including table list."""
+    url = f"{AIRTABLE_META_API}/bases/{base_id}/tables"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        print(f"Error fetching base metadata: {e}")
+        print(f"Response: {e.response.text}")
+        return {}
 
 
 def fetch_records(

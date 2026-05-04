@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Coverage · VUES</title>
+  <title>Coverage Map · VUES</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #060914; --panel: rgba(9, 16, 31, 0.88); --panel-border: rgba(120, 160, 255, 0.22);
-      --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF;
+      --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #0053e2;
       --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81; --pink: #FF5FD2;
     }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(90,228,255,0.08), transparent 35%), radial-gradient(circle at 70% 80%, rgba(155,124,255,0.06), transparent 35%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
     .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
     .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 16px; transition: all 0.18s; }
@@ -24,45 +24,59 @@
     .mode-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); }
     .mode-tab { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--text-soft); background: transparent; border: none; }
     .mode-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-    .mode-tab.active.scout { background: rgba(155,124,255,0.2); color: var(--purple); }
-    .mode-tab.activeckground: rgba(90,228,255,0.2); color: var(--cyan); }
+    .mode-tab.active.scout { background: rgba(155,124,255,0.25); color: var(--purple); }
+    .mode-tab.active.survey { background: rgba(90,228,255,0.25); color: var(--cyan); }
     .pill { padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-    .pill-green { background: rgba(69,230,165,0.12); border: 1px solid rgba(69,230,165,0.35); color: #D9FFE8; }
+    .pill-green { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.4); color: var(--green); }
     .btn { padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
     .btn:hover { background: rgba(255,255,255,0.1); }
+    
     .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
     .stat-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 16px; text-align: center; transition: all 0.2s; }
     .stat-card:hover { transform: translateY(-2px); border-color: rgba(90,228,255,0.4); }
     .stat-value { font-size: 32px; font-weight: 900; }
     .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); margin-top: 4px; }
+    .stat-sub { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    
     .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
     .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; overflow: hidden; }
-    .panel-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: s-between; align-items: center; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
     .panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
     .panel-body { padding: 16px; }
-    .globe-container { position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 480px; }
-    .globe-wrap { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1; }
-    #globe-canvas { width: 100%; height: 100%; cursor: grab; border-radius: 50%; touch-action: none; }
-    #globe-canvas:active { cursor: grabbing; }
+    
+    .map-container { position: relative; padding: 20px; min-height: 480px; display: flex; align-items: center; justify-content: center; }
+    #us-map { width: 100%; max-width: 900px; height: auto; }
+    #us-map path { stroke: rgba(255,255,255,0.12); stroke-width: 0.5; transition: all 0.2s; cursor: pointer; }
+    #us-map path:hover { stroke: var(--cyan); stroke-width: 1.5; filter: brightness(1.3); }
+    
+    .map-tooltip { position: absolute; background: rgba(0,0,0,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px 16px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; min-width: 180px; }
+    .map-tooltip.visible { opacity: 1; }
+    .tooltip-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .tooltip-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
+    .tooltip-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+    
     .vendor-legend { display: flex; flex-direction: column; gap: 10px; }
     .vendor-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: all 0.2s; }
     .vendor-item:hover { background: rgba(255,255,255,0.06); transform: translateX(4px); border-color: var(--vendor-color); }
     .vendor-item.active { border-color: var(--vendor-color); background: color-mix(in srgb, var(--vendor-color) 15%, transparent); }
-    .vendor-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--vendor-color); box-shadow: 0 0 16px var(--vendor-color); flex-shrink: 0; }
+    .vendor-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--vendor-color); box-shadow: 0 0 12px var(--vendor-color); flex-shrink: 0; }
     .vendor-info { flex: 1; }
     .vendor-name-label { font-weight: 700; font-size: 14px; }
     .vendor-sub { font-size: 11px; color: var(--text-soft); }
     .vendor-count { font-size: 24px; font-weight: 900; color: var(--vendor-color); }
+    
     .velocity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .velocity-card { padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); text-align: center; }
     .velocity-value { font-size: 22px; font-weight: 800; }
     .velocity-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); margin-top: 4px; }
+    
     .region-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
     .region-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); font-size: 12px; }
     .region-name { flex: 1; font-weight: 600; }
     .region-bar { width: 80px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
-    .region-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
-    .region-count { font-weight: 700; min-width: 30px; text-align: right; }
+    .region-bar-fill { height: 100%; border-radius: 3px; }
+    .region-count { font-weight: 700; min-width: 40px; text-align: right; }
+    
     @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
@@ -72,15 +86,15 @@
     <a href="routing.html" class="back-link">← Back to Routing</a>
     <header class="header">
       <div class="header-left">
-        <h1 id="pageTitle">🌍 Scout Coverage</h1>
-        <p id="pageSubtitle">Interactive visualization of scout program distribution</p>
+        <h1 id="pageTitle">🗺️ Scout Coverage</h1>
+        <p id="pageSubtitle">Vendor assignments across the United States</p>
       </div>
       <div class="header-right">
         <div class="mode-tabs">
           <button class="mode-tab scout active" data-mode="scout">☄ Scout</button>
-          <button class="mode-tab survey" data-mode="survey">✈ Survey</button>
+          <button class="mode-tab survey" data-mode="survey">📋 Survey</button>
         </div>
-        <span class="pill pill-green">● Live</span>
+        <span class="pill pill-green" id="statusPill">● Live Data</span>
         <button class="btn" id="resetBtn">🔄 Reset</button>
       </div>
     </header>
@@ -88,11 +102,12 @@
     <div class="main-grid">
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title" id="globeTitle">🌐 Scout Distribution</span>
-          <span style="color:var(--text-soft);font-size:11px;">Drag to rotate • Click legend to filter</span>
+          <span class="panel-title" id="mapTitle">🇺🇸 US Coverage Map</span>
+          <span style="color:var(--text-soft);font-size:11px;">Hover states for details</span>
         </div>
-        <div class="globe-container">
-          <div class="globe-wrap"><canvas id="globe-canvas"></canvas></div>
+        <div class="map-container">
+          <svg id="us-map" viewBox="0 0 959 593"></svg>
+          <div class="map-tooltip" id="tooltip"></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;">
@@ -105,7 +120,7 @@
           <div class="panel-body"><div class="velocity-grid" id="velocityGrid"></div></div>
         </div>
         <div class="panel" style="flex:1;">
-          <div class="panel-header"><span class="panel-title">📍 Top Regions</span></div>
+          <div class="panel-header"><span class="panel-title">📍 Top States</span></div>
           <div class="panel-body"><div class="region-list" id="regionList"></div></div>
         </div>
       </div>
@@ -113,218 +128,85 @@
   </div>
 
 <script>
-// === PURE CANVAS GLOBE - NO EXTERNAL DEPENDENCIES ===
+// === COLORS ===
 const VENDOR_HEX = { 'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Techwise': '#FF5FD2', 'Everon': '#45E6A5', 'SAS': '#FFC857' };
-const SURVEY_HEX = { 'Completed': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#888899' };
-const PROGRAM_WEEK = 3;
+const SURVEY_HEX = { 'Complete': '#45E6A5', 'Pending': '#FFC857', 'No Survey': '#FF6B81' };
 
-// State coordinates [lat, lon]
-const STATE_COORDS = {
-  'AL':[32.81,-86.79],'AK':[64.07,-152.28],'AZ':[33.73,-111.43],'AR':[34.97,-92.37],'CA':[36.62,-119.38],
-  'CO':[39.06,-105.31],'CT':[41.60,-72.76],'DE':[39.32,-75.51],'FL':[27.77,-81.69],'GA':[33.04,-83.64],
-  'HI':[19.74,-155.84],'ID':[44.24,-114.48],'IL':[40.85,-88.69],'IN':[39.85,-86.26],'IA':[42.01,-93.21],
-  'KS':[38.53,-96.73],'KY':[37.84,-84.27],'LA':[31.17,-91.87],'ME':[44.69,-69.38],'MD':[39.06,-76.80],
-  'MA':[42.23,-71.53],'MI':[43.33,-84.54],'MN':[45.69,-93.90],'MS':[32.74,-89.68],'MO':[38.46,-92.29],
-  'MT':[46.92,-110.45],'NE':[41.13,-98.27],'NV':[38.31,-117.06],'NH':[43.45,-71.56],'NJ':[40.30,-74.52],
-  'NM':[34.84,-106.25],'NY':[42.17,-74.95],'NC':[35.63,-79.81],'ND':[47.53,-99.78],'OH':[40.39,-82.76],
-  'OK':[35.57,-96.93],'OR':[44.57,-122.07],'PA':[40.59,-77.21],'RI':[41.68,-71.51],'SC':[33.86,-80.95],
-  'SD':[44.30,-99.44],'TN':[35.75,-86.69],'TX':[31.05,-97.56],'UT':[40.15,-111.86],'VT':[44.05,-72.71],
-  'VA':[37.77,-78.17],'WA':[47.40,-121.49],'WV':[38.99,-80.65],'WI':[44.27,-89.62],'WY':[42.76,-107.30],'DC':[38.90,-77.04]
+// === US STATE PATHS ===
+const STATE_PATHS = {
+  'AL': 'M628.5,387.5l-1.2-17.1-1.3-12.8 24.4-2.7 16.4-1.4 4.6,25.5 3.4,21.7 3.1,14-3.3,3.7-2.6-0.2-1.8,5.1-5.4-0.5-1.9-4.7-13.7,1.5-20.6,2.3z',
+  'AZ': 'M213.9,389.3l-1.5-9.8-10.4-60.4-4.2-23.9 30-5.3 37.7-7.9 24.6-5.5 15.1,67.8 10,46.4 5.9,26 0.5,4.6-4,2.7-4.6-0.5-0.4,3.6-14.8,10.4-1.2,3.4-2.1,0.7-2.9-1-5.3,3.6-3.2-1.9-8.6,4.3-9.7-13.7-21.6-13-9.4-5.7-18.9-24.8z',
+  'AR': 'M585.4,336.5l-1.9-11.7-3.5-22.9-0.7-10.8 5.3-3.6 1.7-5.4-2.7-6 3.9-5.9 42.9-0.8 28.1-0.9 2.7,4.3 0.2,7.3-4.7,5-0.1,5.2 3.3,5.5 0.4,22.3 1.9,33.3-39.3,1.8-33.5,2.6z',
+  'CA': 'M135.6,296.5l-10-58.9-15.7-66 14.2-3.4 1.5-6.2 4.9-8.1 1.5-5.5-0.4-4.4 2.3-4.1 0.8-11.9-2.1-3.2-1.9-5.5 1.1-6.6-9.8,1.7-40.6,6.7 3.9,21.1 10.7,46.5 18.9,71.2 10.7,40.6-2.5,25.9 0.1,3.9 2.9,5.1 2.8-0.3 3.9,3.6-0.2,3.4 1.7,2.7-0.7,4.6-2.1,0.1-0.3,3.7-1.7,0 0.9,4.5 4.3,5.2 2.5,5.6 5.5,6.2 2.3,6.3-1.7,0.9-1.9,0.1 3.2,8.2 5.1,6.2 13.1,9.5 2.1,-0.2 2.9,2.5 3.3-2.3 1.4-12.5-0.7-5.2 3.7-8.2 1.9-2.3-0.9-2.1-3.5-2.2-1.7-3.6-0.9-1-3.1,0.7 0.6-2.6-0.9-6.2-3.9-5.3-3.9-8.9-1.3-5.9-3.3-4.9 0.3-4.3-3.7-3.6-1.9-3.3-2.2-5.3-2.2-20.7z',
+  'CO': 'M380.9,251.1l-47.2-4.1-47.2-6.4-18.4-3.2 8.1-61.1 3.5-21.2 51.2,6.7 46.9,4.6 45.8,2.8 0.5,28 0.9,23.1-0.3,30.6z',
+  'CT': 'M852.8,175.4l-3.3-14.6 1.6-2.4 1.4-5.2-1.9-3.4 21.8-5.1 7.6-1.5 3.9,7.5 3.3,9.7-0.9,4.4-6.1,3.3-7.6,6.6-3.9-0.1-2.9,2.9z',
+  'DE': 'M820.9,227l-1.9-5.6-2.9-8.7 0.9-5.9 7.7-2.2 3.7,2.7 3.5,8.9 3.7,14.4-0.9,7.7-5.9-4.9z',
+  'FL': 'M754.1,440.7l-3.7,1.6-11.6-3.5-7.7-6.4-6.2-1.9-4.6-4.6-6.1-4.1-5.9,1.2-8.8-3.2-9.5-0.2-4.4,3.7-5.7,0-7.8,6.1 20.7-1.5 21.1-1.5 15.7,1.9 8.8,6.5 5.9,7.4 9.5,10.6 7.7,9.7 4.8,8.2 7.2,10.1 3.5,10 0.9,5.6 5.5,8.2-0.5,3.1-3.1,4.6-2.2,7.5-3.1,0.9-3.7,5.5-5.1,2.4-3.3-3.3-0.7-5.9-3.9-6.6-3.3-8.6-4.2-4.4-1.7-5.5-4.6-4.2-1.1-5.3 1.5-5.5-4.4-9.7-4.2-3.5-0.9-5.9-4.4-1.3-3.5,0.4-0.5-3.5-1.5-1.1-1.1-7.2-3.5-5.7 0.6-3.5 3.5,0.4 0.2-3.5-3.1-5.1-1.8-10.6z',
+  'GA': 'M701.5,372.7l-18.7,2.3-13.6,1.5-5.9-32.7-3.5-21.7-2.7-16.3 8.2-1.2 21.7-3.5 9.5-1.3 3.1,5.4 5.9,12.5 2.2,9.3 4.6,7.5 3.1,2.4 0.4,3.5 5.7,9.9 7,6.8 1.5,4.6-0.7,8.8-3.3,5.2-1.7,4.8-6.1,4.6-4.4-0.9-5.5-5.3-4.6-2.1-2.2-3.9z',
+  'ID': 'M227.7,59.5l-5.9,23.9-7.4,30.2-3.2,15.1-3.1,8.6 1.6,6.5 4.9,5.2 0.3,3.3-5.3,6.9 0,4.4-0.9,1.2 1.7,3.9-0.4,3.1 4.4,5.3 1.6,0 0.4,4.4 3.2,3.1-0.1,3.3-0.5,2.1-24.5-5.1-28.4-6.7 5.4-23.7 6.6-27.2 4.9-22.6 3.8-11.7-1.8-5.6-2.1-2.9 0.7-5.7 4.1-4.5-0.4-3.4-0.3-5.9-5.8-5.9 1-4.8 5.9-11.1 2.6-1 1.9,3.9 2.7-5.4 7.9,0.7 8.9,2.1 21.7,4.9z',
+  'IL': 'M612.7,218.3l-0.7-5.2-1.5-11.9-2-13.2-0.4-8.9-2.5-3.6-0.5-4.9 2.4-3.9 0-4.9-3.1-2.5 1.1-2.2 0.3-7.1-3.1-4.8 1.3-1.2-2.4-2.9-0.9-5.7 37.1-3.3 0.5,4.9 4.9,3.2 2.3,4.9-0.5,6.7-2.3,3.3 0.3,2.3 3.3,3.5-0.3,16.9 2.5,4.7-0.5,3.9-3.2,2.9-1.4,4.7 5.2,8.3 7,5.3-0.2,6.7-4,4.3-0.9,3.5 1.1,4.1-0.4,1.3-5.2,1.4-2.6-1.1-2.7,2.9 0.5,3.5 5,4.7-0.7,3.9-4.9-0.7-3.4-2.6-1.1,0.9-3.6-4.3-5.4-0.7-2.9,1.4-7.2-3.3z',
+  'IN': 'M627.8,266.3l0.1-5.4-0.5-22 33.5-3.1 1.3,2.3-0.7,3.4 2.3,6.7 4.5,5.7 0,3.5-2.3,2.4 1.1,4.3-0.5,5.2 1.6,7.2 2.9,6.3-0.4,6.7-3.1,3.5-3.9-0.3-4.9,4-3.1,4.6-4.1-1.8-3.6,2.1-3.3-0.4-4.4-3.6-9.9-6.7 1.2-4.3-0.7-5.2 2.7-4.5-0.9-2.7 2-3.5-0.3-6.6z',
+  'IA': 'M590.5,194l-4.2-3.2-2.5-3.7-4.9,0.3-4.9-1.6-2.2-5.9-2.9-1.6-0.2-3.9-2.6-1.4-3.9,1.8-3.5-0.4-2.4-6.3-0.9-6-1.8-2.6-71.3,2.9 0.7-9.1-2.7-4.5-2.9-3.8-0.9-4.9 2.1-4.4 0.5-3.5-3.1-5.3 0.5-2.5 78.8-1.8 2.2,3.1-0.5,6.3 2.7,3.9 5.2,0 1.6,5.8 10.1,0 1.1,2.1-3.5,4.5-1.6,6.5 0.9,2.9 2.1,2.2-0.5,2.5 3.5,5.4 3.9,2.2 2.9,2.4 0.4,3.7 4.5,2.5 1.8,2.6z',
+  'KS': 'M546.5,263.2l-72.6,0.5-59.7-2.2-0.3-24.1 1.5-34.1 56.9,1.7 75.7,0.5 0.6,7.7-0.4,8.9 1.7,35.5z',
+  'KY': 'M718.3,288.4l-5.5,4.3-32.9,3.2-7.4,3.9-21.5,1.9-12.9,2-6.1,3.7 0.4-3.9-4.7-4.7-4.7,0.7-3.9-4.1-10.1,0-1.4-2.2-3-0.7-1.1,1.1 0.3,3.7-3.1,0.3-3.6,3.4-3.7-1.1-0.9,4.9-1.6,2.5-4.7-3-2.9-1.4 1.9-7.8 4.1-2.7 3.9,0.3 3.1-3.5 0.4-6.7-2.9-6.3-1.6-7.2 0.5-5.2-1.1-4.3 2.3-2.4 0-3.5-0.2-2.3 47.9-4.9 2.5,3.1 5.9-3.7 4.1-0.7 4.9,3.1 6.5-1.2 5.2,0.9 6.7,4.5 10.1-5.9 3.7-0.1 3,3.6 4.5,0 4.4,3.8 4.6,2.7-0.6,2.4 4.3,2.1 2.5,4.5z',
+  'LA': 'M610.3,435.4l-1.7-12.9-4-15-5.5-6.7-0.9-5.7 2.7-3.9 3.9,2.4 31.9-0.7 28.1-1.2-0.7,10.1 2.2,5.2-1.5,5.9 3.9,4.7 0.1,5.7-5.2-1.9-7.7,1.5-2.1,3.2-0.5,4.2-4.8-0.2-5.1,3.1-1.4-3.6-3.8,0.3-1.1,2.5 1.7,3.8 0.2,2.9-4.1,4.7 0.3,2.9-0.9,1.7-3.1-3.5-4.5,1.3 0.3,3.8 2.8,1 0.6,2.1-3.9,1.9-0.4,5.2 4.9,2.5-1.9,2.7-4-1.8-3.3,6.3 3.2,1.9 4.2-1.9 3.9,2.2 0.2,2.5-2.1,2.1-0.2,2.7 5.3,0.2 3.9-3.6 2.9,2.8 0.2,3.5-2.9,1.6-2.2-2.9-2.9,0.9-6.2-2.9-6.7,1.9-3.2-1.7-3.9,0z',
+  'MA': 'M885.7,152l-0.5-2.7 2.3-0.1 1.9,1.9-0.4,2.8z M878.6,154l-1.7-0.4-0.5-2.3 3.7-0.3 1.9,0.8-0.4,2.5z M852.8,175.4l12.9-4.2 2.3-2.8-0.3-1.7 4.5-1.9 6.5,4.3-3.6,1.1 0.7,2.8 2.4,0.9 2.1-1 4.3,0.2 5.5-4.9 2.5-4.1 3-0.3 1.3,2.1 0,2.1-4.5,2.1-3.9,3.1-4.9,1.5 1.5,3.5-1.1,1.4 1.7,4.7 3.7-2.3 1.6-3.4 2.8,1.3-3.7,5.7-5.4,4-2.7-1-3.9,1.7 0.7-1.9-2.7-0.5-3,2.3-3.9-5.7-5.2-1.6-10.6,2.6-10.2,2.4-1.9-6.4z',
+  'MD': 'M824.6,233.6l-7.3-18.3-10-2.3-4.1,1.8-3.5-1.1-3.3,3-3.3,5.4-3.3-1.7-2.7,0.3-4.9-2-4.5,1.4-3.8-2.7 0.4-2.6-6.9,2 0.6,2.3-4.9,0.4-0.4-6.5-1.5-5.8 30.9-7.2 1.2-4.9 5.9-4.3 3.7-3.6-1.7-2.7-4.9,4.6-3.9,0.7-3.5,3.2-7.1,0.8-4.9,3.7-3.9-4.4-4.9-0.4-0.1-3.5 37.6-9.6 0.9,5.3 4.7,1 3.9,7.9 5.9,3 3.3,0.2 2.5,2.9 4.7,0.7 3.2,5.3-5.6,0.9-2.6,2.9-2.9,4.9-3.7,3.9-2.5-2.4-3.7,5.3z',
+  'MI': 'M573.7,111.9l2.1-2.6 3.5-2 5.5-1.9 2.5,0.9 0.9,1.5 5.1-3.6 2.7-0.8 0.9,1.2-1.9,4.5-2.7,2.5-3.5,0.3-3.5,1.2-2.9,3.2-0.9,4.5-4.8,0.7z M652.1,130.2l0.7-2.9 2.1-3 6.1-4.4 3.3-3.2 0.7,0.4 0.1,3.4-2.9,5.7-3.1,2.8-3.8,2.3z',
+  'MN': 'M576.9,88.7l-1.2-4.7-3.9-6.7-1.1-5.4 0.5-5.2-1.9-6-0.8-9-1.1-2.7-0.6-7.6 2.9-4.6 2.3-1.9 0.3-6.5-1.1-6.3 57.1-0.4 0.3,10.7 3.1,2 1.5,2.4 6.5,0.7 0.5,3.5 6.3,0.1 1.1-1.3 2.5,4.3-1.5,3.9 0.1,4.1-3.9,3.1-3.3,0.9-1.6,8.5-2.3,2.7-0.2,5.1-1.3,0.5 0.1,5.7-1.3,4.9-0.3,5.4 2.6,4 2.2,1.9 0.9,4.7-2.6,3.2-4.3,1.9-9.5,3.4-3.9,4-4.6,4.2-1.2,3.4-1.2-1.7-4.6,0.5-0.3-3.7-2.9-2.4-3.9-2.2-3.5-5.4 0.5-2.5-2.1-2.2-0.9-2.9 1.6-6.5 3.5-4.5-1.1-2.1-10.1,0-1.6-5.8-5.2,0-2.7-3.9 0.5-6.3z',
+  'MS': 'M628.5,387.5l-3.2-30.5 0.5-3.5-2.6-3.7-0.3-5.5 2.7-1 3.6-5.6-2.5-0.8-0.7-4.3 39.3-1.8-1.9-33.3 10.6-0.6-0.2,5.6-1.5,5.5 2.4,3.7 0.8,3.5-4.9,2.5-2.9,3.9 0.3,6.9 3.3,1.7-0.7,28.7-1.9,8.9-3.6,3.1-0.3,4.4-4.1-0.2-1.9,4.7 5.4,0.5 1.8-5.1 2.6,0.2 3.3-3.7 1.9,1.3 0.5,8.3-20.6,2.3z',
+  'MO': 'M612.5,273.6l-4.7,3.9-4.5,2.9 0.4,3.5-5.1,5-1.6,4.7-47.4,1-47.8-0.9 0.7-4.9-0.4-6.6-1.8-4.5-2.5-3-1.5-4.1 1.2-4.6-2.3-4.1-1.1-5.9 1.4-5.2 3.7-3.7 0.6-4.2-1.9-2.7-0.7-6 56.9-0.9 0.4,5.1 4.9,4.9 3.3,0.2 2.3,2.5 5.4,0.3 5-2.3 2.9,0.7 2.9-2.3 0.7-4.9 2.9-1.5 4,3 0.6,6.4 3.7,2.1 6.5-3.3 3.9-0.6 3.9,3 4.6-5.2-0.1-5.7 3.5-3.9 4.2-2.4 3.2-0.5 1.5,2.7z',
+  'MT': 'M336.7,67.7l-0.7-11.1-2.6-19.2-3.7-18.4-4.1-14.2 47-5.3 45.6-7.5 44.3-9.5 11.7-3.2 3.9,14.7 4.5,23.2 1.5,17.4 2.5,11-0.2,11.4 4.7,8.7 2.9,3.6 1.2,4.5-3.9,4.6-0.2,3.8-4.1-3.9-5.9-1.4-2.3-3.7-3.9-1.7-5.8,0.9-5.1,2.2-0.5,1.6-6.6-0.6-4.7,1.7-1.7-0.9-2.8,3-0.5,3.9-5.2,2.2-3.5-0.5-2.9,2.9 0.2,2.9-1.6-0.3-1.7-3.2-3.8-0.5-2.7-2.1-3.1,0.7-5.7-3.2-3.3,0.5-3.5-2.5-3.5,2.2-3.4-2.5-6.7,1-2.5-0.9 0.5-4.4-4.6-2.7-3.8-0.9-2-3.4z',
+  'NE': 'M485.8,169.6l-6.9,0.2-71.9-3.6-2.4-0.2 1.6-14.1 3.5-30.7 41.7,2.7 54.1,1.7 0.9,3.7-2.7,5.5-0.5,7.3 2.5,7.5 5.3,6.3 4.9,4.7 4.6,2.9 1.3,5.5z',
+  'NV': 'M189.4,185.2l-30,5.3-21.5-94 9.9-4.1 21.6-8.7 11.2-5.7 2.7,3.7-0.3,3.5 3.7,5.3-0.3,2.6 1.9,3.7 4.2,0.3 2.3,4.2-0.8,3.9 4.5,8.2 2.9,0.6 2.1,5.8-2.2,6.9 1.4,6.7-1.9,4.7 2.3,7.9-3.5,8.2-1.7,7.7 1.1,4.3z',
+  'NJ': 'M833.6,225.1l-3.1-2.5-2.8,2-0.3-2.9-1.4-3.9 3.9-2.8-0.3-5.2-2.5-1.7-0.7-6.9 2.4-1.3 0-3.5 1.2-6.8 0.6-5.9-0.2-5.9 1.9-2.7 2.2-0.5 1.5,2 0.5,3.5 4.4,3.2-0.2,3.3-2.6,1.7 0.2,1.5 2.5,2.5 3.6,9.5 3.4,6.2-0.4,4.7-2.9,3.9-0.2,3.6 1,3.1-3.5,3.2z',
+  'NM': 'M319.7,389.1l-4.1-30-4.2-33.2-4.6-31.4-4.8-38.5 37.5-4.2 36.5-5.7 26,1.9 0.9,9.3-0.7,7.9 1.5,34.1 0.3,24.1-3.6,0-0.4,8.5-47.2,3.8z',
+  'NY': 'M844.5,160.5l-1.9-0.9-2.9,2.1-2.7,3.5-0.9,3.2 0.7,2 3.9,2.5-0.3,2.8-4.9,5.5-4.9,3-8.5,4.9-7.3,3.2-8,2.5-1.9-4.6-3.5-2.9-4.7-0.9-4.9-3.1-38.2,8.7-27.9,5.5-1.6-8.7 2.7-2.1 1.6-2.5-0.2-4.6 1.4-0.7-0.3-3.2 0.7-0.8-0.3-1.5 0.9-0.8 4.7-3.3 4.7-2.8 3.6-1.5 3.9-3 7.3-3.7 6.2-2.6 4.4-0.7 7.2-2.4 3.9,0.1 3.2-1.4 2.9,0.5 0.5-2.7-1.5-1.5-0.1-2.7 1.2-2.5-0.1-3.2 3.9-3.7 3-1.9 2.3-2.6 5.9-3.9 3.9-1.1 6.7,0 13.4-4.5 5.3-0.2-0.1,3.4 3.6,2.3 3.5-1.2 5.1,2.2 3.7-2.5 1.7,1.6 0.9,5.5-1.9,4.1 5,4.5 0.8,2.9 4,0.9-0.1,4.3 2,0.7 0.9-1.1 3.1,0.6z',
+  'NC': 'M827.3,307l1.2,5.7-2,8.2-2.7,3.9-1.9,6.9-2.8,2.4-0.9,3.3-3.4-0.4-3.7,2.7 0.6,3.6-6.7-1.7-13-3.9-21.3-0.4-8.7,0.8-11.9,4.7-8.6,0.1-4.2-1.5-5.4,4.9-6.5,2.3-3.7,2.7-3.1-0.4-2.7,2.2-1.9-1.3 0.6-4.5 6.1-4.6 1.7-4.8 3.3-5.2 0.7-8.8-1.5-4.6 10.1-1.5 44.1-6.5 33.1-6.7 13.9-2.3z',
+  'OH': 'M718.8,234.3l-3.8,3.2-2.2,5.3-4.3,4.7-2.9,1-2.9,3.9-1.5,7.8-5.1,4.6-1.9-0.5-3.7,2.2-3.2-0.7-3.9,4.3-4.2,1.9-2.9-2.7-3.6-1.1-3.2-3.3 0.5-3.1-3.1-0.7-2.1-4.4 0.5-2.9-47.9,4.9 3.4-3.1-0.9-5.6 4.3-3.7 0.2-6.7-7-5.3-5.2-8.3 1.4-4.7 3.2-2.9 0.5-3.9-2.5-4.7 0.3-4.1 42.1-4.7 1.6,2.1 3.5,0 5.1,4.7 7.4,6 4.8,2.7 3.7,0.7 8.9,5.6 8.6,3.9-0.3,2.2 3.9,5.4z',
+  'OK': 'M487.7,340.2l0.3-35.7-2.3-0.2-2.9-2.1-4.5,0.2-0.7-3.9 2.1-3.9-0.9-3.5-56.7,0.9-36.3-1.9 0.9-17.9 53.9,1.7 42.8,0.5-0.6-7.7-75.7-0.5-56.9-1.7 1.8-10.5 34.9,1.2 38.9,0.5 39.7-0.1 1.8,4.9-0.3,4.7 4.5,3.9 2.2,0.7 2.3-2 4,1.5 1.2,4.4 5.6,1.5 3.2,2.5 5,1.1 5.5,0.3 1.7,3.3 6.6-2 1.7,3.5 3.7,1.9-0.3,2.9 6.2,0.3 3.2-3 5.2,1.4 4.3,0 2.9,1.7 5.3,2.4 4.8-0.3 3.9,2.4-0.2,4.6 4.6,0.2 2.9-2.8 4,2.5-0.3,3.9-43.9,2.3-41.5,1.2z',
+  'OR': 'M173.1,81.6l-4.9-1.5-9.2-1.2-3.8-2.2-6.1-1.2-4.3,0.6-8.7-2.7-6.9,0.7-4.2,2.2-4.7-1.5-5-0.1-9.9-3.9-6.2-4.3 1.1-5.7-1.8-2-0.9-5.6 4.7-6.5 1.6,0.5 1.6-3.1 4.9-1 1.4,1.3 0.4-2.7 5.5-0.7 2.5-2.9 1.5-4.3-0.1-4.9 3.7-4.5 0.1-5.3 1.7,0.7 4.3-2.2 0.9-2 6.9-3 1-2.7 5.5-3.7 5.4,0.4 9,3.1 14.9,3.2 11.2,1.9 3.1-0.5 21.7,4.9-7.9-0.7-2.7,5.4-1.9-3.9-2.6,1-5.9,11.1-1,4.8 5.8,5.9 0.3,5.9 0.4,3.4-4.1,4.5-0.7,5.7 2.1,2.9 1.8,5.6-3.8,11.7z',
+  'PA': 'M824.6,198.4l-4.9,4.6-3.9,0.7-3.5,3.2-6.5,0.3-4.9,3.7 0.5,3.3-37.6,9.6 0.1,3.5-27.6,6.1-1.3-8.1 3-2.5 0.5-3.9-0.5-4.6-2.7-4.5 0.5-3.1-0.9-0.5 0.7-2.3 2.5-2.6-1.4-0.7-2.7,2.1-2-1.9 27.9-5.5 38.2-8.7 26.5-5.2z',
+  'SC': 'M754.8,357.3l-5.1,3.6-3.7-1.5-1.5-3.9-4.6-0.6-6.7,4.5-7.7,7.4-4.9,2.7-3.1,4.4-3.9,1.8-2.5-0.5-1.9,5-5.4,4-4.5-0.1 2.2,3.9 4.6,2.1 5.5,5.3 4.4,0.9-1.9-3.5 21.7-3.5 8.2-1.2 9.5,5.7-3.1-5.4 3.1-1.8 8.7-0.8 21.3,0.4 4.4-3.4 4.6-8.9-5.7-4.7-3.6-5.6-5.6-4.4-6.9-2.9-5.6-7.3z',
+  'TN': 'M718.6,310.1l-5.5,4.2-10.2,0.9-58.3,5.1-10.3,1.1-10.1,0.1-3.7,3.7-5.9,0.5-9.7,3-3.7-5.3 0.2-3.4 6.1-3.7 12.9-2 21.5-1.9 7.4-3.9 32.9-3.2 5.5-4.3 8.7-0.7 8.3,0.9-1,3.4 4.2,3.7z',
+  'TX': 'M487.5,340.3l41.5-1.2 43.9-2.3 4.3,28.6 4,15 1.7,12.9 1.4,2.6-3.9,1.7-2.9,4.7-2.4,0.5-4.2,7.6-1.5,0.9 0.2,3.5-7.7,1.7-6.9,6-4.7,1.9-0.9,1.7-6,6.7-1.6,4.5-4.8,7.9-0.7,6.2-1.3,1.5 2.6,3.5-1.7,5.5-0.2,5.7-2.5,1.5 0.5,1.9-1.4,8.5-0.8,4.1-1.7,4.4-1.5-0.4-4.9,3.5-6.5,0.3-6.1,3.4-4.2,0.7-2.9,1.9-5.7,0.5-5.5,3.9-7.5,2.5-4.1,4.7-1.1,5-3.7,5.5-8.9,6.7-4.1,1.1-0.3,1.6-7.3,3.2-6.9-3.7-3.3,1.4-3.3-0.5 0.5-4.7-2.7-4.7-9.1-3.2-1.5-4.8-4.5-1.3-3.7-5.9-3.7-0.9-3.5-5.9-6-3.9-1.3-4.1-4.9-5.4-1.5,0.8-4.9-3.2-2.5-2.7-5.4-6.4-4.6-1.5-4.6-4.9-1.4-2.4-4.5-6-1.7-5.2 2.6-5.9-3-1.7-1.9-8.5-1.3-2.7 0.6-4.7 3.1-2.7-4.4-3.9-1.5-1.3-5.9 0.6-2.7-5.9-3.1-2.3 0.7-5.7-6.2-7.8-2.5-6.5 0.5-4.6-4.7-6.1 0.5-2.3-3-5.1 2.7-1.8 47.2-3.8 0.4-8.5 3.6,0 59.7,2.2 72.6-0.5 1.8,35.5z',
+  'UT': 'M285.9,251.4l-47.4-7-18.4-3.2 10.4,60.4 1.5,9.8-8.7-5.3-31.6-5.3-1.1-4.3 1.7-7.7 3.5-8.2-2.3-7.9 1.9-4.7-1.4-6.7 2.2-6.9-2.1-5.8-2.9-0.6-4.5-8.2 0.8-3.9-2.3-4.2-4.2-0.3-1.9-3.7 0.3-2.6-3.7-5.3 0.3-3.5-2.7-3.7 2.4-10.7 46.1,7.6 46.2,6.4z',
+  'VA': 'M823,269.6l-1.2,4.6-4.9,9.1 2.2,1.9 0.1,5.2-13.9,2.3-33.1,6.7-27.2,4.5-10.2,1.1-1.5-1.7 0.9-2.4 2.4-2.9-2.5-4.5-4.3-2.1 0.6-2.4-4.6-2.7-4.4-3.8-4.5,0-3-3.6 4.7-0.2 2.4-4.9 6.6-4.7 2.3-0.8 0.7-4.7 2.9-0.7 3.9-4.8-0.4-2.9 3.9-0.4 4.7-6.7 1.5,1.1 5.5,0.2 3.7-2.9 4.9,4.2 6.3,0.3 3.9,4.7 4.3-1.7 7.7,3.5 3.7-0.7 3.3,1.5 4.5-1.4 4.9,2 2.7-0.3 3.3,1.7 3.3-5.4 3.3-3 3.5,1.1 4.1-1.8 10,2.3z',
+  'WA': 'M184.9,14.9l-1-2.7-5.5,0.4-1-2-5.4-1.3-3.9,0.8-7.9-2.9-8.2,0.5-2.5-3.7 6.1-0.6 5.1,1.1 3-0.6-0.8-1.1 6.9,0.2 2.6-3.3-5.9-0.3 2.9-3.5-3.9-0.3 0.5-4.8-2.2,0.2-4.7-3.5 2.7-5 2.9,2.2 4.9,1.8 8.4,2.1 3.2,1.7 5.7,1.3 6.4,0.5 2.9,-1.1 8.3,1.7 7.2,-0.4 2.5,0.9 7.3,-2.4 1.3,3.4 2.4,3.9 3.9,-0.5 1.2,2.6-2.9,7.3 0.9,3.6-0.3,2.5 5.4,0.8-0.3,17.7-4.1,0.4-4.9,1.9-6.7,1.1-5.1-0.5-5.4,1.6-6.2-0.7-11.2-1.9-14.9-3.2-9-3.1-5.4-0.4z',
+  'WV': 'M765.9,248.3l-4.2-1.9 3.9-4.3 3.2,0.7 3.7-2.2 1.9,0.5 5.1-4.6 1.5-7.8 2.9-3.9 2.9-1 4.3-4.7 2.2-5.3 3.8-3.2 0.2,3.5 3.9,0.9 4.5,0.1-0.1,3.5-2.2,0.5-1.9,2.7 0.2,5.9-0.6,5.9-1.2,6.8 0,3.5-2.4,1.3 0.7,6.9 2.5,1.7-0.4,5.2-3.5,2.5-0.7-4-2.5-2-4.7,6.9-3.9,0.1-0.7,4.7-2.9,0.7-2.3,0.8-6.6,4.7-2.4,4.9-4.7,0.2-2.7,2.6 0.4,2.9-3.9,4.8-2.9,0.7 1-3.4-8.3-0.9-8.7,0.7 2.5,4.5 0.9,2.4-10.1,5.9-6.7-4.5-5.2-0.9-6.5,1.2-4.9-3.1-4.1,0.7-5.9,3.7-2.5-3.1 0.2,2.3-4.5-5.7-2.3-6.7 0.7-3.4-1.3-2.3 0.5-3.7 47.2-4.5z',
+  'WI': 'M615.2,129.9l-1.9-2.1-1.3-5.6-3-5.5 0.7-3.1-1-2.7 1.8-4-0.3-4.9-2.9-2.8 0.6-0.9-0.2-5.5 5.9-7.7 3.9-6.9 2.1-6.9 1.6-1.9-1.4-3.1 0.3-3.7 1.9-0.3-0.4-3.8 2.7-5.5-2.5-8.9 2.9-5.9-0.5-2.9 0.8-1.6-0.7-3.1 22.7-3.4 3.7,0.8 9.5-3.4 4.3-1.9 2.6-3.2-0.9-4.7-2.2-1.9-2.6-4 0.3-5.4 1.3-4.9-0.1-5.7 3.5-0.7 1.5-2.1 5.3,4.7 2.7,1.9 7.1,1.9-0.5,5.1 2,3.4 0.3,2.5-2.5,1.9-0.9,2.7 0.5,2.3 3,3.4 4,0.5 1.5-1.5 1.6,1.3-1.7,4 0.7,3.2 3.6,1.6 3.9,0 4.7,5.9 1.6,0 1.7,5.2 4.9-1.7 1,3.3 6.5,0.9-4.7,3-3.2,1.4-6.9,5.7-1,3.9-3.2,3.9-0.5,2.9 1.7,0.9-0.5,4.1-2.9,6.5-1.7-0.7-1.8,2.1-3.7,1.6-2.5,0.1-0.7,2.5 1.6,4.3-0.9,4.5-3.7-3.3-5.4-0.4-2.5-2.6-9.8-2.1-4.9-2.4-9.9,0.8z',
+  'WY': 'M336.7,184.9l-3.5-30.7-7.7-60.2 45.8,5.7 47.7,4.3 47.3,2.4-3.5,21.2-8.1,61.1-48.4-5.5-69.8-10z'
 };
 
+// === DATA ===
 let scoutData = null, surveyData = null;
 let activeMode = 'scout', activeFilter = null;
-let rotation = 0, isDragging = false, lastX = 0;
 
-// Fallback data
-const SCOUT_FALLBACK = {
-  markers: [
-    {vendor:'CEI',state:'TX',location:[31.05,-97.56],count:69},{vendor:'CEI',state:'FL',location:[27.77,-81.69],count:52},
-    {vendor:'Wachter',state:'PA',location:[40.59,-77.21],count:38},{vendor:'Techwise',state:'NC',location:[35.63,-79.81],count:33},
-    {vendor:'Wachter',state:'OH',location:[40.39,-82.76],count:31},{vendor:'Wachter',state:'NY',location:[42.17,-74.95],count:24},
-    {vendor:'CEI',state:'GA',location:[33.04,-83.64],count:23},{vendor:'Everon',state:'IL',location:[40.85,-88.69],count:22},
-    {vendor:'CEI',state:'AL',location:[32.81,-86.79],count:22},{vendor:'CEI',state:'TN',location:[35.75,-86.69],count:22},
-    {vendor:'CEI',state:'CA',location:[36.62,-119.38],count:21},{vendor:'Wachter',state:'IN',location:[39.85,-86.26],count:20},
-    {vendor:'Wachter',state:'NJ',location:[40.30,-74.52],count:20},{vendor:'CEI',state:'OK',location:[35.57,-96.93],count:20},
-    {vendor:'CEI',state:'AZ',location:[33.73,-111.43],count:18},{vendor:'Techwise',state:'VA',location:[37.77,-78.17],count:17},
-    {vendor:'Everon',state:'WA',location:[47.40,-121.49],count:11},{vendor:'Everon',state:'CO',location:[39.06,-105.31],count:10}
-  ],
-  vendor_totals: {CEI:342,Wachter:176,Everon:154,Techwise:78,SAS:8},
-  state_totals: {TX:{CEI:69},FL:{CEI:52},PA:{Wachter:38},NC:{Techwise:33},OH:{Wachter:31},NY:{Wachter:24},GA:{CEI:23},IL:{Everon:22},AL:{CEI:22},TN:{CEI:22},CA:{CEI:21},IN:{Wachter:20},NJ:{Wachter:20},OK:{CEI:20},AZ:{CEI:18},VA:{Techwise:17},WA:{Everon:11},CO:{Everon:10}}
-};
-
-// === CANVAS GLOBE ===
-function initGlobe() {
-  const canvas = document.getElementById('globe-canvas');
-  const ctx = canvas.getContext('2d');
-  const size = Math.min(canvas.parentElement.offsetWidth, 440);
-  canvas.width = size * 2;
-  canvas.height = size * 2;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
-  ctx.scale(2, 2);
-
-  const cx = size / 2, cy = size / 2, radius = size / 2 - 20;
-
-  // Drag handling
-  canvas.onpointerdown = e => { isDragging = true; lastX = e.clientX; canvas.setPointerCapture(e.pointerId); };
-  canvas.onpointermove = e => { if (isDragging) { rotation += (e.clientX - lastX) * 0.01; lastX = e.clientX; } };
-  canvas.onpointerup = e => { isDragging = false; canvas.releasePointerCapture(e.pointerId); };
-
-  function latLonTo2D(lat, lon, rot) {
-    const phi = (90 - lat) * Math.PI / 180;
-    const theta = (lon + rot * 180 / Math.PI) * Math.PI / 180;
-    const x = Math.sin(phi) * Math.cos(theta);
-    const z = Math.sin(phi) * Math.sin(theta);
-    const y = Math.cos(phi);
-    if (z < -0.1) return null; // behind globe
-    return { x: cx + x * radius * 0.95, y: cy - y * radius * 0.95, depth: z };
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, size, size);
-
-    // Globe background with gradient
-    const grad = ctx.createRadialGradient(cx - radius*0.3, cy - radius*0.3, 0, cx, cy, radius);
-    grad.addColorStop(0, '#1a2a4a');
-    grad.addColorStop(0.7, '#0d1525');
-    grad.addColorStop(1, '#060914');
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Globe edge glow
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(90,228,255,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Grid lines (latitude)
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    for (let lat = -60; lat <= 60; lat += 30) {
-      ctx.beginPath();
-      for (let lon = -180; lon <= 180; lon += 5) {
-        const p = latLonTo2D(lat, lon, rotation);
-        if (p) { if (lon === -180) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
-      }
-      ctx.stroke();
-    }
-    // Grid lines (longitude)
-    for (let lon = -180; lon < 180; lon += 30) {
-      ctx.beginPath();
-      for (let lat = -90; lat <= 90; lat += 5) {
-        const p = latLonTo2D(lat, lon, rotation);
-        if (p) { if (lat === -90) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
-      }
-      ctx.stroke();
-    }
-
-    // Draw markers
-    const data = activeMode === 'scout' ? scoutData : surveyData;
-    if (!data || !data.markers) { requestAnimationFrame(draw); return; }
-
-    const markers = data.markers
-      .filter(m => !activeFilter || (activeMode === 'scout' ? m.vendor === activeFilter : m.status === activeFilter))
-      .map(m => {
-        const p = latLonTo2D(m.location[0], m.location[1], rotation);
-        if (!p) return null;
-        const color = activeMode === 'scout' ? VENDOR_HEX[m.vendor] : SURVEY_HEX[m.status];
-        const size = Math.min(16, 4 + (m.count / 20) * 4);
-        return { ...m, ...p, color, markerSize: size };
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.depth - b.depth); // Draw back-to-front
-
-    markers.forEach(m => {
-      const alpha = 0.4 + m.depth * 0.6;
-      // Glow
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, m.markerSize + 4, 0, Math.PI * 2);
-      ctx.fillStyle = m.color.replace(')', `,${alpha * 0.3})`).replace('rgb', 'rgba').replace('#', 'rgba(').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i, (_, r, g, b) => `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)}`);
-      const glowGrad = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.markerSize + 6);
-      glowGrad.addColorStop(0, m.color + '60');
-      glowGrad.addColorStop(1, m.color + '00');
-      ctx.fillStyle = glowGrad;
-      ctx.fill();
-      // Marker
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, m.markerSize, 0, Math.PI * 2);
-      ctx.fillStyle = m.color;
-      ctx.globalAlpha = alpha;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
-    // Auto-rotate when not dragging
-    if (!isDragging) rotation += 0.003;
-    requestAnimationFrame(draw);
-  }
-
-  draw();
-}
-
-// === DATA LOADING ===
 async function loadData() {
+  // Load scout data
   try {
     const res = await fetch('vendor_locations.json?t=' + Date.now());
-    scoutData = res.ok ? await res.json() : SCOUT_FALLBACK;
-  } catch { scoutData = SCOUT_FALLBACK; }
+    scoutData = res.ok ? await res.json() : null;
+  } catch { scoutData = null; }
 
+  // Load survey data
   try {
     const res = await fetch('survey_routing_data.json?t=' + Date.now());
     if (res.ok) {
       const raw = await res.json();
-      surveyData = processSurveyData(raw);
-    } else {
-      surveyData = buildFallbackSurvey();
+      surveyData = {
+        summary: raw.summary,
+        rows: raw.rows
+      };
     }
-  } catch { surveyData = buildFallbackSurvey(); }
+  } catch { surveyData = null; }
 
-  setupModeTabs();
+  setupTabs();
+  renderMap();
   renderUI();
-  initGlobe();
 }
 
-function processSurveyData(raw) {
-  const byState = {}, byVendor = {}, statusCounts = { Completed: 0, Pending: 0, 'No Survey': 0 };
-  raw.surveys.forEach(s => {
-    const state = s.state || 'Unknown', vendor = s.vendor || 'Unknown';
-    const status = s.survey_status === 'Completed' ? 'Completed' : (!s.survey_status || s.survey_status === 'Not Started') ? 'No Survey' : 'Pending';
-    if (!byState[state]) byState[state] = { Completed: 0, Pending: 0, 'No Survey': 0, total: 0 };
-    byState[state][status]++; byState[state].total++;
-    if (!byVendor[vendor]) byVendor[vendor] = { Completed: 0, Pending: 0, 'No Survey': 0, total: 0 };
-    byVendor[vendor][status]++; byVendor[vendor].total++;
-    statusCounts[status]++;
-  });
-  const markers = [];
-  Object.entries(byState).forEach(([state, data]) => {
-    const coord = STATE_COORDS[state]; if (!coord) return;
-    ['Completed', 'Pending', 'No Survey'].forEach((status, i) => {
-      if (data[status] > 0) markers.push({ status, state, location: [coord[0] + (i-1)*0.5, coord[1] + (i-1)*0.3], count: data[status] });
-    });
-  });
-  return { markers, byState, byVendor, statusCounts, total: raw.surveys.length };
-}
-
-function buildFallbackSurvey() {
-  return {
-    markers: [
-      { status:'Completed', state:'TX', location:[31.05,-97.56], count:45 },
-      { status:'Pending', state:'TX', location:[31.55,-97.26], count:15 },
-      { status:'Completed', state:'FL', location:[27.77,-81.69], count:38 },
-      { status:'Completed', state:'CA', location:[36.62,-119.38], count:28 }
-    ],
-    byState: { TX: { Completed:45, Pending:15, 'No Survey':9, total:69 } },
-    byVendor: { CEI: { Completed:200, Pending:80, 'No Survey':62, total:342 } },
-    statusCounts: { Completed:450, Pending:180, 'No Survey':128 }, total:758
-  };
-}
-
-// === UI ===
-function setupModeTabs() {
+function setupTabs() {
   document.querySelectorAll('.mode-tab').forEach(tab => {
     tab.onclick = () => {
       if (tab.dataset.mode === activeMode) return;
@@ -332,42 +214,112 @@ function setupModeTabs() {
       activeFilter = null;
       document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      document.getElementById('pageTitle').textContent = activeMode === 'scout' ? '🌍 Scout Coverage' : '📊 Survey Status';
-      document.getElementById('pageSubtitle').textContent = activeMode === 'scout' ? 'Interactive visualization of scout program distribution' : 'Survey completion tracking across all locations';
-      document.getElementById('globeTitle').textContent = activeMode === 'scout' ? '🌐 Scout Distribution' : '🌐 Survey Distribution';
+      document.getElementById('pageTitle').textContent = activeMode === 'scout' ? '🗺️ Scout Coverage' : '📋 Survey Status';
+      document.getElementById('pageSubtitle').textContent = activeMode === 'scout' ? 'Vendor assignments across the United States' : 'Survey completion status by vendor';
       document.getElementById('legendTitle').textContent = activeMode === 'scout' ? '◈ Vendors' : '◈ Status';
-      document.getElementById('velocityTitle').textContent = activeMode === 'scout' ? '🚀 Velocity' : '📈 Rates';
+      document.getElementById('velocityTitle').textContent = activeMode === 'scout' ? '🚀 Velocity' : '📈 Completion';
+      renderMap();
       renderUI();
     };
   });
 }
 
+function renderMap() {
+  const svg = document.getElementById('us-map');
+  svg.innerHTML = '';
+
+  Object.entries(STATE_PATHS).forEach(([state, path]) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', path);
+    el.setAttribute('id', `state-${state}`);
+    el.dataset.state = state;
+
+    let color = 'rgba(255,255,255,0.06)';
+    let opacity = 0.6;
+
+    if (activeMode === 'scout' && scoutData?.state_totals?.[state]) {
+      const stateData = scoutData.state_totals[state];
+      const dominant = Object.entries(stateData).sort((a, b) => b[1] - a[1])[0];
+      color = VENDOR_HEX[dominant[0]] || '#4D8DFF';
+      opacity = activeFilter ? (stateData[activeFilter] ? 0.8 : 0.15) : 0.6;
+    } else if (activeMode === 'survey' && surveyData) {
+      // For survey mode, we don't have state-level data, so just show a neutral color
+      color = 'rgba(90,228,255,0.3)';
+      opacity = 0.4;
+    }
+
+    el.setAttribute('fill', color);
+    el.style.fillOpacity = opacity;
+
+    el.addEventListener('mouseenter', (e) => showTooltip(e, state));
+    el.addEventListener('mousemove', (e) => moveTooltip(e));
+    el.addEventListener('mouseleave', hideTooltip);
+
+    svg.appendChild(el);
+  });
+}
+
+function showTooltip(e, state) {
+  const tooltip = document.getElementById('tooltip');
+  
+  if (activeMode === 'scout') {
+    const stateData = scoutData?.state_totals?.[state];
+    if (!stateData) {
+      tooltip.innerHTML = `<div class="tooltip-title">${state}</div><div style="color:var(--text-soft);font-size:12px;">No assignments</div>`;
+    } else {
+      const total = Object.values(stateData).reduce((a, b) => a + b, 0);
+      const rows = Object.entries(stateData).sort((a, b) => b[1] - a[1]).map(([v, c]) => 
+        `<div class="tooltip-row"><span><span class="tooltip-dot" style="background:${VENDOR_HEX[v]}"></span>${v}</span><span style="font-weight:700;">${c}</span></div>`
+      ).join('');
+      tooltip.innerHTML = `<div class="tooltip-title">${state} — ${total} sites</div>${rows}`;
+    }
+  } else {
+    tooltip.innerHTML = `<div class="tooltip-title">${state}</div><div style="color:var(--text-soft);font-size:12px;">See vendor breakdown →</div>`;
+  }
+  
+  tooltip.classList.add('visible');
+  moveTooltip(e);
+}
+
+function moveTooltip(e) {
+  const tooltip = document.getElementById('tooltip');
+  tooltip.style.left = (e.clientX + 15) + 'px';
+  tooltip.style.top = (e.clientY + 15) + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
 function renderUI() {
-  if (activeMode === 'scout') renderScoutUI(); else renderSurveyUI();
+  if (activeMode === 'scout') renderScoutUI();
+  else renderSurveyUI();
 }
 
 function renderScoutUI() {
   if (!scoutData) return;
-  const vt = scoutData.vendor_totals, st = scoutData.state_totals;
-  const total = Object.values(vt).reduce((a,b) => a+b, 0);
-  const states = Object.keys(st).length, vendors = Object.keys(vt).length;
+  const vt = scoutData.vendor_totals;
+  const st = scoutData.state_totals;
+  const total = Object.values(vt).reduce((a, b) => a + b, 0);
+  const states = Object.keys(st).length;
+  const vendors = Object.keys(vt).length;
 
   document.getElementById('statsRow').innerHTML = `
     <div class="stat-card"><div class="stat-value" style="color:var(--cyan)">${total}</div><div class="stat-label">Total Sites</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--green)">${states}</div><div class="stat-label">States</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--purple)">${vendors}</div><div class="stat-label">Vendors</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${Math.round(total/vendors)}</div><div class="stat-label">Avg/Vendor</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--pink)">${Math.round(total/PROGRAM_WEEK)}</div><div class="stat-label">Sites/Week</div></div>`;
+    <div class="stat-card"><div class="stat-value" style="color:var(--pink)">${Math.round(total/3)}</div><div class="stat-label">Sites/Week</div></div>`;
 
   document.getElementById('vendorLegend').innerHTML = Object.entries(vt).sort((a,b) => b[1]-a[1]).map(([v,c]) => `
     <div class="vendor-item ${activeFilter===v?'active':''}" data-filter="${v}" style="--vendor-color:${VENDOR_HEX[v]}">
       <div class="vendor-dot"></div>
-      <div class="vendor-info"><div class="vendor-name-label">${v}</div><div class="vendor-sub">${Math.round(c/total*100)}% coverage</div></div>
+      <div class="vendor-info"><div class="vendor-name-label">${v}</div><div class="vendor-sub">${Math.round(c/total*100)}% of total</div></div>
       <div class="vendor-count">${c}</div>
     </div>`).join('');
 
   document.getElementById('velocityGrid').innerHTML = Object.entries(vt).sort((a,b) => b[1]-a[1]).slice(0,4).map(([v,c]) => `
-    <div class="velocity-card"><div class="velocity-value" style="color:${VENDOR_HEX[v]}">${Math.round(c/PROGRAM_WEEK)}</div><div class="velocity-label">${v}/wk</div></div>`).join('');
+    <div class="velocity-card"><div class="velocity-value" style="color:${VENDOR_HEX[v]}">${Math.round(c/3)}</div><div class="velocity-label">${v}/wk</div></div>`).join('');
 
   const stateArr = Object.entries(st).map(([s,v]) => ({s, total: Object.values(v).reduce((a,b)=>a+b,0), top: Object.entries(v).sort((a,b)=>b[1]-a[1])[0]})).sort((a,b) => b.total-a.total).slice(0,10);
   const max = stateArr[0]?.total || 1;
@@ -378,46 +330,72 @@ function renderScoutUI() {
 }
 
 function renderSurveyUI() {
-  if (!surveyData) return;
-  const { statusCounts: sc, total, byVendor, byState } = surveyData;
-  const rate = total > 0 ? Math.round(sc.Completed/total*100) : 0;
+  if (!surveyData?.summary) return;
+  const s = surveyData.summary;
+  const vb = s.vendor_breakdown;
+  
+  const totalSites = s.total_sites;
+  const complete = s.surveys_complete;
+  const pending = s.surveys_required - s.surveys_complete;
+  const noSurvey = totalSites - s.surveys_required;
+  const rate = s.surveys_required > 0 ? Math.round((complete / s.surveys_required) * 100) : 0;
 
   document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card"><div class="stat-value" style="color:var(--cyan)">${total}</div><div class="stat-label">Total Sites</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${sc.Completed}</div><div class="stat-label">Completed</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${sc.Pending}</div><div class="stat-label">Pending</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--text-soft)">${sc['No Survey']}</div><div class="stat-label">No Survey</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${rate}%</div><div class="stat-label">Complete Rate</div></div>`;
+    <div class="stat-card"><div class="stat-value" style="color:var(--cyan)">${totalSites}</div><div class="stat-label">Total Sites</div><div class="stat-sub">${s.surveys_required} need survey</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${complete}</div><div class="stat-label">Completed</div><div class="stat-sub">${rate}% of required</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${pending}</div><div class="stat-label">Pending</div><div class="stat-sub">awaiting survey</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--text-soft)">${noSurvey}</div><div class="stat-label">No Survey Req</div><div class="stat-sub">full upgrades</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:${rate >= 50 ? 'var(--green)' : 'var(--amber)'}">${rate}%</div><div class="stat-label">Complete Rate</div></div>`;
 
-  document.getElementById('vendorLegend').innerHTML = ['Completed','Pending','No Survey'].map(status => {
-    const c = sc[status] || 0;
-    return `<div class="vendor-item ${activeFilter===status?'active':''}" data-filter="${status}" style="--vendor-color:${SURVEY_HEX[status]}">
+  // Status legend
+  document.getElementById('vendorLegend').innerHTML = `
+    <div class="vendor-item ${activeFilter==='Complete'?'active':''}" data-filter="Complete" style="--vendor-color:${SURVEY_HEX['Complete']}">
       <div class="vendor-dot"></div>
-      <div class="vendor-info"><div class="vendor-name-label">${status}</div><div class="vendor-sub">${total>0?Math.round(c/total*100):0}% of surveys</div></div>
-      <div class="vendor-count">${c}</div>
+      <div class="vendor-info"><div class="vendor-name-label">Complete</div><div class="vendor-sub">${Math.round(complete/(complete+pending)*100)}% of surveys</div></div>
+      <div class="vendor-count">${complete}</div>
+    </div>
+    <div class="vendor-item ${activeFilter==='Pending'?'active':''}" data-filter="Pending" style="--vendor-color:${SURVEY_HEX['Pending']}">
+      <div class="vendor-dot"></div>
+      <div class="vendor-info"><div class="vendor-name-label">Pending</div><div class="vendor-sub">${Math.round(pending/(complete+pending)*100)}% of surveys</div></div>
+      <div class="vendor-count">${pending}</div>
+    </div>
+    <div class="vendor-item ${activeFilter==='No Survey'?'active':''}" data-filter="No Survey" style="--vendor-color:${SURVEY_HEX['No Survey']}">
+      <div class="vendor-dot"></div>
+      <div class="vendor-info"><div class="vendor-name-label">No Survey Req</div><div class="vendor-sub">full upgrades</div></div>
+      <div class="vendor-count">${noSurvey}</div>
     </div>`;
+
+  // Vendor completion rates
+  const vendorRates = Object.entries(vb).filter(([v]) => v !== 'unassigned').map(([v, d]) => ({
+    v, rate: d.survey_required > 0 ? Math.round((d.complete / d.survey_required) * 100) : 0, complete: d.complete, total: d.total
+  })).sort((a, b) => b.total - a.total);
+
+  document.getElementById('velocityGrid').innerHTML = vendorRates.slice(0,4).map(({v, rate, complete}) => `
+    <div class="velocity-card">
+      <div class="velocity-value" style="color:${rate >= 15 ? 'var(--green)' : rate >= 5 ? 'var(--amber)' : 'var(--red)'}">${rate}%</div>
+      <div class="velocity-label">${v} (${complete})</div>
+    </div>`).join('');
+
+  // Vendor breakdown list
+  document.getElementById('regionList').innerHTML = vendorRates.map(({v, rate, complete, total}) => {
+    const color = rate >= 15 ? 'var(--green)' : rate >= 5 ? 'var(--amber)' : 'var(--red)';
+    return `<div class="region-item"><span class="region-name">${v}</span><div class="region-bar"><div class="region-bar-fill" style="width:${rate}%;background:${color}"></div></div><span class="region-count" style="color:${color}">${complete}/${total}</span></div>`;
   }).join('');
-
-  const vendorRates = Object.entries(byVendor).map(([v,d]) => ({v, rate: d.total>0 ? Math.round(d.Completed/d.total*100) : 0, total: d.total})).sort((a,b) => b.total-a.total).slice(0,4);
-  document.getElementById('velocityGrid').innerHTML = vendorRates.map(({v,rate}) => `
-    <div class="velocity-card"><div class="velocity-value" style="color:${rate>=70?'var(--green)':rate>=40?'var(--amber)':'var(--red)'}">${rate}%</div><div class="velocity-label">${v}</div></div>`).join('');
-
-  const stateArr = Object.entries(byState).map(([s,d]) => ({s, total: d.total, rate: d.total>0 ? Math.round(d.Completed/d.total*100) : 0})).sort((a,b) => b.total-a.total).slice(0,10);
-  const max = stateArr[0]?.total || 1;
-  document.getElementById('regionList').innerHTML = stateArr.map(({s,total,rate}) => `
-    <div class="region-item"><span class="region-name">${s}</span><div class="region-bar"><div class="region-bar-fill" style="width:${Math.round(total/max*100)}%;background:${rate>=70?'var(--green)':rate>=40?'var(--amber)':'var(--red)'}"></div></div><span class="region-count" style="color:${rate>=70?'var(--green)':rate>=40?'var(--amber)':'var(--red)'}">${rate}%</span></div>`).join('');
 
   bindLegend();
 }
 
 function bindLegend() {
   document.querySelectorAll('.vendor-item').forEach(el => {
-    el.onclick = () => { activeFilter = activeFilter === el.dataset.filter ? null : el.dataset.filter; renderUI(); };
+    el.onclick = () => { 
+      activeFilter = activeFilter === el.dataset.filter ? null : el.dataset.filter; 
+      renderMap();
+      renderUI(); 
+    };
   });
 }
 
-document.getElementById('resetBtn').onclick = () => { rotation = 0; activeFilter = null; renderUI(); };
-window.onresize = () => initGlobe();
+document.getElementById('resetBtn').onclick = () => { activeFilter = null; renderMap(); renderUI(); };
 loadData();
 </script>
 </body>

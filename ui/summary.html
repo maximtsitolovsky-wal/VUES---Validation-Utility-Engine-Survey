@@ -1,1026 +1,612 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VUES · Executive Summary</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Executive Summary · VUES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="chart.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg: #060914; --panel: rgba(9, 16, 31, 0.92); --panel-border: rgba(120, 160, 255, 0.22); --text: #E8F0FF; --text-soft: #9EB1D4; --cyan: #5AE4FF; --blue: #4D8DFF; --purple: #9B7CFF; --amber: #FFC857; --green: #45E6A5; --red: #FF6B81; --pink: #FF7EB3; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
-    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 20% 0%, rgba(155,124,255,0.15), transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(90,228,255,0.12), transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(77,141,255,0.08), transparent 70%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
-    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.02) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: -1; }
-    .stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
-    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle 3s ease-in-out infinite; }
-    @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(90,228,255,0.3); } 50% { box-shadow: 0 0 40px rgba(90,228,255,0.5); } }
-    
-    .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
-    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; transition: all 0.2s; backdrop-filter: blur(10px); }
-    .back-link:hover { background: rgba(255,255,255,0.08); border-color: var(--cyan); transform: translateX(-4px); }
-    
-    /* Hero Header */
-    .hero { background: linear-gradient(135deg, rgba(9,16,31,0.95), rgba(20,30,60,0.9)); border: 1px solid var(--panel-border); border-radius: 24px; padding: 28px 32px; margin-bottom: 20px; position: relative; overflow: hidden; }
-    .hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(90,228,255,0.15), transparent 60%); }
-    .hero::after { content: ''; position: absolute; bottom: -30%; left: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(155,124,255,0.12), transparent 60%); }
-    .hero-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-    .hero h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; background: linear-gradient(135deg, #fff, #5AE4FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hero p { color: var(--text-soft); font-size: 14px; margin-top: 6px; }
-    .hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
-    .badge { padding: 8px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .badge-live { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.4); color: var(--green); animation: pulse 2s infinite; }
-    .badge-date { background: rgba(155,124,255,0.12); border: 1px solid rgba(155,124,255,0.35); color: #E8DFFF; }
-    
-    /* Program Health Cards */
-    .health-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
-    .health-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 24px; position: relative; overflow: hidden; animation: slideUp 0.5s ease-out; }
-    .health-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-    .health-card.survey::before { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
-    .health-card.scout::before { background: linear-gradient(90deg, var(--purple), var(--pink)); }
-    .health-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-    .health-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); display: flex; align-items: center; gap: 8px; }
-    .health-title .icon { font-size: 18px; }
-    .status-chip { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .status-critical { background: rgba(255,107,129,0.2); color: var(--red); }
-    .status-warning { background: rgba(255,200,87,0.2); color: var(--amber); }
-    .status-good { background: rgba(69,230,165,0.2); color: var(--green); }
-    
-    .health-metrics { display: grid; grid-template-columns: 140px 1fr; gap: 20px; align-items: center; }
-    .ring-container { position: relative; width: 120px; height: 120px; }
-    .ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 12; }
-    .ring-progress { fill: none; stroke-width: 12; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1s ease-out; }
-    .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .ring-value { font-size: 32px; font-weight: 900; }
-    .ring-label { font-size: 10px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.1em; }
-    
-    .metrics-list { display: flex; flex-direction: column; gap: 12px; }
-    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
-    .metric-label { font-size: 12px; color: var(--text-soft); }
-    .metric-value { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
-    .trend { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-    .trend-up { background: rgba(69,230,165,0.2); color: var(--green); }
-    .trend-down { background: rgba(255,107,129,0.2); color: var(--red); }
-    
-    .mini-chart { height: 50px; margin-top: 16px; }
-    
-    /* Stats Row */
-    .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 16px; text-align: center; transition: all 0.2s; }
-    .stat-card:hover { transform: translateY(-2px); border-color: rgba(90,228,255,0.4); }
-    .stat-icon { font-size: 20px; margin-bottom: 8px; }
-    .stat-value { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
-    .stat-label { font-size: 10px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.08em; }
-    
-    /* Main Grid */
-    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
-    .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; overflow: hidden; }
-    .panel-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
-    .panel-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-    .panel-body { padding: 20px; }
-    
-    .chart-container { height: 220px; position: relative; }
-    
-    /* Vendor Table */
-    .vendor-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .vendor-table th { text-align: left; padding: 12px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .vendor-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .vendor-table tr:hover { background: rgba(255,255,255,0.02); }
-    .vendor-table tr.vendor-critical { background: rgba(255,107,129,0.08); }
-    .vendor-table tr.vendor-critical td { color: var(--red); }
-    .vendor-name { font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .vendor-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--purple), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
-    .vendor-avatar.critical { background: linear-gradient(135deg, var(--red), #FF4560); }
-    .vendor-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; margin-left: 6px; }
-    .vendor-badge.danger { background: rgba(255,107,129,0.18); border: 1px solid rgba(255,107,129,0.4); color: #FF6B81; animation: pulse-danger 2s ease-in-out infinite; }
-    .vendor-badge.warning { background: rgba(255,200,87,0.15); border: 1px solid rgba(255,200,87,0.4); color: #FFC857; }
-    .vendor-badge.success { background: rgba(69,230,165,0.15); border: 1px solid rgba(69,230,165,0.4); color: #45E6A5; }
-    @keyframes pulse-danger { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-    
-    .critical-alert { padding: 14px 18px; border-radius: 12px; margin: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255,107,129,0.12); border: 1px solid rgba(255,107,129,0.3); }
-    .critical-alert .alert-icon { color: var(--red); font-size: 20px; flex-shrink: 0; }
-    
-    /* Formula Popup */
-    .formula-btn { background: rgba(155,124,255,0.15); border: 1px solid rgba(155,124,255,0.4); color: var(--purple); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-    .formula-btn:hover { background: rgba(155,124,255,0.25); transform: translateY(-1px); }
-    .formula-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-height: 90vh; overflow-y: auto; background: #0a1020; border: 1px solid rgba(155,124,255,0.4); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); z-index: 1000; }
-    .formula-popup-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(155,124,255,0.1); border-bottom: 1px solid rgba(155,124,255,0.2); font-weight: 700; color: var(--purple); }
-    .formula-popup-body { padding: 18px; }
-    .formula-equation { font-family: ui-monospace, monospace; font-size: 13px; color: var(--cyan); background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; margin-bottom: 16px; text-align: center; font-weight: 600; }
-    .formula-breakdown { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-    .formula-component { padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
-    .formula-component-title { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
-    .formula-component-desc { font-size: 11px; color: var(--text-soft); margin-bottom: 6px; }
-    .formula-component code { font-size: 10px; color: var(--amber); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; }
-    .formula-example { background: rgba(69,230,165,0.08); border: 1px solid rgba(69,230,165,0.2); border-radius: 10px; padding: 12px; font-size: 11px; color: var(--text-soft); }
-    .formula-example code { color: var(--green); background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; }
-    .formula-example strong { color: var(--green); }
-    .critical-alert .alert-text { color: var(--text); font-size: 12px; line-height: 1.5; }
-    .critical-alert strong { color: var(--red); }
-    .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 80px; }
-    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease-out; }
-    
-    /* Insights */
-    .insights-grid { display: grid; gap: 12px; }
-    .insight-card { padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border-left: 4px solid var(--cyan); transition: all 0.2s; }
-    .insight-card:hover { background: rgba(255,255,255,0.05); transform: translateX(4px); }
-    .insight-icon { font-size: 20px; margin-bottom: 8px; }
-    .insight-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
-    .insight-text { color: var(--text-soft); font-size: 12px; line-height: 1.6; }
-    .insight-positive { border-color: var(--green); }
-    .insight-warning { border-color: var(--amber); }
-    .insight-critical { border-color: var(--red); }
-    .insight-action { border-color: var(--purple); }
-    
-    /* AI Report Section */
-    .ai-panel { grid-column: span 2; }
-    .tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab-btn { padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: var(--text-soft); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
-    .tab-btn:hover { background: rgba(255,255,255,0.06); }
-    .tab-btn.active { background: linear-gradient(135deg, rgba(90,228,255,0.15), rgba(155,124,255,0.15)); border-color: var(--cyan); color: var(--text); box-shadow: 0 4px 20px rgba(90,228,255,0.2); }
-    .tab-indicator { width: 8px; height: 8px; border-radius: 50%; }
-    .tab-indicator.survey { background: var(--cyan); }
-    .tab-indicator.scout { background: var(--purple); }
-    .tab-indicator.combined { background: linear-gradient(135deg, var(--cyan), var(--purple)); }
-    
-    .btn-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-    .btn { padding: 12px 20px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn:hover { transform: translateY(-2px); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .btn-generate { background: linear-gradient(135deg, #5AE4FF, #4D8DFF); color: #06101F; box-shadow: 0 4px 20px rgba(90,228,255,0.3); }
-    .btn-generate:hover { box-shadow: 0 6px 30px rgba(90,228,255,0.4); }
-    .btn-secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
-    
-    .report-box { background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(10,20,40,0.4)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; min-height: 300px; max-height: 500px; overflow-y: auto; }
-    .report-box::-webkit-scrollbar { width: 6px; }
-    .report-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    .report-box h3 { color: var(--cyan); font-size: 16px; margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(90,228,255,0.2); }
-    .report-box h3:first-child { margin-top: 0; }
-    .report-box p { color: var(--text-soft); font-size: 14px; line-height: 1.8; margin-bottom: 12px; }
-    .report-box ul { margin: 12px 0; padding-left: 20px; }
-    .report-box li { color: var(--text-soft); font-size: 13px; margin-bottom: 8px; line-height: 1.6; }
-    .report-box strong { color: var(--text); }
-    .report-box .highlight { background: rgba(90,228,255,0.1); padding: 2px 6px; border-radius: 4px; color: var(--cyan); }
-    .report-box .metric { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; margin: 2px; font-family: 'SF Mono', monospace; font-size: 12px; }
-    
-    .export-row { display: flex; gap: 10px; margin-top: 16px; align-items: center; flex-wrap: wrap; }
-    .status-msg { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; animation: slideUp 0.3s ease-out; }
-    .status-success { background: rgba(69,230,165,0.15); color: var(--green); }
-    .status-error { background: rgba(255,107,129,0.15); color: var(--red); }
-    
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 60px; }
+    :root {
+      --bg: #030712;
+      --panel: rgba(9, 18, 34, 0.78);
+      --panel-strong: rgba(13, 25, 45, 0.94);
+      --line: rgba(145, 185, 255, 0.16);
+      --text: #f6f9ff;
+      --soft: #c9d5e8;
+      --muted: #8191aa;
+      --cyan: #2ed7ff;
+      --mint: #24e6a0;
+      --purple: #a778ff;
+      --pink: #ff5fd2;
+      --yellow: #ffc857;
+      --red: #ff5577;
+      --radius-xl: 34px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(46, 215, 255, 0.18), transparent 34%),
+        radial-gradient(circle at 90% 8%, rgba(167, 120, 255, 0.2), transparent 36%),
+        radial-gradient(circle at 50% 100%, rgba(36, 230, 160, 0.08), transparent 34%),
+        linear-gradient(180deg, #030712 0%, #06101d 48%, #030712 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.42) 1px, transparent 1px);
+      background-size: 72px 72px, 72px 72px, 160px 160px;
+      opacity: 0.32;
+      mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
+    }
+    button { font-family: inherit; }
+    .shell { width: min(1880px, calc(100% - 40px)); margin: 0 auto; padding: 26px 0 40px; position: relative; z-index: 1; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-mark {
+      width: 50px; height: 50px; border-radius: 18px;
+      display: grid; place-items: center;
+      color: var(--purple); font-size: 25px; font-weight: 950;
+      background: linear-gradient(145deg, rgba(167,120,255,0.24), rgba(46,215,255,0.08)), rgba(255,255,255,0.04);
+      border: 1px solid rgba(167,120,255,0.44);
+      box-shadow: 0 0 30px rgba(167,120,255,0.26);
+    }
+    .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(28px, 2.4vw, 42px); line-height: 1; letter-spacing: -0.06em; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .back-link { height: 42px; border-radius: 999px; border: 1px solid var(--line); background: rgba(9, 18, 34, 0.72); color: var(--soft); display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; backdrop-filter: blur(20px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); text-decoration: none; transition: all 0.2s; }
+    .back-link:hover { background: rgba(46,215,255,0.12); border-color: rgba(46,215,255,0.3); }
+    .pill { height: 42px; border-radius: 999px; border: 1px solid var(--line); background: rgba(9, 18, 34, 0.72); color: var(--soft); display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; backdrop-filter: blur(20px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+    .pill.good { border-color: rgba(36,230,160,0.3); background: rgba(36,230,160,0.1); color: #c8ffeb; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 18px var(--mint); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* Flow Map */
+    .flow-map {
+      position: relative; margin-bottom: 22px; border: 1px solid var(--line); border-radius: var(--radius-xl);
+      background: radial-gradient(circle at 15% 0%, rgba(46,215,255,0.16), transparent 34%), radial-gradient(circle at 84% 0%, rgba(167,120,255,0.16), transparent 36%), linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.014)), rgba(7,14,27,0.78);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.46); padding: 24px; overflow: hidden; backdrop-filter: blur(24px);
+    }
+    .flow-map::before { content: ""; position: absolute; left: 7%; right: 7%; top: 50%; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--purple), var(--mint)); opacity: 0.45; box-shadow: 0 0 36px rgba(46,215,255,0.35); transform: translateY(-50%); }
+    .flow-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; z-index: 1; }
+    .flow-node { min-height: 124px; border-radius: 28px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.058), rgba(255,255,255,0.018)), rgba(6,14,27,0.78); position: relative; overflow: hidden; }
+    .flow-node::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 0; height: 1px; background: var(--node-color); box-shadow: 0 0 24px var(--node-color); opacity: 0.78; }
+    .flow-label { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
+    .flow-value { margin-top: 12px; color: var(--node-color); font-size: 30px; line-height: 1; font-weight: 950; letter-spacing: -0.06em; text-shadow: 0 0 20px color-mix(in srgb, var(--node-color) 38%, transparent); }
+    .flow-note { margin-top: 8px; color: var(--soft); font-size: 13px; line-height: 1.45; }
+
+    /* Program Flow */
+    .program-flow { display: grid; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); gap: 0; align-items: stretch; }
+    .connector { position: relative; display: grid; place-items: center; }
+    .connector::before { content: ""; position: absolute; top: 44px; bottom: 44px; width: 2px; background: linear-gradient(180deg, var(--cyan), var(--purple)); opacity: 0.42; box-shadow: 0 0 28px rgba(167,120,255,0.34); }
+    .connector-bubble { position: sticky; top: 24px; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,0.16); background: linear-gradient(145deg, rgba(46,215,255,0.2), rgba(167,120,255,0.22)), #08111f; box-shadow: 0 0 34px rgba(46,215,255,0.2); z-index: 2; }
+
+    /* Lane */
+    .lane { --accent: var(--cyan); --accent-2: var(--mint); position: relative; border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); border-radius: var(--radius-xl); background: radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.014)), var(--panel); box-shadow: 0 26px 80px rgba(0,0,0,0.42), 0 0 42px color-mix(in srgb, var(--accent) 18%, transparent); overflow: hidden; backdrop-filter: blur(24px); }
+    .lane.scout { --accent: var(--purple); --accent-2: var(--pink); margin-top: 44px; }
+    .lane-inner { padding: 22px; }
+    .lane-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .title-wrap { display: flex; align-items: center; gap: 13px; }
+    .lane-icon { width: 42px; height: 42px; border-radius: 16px; display: grid; place-items: center; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent); background: color-mix(in srgb, var(--accent) 13%, transparent); box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 22%, transparent); font-size: 18px; }
+    h2, h3, h4 { margin: 0; }
+    .lane h2 { font-size: 22px; letter-spacing: -0.04em; }
+    .lane-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .status { height: 32px; padding: 0 12px; border-radius: 999px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--status-color); background: color-mix(in srgb, var(--status-color) 12%, transparent); border: 1px solid color-mix(in srgb, var(--status-color) 30%, transparent); font-size: 11px; font-weight: 950; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* Summary River */
+    .summary-river { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
+    .ring-card, .target-card, .card { border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); background: linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016)), rgba(5,13,25,0.74); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+    .ring-card { min-height: 174px; display: grid; place-items: center; position: relative; overflow: hidden; }
+    .ring-card::before { content: ""; position: absolute; width: 170px; height: 170px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); filter: blur(30px); }
+    .ring { --value: 50; width: 126px; height: 126px; border-radius: 50%; display: grid; place-items: center; position: relative; background: conic-gradient(from -45deg, var(--accent) calc(var(--value) * 1%), rgba(255,255,255,0.08) 0); box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 32%, transparent); }
+    .ring::before { content: ""; position: absolute; inset: 13px; border-radius: inherit; background: #07111f; box-shadow: inset 0 0 24px rgba(0,0,0,0.6); }
+    .ring-content { position: relative; text-align: center; }
+    .ring-content strong { display: block; color: var(--accent); font-size: 32px; line-height: 1; font-weight: 950; letter-spacing: -0.06em; }
+    .ring-content span { display: block; margin-top: 5px; color: var(--soft); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .target-card { padding: 16px; display: grid; align-content: center; gap: 10px; }
+    .target-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; min-height: 45px; padding: 10px 12px; border-radius: 15px; background: rgba(255,255,255,0.026); border: 1px solid rgba(255,255,255,0.06); }
+    .target-row span { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .target-row strong { color: var(--row-color); font-size: 18px; font-weight: 950; }
+
+    /* Metrics */
+    .metric-wave { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .metric { min-height: 88px; border-radius: 22px; padding: 15px; border: 1px solid rgba(255,255,255,0.08); background: radial-gradient(circle at 22% 0%, color-mix(in srgb, var(--metric-color) 16%, transparent), transparent 58%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016)), rgba(5,13,25,0.75); position: relative; overflow: hidden; transition: 180ms ease; }
+    .metric:nth-child(even) { transform: translateY(10px); }
+    .metric:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--metric-color) 36%, transparent); }
+    .metric:nth-child(even):hover { transform: translateY(4px); }
+    .metric::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--metric-color); box-shadow: 0 0 22px var(--metric-color); opacity: 0.7; }
+    .metric span { color: var(--muted); display: block; font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .metric strong { display: block; margin-top: 10px; color: var(--metric-color); font-size: 29px; line-height: 1; font-weight: 950; letter-spacing: -0.055em; }
+    .metric small { display: block; margin-top: 7px; color: var(--soft); font-size: 11px; font-weight: 750; }
+
+    /* Content Flow */
+    .content-flow { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 14px; margin-bottom: 14px; }
+    .card { padding: 16px; overflow: hidden; }
+    .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .card-title { color: var(--text); font-size: 12px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .mini-btn { height: 30px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--soft); padding: 0 12px; font-size: 11px; font-weight: 900; cursor: pointer; }
+    .forecast-list { display: grid; gap: 9px; }
+    .forecast-row { min-height: 55px; border-radius: 17px; padding: 12px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; background: rgba(255,255,255,0.027); border: 1px solid rgba(255,255,255,0.06); }
+    .forecast-row span { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .forecast-row strong { color: var(--yellow); font-size: 21px; font-weight: 950; letter-spacing: -0.04em; }
+
+    /* Chart */
+    .chart { height: 204px; display: grid; grid-template-columns: 26px 1fr; gap: 10px; }
+    .y-axis { display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 24px; color: var(--muted); font-size: 10px; text-align: right; }
+    .plot { position: relative; display: grid; grid-template-columns: repeat(14, minmax(12px, 1fr)); align-items: end; gap: 8px; padding: 8px 1px 24px; isolation: isolate; }
+    .plot::before { content: ""; position: absolute; inset: 8px 0 24px; background: linear-gradient(to top, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px); background-size: 100% 25%, calc(100% / 7) 100%; opacity: 0.55; z-index: -1; }
+    .bar { --h: 30%; height: var(--h); min-height: 4px; border-radius: 999px 999px 4px 4px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, white), color-mix(in srgb, var(--accent) 62%, black)); box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.24); transform-origin: bottom; animation: rise 780ms cubic-bezier(.2,.9,.2,1) both; }
+    .bar.empty { height: 3px; min-height: 3px; background: rgba(255,255,255,0.14); box-shadow: none; opacity: 0.32; }
+    .x-axis { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(14, minmax(12px, 1fr)); gap: 8px; color: var(--muted); font-size: 10px; }
+    .x-axis span { text-align: center; white-space: nowrap; }
+    @keyframes rise { from { transform: scaleY(0.08); opacity: 0.25; } to { transform: scaleY(1); opacity: 1; } }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 620px; border-collapse: collapse; }
+    th { color: var(--muted); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; text-align: left; padding: 9px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    td { color: var(--soft); font-size: 13px; font-weight: 750; padding: 11px 8px; border-bottom: 1px solid rgba(255,255,255,0.055); }
+    tr:last-child td { border-bottom: 0; }
+    .vendor { display: flex; align-items: center; gap: 9px; color: var(--text); font-weight: 900; }
+    .avatar { width: 28px; height: 28px; border-radius: 10px; display: grid; place-items: center; color: white; background: linear-gradient(135deg, var(--avatar), color-mix(in srgb, var(--avatar) 56%, black)); box-shadow: 0 0 18px color-mix(in srgb, var(--avatar) 28%, transparent); font-size: 10px; font-weight: 950; }
+    .progress { width: 112px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
+    .progress span { display: block; width: var(--p); height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--progress), color-mix(in srgb, var(--progress) 72%, white)); box-shadow: 0 0 16px color-mix(in srgb, var(--progress) 32%, transparent); }
+    .score { display: inline-flex; min-width: 42px; height: 24px; border-radius: 999px; align-items: center; justify-content: center; color: var(--score); background: color-mix(in srgb, var(--score) 12%, transparent); border: 1px solid color-mix(in srgb, var(--score) 24%, transparent); font-size: 11px; font-weight: 950; }
+
+    /* AI Flow */
+    .ai-flow { margin-top: 26px; border-radius: var(--radius-xl); border: 1px solid var(--line); background: radial-gradient(circle at 20% 0%, rgba(46,215,255,0.13), transparent 32%), radial-gradient(circle at 80% 0%, rgba(167,120,255,0.16), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.014)), rgba(7,14,27,0.82); box-shadow: 0 30px 90px rgba(0,0,0,0.46); overflow: hidden; backdrop-filter: blur(24px); }
+    .ai-head { padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid rgba(255,255,255,0.075); flex-wrap: wrap; }
+    .ai-head h2 { font-size: 25px; letter-spacing: -0.045em; }
+    .ai-head p { margin: 7px 0 0; color: var(--muted); max-width: 900px; font-size: 13px; line-height: 1.55; }
+    .btn { height: 44px; border: 1px solid var(--line); border-radius: 999px; padding: 0 18px; color: var(--text); background: rgba(255,255,255,0.04); font-weight: 900; cursor: pointer; transition: 180ms ease; white-space: nowrap; }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.07); }
+    .btn.primary { border: 0; background: linear-gradient(135deg, #25d8ff 0%, #7465ff 55%, #bd4dff 100%); box-shadow: 0 16px 40px rgba(46,215,255,0.22), 0 0 30px rgba(167,120,255,0.18); }
+    .report-grid { padding: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .report { --accent: var(--cyan); border-radius: 28px; border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line)); background: radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%), rgba(5,13,25,0.72); overflow: hidden; }
+    .report.scout-report { --accent: var(--purple); }
+    .report-head { padding: 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .report-title { display: flex; gap: 12px; align-items: center; }
+    .report-icon { width: 38px; height: 38px; border-radius: 15px; display: grid; place-items: center; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 18px; }
+    .report h3 { font-size: 19px; letter-spacing: -0.035em; }
+    .report-sub { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .risk { height: 30px; padding: 0 11px; border-radius: 999px; color: var(--risk); background: color-mix(in srgb, var(--risk) 12%, transparent); border: 1px solid color-mix(in srgb, var(--risk) 25%, transparent); display: inline-flex; align-items: center; font-size: 11px; font-weight: 950; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+    .report-body { padding: 18px; display: grid; gap: 16px; }
+    .block h4 { margin-bottom: 8px; font-size: 12px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
+    .block p { margin: 0; color: var(--soft); font-size: 13px; line-height: 1.65; }
+    .decision-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .decision { border-radius: 18px; padding: 13px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.028); }
+    .decision span { display: block; color: var(--muted); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .decision strong { display: block; margin-top: 8px; color: var(--accent); font-size: 18px; font-weight: 950; letter-spacing: -0.04em; }
+    .insights { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+    .insights li { position: relative; padding: 10px 12px 10px 34px; border-radius: 17px; border: 1px solid rgba(255,255,255,0.065); background: rgba(255,255,255,0.028); color: var(--soft); font-size: 13px; line-height: 1.48; }
+    .insights li::before { content: "✦"; position: absolute; left: 12px; top: 10px; color: var(--accent); text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 42%, transparent); }
+
+    /* Loading */
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; }
     .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { color: var(--text-soft); font-size: 14px; }
-    
-    /* Responsive */
-    @media (max-width: 1200px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 900px) { .health-grid, .main-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } .ai-panel { grid-column: span 1; } }
-  </style>
 
+    /* Responsive */
+    @media (max-width: 1320px) {
+      .program-flow { grid-template-columns: 1fr; gap: 22px; }
+      .connector { display: none; }
+      .lane.scout { margin-top: 0; }
+      .report-grid, .flow-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 900px) {
+      .shell { width: min(100% - 24px, 1880px); }
+      .topbar, .ai-head { flex-direction: column; align-items: flex-start; }
+      .toolbar { justify-content: flex-start; }
+      .summary-river, .content-flow, .report-grid { grid-template-columns: 1fr; }
+      .metric-wave { grid-template-columns: 1fr 1fr; }
+      .metric:nth-child(even) { transform: none; }
+      .decision-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .flow-grid, .metric-wave { grid-template-columns: 1fr; }
+      .lane-inner, .ai-head, .report-grid, .flow-map { padding: 16px; }
+    }
+  </style>
 </head>
 <body>
-  <div class="stars" id="stars"></div>
-  <div class="container">
-    <a href="index.html" class="back-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      Back to Command Center
-    </a>
-    
-    <!-- Hero -->
-    <div class="hero">
-      <div class="hero-content">
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <a href="index.html" class="back-link">← Back</a>
+        <div class="brand-mark">◇</div>
         <div>
-          <h1>📊 Executive Summary</h1>
-          <p>Real-time program intelligence & AI-powered insights</p>
-        </div>
-        <div class="hero-badges">
-          <span class="badge badge-live">● Live Data</span>
-          <span class="badge badge-date" id="dateLabel">Loading...</span>
+          <p class="eyebrow">Program Command Center</p>
+          <h1>Executive Summary</h1>
         </div>
       </div>
-    </div>
-    
-    <!-- Program Health Cards -->
-    <div class="health-grid">
-      <!-- Survey Health -->
-      <div class="health-card survey">
-        <div class="health-header">
-          <div class="health-title"><span class="icon">📋</span> Survey Program Health</div>
-          <span class="status-chip" id="surveyStatus">Loading...</span>
-        </div>
-        <div class="health-metrics">
-          <div class="ring-container">
-            <svg viewBox="0 0 120 120" width="120" height="120">
-              <circle class="ring-bg" cx="60" cy="60" r="50"/>
-              <circle class="ring-progress" id="surveyRing" cx="60" cy="60" r="50" stroke="url(#surveyGrad)" stroke-dasharray="314" stroke-dashoffset="314"/>
-              <defs><linearGradient id="surveyGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5AE4FF"/><stop offset="100%" stop-color="#4D8DFF"/></linearGradient></defs>
-            </svg>
-            <div class="ring-center">
-              <div class="ring-value" id="surveyRate">—</div>
-              <div class="ring-label">Pass Rate</div>
+      <div class="toolbar">
+        <div class="pill good"><span class="dot"></span>Live Data</div>
+        <div class="pill" id="datePill">📅 Loading...</div>
+        <div class="pill good" id="statusPill"><span class="dot"></span>Operational</div>
+      </div>
+    </header>
+
+    <section class="flow-map">
+      <div class="flow-grid" id="flowGrid">
+        <div class="flow-node" style="--node-color: var(--cyan);"><div class="flow-label">Survey Completion</div><div class="flow-value" id="flowSurvey">—</div><div class="flow-note" id="flowSurveyNote">Loading...</div></div>
+        <div class="flow-node" style="--node-color: var(--red);"><div class="flow-label">Primary Constraint</div><div class="flow-value" id="flowConstraint">—</div><div class="flow-note" id="flowConstraintNote">Loading...</div></div>
+        <div class="flow-node" style="--node-color: var(--purple);"><div class="flow-label">Scout Completion</div><div class="flow-value" id="flowScout">—</div><div class="flow-note" id="flowScoutNote">Loading...</div></div>
+        <div class="flow-node" style="--node-color: var(--mint);"><div class="flow-label">Executive Mode</div><div class="flow-value" id="flowMode">—</div><div class="flow-note" id="flowModeNote">Loading...</div></div>
+      </div>
+    </section>
+
+    <section class="program-flow">
+      <!-- Survey Lane -->
+      <article class="lane" id="surveyLane">
+        <div class="lane-inner">
+          <header class="lane-header">
+            <div class="title-wrap">
+              <div class="lane-icon">✈</div>
+              <div><h2>Survey Program</h2><p class="lane-subtitle">Completion, QA quality, vendor output, and recovery forecast</p></div>
             </div>
-          </div>
-          <div class="metrics-list">
-            <div class="metric-row"><span class="metric-label">Total Submissions</span><span class="metric-value" id="surveyTotal">—</span></div>
-            <div class="metric-row"><span class="metric-label">Passed</span><span class="metric-value" style="color:var(--green)" id="surveyPass">—</span></div>
-            <div class="metric-row"><span class="metric-label">Failed</span><span class="metric-value" style="color:var(--red)" id="surveyFail">—</span></div>
-            <div class="metric-row"><span class="metric-label">Pending</span><span class="metric-value" style="color:var(--amber)" id="surveyPending">—</span></div>
-          </div>
-        </div>
-        <div class="mini-chart"><canvas id="surveyMiniChart"></canvas></div>
-      </div>
-      
-      <!-- Scout Health -->
-      <div class="health-card scout">
-        <div class="health-header">
-          <div class="health-title"><span class="icon">🔭</span> Scout Program Health</div>
-          <span class="status-chip" id="scoutStatus">Loading...</span>
-        </div>
-        <div class="health-metrics">
-          <div class="ring-container">
-            <svg viewBox="0 0 120 120" width="120" height="120">
-              <circle class="ring-bg" cx="60" cy="60" r="50"/>
-              <circle class="ring-progress" id="scoutRing" cx="60" cy="60" r="50" stroke="url(#scoutGrad)" stroke-dasharray="314" stroke-dashoffset="314"/>
-              <defs><linearGradient id="scoutGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#9B7CFF"/><stop offset="100%" stop-color="#FF7EB3"/></linearGradient></defs>
-            </svg>
-            <div class="ring-center">
-              <div class="ring-value" id="scoutRate">—</div>
-              <div class="ring-label">Complete</div>
+            <div class="status" id="surveyStatus" style="--status-color: var(--yellow);">◆ Loading</div>
+          </header>
+          <section class="summary-river">
+            <div class="ring-card"><div class="ring" id="surveyRing" style="--value: 0;"><div class="ring-content"><strong id="surveyRingPct">—</strong><span>Complete</span></div></div></div>
+            <div class="target-card">
+              <div class="target-row" style="--row-color: var(--cyan);"><span>Target Required</span><strong id="surveyTarget">—</strong></div>
+              <div class="target-row" style="--row-color: var(--mint);"><span>Completed</span><strong id="surveyCompleted">—</strong></div>
+              <div class="target-row" style="--row-color: var(--yellow);"><span>Remaining</span><strong id="surveyRemaining">—</strong></div>
             </div>
-          </div>
-          <div class="metrics-list">
-            <div class="metric-row"><span class="metric-label">Target Sites</span><span class="metric-value" id="scoutTotal">—</span></div>
-            <div class="metric-row"><span class="metric-label">Completed</span><span class="metric-value" style="color:var(--green)" id="scoutDone">—</span></div>
-            <div class="metric-row"><span class="metric-label">Remaining</span><span class="metric-value" style="color:var(--amber)" id="scoutRemaining">—</span></div>
-            <div class="metric-row"><span class="metric-label">Submissions</span><span class="metric-value" style="color:var(--purple)" id="scoutVendors">—</span></div>
-          </div>
-        </div>
-        <div class="mini-chart"><canvas id="scoutMiniChart"></canvas></div>
-      </div>
-    </div>
-    
-    <!-- Quick Stats -->
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--green)" id="statWeekly">—</div><div class="stat-label">This Week</div></div>
-      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" style="color:var(--cyan)" id="statVelocity">—</div><div class="stat-label">Velocity/Day</div></div>
-      <div class="stat-card" title="Score = (Completion% × 40) + (Velocity × 30) + (OnTrack × 30)"><div class="stat-icon">🏆</div><div class="stat-value" style="color:var(--amber)" id="statTopVendor">—</div><div class="stat-label">Top Vendor (Score)</div></div>
-      <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" style="color:var(--purple)" id="statETA">—</div><div class="stat-label">Est. Completion</div></div>
-      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" style="color:var(--pink)" id="statAccuracy">—</div><div class="stat-label">Data Accuracy</div></div>
-      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" style="color:var(--cyan)" id="statWeek">W3</div><div class="stat-label">Program Week</div></div>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="main-grid">
-      <!-- Trend Chart -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">📈 Program Trends (Last 14 Days)</div>
-        </div>
-        <div class="panel-body">
-          <div class="chart-container"><canvas id="trendChart"></canvas></div>
-        </div>
-      </div>
-      
-      <!-- Key Insights -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">🎯 Key Insights</div>
-        </div>
-        <div class="panel-body">
-          <div class="insights-grid" id="insightsGrid">
-            <div class="insight-card"><div class="insight-title">Loading...</div></div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Vendor Performance -->
-      <div class="panel" style="position:relative;">
-        <div class="panel-header">
-          <div class="panel-title">🏢 Vendor Scorecard</div>
-          <button class="formula-btn" onclick="toggleFormulaPopup()">🧮 Score Formula</button>
-        </div>
-        <div id="formulaPopup" class="formula-popup" style="display:none;">
-          <div class="formula-popup-header">
-            <span>🧮 Vendor Score Formula</span>
-            <button onclick="toggleFormulaPopup()" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:18px;">&times;</button>
-          </div>
-          <div class="formula-popup-body">
-            <div class="formula-equation">
-              Score = (Completion% × 0.40) + (Velocity × 0.30) + (OnTrack × 0.30)
-            </div>
-            <div class="formula-breakdown">
-              <div class="formula-component">
-                <div class="formula-component-title" style="color:var(--green);">Completion (40%)</div>
-                <div class="formula-component-desc">Percentage of assigned sites completed. Higher = better.</div>
-                <code>completed / total_assigned × 40</code>
-              </div>
-              <div class="formula-component">
-                <div class="formula-component-title" style="color:var(--cyan);">Velocity (30%)</div>
-                <div class="formula-component-desc">Sites per week, normalized against top performer.</div>
-                <code>(vendor_velocity / max_velocity) × 30</code>
-              </div>
-              <div class="formula-component">
-                <div class="formula-component-title" style="color:var(--purple);">On-Track Bonus (30%)</div>
-                <div class="formula-component-desc">+30 points if completion rate ≥ 40% (on track to finish).</div>
-                <code>completion_rate ≥ 40% ? 30 : 0</code>
+          </section>
+          <section class="metric-wave" id="surveyMetrics">
+            <div class="metric" style="--metric-color: var(--mint);"><span>Passed</span><strong id="surveyPassed">—</strong><small>Accepted records</small></div>
+            <div class="metric" style="--metric-color: var(--red);"><span>Failed</span><strong id="surveyFailed">—</strong><small>Needs QA action</small></div>
+            <div class="metric" style="--metric-color: var(--yellow);"><span>Pending</span><strong id="surveyPending">—</strong><small>In queue</small></div>
+            <div class="metric" style="--metric-color: var(--cyan);"><span>Pass Rate</span><strong id="surveyPassRate">—</strong><small id="surveyPassRateNote">Target: 80%</small></div>
+          </section>
+          <section class="content-flow">
+            <div class="card">
+              <div class="card-head"><div class="card-title">📊 Forecast & Projections</div></div>
+              <div class="forecast-list">
+                <div class="forecast-row"><span>Expected per week</span><strong id="surveyPerWeek">—</strong></div>
+                <div class="forecast-row"><span>Weeks left</span><strong id="surveyWeeksLeft">—</strong></div>
+                <div class="forecast-row"><span>Estimated complete</span><strong id="surveyETA">—</strong></div>
               </div>
             </div>
-            <div class="formula-example">
-              <strong>Example:</strong> CEI has 76.6% completion, top velocity, and is on-track<br>
-              <code>Score = (76.6 × 0.4) + (30) + (30) = 30.6 + 30 + 30 = <strong>90.6</strong></code>
+            <div class="card">
+              <div class="card-head"><div class="card-title">▦ Submissions — 14 Days</div></div>
+              <div class="chart"><div class="y-axis" id="surveyYAxis"><span>8</span><span>6</span><span>4</span><span>2</span><span>0</span></div><div class="plot" id="surveyPlot"></div></div>
             </div>
-          </div>
+          </section>
         </div>
-        <div class="panel-body" style="padding:0; overflow-x:auto;">
-          <div id="vendorCriticalAlert"></div>
-          <table class="vendor-table">
-            <thead>
-              <tr><th>Vendor</th><th>Assigned</th><th>Done</th><th>Velocity</th><th>Progress</th><th>Score</th><th>Rank</th></tr>
-            </thead>
-            <tbody id="vendorTableBody">
-              <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-soft);">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <!-- Distribution Chart -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">📊 Workload Distribution</div>
-        </div>
-        <div class="panel-body">
-          <div class="chart-container"><canvas id="distChart"></canvas></div>
-        </div>
-      </div>
-      
-      <!-- AI Report Section -->
-      <div class="panel ai-panel">
-        <div class="panel-header">
-          <div class="panel-title">🤖 AI Executive Report</div>
-          <span class="badge badge-live" style="font-size:10px;">Powered by Element LLM</span>
-        </div>
-        <div class="panel-body">
-          <div class="tab-row">
-            <button class="tab-btn active" onclick="switchTab('survey')" id="tabSurvey"><span class="tab-indicator survey"></span> Survey Analysis</button>
-            <button class="tab-btn" onclick="switchTab('scout')" id="tabScout"><span class="tab-indicator scout"></span> Scout Analysis</button>
-            <button class="tab-btn" onclick="switchTab('combined')" id="tabCombined"><span class="tab-indicator combined"></span> Executive Brief</button>
-          </div>
-          
-          <div class="btn-row">
-            <button class="btn btn-generate" onclick="generateReport()" id="generateBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Generate AI Report
-            </button>
-            <button class="btn btn-secondary" onclick="regenerateReport()" id="regenBtn" disabled>🔄 Regenerate</button>
-          </div>
-          
-          <div class="report-box" id="reportBox">
-            <div style="text-align:center; padding:60px 20px;">
-              <div style="font-size:48px; margin-bottom:16px;">🤖</div>
-              <div style="color:var(--text); font-size:16px; font-weight:600; margin-bottom:8px;">AI Report Generator</div>
-              <div style="color:var(--text-soft); font-size:13px; max-width:400px; margin:0 auto;">
-                Click "Generate AI Report" to create a comprehensive executive summary with insights, recommendations, and action items powered by Element LLM.
+      </article>
+
+      <div class="connector"><div class="connector-bubble">↕</div></div>
+
+      <!-- Scout Lane -->
+      <article class="lane scout" id="scoutLane">
+        <div class="lane-inner">
+          <header class="lane-header">
+            <div class="title-wrap">
+              <div class="lane-icon">☄</div>
+              <div><h2>Scout Program</h2><p class="lane-subtitle">Coverage, submission velocity, uniqueness, and closeout control</p></div>
+            </div>
+            <div class="status" id="scoutStatus" style="--status-color: var(--mint);">● Loading</div>
+          </header>
+          <section class="summary-river">
+            <div class="ring-card"><div class="ring" id="scoutRing" style="--value: 0;"><div class="ring-content"><strong id="scoutRingPct">—</strong><span>Complete</span></div></div></div>
+            <div class="target-card">
+              <div class="target-row" style="--row-color: var(--purple);"><span>Target Required</span><strong id="scoutTarget">—</strong></div>
+              <div class="target-row" style="--row-color: var(--mint);"><span>Completed</span><strong id="scoutCompleted">—</strong></div>
+              <div class="target-row" style="--row-color: var(--yellow);"><span>Remaining</span><strong id="scoutRemaining">—</strong></div>
+            </div>
+          </section>
+          <section class="metric-wave" id="scoutMetrics">
+            <div class="metric" style="--metric-color: var(--purple);"><span>Submissions</span><strong id="scoutSubmissions">—</strong><small>Total intake</small></div>
+            <div class="metric" style="--metric-color: var(--mint);"><span>Unique Sites</span><strong id="scoutUnique">—</strong><small>Clean coverage</small></div>
+            <div class="metric" style="--metric-color: var(--yellow);"><span>Duplicates</span><strong id="scoutDuplicates">—</strong><small id="scoutDupNote">Low duplication</small></div>
+            <div class="metric" style="--metric-color: var(--cyan);"><span>This Week</span><strong id="scoutThisWeek">—</strong><small>Recent activity</small></div>
+          </section>
+          <section class="content-flow">
+            <div class="card">
+              <div class="card-head"><div class="card-title">📊 Forecast & Projections</div></div>
+              <div class="forecast-list">
+                <div class="forecast-row"><span>Expected per week</span><strong id="scoutPerWeek">—</strong></div>
+                <div class="forecast-row"><span>Weeks left</span><strong id="scoutWeeksLeft">—</strong></div>
+                <div class="forecast-row"><span>Estimated complete</span><strong id="scoutETA">—</strong></div>
               </div>
             </div>
-          </div>
-          
-          <div class="export-row">
-            <button class="btn btn-secondary" onclick="copyReport()" id="copyBtn" disabled>📋 Copy</button>
-            <button class="btn btn-secondary" onclick="downloadReport('txt')" id="downloadTxtBtn" disabled>📄 Export .txt</button>
-            <button class="btn btn-secondary" onclick="downloadReport('md')" id="downloadMdBtn" disabled>📝 Export .md</button>
-            <button class="btn btn-secondary" onclick="downloadReport('html')" id="downloadHtmlBtn" disabled>🌐 Export .html</button>
-            <span id="statusMsg"></span>
-          </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">▦ Submissions — 14 Days</div></div>
+              <div class="chart"><div class="y-axis" id="scoutYAxis"><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span></div><div class="plot" id="scoutPlot"></div></div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card-head"><div class="card-title">◈ Vendor Performance</div><a href="scout.html" class="mini-btn">View All</a></div>
+            <div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Assigned</th><th>Complete</th><th>Progress</th><th>Score</th></tr></thead><tbody id="vendorTableBody"></tbody></table></div>
+          </section>
         </div>
+      </article>
+    </section>
+
+    <section class="ai-flow">
+      <header class="ai-head">
+        <div>
+          <p class="eyebrow">AI Executive Intelligence</p>
+          <h2>Program Reports</h2>
+          <p>Automated executive insights with actionable recommendations based on live program data.</p>
+        </div>
+        <button class="btn primary" id="generateBtn">✨ Generate Intelligent Reports</button>
+      </header>
+      <div class="report-grid">
+        <article class="report" id="surveyReport"><div class="loading"><div class="spinner"></div><div style="color:var(--muted)">Click Generate to create report</div></div></article>
+        <article class="report scout-report" id="scoutReport"><div class="loading"><div class="spinner"></div><div style="color:var(--muted)">Click Generate to create report</div></div></article>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
 <script>
-// Generate stars
-const starsEl = document.getElementById('stars');
-for (let i = 0; i < 80; i++) {
-  const s = document.createElement('span');
-  s.className = 'star';
-  const size = 1 + Math.random() * 2;
-  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;width:${size}px;height:${size}px;animation-delay:${Math.random()*5}s;`;
-  starsEl.appendChild(s);
-}
+const PROGRAM_WEEK = 3;
+const TOTAL_WEEKS = 16;
+const VENDOR_COLORS = { CEI: 'var(--cyan)', Wachter: 'var(--purple)', Techwise: 'var(--pink)', Everon: 'var(--mint)', SAS: 'var(--yellow)' };
 
 let programData = null;
-let currentTab = 'survey';
-let generatedReports = { survey: null, scout: null, combined: null };
-let chartInstances = {};  // Track chart instances to destroy on refresh
 
-const C = { cyan: '#5AE4FF', purple: '#9B7CFF', green: '#45E6A5', red: '#FF6B81', amber: '#FFC857', pink: '#FF7EB3', grid: 'rgba(255,255,255,0.06)' };
-
-// Vendor name mapping
-const vendorNames = {
-  'customelectronics.com': 'CEI', 'securitasinc.com': 'SAS', 'safeandsoundsecurity.com': 'SAS',
-  'teaborinc.com': 'Techwise', 'techwiseis.com': 'Techwise', 'wachter.com': 'Wachter',
-  'evaborinc.com': 'Everon', 'everon.com': 'Everon', 'Wachter': 'Wachter', 'Everon': 'Everon',
-  'CEI': 'CEI', 'SAS': 'SAS', 'Techwise': 'Techwise', 'Safe and Sound': 'SAS'
-};
-function getVendorName(n) { return vendorNames[n] || n.split('.')[0].slice(0,10); }
-
-// Toggle formula popup
-function toggleFormulaPopup() {
-  const popup = document.getElementById('formulaPopup');
-  popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+function getVendorColor(name) {
+  const key = Object.keys(VENDOR_COLORS).find(k => name?.toLowerCase().includes(k.toLowerCase()));
+  return key ? VENDOR_COLORS[key] : 'var(--purple)';
+}
+function getVendorInitials(name) {
+  if (!name) return '??';
+  return name.replace(/[^A-Z]/g, '').slice(0,2) || name.slice(0,2).toUpperCase();
+}
+function formatDate(d) {
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-// Close popup when clicking outside
-document.addEventListener('click', function(e) {
-  const popup = document.getElementById('formulaPopup');
-  const btn = document.querySelector('.formula-btn');
-  if (popup && !popup.contains(e.target) && !btn.contains(e.target)) {
-    popup.style.display = 'none';
-  }
-});
-
-// Destroy existing charts before redrawing
-function destroyCharts() {
-  Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
-  chartInstances = {};
-}
-
-// Load data with cache-bust
 async function loadData() {
-  const errorBox = document.createElement('div');
-  errorBox.id = 'vues-error-box';
-  errorBox.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:15px;background:#4e1d1d;color:#fff;text-align:center;z-index:9999;display:none;font-family:system-ui;';
-  document.body.appendChild(errorBox);
-  
-  function showError(msg) {
-    errorBox.innerHTML = '⚠️ ' + msg + ' <button onclick="location.reload()" style="margin-left:10px;padding:5px 10px;cursor:pointer;">Retry</button>';
-    errorBox.style.display = 'block';
-  }
-  
-  function showStaleWarning() {
-    errorBox.innerHTML = '⚠️ Using cached data (baked ' + (window.VUES_BAKED_VERSION || 'unknown') + '). <a href="diagnostic.html" style="color:#ffc220;">Run diagnostic</a>';
-    errorBox.style.display = 'block';
-    errorBox.style.background = '#4e4e1d';
-  }
-  
-  let data = null;
-  let source = 'none';
-  
-  // Try fetch first
   try {
     const response = await fetch(`team_dashboard_data.json?t=${Date.now()}`, { cache: 'no-store' });
-    if (response.ok) {
-      data = await response.json();
-      source = 'fetch';
-      console.log('[VUES] ✓ Loaded data via fetch');
-    }
-  } catch (error) {
-    console.warn('[VUES] Fetch failed:', error.message);
-  }
-  
-  // Fallback to embedded data
-  if (!data && window.TEAM_DASHBOARD_DATA_FALLBACK) {
-    data = window.TEAM_DASHBOARD_DATA_FALLBACK;
-    source = 'fallback';
-    console.log('[VUES] Using embedded fallback data');
-    showStaleWarning();
-  }
-  
-  // No data available
-  if (!data) {
-    showError('No data available. Please run: git pull');
-    return;
-  }
-  
-  // Try to render
-  try {
-    destroyCharts();
-    programData = data;  // Set the global so renderAll() can use it
+    if (!response.ok) throw new Error('Failed to fetch data');
+    programData = await response.json();
     renderAll();
-    console.log('[VUES] ✓ Rendered successfully from ' + source);
+    document.getElementById('datePill').textContent = '📅 ' + formatDate(new Date());
   } catch (error) {
-    console.error('[VUES] Render error:', error);
-    showError('Render error: ' + error.message + '. Check console for details.');
+    console.error('Load error:', error);
+    document.getElementById('statusPill').innerHTML = '<span class="dot" style="background:var(--red);box-shadow:0 0 18px var(--red);"></span>Error';
   }
 }
-
-// Auto-refresh every 15 seconds
-setInterval(loadData, 15000);
 
 function renderAll() {
   if (!programData) return;
   
   const survey = programData.survey?.records || [];
-  const vendors = programData.vendor_assignments?.vendors || [];
   const scout = programData.scout || {};
+  const vendorAssignments = programData.vendor_assignments || {};
+  const vendors = vendorAssignments.vendors || [];
   const scoutRecords = scout.records || [];
   
-  // Survey metrics
+  // Survey Stats
   const surveyTotal = survey.length;
   const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
   const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
-  const surveyPending = surveyTotal - surveyPass - surveyFail;
+  const surveyPend = surveyTotal - surveyPass - surveyFail;
   const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
+  const surveyTargetCount = 548; // Target from routing
+  const surveyScopeRemaining = Math.max(surveyTargetCount - surveyPass, 0);
   
-  // Scout metrics - use new stats from backend (computed against Excel reference)
-  const scoutTotalSubmissions = scout.total_submissions || scoutRecords.length;
-  const scoutUniqueSubmissions = scout.unique_submissions || 0;
-  const scoutCompleted = scout.completed || 0;  // Sites matching Excel reference
-  const scoutExcelTotal = scout.excel_total || 0;  // Total sites in Excel scope
-  // Use vendor assignments remaining (actual work left) instead of Excel remaining
-  const vendorAssignments = programData.vendor_assignments || {};
+  // Scout Stats
+  const scoutSubmissions = scout.total_submissions || scoutRecords.length;
+  const scoutUnique = scout.unique_submissions || 0;
+  const scoutCompleted = scout.completed || 0;
+  const scoutExcelTotal = scout.excel_total || 0;
   const vendorRemaining = vendorAssignments.total_remaining || 0;
-  const scoutRemaining = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || (scoutExcelTotal - scoutCompleted));
-  const scoutRate = scout.completion_rate || (scoutExcelTotal > 0 ? (scoutCompleted / scoutExcelTotal * 100).toFixed(1) : 0);
+  const scoutRemainingCount = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || 0);
+  const scoutRate = scout.completion_rate || 0;
+  const scoutDupes = scoutSubmissions - scoutUnique;
   
-  // Update date
-  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-  
-  // Survey Health Card
-  document.getElementById('surveyRate').textContent = surveyRate + '%';
-  document.getElementById('surveyTotal').textContent = surveyTotal;
-  document.getElementById('surveyPass').textContent = surveyPass;
-  document.getElementById('surveyFail').textContent = surveyFail;
-  document.getElementById('surveyPending').textContent = surveyPending;
-  document.getElementById('surveyRing').style.strokeDashoffset = 314 - (314 * surveyRate / 100);
-  
-  const surveyStatusEl = document.getElementById('surveyStatus');
-  if (surveyRate >= 80) { surveyStatusEl.textContent = '● Healthy'; surveyStatusEl.className = 'status-chip status-good'; }
-  else if (surveyRate >= 50) { surveyStatusEl.textContent = '● Warning'; surveyStatusEl.className = 'status-chip status-warning'; }
-  else { surveyStatusEl.textContent = '● Critical'; surveyStatusEl.className = 'status-chip status-critical'; }
-  
-  // Scout Health Card - using Excel reference stats
-  document.getElementById('scoutRate').textContent = scoutRate + '%';
-  document.getElementById('scoutTotal').textContent = scoutExcelTotal;  // Target sites from Excel
-  document.getElementById('scoutDone').textContent = scoutCompleted;    // Matching Excel
-  document.getElementById('scoutRemaining').textContent = scoutRemaining;
-  document.getElementById('scoutVendors').textContent = scoutTotalSubmissions;  // Total submissions count
-  document.getElementById('scoutRing').style.strokeDashoffset = 314 - (314 * parseFloat(scoutRate) / 100);
-  
-  const scoutStatusEl = document.getElementById('scoutStatus');
-  if (scoutRate >= 50) { scoutStatusEl.textContent = '● On Track'; scoutStatusEl.className = 'status-chip status-good'; }
-  else if (scoutRate >= 20) { scoutStatusEl.textContent = '● In Progress'; scoutStatusEl.className = 'status-chip status-warning'; }
-  else { scoutStatusEl.textContent = '● Early Stage'; scoutStatusEl.className = 'status-chip status-warning'; }
-  
-  // Program week (hardcoded for now - Week 3)
-  const PROGRAM_WEEK = 3;
-  const TOTAL_WEEKS = 16; // Expected program duration
-  const expectedProgress = (PROGRAM_WEEK / TOTAL_WEEKS) * 100; // ~18.75% by Week 3
-  
-  // Quick Stats
-  document.getElementById('statWeek').textContent = 'W' + PROGRAM_WEEK;
-  
-  const thisWeek = scoutRecords.filter(r => {
-    const d = new Date(r.raw_fields?.['Scout Date']);
-    const now = new Date();
-    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  // This week count
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const scoutThisWeek = scoutRecords.filter(r => {
+    const d = new Date(r.raw_fields?.['Scout Date'] || r.submitted_at);
     return d >= weekAgo;
   }).length;
-  document.getElementById('statWeekly').textContent = thisWeek;
   
-  // Calculate velocity (sites per week based on program weeks)
-  const velocityPerWeek = PROGRAM_WEEK > 0 ? (scoutCompleted / PROGRAM_WEEK) : 0;
-  document.getElementById('statVelocity').textContent = velocityPerWeek.toFixed(1) + '/wk';
+  // Flow Map
+  document.getElementById('flowSurvey').textContent = surveyRate + '%';
+  document.getElementById('flowSurveyNote').textContent = surveyRate < 30 ? 'Early-stage recovery' : surveyRate < 60 ? 'Building momentum' : 'Healthy progress';
+  document.getElementById('flowConstraint').textContent = surveyFail > surveyPass ? 'QA' : 'Volume';
+  document.getElementById('flowConstraintNote').textContent = `${surveyFail} failed vs. ${surveyPass} passed`;
+  document.getElementById('flowScout').textContent = scoutRate + '%';
+  document.getElementById('flowScoutNote').textContent = scoutRate >= 80 ? 'Closeout mode' : scoutRate >= 50 ? 'On track' : 'Building coverage';
+  document.getElementById('flowMode').textContent = surveyRate < 50 && scoutRate >= 50 ? 'Split' : surveyRate >= 50 ? 'Unified' : 'Focus';
+  document.getElementById('flowModeNote').textContent = surveyRate < 50 ? 'Recover Survey, protect Scout' : 'Both programs aligned';
   
-  // Calculate Top Vendor using weighted scoring equation
-  // Score = (Completion% × 0.4) + (Velocity_normalized × 0.3) + (OnTrack_bonus × 0.3)
+  // Survey Lane
+  document.getElementById('surveyRing').style.setProperty('--value', surveyRate);
+  document.getElementById('surveyRingPct').textContent = surveyRate + '%';
+  document.getElementById('surveyTarget').textContent = surveyTargetCount;
+  document.getElementById('surveyCompleted').textContent = surveyPass;
+  document.getElementById('surveyRemaining').textContent = surveyScopeRemaining;
+  document.getElementById('surveyPassed').textContent = surveyPass;
+  document.getElementById('surveyFailed').textContent = surveyFail;
+  document.getElementById('surveyPending').textContent = surveyPend;
+  document.getElementById('surveyPassRate').textContent = surveyRate + '%';
+  document.getElementById('surveyPassRateNote').textContent = surveyRate >= 80 ? 'On target' : 'Below target';
+  
+  const surveyStatusEl = document.getElementById('surveyStatus');
+  if (surveyRate >= 60) { surveyStatusEl.textContent = '● On Track'; surveyStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
+  else if (surveyRate >= 30) { surveyStatusEl.textContent = '◆ In Progress'; surveyStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
+  else { surveyStatusEl.textContent = '◆ Early Stage'; surveyStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
+  
+  // Survey Forecasts
+  const surveyVelocity = PROGRAM_WEEK > 0 ? surveyPass / PROGRAM_WEEK : 0;
+  const surveyWeeksLeft = surveyVelocity > 0 ? Math.ceil(surveyScopeRemaining / surveyVelocity) : 99;
+  document.getElementById('surveyPerWeek').textContent = surveyVelocity.toFixed(1);
+  document.getElementById('surveyWeeksLeft').textContent = surveyWeeksLeft < 99 ? surveyWeeksLeft : '—';
+  document.getElementById('surveyETA').textContent = surveyWeeksLeft < 99 ? 'W' + (PROGRAM_WEEK + surveyWeeksLeft) : '—';
+  
+  // Scout Lane
+  document.getElementById('scoutRing').style.setProperty('--value', scoutRate);
+  document.getElementById('scoutRingPct').textContent = scoutRate + '%';
+  document.getElementById('scoutTarget').textContent = scoutExcelTotal;
+  document.getElementById('scoutCompleted').textContent = scoutCompleted;
+  document.getElementById('scoutRemaining').textContent = scoutRemainingCount;
+  document.getElementById('scoutSubmissions').textContent = scoutSubmissions;
+  document.getElementById('scoutUnique').textContent = scoutUnique;
+  document.getElementById('scoutDuplicates').textContent = scoutDupes;
+  document.getElementById('scoutDupNote').textContent = scoutDupes < 20 ? 'Low duplication' : 'Check duplicates';
+  document.getElementById('scoutThisWeek').textContent = scoutThisWeek;
+  
+  const scoutStatusEl = document.getElementById('scoutStatus');
+  if (scoutRate >= 80) { scoutStatusEl.textContent = '● Closeout'; scoutStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
+  else if (scoutRate >= 50) { scoutStatusEl.textContent = '● On Track'; scoutStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
+  else { scoutStatusEl.textContent = '◆ Building'; scoutStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
+  
+  // Scout Forecasts
+  const scoutVelocity = PROGRAM_WEEK > 0 ? scoutCompleted / PROGRAM_WEEK : 0;
+  const scoutWeeksLeft = scoutVelocity > 0 ? Math.ceil(scoutRemainingCount / scoutVelocity) : 99;
+  document.getElementById('scoutPerWeek').textContent = scoutVelocity.toFixed(1);
+  document.getElementById('scoutWeeksLeft').textContent = scoutWeeksLeft < 99 ? scoutWeeksLeft : '—';
+  document.getElementById('scoutETA').textContent = scoutWeeksLeft < 99 ? 'W' + (PROGRAM_WEEK + scoutWeeksLeft) : '—';
+  
+  // Vendor Table
+  renderVendorTable(vendors);
+  
+  // Charts
+  renderCharts(survey, scoutRecords);
+}
+
+function renderVendorTable(vendors) {
+  const sorted = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0));
   const maxVelocity = Math.max(...vendors.map(v => v.completed / PROGRAM_WEEK || 0), 1);
   
-  const scoredVendors = vendors.map(v => {
-    const completionScore = (v.completion_rate || 0) * 0.4; // 0-40 points
-    const vendorVelocity = v.completed / PROGRAM_WEEK || 0;
-    const velocityScore = (vendorVelocity / maxVelocity) * 30; // 0-30 points (normalized)
-    const onTrackBonus = (v.completion_rate || 0) >= expectedProgress ? 30 : ((v.completion_rate || 0) / expectedProgress) * 30; // 0-30 points
-    const totalScore = completionScore + velocityScore + onTrackBonus;
-    return { ...v, score: totalScore, velocity: vendorVelocity };
-  }).sort((a, b) => b.score - a.score);
-  
-  const topVendor = scoredVendors[0];
-  document.getElementById('statTopVendor').textContent = topVendor ? `${getVendorName(topVendor.vendor_name)}` : '—';
-  document.getElementById('statTopVendor').title = topVendor ? `Score: ${topVendor.score.toFixed(1)} | Rate: ${topVendor.completion_rate?.toFixed(1)}% | Velocity: ${topVendor.velocity.toFixed(1)}/wk` : '';
-  
-  const weeksToComplete = velocityPerWeek > 0 ? Math.ceil(scoutRemaining / velocityPerWeek) : 99;
-  document.getElementById('statETA').textContent = weeksToComplete < 99 ? 'W' + (PROGRAM_WEEK + weeksToComplete) : '—';
-  
-  document.getElementById('statAccuracy').textContent = surveyRate + '%';
-  
-  // Render charts
-  renderTrendChart(survey, scoutRecords);
-  renderSurveyMiniChart(survey);
-  renderScoutMiniChart(vendors);
-  renderDistChart(vendors);
-  renderVendorTable(vendors, scoutCompleted, scoutExcelTotal);
-  renderInsights(surveyRate, scoutRate, vendors, scoutCompleted, scoutExcelTotal);
-}
-
-function renderTrendChart(survey, scout) {
-  const days = {};
-  const now = new Date();
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    days[d] = { survey: 0, scout: 0 };
-  }
-  survey.forEach(r => { const d = (r.submitted_at || '').slice(0, 10); if (days[d]) days[d].survey++; });
-  scout.forEach(r => { const d = r.raw_fields?.['Scout Date']; if (days[d]) days[d].scout++; });
-  
-  const labels = Object.keys(days).map(d => d.slice(5));
-  chartInstances.trend = new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Survey', data: Object.values(days).map(d => d.survey), borderColor: C.cyan, backgroundColor: 'rgba(90,228,255,0.1)', fill: true, tension: 0.4 },
-        { label: 'Scout', data: Object.values(days).map(d => d.scout), borderColor: C.purple, backgroundColor: 'rgba(155,124,255,0.1)', fill: true, tension: 0.4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9EB1D4' } } }, scales: { x: { grid: { color: C.grid } }, y: { grid: { color: C.grid }, beginAtZero: true } } }
-  });
-}
-
-function renderSurveyMiniChart(survey) {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    days.push(survey.filter(r => (r.submitted_at || '').slice(0, 10) === d).length);
-  }
-  chartInstances.surveyMini = new Chart(document.getElementById('surveyMiniChart'), {
-    type: 'bar', data: { labels: ['', '', '', '', '', '', ''], datasets: [{ data: days, backgroundColor: 'rgba(90,228,255,0.5)', borderRadius: 4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-  });
-}
-
-function renderScoutMiniChart(vendors) {
-  const data = vendors.slice(0, 5).map(v => v.completed || 0);
-  chartInstances.scoutMini = new Chart(document.getElementById('scoutMiniChart'), {
-    type: 'bar', data: { labels: vendors.slice(0, 5).map(v => ''), datasets: [{ data, backgroundColor: 'rgba(155,124,255,0.5)', borderRadius: 4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-  });
-}
-
-function renderDistChart(vendors) {
-  chartInstances.dist = new Chart(document.getElementById('distChart'), {
-    type: 'doughnut',
-    data: {
-      labels: vendors.map(v => getVendorName(v.vendor_name)),
-      datasets: [{ data: vendors.map(v => v.total_assigned), backgroundColor: [C.cyan, C.purple, C.amber, C.green, C.pink], borderWidth: 0, spacing: 2 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#9EB1D4', padding: 12, font: { size: 11 } } } } }
-  });
-}
-
-function renderVendorTable(vendors, scoutCompleted, scoutExcelTotal) {
-  // Recalculate scores for table
-  const PROGRAM_WEEK = 3;
-  const TOTAL_WEEKS = 16;
-  const expectedProgress = (PROGRAM_WEEK / TOTAL_WEEKS) * 100;
-  const maxVelocity = Math.max(...vendors.map(v => v.completed / PROGRAM_WEEK || 0), 1);
-  
-  const scoredVendors = vendors.map(v => {
-    const completionScore = (v.completion_rate || 0) * 0.4;
-    const vendorVelocity = v.completed / PROGRAM_WEEK || 0;
-    const velocityScore = (vendorVelocity / maxVelocity) * 30;
-    const onTrackBonus = (v.completion_rate || 0) >= expectedProgress ? 30 : ((v.completion_rate || 0) / expectedProgress) * 30;
-    const totalScore = completionScore + velocityScore + onTrackBonus;
-    return { ...v, score: totalScore, velocity: vendorVelocity };
-  }).sort((a, b) => b.score - a.score);
-  
-  const tbody = document.getElementById('vendorTableBody');
-  
-  // Add critical alert banner ONLY if vendors have literally 0 submissions
-  const zeroSubmissionVendors = scoredVendors.filter(v => v.completed === 0 && v.total_assigned > 50);
-  const criticalLowVendors = scoredVendors.filter(v => v.completed > 0 && (v.completion_rate || 0) < 5 && v.total_assigned > 50);
-  const alertContainer = document.getElementById('vendorCriticalAlert');
-  
-  let alertHtml = '';
-  if (zeroSubmissionVendors.length > 0) {
-    const names = zeroSubmissionVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong>`).join(', ');
-    alertHtml += `<div class="critical-alert"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${zeroSubmissionVendors.length === 1 ? 'has' : 'have'} <strong>ZERO SCOUT SUBMISSIONS</strong> despite active assignments. Immediate escalation required.</span></div>`;
-  }
-  if (criticalLowVendors.length > 0) {
-    const names = criticalLowVendors.map(v => `<strong>${getVendorName(v.vendor_name)}</strong> (${v.completed}/${v.total_assigned})`).join(', ');
-    alertHtml += `<div class="critical-alert" style="background:rgba(255,200,87,0.12);border-color:rgba(255,200,87,0.3);"><span class="alert-icon">⚠️</span><span class="alert-text">${names} ${criticalLowVendors.length === 1 ? 'is' : 'are'} <strong>CRITICALLY BEHIND</strong> (&lt;5% complete). Follow-up recommended.</span></div>`;
-  }
-  if (alertContainer) {
-    alertContainer.innerHTML = alertHtml;
-  }
-  
-  tbody.innerHTML = scoredVendors.map((v, idx) => {
-    const rate = v.completion_rate || 0;
-    const isCritical = rate < 5 && v.total_assigned > 50;
-    const isWarning = rate < 20 && v.total_assigned > 30;
-    const color = isCritical ? C.red : rate >= 10 ? C.green : rate >= 5 ? C.amber : C.red;
-    const initials = getVendorName(v.vendor_name).slice(0, 2).toUpperCase();
-    const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
-    const scoreColor = v.score >= 50 ? C.green : v.score >= 30 ? C.amber : C.red;
-    const rowClass = isCritical ? 'vendor-critical' : '';
-    const avatarClass = isCritical ? 'vendor-avatar critical' : 'vendor-avatar';
-    
-    // Status badge - only show "NO SUBMISSIONS" when actually 0 completed
-    let badge = '';
-    if (v.completed === 0 && v.total_assigned > 50) {
-      badge = `<span class="vendor-badge danger">⚠️ NO SUBMISSIONS</span>`;
-    } else if (isCritical) {
-      badge = `<span class="vendor-badge danger">⚠️ CRITICAL</span>`;
-    } else if (isWarning) {
-      badge = `<span class="vendor-badge warning">BEHIND</span>`;
-    } else if (rate >= 70) {
-      badge = `<span class="vendor-badge success">ON TRACK</span>`;
-    }
-    
-    return `<tr class="${rowClass}">
-      <td><div class="vendor-name"><div class="${avatarClass}">${initials}</div>${getVendorName(v.vendor_name)}${badge}</div></td>
-      <td>${v.total_assigned}</td>
-      <td style="color:${isCritical ? C.red : C.green};font-weight:700;">${v.completed}</td>
-      <td><span class="metric" style="font-size:11px;">${v.velocity.toFixed(1)}/wk</span></td>
-      <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.max(Math.min(rate, 100), 2)}%;background:${color}"></div></div><span style="font-size:10px;color:${color};margin-left:6px;">${rate.toFixed(1)}%</span></td>
-      <td style="color:${scoreColor};font-weight:800;font-size:16px;">${v.score.toFixed(0)}</td>
-      <td style="font-size:16px;">${rankEmoji}</td>
+  document.getElementById('vendorTableBody').innerHTML = sorted.slice(0, 5).map(v => {
+    const color = getVendorColor(v.vendor_name);
+    const pct = v.completion_rate || 0;
+    const velocity = v.completed / PROGRAM_WEEK || 0;
+    const score = Math.round((pct * 0.4) + (velocity / maxVelocity * 30) + (pct >= 40 ? 30 : pct / 40 * 30));
+    const scoreColor = score >= 70 ? 'var(--mint)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
+    return `<tr>
+      <td><div class="vendor"><span class="avatar" style="--avatar: ${color};">${getVendorInitials(v.vendor_name)}</span>${v.vendor_name || 'Unknown'}</div></td>
+      <td>${v.total_assigned || 0}</td>
+      <td>${v.completed || 0}</td>
+      <td><div class="progress" style="--progress: ${color};"><span style="--p:${Math.min(pct, 100)}%;"></span></div></td>
+      <td><span class="score" style="--score: ${scoreColor};">${score}</span></td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No vendor data</td></tr>';
 }
 
-function renderInsights(surveyRate, scoutRate, vendors, scoutCompleted, scoutExcelTotal) {
-  const insights = [];
-  
-  if (surveyRate < 50) {
-    insights.push({ type: 'critical', icon: '🚨', title: 'Survey Quality Alert', text: `Pass rate at ${surveyRate}% - immediate action required. Review vendor submissions and training protocols.` });
-  } else if (surveyRate < 80) {
-    insights.push({ type: 'warning', icon: '⚠️', title: 'Survey Performance', text: `${surveyRate}% pass rate is below target. Consider vendor coaching sessions.` });
-  } else {
-    insights.push({ type: 'positive', icon: '✅', title: 'Survey Quality', text: `Strong ${surveyRate}% pass rate. Maintain current quality standards.` });
+function renderCharts(surveyRecords, scoutRecords) {
+  // Build 14-day date range
+  const dates = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
   }
   
-  const lowVendors = vendors.filter(v => v.completion_rate < 5 && v.total_assigned > 30);
-  if (lowVendors.length > 0) {
-    insights.push({ type: 'action', icon: '📞', title: 'Vendor Outreach', text: `${lowVendors.length} vendor(s) need follow-up: ${lowVendors.map(v => getVendorName(v.vendor_name)).join(', ')}` });
-  }
+  // Count submissions per day
+  const surveyByDay = {};
+  const scoutByDay = {};
+  dates.forEach(d => { surveyByDay[d] = 0; scoutByDay[d] = 0; });
   
-  if (scoutRate < 10) {
-    insights.push({ type: 'warning', icon: '🔭', title: 'Scout Acceleration', text: `${scoutRate}% complete. Increase velocity to meet timeline.` });
-  }
+  surveyRecords.forEach(r => {
+    const d = (r.submitted_at || r.raw_fields?.['Submitted At'] || '').slice(0, 10);
+    if (surveyByDay[d] !== undefined) surveyByDay[d]++;
+  });
   
-  document.getElementById('insightsGrid').innerHTML = insights.map(i => `
-    <div class="insight-card insight-${i.type}">
-      <div class="insight-icon">${i.icon}</div>
-      <div class="insight-title">${i.title}</div>
-      <div class="insight-text">${i.text}</div>
-    </div>
-  `).join('');
+  scoutRecords.forEach(r => {
+    const d = (r.raw_fields?.['Scout Date'] || r.submitted_at || '').slice(0, 10);
+    if (scoutByDay[d] !== undefined) scoutByDay[d]++;
+  });
+  
+  // Render Survey Chart
+  const surveyMax = Math.max(...Object.values(surveyByDay), 8);
+  const surveyPlot = document.getElementById('surveyPlot');
+  surveyPlot.innerHTML = dates.map(d => {
+    const count = surveyByDay[d];
+    const h = count > 0 ? Math.max(count / surveyMax * 100, 5) : 0;
+    return count > 0 ? `<div class="bar" style="--h:${h}%;"></div>` : '<div class="bar empty"></div>';
+  }).join('') + `<div class="x-axis">${dates.map(d => `<span>${d.slice(5)}</span>`).join('')}</div>`;
+  document.getElementById('surveyYAxis').innerHTML = [surveyMax, Math.round(surveyMax*0.75), Math.round(surveyMax*0.5), Math.round(surveyMax*0.25), 0].map(v => `<span>${v}</span>`).join('');
+  
+  // Render Scout Chart
+  const scoutMax = Math.max(...Object.values(scoutByDay), 40);
+  const scoutPlot = document.getElementById('scoutPlot');
+  scoutPlot.innerHTML = dates.map(d => {
+    const count = scoutByDay[d];
+    const h = count > 0 ? Math.max(count / scoutMax * 100, 5) : 0;
+    return count > 0 ? `<div class="bar" style="--h:${h}%;"></div>` : '<div class="bar empty"></div>';
+  }).join('') + `<div class="x-axis">${dates.map(d => `<span>${d.slice(5)}</span>`).join('')}</div>`;
+  document.getElementById('scoutYAxis').innerHTML = [scoutMax, Math.round(scoutMax*0.75), Math.round(scoutMax*0.5), Math.round(scoutMax*0.25), 0].map(v => `<span>${v}</span>`).join('');
 }
 
-// Tab switching
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-  
-  if (generatedReports[tab]) {
-    document.getElementById('reportBox').innerHTML = generatedReports[tab];
-    enableExport(true);
-  } else {
-    document.getElementById('reportBox').innerHTML = `<div style="text-align:center; padding:60px 20px;"><div style="font-size:48px; margin-bottom:16px;">📊</div><div style="color:var(--text-soft);">Click "Generate AI Report" for ${tab} analysis</div></div>`;
-    enableExport(false);
-  }
-}
-
-function enableExport(on) {
-  ['copyBtn', 'downloadTxtBtn', 'downloadMdBtn', 'downloadHtmlBtn', 'regenBtn'].forEach(id => document.getElementById(id).disabled = !on);
-}
-
-async function generateReport() {
+// AI Report Generation
+document.getElementById('generateBtn').addEventListener('click', () => {
   const btn = document.getElementById('generateBtn');
-  const box = document.getElementById('reportBox');
   btn.disabled = true;
-  box.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Generating AI insights...</div></div>';
+  btn.textContent = 'Analyzing flow...';
   
-  // Simulate API delay then generate locally
-  await new Promise(r => setTimeout(r, 1500));
-  
-  const report = generateLocalReport(currentTab);
-  generatedReports[currentTab] = report;
-  box.innerHTML = report;
-  enableExport(true);
-  showStatus('Report generated!', 'success');
-  btn.disabled = false;
-}
+  setTimeout(() => {
+    const survey = programData?.survey?.records || [];
+    const scout = programData?.scout || {};
+    const vendorAssignments = programData?.vendor_assignments || {};
+    const vendors = vendorAssignments.vendors || [];
+    
+    const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
+    const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
+    const surveyRate = survey.length ? Math.round(surveyPass / survey.length * 100) : 0;
+    const scoutRate = scout.completion_rate || 0;
+    const scoutRemaining = vendorAssignments.total_remaining || scout.remaining || 0;
+    const topVendor = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0))[0];
+    const lowVendor = [...vendors].sort((a, b) => (a.completion_rate || 0) - (b.completion_rate || 0))[0];
+    
+    // Survey Report
+    const surveyRisk = surveyRate < 50 ? 'High Risk' : surveyRate < 80 ? 'Moderate' : 'On Track';
+    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--yellow)' : 'var(--mint)';
+    document.getElementById('surveyReport').innerHTML = `
+      <div class="report-head">
+        <div class="report-title"><div class="report-icon">✈</div><div><h3>Survey AI Report</h3><p class="report-sub">Recovery diagnosis</p></div></div>
+        <span class="risk" style="--risk: ${surveyRiskColor};">${surveyRisk}</span>
+      </div>
+      <div class="report-body">
+        <div class="block"><h4>Executive Summary</h4><p>Survey is at <strong>${surveyRate}%</strong> pass rate with <strong>${surveyFail}</strong> failed records requiring attention. ${surveyFail > surveyPass ? 'Quality is the primary constraint—failed records exceed passed.' : 'Volume is building, maintain quality focus.'}</p></div>
+        <div class="block"><h4>Decision Snapshot</h4><div class="decision-row"><div class="decision"><span>Risk</span><strong>${surveyRisk.split(' ')[0]}</strong></div><div class="decision"><span>Constraint</span><strong>${surveyFail > surveyPass ? 'Quality' : 'Volume'}</strong></div><div class="decision"><span>Mode</span><strong>${surveyRate < 50 ? 'Recover' : 'Scale'}</strong></div></div></div>
+        <div class="block"><h4>Recommended Actions</h4><ul class="insights"><li>Run vendor-level QA triage before increasing volume.</li><li>${surveyRate < 50 ? 'Move to twice-weekly recovery governance.' : 'Maintain current cadence with quality monitoring.'}</li><li>Focus resources on highest-yielding vendors first.</li></ul></div>
+      </div>`;
+    
+    // Scout Report
+    const scoutRisk = scoutRate >= 80 ? 'Closeout' : scoutRate >= 50 ? 'On Track' : 'Building';
+    const scoutRiskColor = scoutRate >= 50 ? 'var(--mint)' : 'var(--yellow)';
+    document.getElementById('scoutReport').innerHTML = `
+      <div class="report-head">
+        <div class="report-title"><div class="report-icon">☄</div><div><h3>Scout AI Report</h3><p class="report-sub">Closeout diagnosis</p></div></div>
+        <span class="risk" style="--risk: ${scoutRiskColor};">${scoutRisk}</span>
+      </div>
+      <div class="report-body">
+        <div class="block"><h4>Executive Summary</h4><p>Scout is at <strong>${scoutRate}%</strong> completion with <strong>${scoutRemaining}</strong> sites remaining. ${scoutRate >= 80 ? 'Program is in closeout mode—protect allocation through completion.' : 'Velocity is strong, continue current trajectory.'}</p></div>
+        <div class="block"><h4>Decision Snapshot</h4><div class="decision-row"><div class="decision"><span>Risk</span><strong>${scoutRate >= 50 ? 'Low' : 'Moderate'}</strong></div><div class="decision"><span>Strength</span><strong>Velocity</strong></div><div class="decision"><span>Mode</span><strong>${scoutRate >= 80 ? 'Protect' : 'Execute'}</strong></div></div></div>
+        <div class="block"><h4>Recommended Actions</h4><ul class="insights"><li>Protect ${topVendor?.vendor_name || 'top vendor'} allocation through closeout.</li><li>Start final duplicate review and validation now.</li><li>Use Scout discipline as model for Survey recovery.</li></ul></div>
+      </div>`;
+    
+    btn.disabled = false;
+    btn.textContent = '✨ Generate Intelligent Reports';
+  }, 650);
+});
 
-function regenerateReport() {
-  generatedReports[currentTab] = null;
-  generateReport();
-}
-
-function generateLocalReport(type) {
-  const survey = programData.survey?.records || [];
-  const vendorAssignments = programData.vendor_assignments || {};
-  const vendors = vendorAssignments.vendors || [];
-  const scout = programData.scout || {};
-  
-  // Survey stats
-  const surveyTotal = survey.length;
-  const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
-  const surveyFail = surveyTotal - surveyPass;
-  const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
-  
-  // Scout stats - from backend (computed against Excel reference)
-  const scoutTotalSubmissions = scout.total_submissions || 0;
-  const scoutUniqueSubmissions = scout.unique_submissions || 0;
-  const scoutCompleted = scout.completed || 0;  // Sites matching Excel
-  const scoutExcelTotal = scout.excel_total || 0;  // Target sites from Excel
-  // Use vendor assignments remaining (actual work left)
-  const vendorRemaining = vendorAssignments.total_remaining || 0;
-  const scoutRemaining = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || 0);
-  const scoutRate = scout.completion_rate || 0;
-  
-  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const topVendor = vendors.sort((a,b) => b.completion_rate - a.completion_rate)[0];
-  const lowVendors = vendors.filter(v => v.completion_rate < 5);
-  
-  if (type === 'survey') {
-    return `<h3>📋 Survey Program Analysis</h3>
-<p><strong>Generated:</strong> ${today} | <strong>Status:</strong> <span class="metric" style="color:${surveyRate >= 80 ? C.green : surveyRate >= 50 ? C.amber : C.red}">${surveyRate >= 80 ? '✅ Healthy' : surveyRate >= 50 ? '⚠️ Attention Needed' : '🚨 Critical'}</span></p>
-
-<h3>Executive Overview</h3>
-<p>The Survey Program has processed <span class="highlight">${surveyTotal}</span> submissions with a current pass rate of <span class="highlight">${surveyRate}%</span>. ${surveyRate < 50 ? 'This is significantly below the 80% target threshold and requires immediate intervention.' : surveyRate < 80 ? 'Performance is trending below target and warrants proactive measures.' : 'Performance meets quality standards.'}</p>
-
-<h3>Key Performance Indicators</h3>
-<ul>
-<li><strong>Total Submissions:</strong> <span class="metric">${surveyTotal}</span></li>
-<li><strong>Passed (QA Approved):</strong> <span class="metric" style="color:${C.green}">${surveyPass}</span> (${surveyRate}%)</li>
-<li><strong>Failed (Requires Revision):</strong> <span class="metric" style="color:${C.red}">${surveyFail}</span> (${100-surveyRate}%)</li>
-<li><strong>Quality Target:</strong> <span class="metric">80%</span> | <strong>Variance:</strong> <span class="metric" style="color:${surveyRate >= 80 ? C.green : C.red}">${surveyRate - 80 > 0 ? '+' : ''}${surveyRate - 80}%</span></li>
-</ul>
-
-<h3>Root Cause Analysis</h3>
-<p>Common failure patterns identified:</p>
-<ul>
-<li>Incorrect site number mapping (estimated 35% of failures)</li>
-<li>Missing or malformed device columns (estimated 28% of failures)</li>
-<li>Data format inconsistencies (estimated 22% of failures)</li>
-<li>Outdated reference data conflicts (estimated 15% of failures)</li>
-</ul>
-
-<h3>Recommendations</h3>
-<ul>
-${surveyRate < 80 ? '<li><strong>Immediate:</strong> Schedule vendor quality review sessions within 48 hours</li>' : ''}
-${surveyRate < 50 ? '<li><strong>Critical:</strong> Implement mandatory pre-submission validation checks</li>' : ''}
-<li><strong>Process:</strong> Enhance vendor training materials with common failure examples</li>
-<li><strong>Technology:</strong> Consider automated validation layer before submission</li>
-<li><strong>Monitoring:</strong> Implement daily quality scorecards for vendor accountability</li>
-</ul>
-
-<h3>Action Items</h3>
-<ul>
-<li>🔴 Review all failed submissions and categorize failure reasons</li>
-<li>🟡 Update vendor SOPs with quality improvement guidance</li>
-<li>🟢 Recognize and reward top-performing vendors</li>
-<li>📊 Schedule weekly quality trend review meeting</li>
-</ul>`;
-  } else if (type === 'scout') {
-    return `<h3>🔭 Scout Program Analysis</h3>
-<p><strong>Generated:</strong> ${today} | <strong>Status:</strong> <span class="metric" style="color:${scoutRate >= 50 ? C.green : scoutRate >= 20 ? C.amber : C.purple}">${scoutRate >= 50 ? '✅ On Track' : scoutRate >= 20 ? '⚠️ Progressing' : '🔵 Early Stage'}</span></p>
-
-<h3>Executive Overview</h3>
-<p>The Scout Program targets <span class="highlight">${scoutExcelTotal}</span> sites per the reference scope. Currently <span class="highlight">${scoutCompleted}</span> unique sites have been verified as complete (<span class="highlight">${scoutRate}%</span>), with <span class="highlight">${scoutRemaining}</span> sites remaining. We've received <span class="highlight">${scoutTotalSubmissions}</span> total submissions (<span class="highlight">${scoutUniqueSubmissions}</span> unique sites).</p>
-
-<h3>Key Performance Indicators</h3>
-<ul>
-<li><strong>Target Sites (Excel Scope):</strong> <span class="metric">${scoutExcelTotal}</span></li>
-<li><strong>Total Submissions:</strong> <span class="metric">${scoutTotalSubmissions}</span></li>
-<li><strong>Unique Sites Submitted:</strong> <span class="metric">${scoutUniqueSubmissions}</span></li>
-<li><strong>Sites Completed (Verified):</strong> <span class="metric" style="color:${C.green}">${scoutCompleted}</span></li>
-<li><strong>Sites Remaining:</strong> <span class="metric" style="color:${C.amber}">${scoutRemaining}</span></li>
-<li><strong>Completion Rate:</strong> <span class="metric">${scoutRate}%</span></li>
-<li><strong>Active Vendors:</strong> <span class="metric">${vendors.length}</span></li>
-</ul>
-
-<h3>Vendor Performance Matrix</h3>
-<ul>
-${vendors.map(v => `<li><strong>${getVendorName(v.vendor_name)}:</strong> <span class="metric">${v.completed}/${v.total_assigned}</span> sites (<span class="metric" style="color:${v.completion_rate >= 10 ? C.green : v.completion_rate >= 5 ? C.amber : C.red}">${v.completion_rate?.toFixed(1)}%</span>)</li>`).join('\n')}
-</ul>
-
-<h3>Performance Insights</h3>
-<p>${topVendor ? `<strong>${getVendorName(topVendor.vendor_name)}</strong> leads performance with ${topVendor.completion_rate?.toFixed(1)}% completion.` : ''}</p>
-${lowVendors.length > 0 ? `<p><span class="metric" style="color:${C.red}">${lowVendors.length} vendor(s)</span> are below 5% completion and require intervention: ${lowVendors.map(v => getVendorName(v.vendor_name)).join(', ')}.</p>` : '<p>All vendors are progressing adequately.</p>'}
-
-<h3>Data Quality Notes</h3>
-<ul>
-<li><strong>Duplicate Submissions:</strong> <span class="metric">${scoutTotalSubmissions - scoutUniqueSubmissions}</span> (${scoutTotalSubmissions > 0 ? ((scoutTotalSubmissions - scoutUniqueSubmissions) / scoutTotalSubmissions * 100).toFixed(1) : 0}%)</li>
-<li><strong>Unmatched Sites:</strong> <span class="metric">${scoutUniqueSubmissions - scoutCompleted}</span> submitted but not in Excel scope</li>
-</ul>
-
-<h3>Timeline Projection</h3>
-<p>Based on current velocity of <span class="highlight">${(scoutCompleted/14).toFixed(1)} sites/day</span>:</p>
-<ul>
-<li><strong>Estimated Completion:</strong> <span class="metric">${scoutCompleted > 0 ? Math.ceil(scoutRemaining / (scoutCompleted / 14)) + ' days' : 'TBD'}</span></li>
-<li><strong>Required Acceleration:</strong> ${scoutRate < 50 ? 'Yes - increase velocity by 25%' : 'No - maintain current pace'}</li>
-</ul>
-
-<h3>Action Items</h3>
-<ul>
-<li>📞 Schedule check-in calls with underperforming vendors</li>
-<li>🗺️ Verify site accessibility for remaining locations</li>
-<li>📊 Implement weekly vendor velocity scorecards</li>
-<li>🎯 Set milestone targets for next 30/60/90 days</li>
-</ul>`;
-  } else {
-    return `<h3>📊 Executive Program Brief</h3>
-<p><strong>Generated:</strong> ${today} | <strong>Report Type:</strong> Combined Analysis</p>
-
-<h3>Program Overview</h3>
-<p>This executive brief provides a consolidated view of both the Survey and Scout programs. The Scout program targets <span class="highlight">${scoutExcelTotal}</span> sites with <span class="highlight">${vendors.length}</span> active vendors executing field operations.</p>
-
-<h3>Survey Program Summary</h3>
-<ul>
-<li><strong>Submissions:</strong> <span class="metric">${surveyTotal}</span> total | <span class="metric" style="color:${C.green}">${surveyPass}</span> passed | <span class="metric" style="color:${C.red}">${surveyFail}</span> failed</li>
-<li><strong>Pass Rate:</strong> <span class="metric" style="color:${surveyRate >= 80 ? C.green : surveyRate >= 50 ? C.amber : C.red}">${surveyRate}%</span> (Target: 80%)</li>
-<li><strong>Program Health:</strong> ${surveyRate >= 80 ? '✅ Healthy' : surveyRate >= 50 ? '⚠️ Needs Attention' : '🚨 Critical'}</li>
-</ul>
-
-<h3>Scout Program Summary</h3>
-<ul>
-<li><strong>Target Sites (Excel Scope):</strong> <span class="metric">${scoutExcelTotal}</span></li>
-<li><strong>Total Submissions:</strong> <span class="metric">${scoutTotalSubmissions}</span> | <span class="metric">Unique: ${scoutUniqueSubmissions}</span></li>
-<li><strong>Sites Completed:</strong> <span class="metric" style="color:${C.green}">${scoutCompleted}</span> | <span class="metric" style="color:${C.amber}">Remaining: ${scoutRemaining}</span></li>
-<li><strong>Completion Rate:</strong> <span class="metric" style="color:${C.purple}">${scoutRate}%</span></li>
-<li><strong>Top Performer:</strong> ${topVendor ? `${getVendorName(topVendor.vendor_name)} (${topVendor.completion_rate?.toFixed(1)}%)` : 'TBD'}</li>
-</ul>
-
-<h3>Cross-Program Insights</h3>
-<ul>
-<li>Overall program velocity is ${scoutRate > 20 ? 'acceptable' : 'below target'} - ${scoutRate > 20 ? 'maintain momentum' : 'acceleration required'}</li>
-<li>Survey quality at ${surveyRate}% ${surveyRate >= 80 ? 'meets' : 'falls short of'} the 80% quality threshold</li>
-<li>Estimated cost avoidance to date: <span class="metric" style="color:${C.green}">$${Math.round(scoutCompleted * 450).toLocaleString()}</span></li>
-<li>Resource utilization across ${vendors.length} vendors is ${lowVendors.length > 2 ? 'uneven' : 'balanced'}</li>
-</ul>
-
-<h3>Priority Actions (Next 7 Days)</h3>
-<ul>
-<li>🔴 <strong>P1:</strong> ${surveyRate < 80 ? 'Address survey quality issues - vendor training required' : 'Maintain survey quality standards'}</li>
-<li>🟡 <strong>P2:</strong> ${lowVendors.length > 0 ? `Follow up with ${lowVendors.length} underperforming vendor(s)` : 'Continue vendor performance monitoring'}</li>
-<li>🟢 <strong>P3:</strong> Prepare weekly executive dashboard update</li>
-<li>📊 <strong>P4:</strong> Schedule bi-weekly cross-program sync meeting</li>
-</ul>
-
-<h3>Financial Impact</h3>
-<ul>
-<li><strong>Scout Cost Savings:</strong> <span class="metric" style="color:${C.green}">$${Math.round(scoutCompleted * 450).toLocaleString()}</span> (vs legacy approach)</li>
-<li><strong>Projected Total Savings:</strong> <span class="metric">$${Math.round(scoutExcelTotal * 450).toLocaleString()}</span> at completion</li>
-<li><strong>ROI Status:</strong> ${scoutRate > 10 ? '✅ Positive' : '⏳ Tracking'}</li>
-</ul>`;
-  }
-}
-
-function showStatus(msg, type) {
-  const el = document.getElementById('statusMsg');
-  el.textContent = msg;
-  el.className = 'status-msg status-' + type;
-  setTimeout(() => { el.textContent = ''; el.className = ''; }, 3000);
-}
-
-function copyReport() {
-  navigator.clipboard.writeText(document.getElementById('reportBox').innerText).then(() => showStatus('Copied!', 'success'));
-}
-
-function downloadReport(fmt) {
-  const box = document.getElementById('reportBox');
-  let content, filename, mime;
-  const date = new Date().toISOString().slice(0,10);
-  
-  if (fmt === 'html') {
-    content = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VUES Report - ${currentTab}</title><style>body{font-family:system-ui;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;}h3{color:#0053e2;border-bottom:2px solid #0053e2;padding-bottom:8px;margin-top:24px;}ul{margin:12px 0;}li{margin:8px 0;}.metric{background:#f0f4ff;padding:2px 8px;border-radius:4px;font-family:monospace;}</style></head><body>${box.innerHTML}
-
-</body></html>`;
-    filename = `VUES_${currentTab}_report_${date}.html`;
-    mime = 'text/html';
-  } else if (fmt === 'md') {
-    content = box.innerText.replace(/^([A-Z📊📋🔭].*)$/gm, '## $1');
-    filename = `VUES_${currentTab}_report_${date}.md`;
-    mime = 'text/markdown';
-  } else {
-    content = box.innerText;
-    filename = `VUES_${currentTab}_report_${date}.txt`;
-    mime = 'text/plain';
-  }
-  
-  const blob = new Blob([content], { type: mime });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  showStatus('Downloaded!', 'success');
-}
-
-// Render immediately with fallback data
-if (window.TEAM_DASHBOARD_DATA_FALLBACK) {
-  console.log('[VUES] Rendering summary with embedded data');
-  programData = window.TEAM_DASHBOARD_DATA_FALLBACK;
-  renderAll();
-}
+// Initial load and auto-refresh
 loadData();
+setInterval(loadData, 30000);
 </script>
 </body>
 </html>

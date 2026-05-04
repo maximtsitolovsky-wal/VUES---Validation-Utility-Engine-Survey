@@ -25,12 +25,12 @@ def load_token() -> str:
     config_path = Path.home() / ".siteowlqa" / "config.json"
     if config_path.exists():
         try:
-            with open(config_path, "r") as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 # For Scout base, use scout_airtable_token
                 token = config.get("scout_airtable_token")
                 if token:
-                    print(f"✓ Using scout_airtable_token from {config_path}")
+                    print(f"[OK] Using scout_airtable_token from {config_path}")
                     return token
         except Exception as e:
             print(f"Warning: Could not load config from {config_path}: {e}")
@@ -38,7 +38,7 @@ def load_token() -> str:
     # Try environment variable
     token = os.getenv("AIRTABLE_TOKEN")
     if token:
-        print("✓ Using AIRTABLE_TOKEN from environment")
+        print("[OK] Using AIRTABLE_TOKEN from environment")
         return token
     
     raise RuntimeError(
@@ -93,7 +93,7 @@ def check_scout_table(token: str):
     
     try:
         records = fetch_all_records(token, BASE_ID, SCOUT_TABLE_ID)
-        print(f"\n✓ Total records in Scout table: {len(records)}")
+        print(f"\n[OK] Total records in Scout table: {len(records)}")
         
         # Show some basic stats if records exist
         if records:
@@ -107,10 +107,10 @@ def check_scout_table(token: str):
             print(f"  Total unique fields: {len(all_fields)}")
             print(f"  Fields: {', '.join(sorted(all_fields))}")
         else:
-            print("\n  ⚠ No records found in Scout table!")
+            print("\n  [WARNING] No records found in Scout table!")
             
     except Exception as e:
-        print(f"\n✗ Error accessing Scout table: {e}")
+        print(f"\n[ERROR] Error accessing Scout table: {e}")
 
 
 def check_survey_routing_table(token: str):
@@ -121,10 +121,10 @@ def check_survey_routing_table(token: str):
     
     try:
         records = fetch_all_records(token, BASE_ID, SURVEY_ROUTING_TABLE_ID)
-        print(f"\n✓ Total records in Survey Routing table: {len(records)}")
+        print(f"\n[OK] Total records in Survey Routing table: {len(records)}")
         
         if not records:
-            print("\n  ⚠ No records found in Survey Routing table!")
+            print("\n  [WARNING] No records found in Survey Routing table!")
             return
         
         # Collect all fields
@@ -158,7 +158,7 @@ def check_survey_routing_table(token: str):
                     field_stats[field_name]["empty"] += 1
         
         # Display fields
-        print(f"\n📋 FIELDS IN SURVEY ROUTING TABLE ({len(all_fields)} total):")
+        print(f"\nFIELDS IN SURVEY ROUTING TABLE ({len(all_fields)} total):")
         print("-" * 80)
         for field_name in sorted(all_fields):
             stats = field_stats[field_name]
@@ -189,7 +189,7 @@ def check_survey_routing_table(token: str):
                 break
         
         if status_field:
-            print(f"\n✓ Found status field: '{status_field}'")
+            print(f"\n[OK] Found status field: '{status_field}'")
             
             # Count status values
             status_values = []
@@ -208,11 +208,11 @@ def check_survey_routing_table(token: str):
             if no_status_count > 0:
                 print(f"  (No status): {no_status_count}")
         else:
-            print("\n⚠ No status field found. Available fields:")
+            print("\n[WARNING] No status field found. Available fields:")
             print(f"  {', '.join(sorted(all_fields))}")
             
             # Show sample record to help identify status
-            print("\n📄 SAMPLE RECORD (first record):")
+            print("\nSAMPLE RECORD (first record):")
             if records:
                 sample = records[0].get("fields", {})
                 for key, value in sorted(sample.items()):
@@ -225,7 +225,7 @@ def check_survey_routing_table(token: str):
                     print(f"  {key}: {display}")
         
     except Exception as e:
-        print(f"\n✗ Error accessing Survey Routing table: {e}")
+        print(f"\n[ERROR] Error accessing Survey Routing table: {e}")
 
 
 def main():
@@ -241,7 +241,7 @@ def main():
     try:
         token = load_token()
     except Exception as e:
-        print(f"\n✗ Error loading token: {e}")
+        print(f"\n[ERROR] Error loading token: {e}")
         return 1
     
     # Check Scout table

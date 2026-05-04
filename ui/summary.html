@@ -1,387 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Executive Summary · VUES</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUES · Executive Summary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <script src="chart.min.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #030712;
-      --panel: rgba(9, 18, 34, 0.78);
-      --panel-strong: rgba(13, 25, 45, 0.94);
-      --line: rgba(145, 185, 255, 0.16);
-      --text: #f6f9ff;
-      --soft: #c9d5e8;
-      --muted: #8191aa;
-      --cyan: #2ed7ff;
-      --mint: #24e6a0;
-      --purple: #a778ff;
-      --pink: #ff5fd2;
-      --yellow: #ffc857;
-      --red: #ff5577;
-      --radius-xl: 34px;
-      --radius-lg: 24px;
-      --radius-md: 18px;
-      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #060914;
+      --panel: rgba(9, 16, 31, 0.88);
+      --panel-border: rgba(120, 160, 255, 0.22);
+      --text: #E8F0FF;
+      --text-soft: #9EB1D4;
+      --cyan: #5AE4FF;
+      --blue: #4D8DFF;
+      --purple: #9B7CFF;
+      --amber: #FFC857;
+      --green: #45E6A5;
+      --red: #FF6B81;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: var(--font);
-      color: var(--text);
-      background:
-        radial-gradient(circle at 12% 0%, rgba(46, 215, 255, 0.18), transparent 34%),
-        radial-gradient(circle at 90% 8%, rgba(167, 120, 255, 0.2), transparent 36%),
-        radial-gradient(circle at 50% 100%, rgba(36, 230, 160, 0.08), transparent 34%),
-        linear-gradient(180deg, #030712 0%, #06101d 48%, #030712 100%);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.42) 1px, transparent 1px);
-      background-size: 72px 72px, 72px 72px, 160px 160px;
-      opacity: 0.32;
-      mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
-    }
-    button { font-family: inherit; }
-    .shell { width: min(1880px, calc(100% - 40px)); margin: 0 auto; padding: 26px 0 40px; position: relative; z-index: 1; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap; }
-    .brand { display: flex; align-items: center; gap: 15px; }
-    .brand-mark {
-      width: 50px; height: 50px; border-radius: 18px;
-      display: grid; place-items: center;
-      color: var(--purple); font-size: 25px; font-weight: 950;
-      background: linear-gradient(145deg, rgba(167,120,255,0.24), rgba(46,215,255,0.08)), rgba(255,255,255,0.04);
-      border: 1px solid rgba(167,120,255,0.44);
-      box-shadow: 0 0 30px rgba(167,120,255,0.26);
-    }
-    .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
-    h1 { margin: 0; font-size: clamp(28px, 2.4vw, 42px); line-height: 1; letter-spacing: -0.06em; }
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-    .back-link { height: 42px; border-radius: 999px; border: 1px solid var(--line); background: rgba(9, 18, 34, 0.72); color: var(--soft); display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; backdrop-filter: blur(20px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); text-decoration: none; transition: all 0.2s; }
-    .back-link:hover { background: rgba(46,215,255,0.12); border-color: rgba(46,215,255,0.3); }
-    .pill { height: 42px; border-radius: 999px; border: 1px solid var(--line); background: rgba(9, 18, 34, 0.72); color: var(--soft); display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; backdrop-filter: blur(20px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
-    .pill.good { border-color: rgba(36,230,160,0.3); background: rgba(36,230,160,0.1); color: #c8ffeb; }
-    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 18px var(--mint); animation: pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(90,228,255,0.12), transparent 25%), radial-gradient(circle at 70% 80%, rgba(155,124,255,0.10), transparent 25%), linear-gradient(180deg, #04070F 0%, #070C18 50%, #050914 100%); z-index: -2; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(90,228,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(90,228,255,0.03) 1px, transparent 1px); background-size: 50px 50px; mask-image: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1)); pointer-events: none; z-index: -1; }
 
-    /* Flow Map */
-    .flow-map {
-      position: relative; margin-bottom: 22px; border: 1px solid var(--line); border-radius: var(--radius-xl);
-      background: radial-gradient(circle at 15% 0%, rgba(46,215,255,0.16), transparent 34%), radial-gradient(circle at 84% 0%, rgba(167,120,255,0.16), transparent 36%), linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.014)), rgba(7,14,27,0.78);
-      box-shadow: 0 30px 90px rgba(0,0,0,0.46); padding: 24px; overflow: hidden; backdrop-filter: blur(24px);
-    }
-    .flow-map::before { content: ""; position: absolute; left: 7%; right: 7%; top: 50%; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--purple), var(--mint)); opacity: 0.45; box-shadow: 0 0 36px rgba(46,215,255,0.35); transform: translateY(-50%); }
-    .flow-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; z-index: 1; }
-    .flow-node { min-height: 124px; border-radius: 28px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.058), rgba(255,255,255,0.018)), rgba(6,14,27,0.78); position: relative; overflow: hidden; }
-    .flow-node::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 0; height: 1px; background: var(--node-color); box-shadow: 0 0 24px var(--node-color); opacity: 0.78; }
-    .flow-label { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
-    .flow-value { margin-top: 12px; color: var(--node-color); font-size: 30px; line-height: 1; font-weight: 950; letter-spacing: -0.06em; text-shadow: 0 0 20px color-mix(in srgb, var(--node-color) 38%, transparent); }
-    .flow-note { margin-top: 8px; color: var(--soft); font-size: 13px; line-height: 1.45; }
+    .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 16px; transition: all 0.18s; }
+    .back-link:hover { background: rgba(90,228,255,0.1); border-color: rgba(90,228,255,0.3); }
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .header-left h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .header-left p { color: var(--text-soft); font-size: 14px; }
+    .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .pill { padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .pill-cyan { background: rgba(90,228,255,0.12); border: 1px solid rgba(90,228,255,0.35); color: #D9FBFF; }
+    .pill-green { background: rgba(69,230,165,0.12); border: 1px solid rgba(69,230,165,0.35); color: #D9FFE8; }
 
-    /* Program Flow */
-    .program-flow { display: grid; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); gap: 0; align-items: stretch; }
-    .connector { position: relative; display: grid; place-items: center; }
-    .connector::before { content: ""; position: absolute; top: 44px; bottom: 44px; width: 2px; background: linear-gradient(180deg, var(--cyan), var(--purple)); opacity: 0.42; box-shadow: 0 0 28px rgba(167,120,255,0.34); }
-    .connector-bubble { position: sticky; top: 24px; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,0.16); background: linear-gradient(145deg, rgba(46,215,255,0.2), rgba(167,120,255,0.22)), #08111f; box-shadow: 0 0 34px rgba(46,215,255,0.2); z-index: 2; }
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); }
+    .tab { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--text-soft); background: transparent; border: none; }
+    .tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .tab.active { background: rgba(90,228,255,0.15); color: var(--cyan); }
+    .tab.active.survey { background: rgba(90,228,255,0.15); color: var(--cyan); }
+    .tab.active.scout { background: rgba(155,124,255,0.15); color: var(--purple); }
+    .tab.active.both { background: rgba(69,230,165,0.15); color: var(--green); }
 
-    /* Lane */
-    .lane { --accent: var(--cyan); --accent-2: var(--mint); position: relative; border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); border-radius: var(--radius-xl); background: radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.014)), var(--panel); box-shadow: 0 26px 80px rgba(0,0,0,0.42), 0 0 42px color-mix(in srgb, var(--accent) 18%, transparent); overflow: hidden; backdrop-filter: blur(24px); }
-    .lane.scout { --accent: var(--purple); --accent-2: var(--pink); margin-top: 44px; }
-    .lane-inner { padding: 22px; }
-    .lane-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
-    .title-wrap { display: flex; align-items: center; gap: 13px; }
-    .lane-icon { width: 42px; height: 42px; border-radius: 16px; display: grid; place-items: center; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent); background: color-mix(in srgb, var(--accent) 13%, transparent); box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 22%, transparent); font-size: 18px; }
-    h2, h3, h4 { margin: 0; }
-    .lane h2 { font-size: 22px; letter-spacing: -0.04em; }
-    .lane-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
-    .status { height: 32px; padding: 0 12px; border-radius: 999px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--status-color); background: color-mix(in srgb, var(--status-color) 12%, transparent); border: 1px solid color-mix(in srgb, var(--status-color) 30%, transparent); font-size: 11px; font-weight: 950; letter-spacing: 0.06em; text-transform: uppercase; }
+    /* Stats Row */
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 16px; }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); }
+    .stat-value { font-size: 28px; font-weight: 800; margin-top: 6px; }
+    .stat-sub { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 
-    /* Summary River */
-    .summary-river { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
-    .ring-card, .target-card, .card { border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); background: linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016)), rgba(5,13,25,0.74); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
-    .ring-card { min-height: 174px; display: grid; place-items: center; position: relative; overflow: hidden; }
-    .ring-card::before { content: ""; position: absolute; width: 170px; height: 170px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); filter: blur(30px); }
-    .ring { --value: 50; width: 126px; height: 126px; border-radius: 50%; display: grid; place-items: center; position: relative; background: conic-gradient(from -45deg, var(--accent) calc(var(--value) * 1%), rgba(255,255,255,0.08) 0); box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 32%, transparent); }
-    .ring::before { content: ""; position: absolute; inset: 13px; border-radius: inherit; background: #07111f; box-shadow: inset 0 0 24px rgba(0,0,0,0.6); }
-    .ring-content { position: relative; text-align: center; }
-    .ring-content strong { display: block; color: var(--accent); font-size: 32px; line-height: 1; font-weight: 950; letter-spacing: -0.06em; }
-    .ring-content span { display: block; margin-top: 5px; color: var(--soft); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .target-card { padding: 16px; display: grid; align-content: center; gap: 10px; }
-    .target-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; min-height: 45px; padding: 10px 12px; border-radius: 15px; background: rgba(255,255,255,0.026); border: 1px solid rgba(255,255,255,0.06); }
-    .target-row span { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .target-row strong { color: var(--row-color); font-size: 18px; font-weight: 950; }
+    /* Main Grid */
+    .main-grid { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-bottom: 20px; }
+    .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; overflow: hidden; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .panel-body { padding: 16px; }
 
-    /* Metrics */
-    .metric-wave { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
-    .metric { min-height: 88px; border-radius: 22px; padding: 15px; border: 1px solid rgba(255,255,255,0.08); background: radial-gradient(circle at 22% 0%, color-mix(in srgb, var(--metric-color) 16%, transparent), transparent 58%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016)), rgba(5,13,25,0.75); position: relative; overflow: hidden; transition: 180ms ease; }
-    .metric:nth-child(even) { transform: translateY(10px); }
-    .metric:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--metric-color) 36%, transparent); }
-    .metric:nth-child(even):hover { transform: translateY(4px); }
-    .metric::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--metric-color); box-shadow: 0 0 22px var(--metric-color); opacity: 0.7; }
-    .metric span { color: var(--muted); display: block; font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .metric strong { display: block; margin-top: 10px; color: var(--metric-color); font-size: 29px; line-height: 1; font-weight: 950; letter-spacing: -0.055em; }
-    .metric small { display: block; margin-top: 7px; color: var(--soft); font-size: 11px; font-weight: 750; }
+    /* Ring */
+    .ring-container { display: flex; flex-direction: column; align-items: center; padding: 24px; }
+    .ring-wrap { position: relative; width: 180px; height: 180px; }
+    .ring-bg { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(rgba(255,255,255,0.08) 0deg, rgba(255,255,255,0.08) 360deg); }
+    .ring-fill { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--ring-color) calc(var(--pct) * 3.6deg), transparent 0); transition: all 0.6s ease; }
+    .ring-inner { position: absolute; inset: 20px; border-radius: 50%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-value { font-size: 42px; font-weight: 900; color: var(--ring-color); letter-spacing: -0.04em; }
+    .ring-label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+    .ring-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; margin-top: 20px; text-align: center; }
+    .ring-stat-value { font-size: 20px; font-weight: 800; }
+    .ring-stat-label { font-size: 10px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.08em; }
 
-    /* Content Flow */
-    .content-flow { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 14px; margin-bottom: 14px; }
-    .card { padding: 16px; overflow: hidden; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .card-title { color: var(--text); font-size: 12px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .mini-btn { height: 30px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--soft); padding: 0 12px; font-size: 11px; font-weight: 900; cursor: pointer; }
-    .forecast-list { display: grid; gap: 9px; }
-    .forecast-row { min-height: 55px; border-radius: 17px; padding: 12px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; background: rgba(255,255,255,0.027); border: 1px solid rgba(255,255,255,0.06); }
-    .forecast-row span { color: var(--muted); font-size: 11px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .forecast-row strong { color: var(--yellow); font-size: 21px; font-weight: 950; letter-spacing: -0.04em; }
+    /* Metrics Grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .metric-card { padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; }
+    .metric-card::after { content: ''; position: absolute; bottom: 0; left: 16px; right: 16px; height: 2px; background: var(--metric-color); opacity: 0.6; }
+    .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); }
+    .metric-value { font-size: 28px; font-weight: 800; color: var(--metric-color); margin-top: 8px; }
+    .metric-sub { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 
     /* Chart */
-    .chart { height: 204px; display: grid; grid-template-columns: 26px 1fr; gap: 10px; }
-    .y-axis { display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 24px; color: var(--muted); font-size: 10px; text-align: right; }
-    .plot { position: relative; display: grid; grid-template-columns: repeat(14, minmax(12px, 1fr)); align-items: end; gap: 8px; padding: 8px 1px 24px; isolation: isolate; }
-    .plot::before { content: ""; position: absolute; inset: 8px 0 24px; background: linear-gradient(to top, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px); background-size: 100% 25%, calc(100% / 7) 100%; opacity: 0.55; z-index: -1; }
-    .bar { --h: 30%; height: var(--h); min-height: 4px; border-radius: 999px 999px 4px 4px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 78%, white), color-mix(in srgb, var(--accent) 62%, black)); box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.24); transform-origin: bottom; animation: rise 780ms cubic-bezier(.2,.9,.2,1) both; }
-    .bar.empty { height: 3px; min-height: 3px; background: rgba(255,255,255,0.14); box-shadow: none; opacity: 0.32; }
-    .x-axis { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(14, minmax(12px, 1fr)); gap: 8px; color: var(--muted); font-size: 10px; }
-    .x-axis span { text-align: center; white-space: nowrap; }
-    @keyframes rise { from { transform: scaleY(0.08); opacity: 0.25; } to { transform: scaleY(1); opacity: 1; } }
+    .chart-container { height: 200px; position: relative; }
 
-    /* Table */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; min-width: 620px; border-collapse: collapse; }
-    th { color: var(--muted); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; text-align: left; padding: 9px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    td { color: var(--soft); font-size: 13px; font-weight: 750; padding: 11px 8px; border-bottom: 1px solid rgba(255,255,255,0.055); }
-    tr:last-child td { border-bottom: 0; }
-    .vendor { display: flex; align-items: center; gap: 9px; color: var(--text); font-weight: 900; }
-    .avatar { width: 28px; height: 28px; border-radius: 10px; display: grid; place-items: center; color: white; background: linear-gradient(135deg, var(--avatar), color-mix(in srgb, var(--avatar) 56%, black)); box-shadow: 0 0 18px color-mix(in srgb, var(--avatar) 28%, transparent); font-size: 10px; font-weight: 950; }
-    .progress { width: 112px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
-    .progress span { display: block; width: var(--p); height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--progress), color-mix(in srgb, var(--progress) 72%, white)); box-shadow: 0 0 16px color-mix(in srgb, var(--progress) 32%, transparent); }
-    .score { display: inline-flex; min-width: 42px; height: 24px; border-radius: 999px; align-items: center; justify-content: center; color: var(--score); background: color-mix(in srgb, var(--score) 12%, transparent); border: 1px solid color-mix(in srgb, var(--score) 24%, transparent); font-size: 11px; font-weight: 950; }
+    /* Vendor Table */
+    .vendor-table { width: 100%; border-collapse: collapse; }
+    .vendor-table th { text-align: left; padding: 10px 12px; color: var(--text-soft); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .vendor-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .vendor-table tr:last-child td { border-bottom: none; }
+    .vendor-name { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .vendor-avatar { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; }
+    .progress-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; width: 100px; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+    .score-badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
 
-    /* AI Flow */
-    .ai-flow { margin-top: 26px; border-radius: var(--radius-xl); border: 1px solid var(--line); background: radial-gradient(circle at 20% 0%, rgba(46,215,255,0.13), transparent 32%), radial-gradient(circle at 80% 0%, rgba(167,120,255,0.16), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.014)), rgba(7,14,27,0.82); box-shadow: 0 30px 90px rgba(0,0,0,0.46); overflow: hidden; backdrop-filter: blur(24px); }
-    .ai-head { padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid rgba(255,255,255,0.075); flex-wrap: wrap; }
-    .ai-head h2 { font-size: 25px; letter-spacing: -0.045em; }
-    .ai-head p { margin: 7px 0 0; color: var(--muted); max-width: 900px; font-size: 13px; line-height: 1.55; }
-    .btn { height: 44px; border: 1px solid var(--line); border-radius: 999px; padding: 0 18px; color: var(--text); background: rgba(255,255,255,0.04); font-weight: 900; cursor: pointer; transition: 180ms ease; white-space: nowrap; }
-    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.07); }
-    .btn.primary { border: 0; background: linear-gradient(135deg, #25d8ff 0%, #7465ff 55%, #bd4dff 100%); box-shadow: 0 16px 40px rgba(46,215,255,0.22), 0 0 30px rgba(167,120,255,0.18); }
-    .report-grid { padding: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .report { --accent: var(--cyan); border-radius: 28px; border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line)); background: radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%), rgba(5,13,25,0.72); overflow: hidden; }
-    .report.scout-report { --accent: var(--purple); }
-    .report-head { padding: 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .report-title { display: flex; gap: 12px; align-items: center; }
-    .report-icon { width: 38px; height: 38px; border-radius: 15px; display: grid; place-items: center; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 18px; }
-    .report h3 { font-size: 19px; letter-spacing: -0.035em; }
-    .report-sub { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-    .risk { height: 30px; padding: 0 11px; border-radius: 999px; color: var(--risk); background: color-mix(in srgb, var(--risk) 12%, transparent); border: 1px solid color-mix(in srgb, var(--risk) 25%, transparent); display: inline-flex; align-items: center; font-size: 11px; font-weight: 950; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
-    .report-body { padding: 18px; display: grid; gap: 16px; }
-    .block h4 { margin-bottom: 8px; font-size: 12px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
-    .block p { margin: 0; color: var(--soft); font-size: 13px; line-height: 1.65; }
-    .decision-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
-    .decision { border-radius: 18px; padding: 13px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.028); }
-    .decision span { display: block; color: var(--muted); font-size: 10px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
-    .decision strong { display: block; margin-top: 8px; color: var(--accent); font-size: 18px; font-weight: 950; letter-spacing: -0.04em; }
-    .insights { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
-    .insights li { position: relative; padding: 10px 12px 10px 34px; border-radius: 17px; border: 1px solid rgba(255,255,255,0.065); background: rgba(255,255,255,0.028); color: var(--soft); font-size: 13px; line-height: 1.48; }
-    .insights li::before { content: "✦"; position: absolute; left: 12px; top: 10px; color: var(--accent); text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 42%, transparent); }
+    /* AI Report */
+    .ai-section { margin-top: 20px; }
+    .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .ai-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .btn { padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text); }
+    .btn:hover { background: rgba(255,255,255,0.1); }
+    .btn-primary { background: linear-gradient(135deg, var(--cyan), var(--purple)); border: none; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(90,228,255,0.3); }
+
+    .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .report-card { border-radius: 20px; border: 1px solid var(--panel-border); background: var(--panel); overflow: hidden; }
+    .report-header { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .report-title { display: flex; align-items: center; gap: 10px; }
+    .report-icon { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .report-body { padding: 16px; }
+    .report-section { margin-bottom: 16px; }
+    .report-section:last-child { margin-bottom: 0; }
+    .report-section h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); margin-bottom: 8px; }
+    .report-section p { font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+    .decision-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .decision-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); text-align: center; }
+    .decision-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); }
+    .decision-value { font-size: 16px; font-weight: 800; margin-top: 4px; }
+    .insights-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .insights-list li { padding: 10px 12px 10px 32px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: var(--text-soft); position: relative; line-height: 1.5; }
+    .insights-list li::before { content: '✦'; position: absolute; left: 12px; top: 10px; }
+
+    .risk-badge { padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Tab Content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* Loading */
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; }
-    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--text-soft); }
+    .spinner { width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Responsive */
-    @media (max-width: 1320px) {
-      .program-flow { grid-template-columns: 1fr; gap: 22px; }
-      .connector { display: none; }
-      .lane.scout { margin-top: 0; }
-      .report-grid, .flow-grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 1100px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .report-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 900px) {
-      .shell { width: min(100% - 24px, 1880px); }
-      .topbar, .ai-head { flex-direction: column; align-items: flex-start; }
-      .toolbar { justify-content: flex-start; }
-      .summary-river, .content-flow, .report-grid { grid-template-columns: 1fr; }
-      .metric-wave { grid-template-columns: 1fr 1fr; }
-      .metric:nth-child(even) { transform: none; }
-      .decision-row { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 560px) {
-      .flow-grid, .metric-wave { grid-template-columns: 1fr; }
-      .lane-inner, .ai-head, .report-grid, .flow-map { padding: 16px; }
+    @media (max-width: 700px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .metrics-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header class="topbar">
-      <div class="brand">
-        <a href="index.html" class="back-link">← Back</a>
-        <div class="brand-mark">◇</div>
-        <div>
-          <p class="eyebrow">Program Command Center</p>
-          <h1>Executive Summary</h1>
-        </div>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Command Center</a>
+    
+    <header class="header">
+      <div class="header-left">
+        <h1>📊 Executive Summary</h1>
+        <p>Real-time program intelligence & AI-powered insights</p>
       </div>
-      <div class="toolbar">
-        <div class="pill good"><span class="dot"></span>Live Data</div>
-        <div class="pill" id="datePill">📅 Loading...</div>
-        <div class="pill good" id="statusPill"><span class="dot"></span>Operational</div>
+      <div class="header-right">
+        <div class="tabs">
+          <button class="tab active survey" data-tab="survey">✈ Survey</button>
+          <button class="tab scout" data-tab="scout">☄ Scout</button>
+          <button class="tab both" data-tab="both">◈ Combined</button>
+        </div>
+        <span class="pill pill-green" id="statusPill">● Live</span>
       </div>
     </header>
 
-    <section class="flow-map">
-      <div class="flow-grid" id="flowGrid">
-        <div class="flow-node" style="--node-color: var(--cyan);"><div class="flow-label">Survey Completion</div><div class="flow-value" id="flowSurvey">—</div><div class="flow-note" id="flowSurveyNote">Loading...</div></div>
-        <div class="flow-node" style="--node-color: var(--red);"><div class="flow-label">Primary Constraint</div><div class="flow-value" id="flowConstraint">—</div><div class="flow-note" id="flowConstraintNote">Loading...</div></div>
-        <div class="flow-node" style="--node-color: var(--purple);"><div class="flow-label">Scout Completion</div><div class="flow-value" id="flowScout">—</div><div class="flow-note" id="flowScoutNote">Loading...</div></div>
-        <div class="flow-node" style="--node-color: var(--mint);"><div class="flow-label">Executive Mode</div><div class="flow-value" id="flowMode">—</div><div class="flow-note" id="flowModeNote">Loading...</div></div>
+    <!-- SURVEY TAB -->
+    <div class="tab-content active" id="content-survey">
+      <div class="stats-row" id="surveyStats"></div>
+      <div class="main-grid">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📈 Completion</span></div>
+          <div class="ring-container" id="surveyRingContainer"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📊 Metrics</span></div>
+          <div class="panel-body"><div class="metrics-grid" id="surveyMetrics"></div></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:20px;">
+        <div class="panel-header"><span class="panel-title">📉 Submissions — 14 Days</span></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="surveyChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- SCOUT TAB -->
+    <div class="tab-content" id="content-scout">
+      <div class="stats-row" id="scoutStats"></div>
+      <div class="main-grid">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📈 Completion</span></div>
+          <div class="ring-container" id="scoutRingContainer"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📊 Metrics</span></div>
+          <div class="panel-body"><div class="metrics-grid" id="scoutMetrics"></div></div>
+        </div>
+      </div>
+      <div class="main-grid">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📉 Submissions — 14 Days</span></div>
+          <div class="panel-body"><div class="chart-container"><canvas id="scoutChart"></canvas></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">◈ Vendor Performance</span><a href="scout.html" style="color:var(--cyan);font-size:12px;text-decoration:none;">View All →</a></div>
+          <div class="panel-body"><table class="vendor-table" id="vendorTable"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMBINED TAB -->
+    <div class="tab-content" id="content-both">
+      <div class="stats-row" id="bothStats"></div>
+      <div class="main-grid">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">✈ Survey Progress</span></div>
+          <div class="ring-container" id="bothSurveyRing"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">☄ Scout Progress</span></div>
+          <div class="ring-container" id="bothScoutRing"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI REPORTS (shown on all tabs) -->
+    <section class="ai-section">
+      <div class="ai-header">
+        <div class="ai-title">🤖 AI Executive Intelligence</div>
+        <button class="btn btn-primary" id="generateBtn">✨ Generate Reports</button>
+      </div>
+      <div class="report-grid" id="reportGrid">
+        <div class="report-card" id="reportSurvey"><div class="loading"><div class="spinner"></div>Click Generate for AI insights</div></div>
+        <div class="report-card" id="reportScout"><div class="loading"><div class="spinner"></div>Click Generate for AI insights</div></div>
       </div>
     </section>
-
-    <section class="program-flow">
-      <!-- Survey Lane -->
-      <article class="lane" id="surveyLane">
-        <div class="lane-inner">
-          <header class="lane-header">
-            <div class="title-wrap">
-              <div class="lane-icon">✈</div>
-              <div><h2>Survey Program</h2><p class="lane-subtitle">Completion, QA quality, vendor output, and recovery forecast</p></div>
-            </div>
-            <div class="status" id="surveyStatus" style="--status-color: var(--yellow);">◆ Loading</div>
-          </header>
-          <section class="summary-river">
-            <div class="ring-card"><div class="ring" id="surveyRing" style="--value: 0;"><div class="ring-content"><strong id="surveyRingPct">—</strong><span>Complete</span></div></div></div>
-            <div class="target-card">
-              <div class="target-row" style="--row-color: var(--cyan);"><span>Target Required</span><strong id="surveyTarget">—</strong></div>
-              <div class="target-row" style="--row-color: var(--mint);"><span>Completed</span><strong id="surveyCompleted">—</strong></div>
-              <div class="target-row" style="--row-color: var(--yellow);"><span>Remaining</span><strong id="surveyRemaining">—</strong></div>
-            </div>
-          </section>
-          <section class="metric-wave" id="surveyMetrics">
-            <div class="metric" style="--metric-color: var(--mint);"><span>Passed</span><strong id="surveyPassed">—</strong><small>Accepted records</small></div>
-            <div class="metric" style="--metric-color: var(--red);"><span>Failed</span><strong id="surveyFailed">—</strong><small>Needs QA action</small></div>
-            <div class="metric" style="--metric-color: var(--yellow);"><span>Pending</span><strong id="surveyPending">—</strong><small>In queue</small></div>
-            <div class="metric" style="--metric-color: var(--cyan);"><span>Pass Rate</span><strong id="surveyPassRate">—</strong><small id="surveyPassRateNote">Target: 80%</small></div>
-          </section>
-          <section class="content-flow">
-            <div class="card">
-              <div class="card-head"><div class="card-title">📊 Forecast & Projections</div></div>
-              <div class="forecast-list">
-                <div class="forecast-row"><span>Expected per week</span><strong id="surveyPerWeek">—</strong></div>
-                <div class="forecast-row"><span>Weeks left</span><strong id="surveyWeeksLeft">—</strong></div>
-                <div class="forecast-row"><span>Estimated complete</span><strong id="surveyETA">—</strong></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-head"><div class="card-title">▦ Submissions — 14 Days</div></div>
-              <div class="chart"><div class="y-axis" id="surveyYAxis"><span>8</span><span>6</span><span>4</span><span>2</span><span>0</span></div><div class="plot" id="surveyPlot"></div></div>
-            </div>
-          </section>
-        </div>
-      </article>
-
-      <div class="connector"><div class="connector-bubble">↕</div></div>
-
-      <!-- Scout Lane -->
-      <article class="lane scout" id="scoutLane">
-        <div class="lane-inner">
-          <header class="lane-header">
-            <div class="title-wrap">
-              <div class="lane-icon">☄</div>
-              <div><h2>Scout Program</h2><p class="lane-subtitle">Coverage, submission velocity, uniqueness, and closeout control</p></div>
-            </div>
-            <div class="status" id="scoutStatus" style="--status-color: var(--mint);">● Loading</div>
-          </header>
-          <section class="summary-river">
-            <div class="ring-card"><div class="ring" id="scoutRing" style="--value: 0;"><div class="ring-content"><strong id="scoutRingPct">—</strong><span>Complete</span></div></div></div>
-            <div class="target-card">
-              <div class="target-row" style="--row-color: var(--purple);"><span>Target Required</span><strong id="scoutTarget">—</strong></div>
-              <div class="target-row" style="--row-color: var(--mint);"><span>Completed</span><strong id="scoutCompleted">—</strong></div>
-              <div class="target-row" style="--row-color: var(--yellow);"><span>Remaining</span><strong id="scoutRemaining">—</strong></div>
-            </div>
-          </section>
-          <section class="metric-wave" id="scoutMetrics">
-            <div class="metric" style="--metric-color: var(--purple);"><span>Submissions</span><strong id="scoutSubmissions">—</strong><small>Total intake</small></div>
-            <div class="metric" style="--metric-color: var(--mint);"><span>Unique Sites</span><strong id="scoutUnique">—</strong><small>Clean coverage</small></div>
-            <div class="metric" style="--metric-color: var(--yellow);"><span>Duplicates</span><strong id="scoutDuplicates">—</strong><small id="scoutDupNote">Low duplication</small></div>
-            <div class="metric" style="--metric-color: var(--cyan);"><span>This Week</span><strong id="scoutThisWeek">—</strong><small>Recent activity</small></div>
-          </section>
-          <section class="content-flow">
-            <div class="card">
-              <div class="card-head"><div class="card-title">📊 Forecast & Projections</div></div>
-              <div class="forecast-list">
-                <div class="forecast-row"><span>Expected per week</span><strong id="scoutPerWeek">—</strong></div>
-                <div class="forecast-row"><span>Weeks left</span><strong id="scoutWeeksLeft">—</strong></div>
-                <div class="forecast-row"><span>Estimated complete</span><strong id="scoutETA">—</strong></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-head"><div class="card-title">▦ Submissions — 14 Days</div></div>
-              <div class="chart"><div class="y-axis" id="scoutYAxis"><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span></div><div class="plot" id="scoutPlot"></div></div>
-            </div>
-          </section>
-          <section class="card">
-            <div class="card-head"><div class="card-title">◈ Vendor Performance</div><a href="scout.html" class="mini-btn">View All</a></div>
-            <div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Assigned</th><th>Complete</th><th>Progress</th><th>Score</th></tr></thead><tbody id="vendorTableBody"></tbody></table></div>
-          </section>
-        </div>
-      </article>
-    </section>
-
-    <section class="ai-flow">
-      <header class="ai-head">
-        <div>
-          <p class="eyebrow">AI Executive Intelligence</p>
-          <h2>Program Reports</h2>
-          <p>Automated executive insights with actionable recommendations based on live program data.</p>
-        </div>
-        <button class="btn primary" id="generateBtn">✨ Generate Intelligent Reports</button>
-      </header>
-      <div class="report-grid">
-        <article class="report" id="surveyReport"><div class="loading"><div class="spinner"></div><div style="color:var(--muted)">Click Generate to create report</div></div></article>
-        <article class="report scout-report" id="scoutReport"><div class="loading"><div class="spinner"></div><div style="color:var(--muted)">Click Generate to create report</div></div></article>
-      </div>
-    </section>
-  </main>
+  </div>
 
 <script>
 const PROGRAM_WEEK = 3;
-const TOTAL_WEEKS = 16;
-const VENDOR_COLORS = { CEI: 'var(--cyan)', Wachter: 'var(--purple)', Techwise: 'var(--pink)', Everon: 'var(--mint)', SAS: 'var(--yellow)' };
-
+const VENDOR_COLORS = { CEI: '#5AE4FF', Wachter: '#9B7CFF', Techwise: '#FF6B81', Everon: '#45E6A5', SAS: '#FFC857' };
 let programData = null;
+let charts = {};
 
-function getVendorColor(name) {
-  const key = Object.keys(VENDOR_COLORS).find(k => name?.toLowerCase().includes(k.toLowerCase()));
-  return key ? VENDOR_COLORS[key] : 'var(--purple)';
-}
-function getVendorInitials(name) {
-  if (!name) return '??';
-  return name.replace(/[^A-Z]/g, '').slice(0,2) || name.slice(0,2).toUpperCase();
-}
-function formatDate(d) {
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('content-' + tab.dataset.tab).classList.add('active');
+  });
+});
 
 async function loadData() {
   try {
-    const response = await fetch(`team_dashboard_data.json?t=${Date.now()}`, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Failed to fetch data');
+    const response = await fetch('team_dashboard_data.json?t=' + Date.now(), { cache: 'no-store' });
     programData = await response.json();
     renderAll();
-    document.getElementById('datePill').textContent = '📅 ' + formatDate(new Date());
   } catch (error) {
     console.error('Load error:', error);
-    document.getElementById('statusPill').innerHTML = '<span class="dot" style="background:var(--red);box-shadow:0 0 18px var(--red);"></span>Error';
+    document.getElementById('statusPill').textContent = '● Error';
+    document.getElementById('statusPill').className = 'pill';
+    document.getElementById('statusPill').style.background = 'rgba(255,107,129,0.2)';
+    document.getElementById('statusPill').style.color = '#FF6B81';
   }
 }
 
@@ -390,124 +269,146 @@ function renderAll() {
   
   const survey = programData.survey?.records || [];
   const scout = programData.scout || {};
-  const vendorAssignments = programData.vendor_assignments || {};
-  const vendors = vendorAssignments.vendors || [];
+  const va = programData.vendor_assignments || {};
+  const vendors = va.vendors || [];
   const scoutRecords = scout.records || [];
   
-  // Survey Stats
+  // Survey calculations
   const surveyTotal = survey.length;
   const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
   const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
-  const surveyPend = surveyTotal - surveyPass - surveyFail;
+  const surveyPending = surveyTotal - surveyPass - surveyFail;
   const surveyRate = surveyTotal ? Math.round(surveyPass / surveyTotal * 100) : 0;
-  const surveyTargetCount = 548; // Target from routing
-  const surveyScopeRemaining = Math.max(surveyTargetCount - surveyPass, 0);
+  const surveyTarget = 548;
+  const surveyRemaining = Math.max(surveyTarget - surveyPass, 0);
   
-  // Scout Stats
+  // Scout calculations
   const scoutSubmissions = scout.total_submissions || scoutRecords.length;
   const scoutUnique = scout.unique_submissions || 0;
   const scoutCompleted = scout.completed || 0;
-  const scoutExcelTotal = scout.excel_total || 0;
-  const vendorRemaining = vendorAssignments.total_remaining || 0;
-  const scoutRemainingCount = vendorRemaining > 0 ? vendorRemaining : (scout.remaining || 0);
+  const scoutTarget = scout.excel_total || 0;
+  const scoutRemaining = va.total_remaining || scout.remaining || 0;
   const scoutRate = scout.completion_rate || 0;
   const scoutDupes = scoutSubmissions - scoutUnique;
   
-  // This week count
+  // This week
   const now = new Date();
   const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-  const scoutThisWeek = scoutRecords.filter(r => {
-    const d = new Date(r.raw_fields?.['Scout Date'] || r.submitted_at);
-    return d >= weekAgo;
-  }).length;
+  const scoutThisWeek = scoutRecords.filter(r => new Date(r.raw_fields?.['Scout Date'] || r.submitted_at) >= weekAgo).length;
+  const surveyThisWeek = survey.filter(r => new Date(r.submitted_at || '') >= weekAgo).length;
   
-  // Flow Map
-  document.getElementById('flowSurvey').textContent = surveyRate + '%';
-  document.getElementById('flowSurveyNote').textContent = surveyRate < 30 ? 'Early-stage recovery' : surveyRate < 60 ? 'Building momentum' : 'Healthy progress';
-  document.getElementById('flowConstraint').textContent = surveyFail > surveyPass ? 'QA' : 'Volume';
-  document.getElementById('flowConstraintNote').textContent = `${surveyFail} failed vs. ${surveyPass} passed`;
-  document.getElementById('flowScout').textContent = scoutRate + '%';
-  document.getElementById('flowScoutNote').textContent = scoutRate >= 80 ? 'Closeout mode' : scoutRate >= 50 ? 'On track' : 'Building coverage';
-  document.getElementById('flowMode').textContent = surveyRate < 50 && scoutRate >= 50 ? 'Split' : surveyRate >= 50 ? 'Unified' : 'Focus';
-  document.getElementById('flowModeNote').textContent = surveyRate < 50 ? 'Recover Survey, protect Scout' : 'Both programs aligned';
+  // SURVEY TAB
+  document.getElementById('surveyStats').innerHTML = [
+    { label: 'Total Submissions', value: surveyTotal, color: 'var(--cyan)' },
+    { label: 'Passed', value: surveyPass, color: 'var(--green)' },
+    { label: 'Failed', value: surveyFail, color: 'var(--red)' },
+    { label: 'Pass Rate', value: surveyRate + '%', color: surveyRate >= 80 ? 'var(--green)' : 'var(--amber)' },
+    { label: 'This Week', value: surveyThisWeek, color: 'var(--purple)' },
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value" style="color:${s.color}">${s.value}</div></div>`).join('');
   
-  // Survey Lane
-  document.getElementById('surveyRing').style.setProperty('--value', surveyRate);
-  document.getElementById('surveyRingPct').textContent = surveyRate + '%';
-  document.getElementById('surveyTarget').textContent = surveyTargetCount;
-  document.getElementById('surveyCompleted').textContent = surveyPass;
-  document.getElementById('surveyRemaining').textContent = surveyScopeRemaining;
-  document.getElementById('surveyPassed').textContent = surveyPass;
-  document.getElementById('surveyFailed').textContent = surveyFail;
-  document.getElementById('surveyPending').textContent = surveyPend;
-  document.getElementById('surveyPassRate').textContent = surveyRate + '%';
-  document.getElementById('surveyPassRateNote').textContent = surveyRate >= 80 ? 'On target' : 'Below target';
+  document.getElementById('surveyRingContainer').innerHTML = `
+    <div class="ring-wrap">
+      <div class="ring-bg"></div>
+      <div class="ring-fill" style="--pct:${surveyRate};--ring-color:var(--cyan)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyRate}%</span><span class="ring-label">Pass Rate</span></div>
+    </div>
+    <div class="ring-stats">
+      <div><div class="ring-stat-value" style="color:var(--cyan)">${surveyTarget}</div><div class="ring-stat-label">Target</div></div>
+      <div><div class="ring-stat-value" style="color:var(--green)">${surveyPass}</div><div class="ring-stat-label">Passed</div></div>
+      <div><div class="ring-stat-value" style="color:var(--amber)">${surveyRemaining}</div><div class="ring-stat-label">Remaining</div></div>
+    </div>`;
   
-  const surveyStatusEl = document.getElementById('surveyStatus');
-  if (surveyRate >= 60) { surveyStatusEl.textContent = '● On Track'; surveyStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
-  else if (surveyRate >= 30) { surveyStatusEl.textContent = '◆ In Progress'; surveyStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
-  else { surveyStatusEl.textContent = '◆ Early Stage'; surveyStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
+  document.getElementById('surveyMetrics').innerHTML = [
+    { label: 'Passed', value: surveyPass, sub: 'QA Approved', color: 'var(--green)' },
+    { label: 'Failed', value: surveyFail, sub: 'Needs Revision', color: 'var(--red)' },
+    { label: 'Pending', value: surveyPending, sub: 'In Queue', color: 'var(--amber)' },
+    { label: 'Velocity', value: (surveyPass / PROGRAM_WEEK).toFixed(1) + '/wk', sub: 'Avg Output', color: 'var(--purple)' },
+  ].map(m => `<div class="metric-card" style="--metric-color:${m.color}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
   
-  // Survey Forecasts
-  const surveyVelocity = PROGRAM_WEEK > 0 ? surveyPass / PROGRAM_WEEK : 0;
-  const surveyWeeksLeft = surveyVelocity > 0 ? Math.ceil(surveyScopeRemaining / surveyVelocity) : 99;
-  document.getElementById('surveyPerWeek').textContent = surveyVelocity.toFixed(1);
-  document.getElementById('surveyWeeksLeft').textContent = surveyWeeksLeft < 99 ? surveyWeeksLeft : '—';
-  document.getElementById('surveyETA').textContent = surveyWeeksLeft < 99 ? 'W' + (PROGRAM_WEEK + surveyWeeksLeft) : '—';
+  // SCOUT TAB
+  document.getElementById('scoutStats').innerHTML = [
+    { label: 'Submissions', value: scoutSubmissions, color: 'var(--purple)' },
+    { label: 'Completed', value: scoutCompleted, color: 'var(--green)' },
+    { label: 'Remaining', value: scoutRemaining, color: 'var(--amber)' },
+    { label: 'Completion', value: scoutRate + '%', color: scoutRate >= 80 ? 'var(--green)' : 'var(--cyan)' },
+    { label: 'This Week', value: scoutThisWeek, color: 'var(--cyan)' },
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value" style="color:${s.color}">${s.value}</div></div>`).join('');
   
-  // Scout Lane
-  document.getElementById('scoutRing').style.setProperty('--value', scoutRate);
-  document.getElementById('scoutRingPct').textContent = scoutRate + '%';
-  document.getElementById('scoutTarget').textContent = scoutExcelTotal;
-  document.getElementById('scoutCompleted').textContent = scoutCompleted;
-  document.getElementById('scoutRemaining').textContent = scoutRemainingCount;
-  document.getElementById('scoutSubmissions').textContent = scoutSubmissions;
-  document.getElementById('scoutUnique').textContent = scoutUnique;
-  document.getElementById('scoutDuplicates').textContent = scoutDupes;
-  document.getElementById('scoutDupNote').textContent = scoutDupes < 20 ? 'Low duplication' : 'Check duplicates';
-  document.getElementById('scoutThisWeek').textContent = scoutThisWeek;
+  document.getElementById('scoutRingContainer').innerHTML = `
+    <div class="ring-wrap">
+      <div class="ring-bg"></div>
+      <div class="ring-fill" style="--pct:${scoutRate};--ring-color:var(--purple)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--purple)">${scoutRate}%</span><span class="ring-label">Complete</span></div>
+    </div>
+    <div class="ring-stats">
+      <div><div class="ring-stat-value" style="color:var(--purple)">${scoutTarget}</div><div class="ring-stat-label">Target</div></div>
+      <div><div class="ring-stat-value" style="color:var(--green)">${scoutCompleted}</div><div class="ring-stat-label">Done</div></div>
+      <div><div class="ring-stat-value" style="color:var(--amber)">${scoutRemaining}</div><div class="ring-stat-label">Left</div></div>
+    </div>`;
   
-  const scoutStatusEl = document.getElementById('scoutStatus');
-  if (scoutRate >= 80) { scoutStatusEl.textContent = '● Closeout'; scoutStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
-  else if (scoutRate >= 50) { scoutStatusEl.textContent = '● On Track'; scoutStatusEl.style.setProperty('--status-color', 'var(--mint)'); }
-  else { scoutStatusEl.textContent = '◆ Building'; scoutStatusEl.style.setProperty('--status-color', 'var(--yellow)'); }
+  document.getElementById('scoutMetrics').innerHTML = [
+    { label: 'Unique Sites', value: scoutUnique, sub: 'Clean Coverage', color: 'var(--green)' },
+    { label: 'Duplicates', value: scoutDupes, sub: scoutDupes < 20 ? 'Low' : 'Review', color: 'var(--amber)' },
+    { label: 'Velocity', value: (scoutCompleted / PROGRAM_WEEK).toFixed(1) + '/wk', sub: 'Avg Output', color: 'var(--cyan)' },
+    { label: 'ETA', value: 'W' + (PROGRAM_WEEK + Math.ceil(scoutRemaining / (scoutCompleted / PROGRAM_WEEK || 1))), sub: 'Est. Complete', color: 'var(--purple)' },
+  ].map(m => `<div class="metric-card" style="--metric-color:${m.color}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
   
-  // Scout Forecasts
-  const scoutVelocity = PROGRAM_WEEK > 0 ? scoutCompleted / PROGRAM_WEEK : 0;
-  const scoutWeeksLeft = scoutVelocity > 0 ? Math.ceil(scoutRemainingCount / scoutVelocity) : 99;
-  document.getElementById('scoutPerWeek').textContent = scoutVelocity.toFixed(1);
-  document.getElementById('scoutWeeksLeft').textContent = scoutWeeksLeft < 99 ? scoutWeeksLeft : '—';
-  document.getElementById('scoutETA').textContent = scoutWeeksLeft < 99 ? 'W' + (PROGRAM_WEEK + scoutWeeksLeft) : '—';
+  // Vendor table
+  const sortedVendors = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0));
+  document.getElementById('vendorTable').innerHTML = `
+    <thead><tr><th>Vendor</th><th>Assigned</th><th>Done</th><th>Progress</th><th>Score</th></tr></thead>
+    <tbody>${sortedVendors.slice(0, 5).map(v => {
+      const color = VENDOR_COLORS[v.vendor_name] || '#9B7CFF';
+      const pct = v.completion_rate || 0;
+      const score = Math.round(pct * 0.4 + (v.completed / PROGRAM_WEEK / 50) * 30 + (pct >= 40 ? 30 : pct / 40 * 30));
+      const scoreColor = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--amber)' : 'var(--red)';
+      return `<tr>
+        <td><div class="vendor-name"><div class="vendor-avatar" style="background:${color}">${(v.vendor_name || '??').slice(0,2)}</div>${v.vendor_name}</div></td>
+        <td>${v.total_assigned || 0}</td>
+        <td>${v.completed || 0}</td>
+        <td><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div></td>
+        <td><span class="score-badge" style="background:${scoreColor}20;color:${scoreColor}">${score}</span></td>
+      </tr>`;
+    }).join('')}</tbody>`;
   
-  // Vendor Table
-  renderVendorTable(vendors);
+  // COMBINED TAB
+  document.getElementById('bothStats').innerHTML = [
+    { label: 'Survey Pass Rate', value: surveyRate + '%', color: 'var(--cyan)' },
+    { label: 'Scout Completion', value: scoutRate + '%', color: 'var(--purple)' },
+    { label: 'Survey Remaining', value: surveyRemaining, color: 'var(--amber)' },
+    { label: 'Scout Remaining', value: scoutRemaining, color: 'var(--amber)' },
+    { label: 'Active Vendors', value: vendors.length, color: 'var(--green)' },
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value" style="color:${s.color}">${s.value}</div></div>`).join('');
+  
+  document.getElementById('bothSurveyRing').innerHTML = `
+    <div class="ring-wrap">
+      <div class="ring-bg"></div>
+      <div class="ring-fill" style="--pct:${surveyRate};--ring-color:var(--cyan)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--cyan)">${surveyRate}%</span><span class="ring-label">Survey</span></div>
+    </div>
+    <div class="ring-stats">
+      <div><div class="ring-stat-value" style="color:var(--green)">${surveyPass}</div><div class="ring-stat-label">Passed</div></div>
+      <div><div class="ring-stat-value" style="color:var(--red)">${surveyFail}</div><div class="ring-stat-label">Failed</div></div>
+      <div><div class="ring-stat-value" style="color:var(--amber)">${surveyRemaining}</div><div class="ring-stat-label">Left</div></div>
+    </div>`;
+  
+  document.getElementById('bothScoutRing').innerHTML = `
+    <div class="ring-wrap">
+      <div class="ring-bg"></div>
+      <div class="ring-fill" style="--pct:${scoutRate};--ring-color:var(--purple)"></div>
+      <div class="ring-inner"><span class="ring-value" style="--ring-color:var(--purple)">${scoutRate}%</span><span class="ring-label">Scout</span></div>
+    </div>
+    <div class="ring-stats">
+      <div><div class="ring-stat-value" style="color:var(--green)">${scoutCompleted}</div><div class="ring-stat-label">Done</div></div>
+      <div><div class="ring-stat-value" style="color:var(--purple)">${scoutUnique}</div><div class="ring-stat-label">Unique</div></div>
+      <div><div class="ring-stat-value" style="color:var(--amber)">${scoutRemaining}</div><div class="ring-stat-label">Left</div></div>
+    </div>`;
   
   // Charts
   renderCharts(survey, scoutRecords);
 }
 
-function renderVendorTable(vendors) {
-  const sorted = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0));
-  const maxVelocity = Math.max(...vendors.map(v => v.completed / PROGRAM_WEEK || 0), 1);
-  
-  document.getElementById('vendorTableBody').innerHTML = sorted.slice(0, 5).map(v => {
-    const color = getVendorColor(v.vendor_name);
-    const pct = v.completion_rate || 0;
-    const velocity = v.completed / PROGRAM_WEEK || 0;
-    const score = Math.round((pct * 0.4) + (velocity / maxVelocity * 30) + (pct >= 40 ? 30 : pct / 40 * 30));
-    const scoreColor = score >= 70 ? 'var(--mint)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
-    return `<tr>
-      <td><div class="vendor"><span class="avatar" style="--avatar: ${color};">${getVendorInitials(v.vendor_name)}</span>${v.vendor_name || 'Unknown'}</div></td>
-      <td>${v.total_assigned || 0}</td>
-      <td>${v.completed || 0}</td>
-      <td><div class="progress" style="--progress: ${color};"><span style="--p:${Math.min(pct, 100)}%;"></span></div></td>
-      <td><span class="score" style="--score: ${scoreColor};">${score}</span></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No vendor data</td></tr>';
-}
-
 function renderCharts(surveyRecords, scoutRecords) {
-  // Build 14-day date range
   const dates = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
@@ -515,96 +416,95 @@ function renderCharts(surveyRecords, scoutRecords) {
     dates.push(d.toISOString().slice(0, 10));
   }
   
-  // Count submissions per day
   const surveyByDay = {};
   const scoutByDay = {};
   dates.forEach(d => { surveyByDay[d] = 0; scoutByDay[d] = 0; });
   
   surveyRecords.forEach(r => {
-    const d = (r.submitted_at || r.raw_fields?.['Submitted At'] || '').slice(0, 10);
+    const d = (r.submitted_at || '').slice(0, 10);
     if (surveyByDay[d] !== undefined) surveyByDay[d]++;
   });
-  
   scoutRecords.forEach(r => {
     const d = (r.raw_fields?.['Scout Date'] || r.submitted_at || '').slice(0, 10);
     if (scoutByDay[d] !== undefined) scoutByDay[d]++;
   });
   
-  // Render Survey Chart
-  const surveyMax = Math.max(...Object.values(surveyByDay), 8);
-  const surveyPlot = document.getElementById('surveyPlot');
-  surveyPlot.innerHTML = dates.map(d => {
-    const count = surveyByDay[d];
-    const h = count > 0 ? Math.max(count / surveyMax * 100, 5) : 0;
-    return count > 0 ? `<div class="bar" style="--h:${h}%;"></div>` : '<div class="bar empty"></div>';
-  }).join('') + `<div class="x-axis">${dates.map(d => `<span>${d.slice(5)}</span>`).join('')}</div>`;
-  document.getElementById('surveyYAxis').innerHTML = [surveyMax, Math.round(surveyMax*0.75), Math.round(surveyMax*0.5), Math.round(surveyMax*0.25), 0].map(v => `<span>${v}</span>`).join('');
+  const labels = dates.map(d => d.slice(5));
   
-  // Render Scout Chart
-  const scoutMax = Math.max(...Object.values(scoutByDay), 40);
-  const scoutPlot = document.getElementById('scoutPlot');
-  scoutPlot.innerHTML = dates.map(d => {
-    const count = scoutByDay[d];
-    const h = count > 0 ? Math.max(count / scoutMax * 100, 5) : 0;
-    return count > 0 ? `<div class="bar" style="--h:${h}%;"></div>` : '<div class="bar empty"></div>';
-  }).join('') + `<div class="x-axis">${dates.map(d => `<span>${d.slice(5)}</span>`).join('')}</div>`;
-  document.getElementById('scoutYAxis').innerHTML = [scoutMax, Math.round(scoutMax*0.75), Math.round(scoutMax*0.5), Math.round(scoutMax*0.25), 0].map(v => `<span>${v}</span>`).join('');
+  if (charts.survey) charts.survey.destroy();
+  if (charts.scout) charts.scout.destroy();
+  
+  const surveyCtx = document.getElementById('surveyChart');
+  if (surveyCtx) {
+    charts.survey = new Chart(surveyCtx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: dates.map(d => surveyByDay[d]), backgroundColor: 'rgba(90,228,255,0.6)', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9EB1D4' } }, x: { grid: { display: false }, ticks: { color: '#9EB1D4' } } } }
+    });
+  }
+  
+  const scoutCtx = document.getElementById('scoutChart');
+  if (scoutCtx) {
+    charts.scout = new Chart(scoutCtx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: dates.map(d => scoutByDay[d]), backgroundColor: 'rgba(155,124,255,0.6)', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9EB1D4' } }, x: { grid: { display: false }, ticks: { color: '#9EB1D4' } } } }
+    });
+  }
 }
 
 // AI Report Generation
 document.getElementById('generateBtn').addEventListener('click', () => {
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
-  btn.textContent = 'Analyzing flow...';
+  btn.textContent = '⏳ Analyzing...';
   
   setTimeout(() => {
     const survey = programData?.survey?.records || [];
     const scout = programData?.scout || {};
-    const vendorAssignments = programData?.vendor_assignments || {};
-    const vendors = vendorAssignments.vendors || [];
+    const va = programData?.vendor_assignments || {};
+    const vendors = va.vendors || [];
     
     const surveyPass = survey.filter(r => r.processing_status === 'PASS').length;
     const surveyFail = survey.filter(r => r.processing_status === 'FAIL').length;
     const surveyRate = survey.length ? Math.round(surveyPass / survey.length * 100) : 0;
     const scoutRate = scout.completion_rate || 0;
-    const scoutRemaining = vendorAssignments.total_remaining || scout.remaining || 0;
+    const scoutRemaining = va.total_remaining || scout.remaining || 0;
     const topVendor = [...vendors].sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0))[0];
-    const lowVendor = [...vendors].sort((a, b) => (a.completion_rate || 0) - (b.completion_rate || 0))[0];
     
-    // Survey Report
     const surveyRisk = surveyRate < 50 ? 'High Risk' : surveyRate < 80 ? 'Moderate' : 'On Track';
-    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--yellow)' : 'var(--mint)';
-    document.getElementById('surveyReport').innerHTML = `
-      <div class="report-head">
-        <div class="report-title"><div class="report-icon">✈</div><div><h3>Survey AI Report</h3><p class="report-sub">Recovery diagnosis</p></div></div>
-        <span class="risk" style="--risk: ${surveyRiskColor};">${surveyRisk}</span>
+    const surveyRiskColor = surveyRate < 50 ? 'var(--red)' : surveyRate < 80 ? 'var(--amber)' : 'var(--green)';
+    const scoutRisk = scoutRate >= 80 ? 'Closeout' : scoutRate >= 50 ? 'On Track' : 'Building';
+    const scoutRiskColor = scoutRate >= 50 ? 'var(--green)' : 'var(--amber)';
+    
+    document.getElementById('reportSurvey').innerHTML = `
+      <div class="report-header">
+        <div class="report-title"><div class="report-icon" style="background:rgba(90,228,255,0.15);color:var(--cyan)">✈</div><div><strong>Survey Report</strong><div style="font-size:11px;color:var(--text-soft)">Recovery Analysis</div></div></div>
+        <span class="risk-badge" style="background:${surveyRiskColor}20;color:${surveyRiskColor}">${surveyRisk}</span>
       </div>
       <div class="report-body">
-        <div class="block"><h4>Executive Summary</h4><p>Survey is at <strong>${surveyRate}%</strong> pass rate with <strong>${surveyFail}</strong> failed records requiring attention. ${surveyFail > surveyPass ? 'Quality is the primary constraint—failed records exceed passed.' : 'Volume is building, maintain quality focus.'}</p></div>
-        <div class="block"><h4>Decision Snapshot</h4><div class="decision-row"><div class="decision"><span>Risk</span><strong>${surveyRisk.split(' ')[0]}</strong></div><div class="decision"><span>Constraint</span><strong>${surveyFail > surveyPass ? 'Quality' : 'Volume'}</strong></div><div class="decision"><span>Mode</span><strong>${surveyRate < 50 ? 'Recover' : 'Scale'}</strong></div></div></div>
-        <div class="block"><h4>Recommended Actions</h4><ul class="insights"><li>Run vendor-level QA triage before increasing volume.</li><li>${surveyRate < 50 ? 'Move to twice-weekly recovery governance.' : 'Maintain current cadence with quality monitoring.'}</li><li>Focus resources on highest-yielding vendors first.</li></ul></div>
+        <div class="report-section"><h4>Executive Summary</h4><p>Survey is at <strong>${surveyRate}%</strong> pass rate with <strong>${surveyFail}</strong> failed records. ${surveyFail > surveyPass ? 'Quality is the primary constraint.' : 'Volume is building steadily.'}</p></div>
+        <div class="report-section"><h4>Decision Snapshot</h4><div class="decision-grid"><div class="decision-item"><div class="decision-label">Risk</div><div class="decision-value" style="color:${surveyRiskColor}">${surveyRisk.split(' ')[0]}</div></div><div class="decision-item"><div class="decision-label">Constraint</div><div class="decision-value" style="color:var(--amber)">${surveyFail > surveyPass ? 'Quality' : 'Volume'}</div></div><div class="decision-item"><div class="decision-label">Mode</div><div class="decision-value" style="color:var(--cyan)">${surveyRate < 50 ? 'Recover' : 'Scale'}</div></div></div></div>
+        <div class="report-section"><h4>Actions</h4><ul class="insights-list" style="--color:var(--cyan)"><li style="color:var(--text-soft)">Run vendor QA triage before scaling volume</li><li style="color:var(--text-soft)">${surveyRate < 50 ? 'Move to twice-weekly recovery cadence' : 'Maintain current quality monitoring'}</li><li style="color:var(--text-soft)">Focus on highest-yielding vendors first</li></ul></div>
       </div>`;
     
-    // Scout Report
-    const scoutRisk = scoutRate >= 80 ? 'Closeout' : scoutRate >= 50 ? 'On Track' : 'Building';
-    const scoutRiskColor = scoutRate >= 50 ? 'var(--mint)' : 'var(--yellow)';
-    document.getElementById('scoutReport').innerHTML = `
-      <div class="report-head">
-        <div class="report-title"><div class="report-icon">☄</div><div><h3>Scout AI Report</h3><p class="report-sub">Closeout diagnosis</p></div></div>
-        <span class="risk" style="--risk: ${scoutRiskColor};">${scoutRisk}</span>
+    document.getElementById('reportScout').innerHTML = `
+      <div class="report-header">
+        <div class="report-title"><div class="report-icon" style="background:rgba(155,124,255,0.15);color:var(--purple)">☄</div><div><strong>Scout Report</strong><div style="font-size:11px;color:var(--text-soft)">Closeout Analysis</div></div></div>
+        <span class="risk-badge" style="background:${scoutRiskColor}20;color:${scoutRiskColor}">${scoutRisk}</span>
       </div>
       <div class="report-body">
-        <div class="block"><h4>Executive Summary</h4><p>Scout is at <strong>${scoutRate}%</strong> completion with <strong>${scoutRemaining}</strong> sites remaining. ${scoutRate >= 80 ? 'Program is in closeout mode—protect allocation through completion.' : 'Velocity is strong, continue current trajectory.'}</p></div>
-        <div class="block"><h4>Decision Snapshot</h4><div class="decision-row"><div class="decision"><span>Risk</span><strong>${scoutRate >= 50 ? 'Low' : 'Moderate'}</strong></div><div class="decision"><span>Strength</span><strong>Velocity</strong></div><div class="decision"><span>Mode</span><strong>${scoutRate >= 80 ? 'Protect' : 'Execute'}</strong></div></div></div>
-        <div class="block"><h4>Recommended Actions</h4><ul class="insights"><li>Protect ${topVendor?.vendor_name || 'top vendor'} allocation through closeout.</li><li>Start final duplicate review and validation now.</li><li>Use Scout discipline as model for Survey recovery.</li></ul></div>
+        <div class="report-section"><h4>Executive Summary</h4><p>Scout is at <strong>${scoutRate}%</strong> completion with <strong>${scoutRemaining}</strong> sites remaining. ${scoutRate >= 80 ? 'Program is in closeout mode.' : 'Velocity is strong, maintain trajectory.'}</p></div>
+        <div class="report-section"><h4>Decision Snapshot</h4><div class="decision-grid"><div class="decision-item"><div class="decision-label">Risk</div><div class="decision-value" style="color:${scoutRiskColor}">${scoutRate >= 50 ? 'Low' : 'Moderate'}</div></div><div class="decision-item"><div class="decision-label">Strength</div><div class="decision-value" style="color:var(--green)">Velocity</div></div><div class="decision-item"><div class="decision-label">Mode</div><div class="decision-value" style="color:var(--purple)">${scoutRate >= 80 ? 'Protect' : 'Execute'}</div></div></div></div>
+        <div class="report-section"><h4>Actions</h4><ul class="insights-list" style="--color:var(--purple)"><li style="color:var(--text-soft)">Protect ${topVendor?.vendor_name || 'top vendor'} allocation through closeout</li><li style="color:var(--text-soft)">Start final duplicate review and validation</li><li style="color:var(--text-soft)">Use Scout discipline as model for Survey recovery</li></ul></div>
       </div>`;
     
     btn.disabled = false;
-    btn.textContent = '✨ Generate Intelligent Reports';
-  }, 650);
+    btn.textContent = '✨ Generate Reports';
+  }, 600);
 });
 
-// Initial load and auto-refresh
+// Init
 loadData();
 setInterval(loadData, 30000);
 </script>

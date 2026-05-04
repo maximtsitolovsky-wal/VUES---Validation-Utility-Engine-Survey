@@ -1,3 +1,16 @@
+### 2026-05-04 — TRULY LIVE Dashboard Deployed (BLOCKER Fixed)
+- **Problem:** Dashboard was loading 8 MB baked HTML snapshots from `ui/` instead of live data. `unbake_html.py` was built 2026-04-27 but never applied. User reported stale counts (696 vs actual 702).
+- **Root Cause:** Users hitting `file://ui/*.html` (frozen snapshots) instead of `http://localhost:8765` (live server).
+- **Fix Applied:**
+  1. Ran `tools/unbake_html.py` — HTML files dropped from 8 MB → 17-84 KB
+  2. Created `START_LIVE_DASHBOARD.bat` — starts refresh daemon + server
+  3. Created `SETUP_AUTOSTART.ps1` — adds to Windows Startup folder
+  4. Refresh daemon polls Airtable every 30 seconds
+  5. Server at `http://127.0.0.1:8765` with `Cache-Control: no-store`
+- **Live URL:** `http://127.0.0.1:8765/analytics.html` (NOT `file://ui/`)
+- **Auto-start:** Shortcut in `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\`
+- **Closed:** Yes.
+
 ### 2026-04-27 — Git Required for Viewer Distribution (ZIP Deprecated)
 - **Decision:** Viewers MUST use Git clone, not ZIP download. Install.py now checks for `.git` folder and exits with instructions if missing.
 - **Rationale:**
@@ -116,9 +129,9 @@
 | RISK-003 | Airtable attachment URL expiry / no monitoring | 🔴 OPEN |
 
 ### Last 3 Decisions (Newest First)
-1. **2026-04-27** — Git Required for Viewers: ZIP deprecated, install.py blocks non-Git installs, auto-sync on every launch.
-2. **2026-04-24** — Per-Row Conditional Name: Name checked per-row based on condition column (CCTV=MAC Address, FA/Intrusion=Abbreviated Name).
-3. **2026-04-23** — Survey Type Validation Bug: Fixed `site_validation.py` to respect `survey_type`. FA/Intrusion no longer requires CCTV columns.
+1. **2026-05-04** — TRULY LIVE Dashboard: Unbaked HTML, auto-refresh daemon every 30s, server at http://127.0.0.1:8765, auto-starts on login.
+2. **2026-04-27** — Git Required for Viewers: ZIP deprecated, install.py blocks non-Git installs, auto-sync on every launch.
+3. **2026-04-24** — Per-Row Conditional Name: Name checked per-row based on condition column (CCTV=MAC Address, FA/Intrusion=Abbreviated Name).
 
 ---
 

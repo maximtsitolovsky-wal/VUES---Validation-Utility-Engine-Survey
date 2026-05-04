@@ -1,0 +1,795 @@
+{
+  "markers": [
+    {
+      "id": "IN-Wachter",
+      "vendor": "Wachter",
+      "state": "IN",
+      "location": [
+        39.849426,
+        -86.258278
+      ],
+      "count": 20,
+      "color": "#a778ff"
+    },
+    {
+      "id": "IN-Everon",
+      "vendor": "Everon",
+      "state": "IN",
+      "location": [
+        40.349426,
+        -85.958278
+      ],
+      "count": 1,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "NJ-Wachter",
+      "vendor": "Wachter",
+      "state": "NJ",
+      "location": [
+        40.298904,
+        -74.521011
+      ],
+      "count": 20,
+      "color": "#a778ff"
+    },
+    {
+      "id": "PA-Wachter",
+      "vendor": "Wachter",
+      "state": "PA",
+      "location": [
+        40.590752,
+        -77.209755
+      ],
+      "count": 38,
+      "color": "#a778ff"
+    },
+    {
+      "id": "CT-Wachter",
+      "vendor": "Wachter",
+      "state": "CT",
+      "location": [
+        41.597782,
+        -72.755371
+      ],
+      "count": 9,
+      "color": "#a778ff"
+    },
+    {
+      "id": "DE-Wachter",
+      "vendor": "Wachter",
+      "state": "DE",
+      "location": [
+        39.318523,
+        -75.507141
+      ],
+      "count": 3,
+      "color": "#a778ff"
+    },
+    {
+      "id": "OH-Wachter",
+      "vendor": "Wachter",
+      "state": "OH",
+      "location": [
+        40.388783,
+        -82.764915
+      ],
+      "count": 31,
+      "color": "#a778ff"
+    },
+    {
+      "id": "NY-Wachter",
+      "vendor": "Wachter",
+      "state": "NY",
+      "location": [
+        42.165726,
+        -74.948051
+      ],
+      "count": 24,
+      "color": "#a778ff"
+    },
+    {
+      "id": "WV-Wachter",
+      "vendor": "Wachter",
+      "state": "WV",
+      "location": [
+        38.491226,
+        -80.954453
+      ],
+      "count": 1,
+      "color": "#a778ff"
+    },
+    {
+      "id": "WV-SAS",
+      "vendor": "SAS",
+      "state": "WV",
+      "location": [
+        38.991226,
+        -80.654453
+      ],
+      "count": 7,
+      "color": "#ffc857"
+    },
+    {
+      "id": "MI-Wachter",
+      "vendor": "Wachter",
+      "state": "MI",
+      "location": [
+        43.326618,
+        -84.536095
+      ],
+      "count": 5,
+      "color": "#a778ff"
+    },
+    {
+      "id": "RI-Wachter",
+      "vendor": "Wachter",
+      "state": "RI",
+      "location": [
+        41.680893,
+        -71.51178
+      ],
+      "count": 3,
+      "color": "#a778ff"
+    },
+    {
+      "id": "IL-Wachter",
+      "vendor": "Wachter",
+      "state": "IL",
+      "location": [
+        40.349457,
+        -88.986137
+      ],
+      "count": 1,
+      "color": "#a778ff"
+    },
+    {
+      "id": "IL-Everon",
+      "vendor": "Everon",
+      "state": "IL",
+      "location": [
+        40.849457,
+        -88.686137
+      ],
+      "count": 22,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "IL-CEI",
+      "vendor": "CEI",
+      "state": "IL",
+      "location": [
+        41.349457,
+        -88.386137
+      ],
+      "count": 7,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "KY-Wachter",
+      "vendor": "Wachter",
+      "state": "KY",
+      "location": [
+        37.66814,
+        -84.670067
+      ],
+      "count": 2,
+      "color": "#a778ff"
+    },
+    {
+      "id": "KY-CEI",
+      "vendor": "CEI",
+      "state": "KY",
+      "location": [
+        38.16814,
+        -84.370067
+      ],
+      "count": 5,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "NH-Wachter",
+      "vendor": "Wachter",
+      "state": "NH",
+      "location": [
+        43.452492,
+        -71.563896
+      ],
+      "count": 5,
+      "color": "#a778ff"
+    },
+    {
+      "id": "MA-Wachter",
+      "vendor": "Wachter",
+      "state": "MA",
+      "location": [
+        42.230171,
+        -71.530106
+      ],
+      "count": 7,
+      "color": "#a778ff"
+    },
+    {
+      "id": "VT-Wachter",
+      "vendor": "Wachter",
+      "state": "VT",
+      "location": [
+        44.045876,
+        -72.710686
+      ],
+      "count": 1,
+      "color": "#a778ff"
+    },
+    {
+      "id": "ME-Wachter",
+      "vendor": "Wachter",
+      "state": "ME",
+      "location": [
+        44.693947,
+        -69.381927
+      ],
+      "count": 6,
+      "color": "#a778ff"
+    },
+    {
+      "id": "NC-Techwise",
+      "vendor": "Techwise",
+      "state": "NC",
+      "location": [
+        35.630066,
+        -79.806419
+      ],
+      "count": 33,
+      "color": "#ff5fd2"
+    },
+    {
+      "id": "SC-Techwise",
+      "vendor": "Techwise",
+      "state": "SC",
+      "location": [
+        33.856892,
+        -80.945007
+      ],
+      "count": 14,
+      "color": "#ff5fd2"
+    },
+    {
+      "id": "VA-Techwise",
+      "vendor": "Techwise",
+      "state": "VA",
+      "location": [
+        37.769337,
+        -78.169968
+      ],
+      "count": 17,
+      "color": "#ff5fd2"
+    },
+    {
+      "id": "VA-SAS",
+      "vendor": "SAS",
+      "state": "VA",
+      "location": [
+        38.269337,
+        -77.869968
+      ],
+      "count": 1,
+      "color": "#ffc857"
+    },
+    {
+      "id": "MD-Techwise",
+      "vendor": "Techwise",
+      "state": "MD",
+      "location": [
+        39.063946,
+        -76.802101
+      ],
+      "count": 13,
+      "color": "#ff5fd2"
+    },
+    {
+      "id": "DC-Techwise",
+      "vendor": "Techwise",
+      "state": "DC",
+      "location": [
+        38.897438,
+        -77.026817
+      ],
+      "count": 1,
+      "color": "#ff5fd2"
+    },
+    {
+      "id": "ID-Everon",
+      "vendor": "Everon",
+      "state": "ID",
+      "location": [
+        44.240459,
+        -114.478828
+      ],
+      "count": 4,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "CA-Everon",
+      "vendor": "Everon",
+      "state": "CA",
+      "location": [
+        36.116203,
+        -119.681564
+      ],
+      "count": 18,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "CA-CEI",
+      "vendor": "CEI",
+      "state": "CA",
+      "location": [
+        36.616203,
+        -119.381564
+      ],
+      "count": 21,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "WI-Everon",
+      "vendor": "Everon",
+      "state": "WI",
+      "location": [
+        44.268543,
+        -89.616508
+      ],
+      "count": 11,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "WA-Everon",
+      "vendor": "Everon",
+      "state": "WA",
+      "location": [
+        47.400902,
+        -121.490494
+      ],
+      "count": 11,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "CO-Everon",
+      "vendor": "Everon",
+      "state": "CO",
+      "location": [
+        39.059811,
+        -105.311104
+      ],
+      "count": 10,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "OR-Everon",
+      "vendor": "Everon",
+      "state": "OR",
+      "location": [
+        44.572021,
+        -122.070938
+      ],
+      "count": 9,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "MN-Everon",
+      "vendor": "Everon",
+      "state": "MN",
+      "location": [
+        45.694454,
+        -93.900192
+      ],
+      "count": 9,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "NE-Everon",
+      "vendor": "Everon",
+      "state": "NE",
+      "location": [
+        41.12537,
+        -98.268082
+      ],
+      "count": 13,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "NV-Everon",
+      "vendor": "Everon",
+      "state": "NV",
+      "location": [
+        38.313515,
+        -117.055374
+      ],
+      "count": 7,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "UT-Everon",
+      "vendor": "Everon",
+      "state": "UT",
+      "location": [
+        40.150032,
+        -111.862434
+      ],
+      "count": 6,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "NM-Everon",
+      "vendor": "Everon",
+      "state": "NM",
+      "location": [
+        34.840515,
+        -106.248482
+      ],
+      "count": 6,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "NM-CEI",
+      "vendor": "CEI",
+      "state": "NM",
+      "location": [
+        35.340515,
+        -105.948482
+      ],
+      "count": 1,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "WY-Everon",
+      "vendor": "Everon",
+      "state": "WY",
+      "location": [
+        42.755966,
+        -107.30249
+      ],
+      "count": 5,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "IA-Everon",
+      "vendor": "Everon",
+      "state": "IA",
+      "location": [
+        42.011539,
+        -93.210526
+      ],
+      "count": 11,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "SD-Everon",
+      "vendor": "Everon",
+      "state": "SD",
+      "location": [
+        44.299782,
+        -99.438828
+      ],
+      "count": 5,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "MT-Everon",
+      "vendor": "Everon",
+      "state": "MT",
+      "location": [
+        46.921925,
+        -110.454353
+      ],
+      "count": 2,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "ND-Everon",
+      "vendor": "Everon",
+      "state": "ND",
+      "location": [
+        47.528912,
+        -99.784012
+      ],
+      "count": 4,
+      "color": "#24e6a0"
+    },
+    {
+      "id": "TX-CEI",
+      "vendor": "CEI",
+      "state": "TX",
+      "location": [
+        31.054487,
+        -97.563461
+      ],
+      "count": 69,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "AR-CEI",
+      "vendor": "CEI",
+      "state": "AR",
+      "location": [
+        34.969704,
+        -92.373123
+      ],
+      "count": 21,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "OK-CEI",
+      "vendor": "CEI",
+      "state": "OK",
+      "location": [
+        35.565342,
+        -96.928917
+      ],
+      "count": 20,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "GA-CEI",
+      "vendor": "CEI",
+      "state": "GA",
+      "location": [
+        33.040619,
+        -83.643074
+      ],
+      "count": 23,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "FL-CEI",
+      "vendor": "CEI",
+      "state": "FL",
+      "location": [
+        27.766279,
+        -81.686783
+      ],
+      "count": 52,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "AL-CEI",
+      "vendor": "CEI",
+      "state": "AL",
+      "location": [
+        32.806671,
+        -86.79113
+      ],
+      "count": 22,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "KS-CEI",
+      "vendor": "CEI",
+      "state": "KS",
+      "location": [
+        38.5266,
+        -96.726486
+      ],
+      "count": 19,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "AZ-CEI",
+      "vendor": "CEI",
+      "state": "AZ",
+      "location": [
+        33.729759,
+        -111.431221
+      ],
+      "count": 18,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "TN-CEI",
+      "vendor": "CEI",
+      "state": "TN",
+      "location": [
+        35.747845,
+        -86.692345
+      ],
+      "count": 22,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "MS-CEI",
+      "vendor": "CEI",
+      "state": "MS",
+      "location": [
+        32.741646,
+        -89.678696
+      ],
+      "count": 12,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "MO-CEI",
+      "vendor": "CEI",
+      "state": "MO",
+      "location": [
+        38.456085,
+        -92.288368
+      ],
+      "count": 15,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "LA-CEI",
+      "vendor": "CEI",
+      "state": "LA",
+      "location": [
+        31.169546,
+        -91.867805
+      ],
+      "count": 15,
+      "color": "#2ed7ff"
+    }
+  ],
+  "state_totals": {
+    "IN": {
+      "Wachter": 20,
+      "Everon": 1
+    },
+    "NJ": {
+      "Wachter": 20
+    },
+    "PA": {
+      "Wachter": 38
+    },
+    "CT": {
+      "Wachter": 9
+    },
+    "DE": {
+      "Wachter": 3
+    },
+    "OH": {
+      "Wachter": 31
+    },
+    "NY": {
+      "Wachter": 24
+    },
+    "WV": {
+      "Wachter": 1,
+      "SAS": 7
+    },
+    "MI": {
+      "Wachter": 5
+    },
+    "RI": {
+      "Wachter": 3
+    },
+    "IL": {
+      "Wachter": 1,
+      "Everon": 22,
+      "CEI": 7
+    },
+    "KY": {
+      "Wachter": 2,
+      "CEI": 5
+    },
+    "NH": {
+      "Wachter": 5
+    },
+    "MA": {
+      "Wachter": 7
+    },
+    "VT": {
+      "Wachter": 1
+    },
+    "ME": {
+      "Wachter": 6
+    },
+    "NC": {
+      "Techwise": 33
+    },
+    "SC": {
+      "Techwise": 14
+    },
+    "VA": {
+      "Techwise": 17,
+      "SAS": 1
+    },
+    "MD": {
+      "Techwise": 13
+    },
+    "DC": {
+      "Techwise": 1
+    },
+    "ID": {
+      "Everon": 4
+    },
+    "CA": {
+      "Everon": 18,
+      "CEI": 21
+    },
+    "WI": {
+      "Everon": 11
+    },
+    "WA": {
+      "Everon": 11
+    },
+    "CO": {
+      "Everon": 10
+    },
+    "OR": {
+      "Everon": 9
+    },
+    "MN": {
+      "Everon": 9
+    },
+    "NE": {
+      "Everon": 13
+    },
+    "NV": {
+      "Everon": 7
+    },
+    "UT": {
+      "Everon": 6
+    },
+    "NM": {
+      "Everon": 6,
+      "CEI": 1
+    },
+    "WY": {
+      "Everon": 5
+    },
+    "IA": {
+      "Everon": 11
+    },
+    "SD": {
+      "Everon": 5
+    },
+    "MT": {
+      "Everon": 2
+    },
+    "ND": {
+      "Everon": 4
+    },
+    "TX": {
+      "CEI": 69
+    },
+    "AR": {
+      "CEI": 21
+    },
+    "OK": {
+      "CEI": 20
+    },
+    "GA": {
+      "CEI": 23
+    },
+    "FL": {
+      "CEI": 52
+    },
+    "AL": {
+      "CEI": 22
+    },
+    "KS": {
+      "CEI": 19
+    },
+    "AZ": {
+      "CEI": 18
+    },
+    "TN": {
+      "CEI": 22
+    },
+    "MS": {
+      "CEI": 12
+    },
+    "MO": {
+      "CEI": 15
+    },
+    "LA": {
+      "CEI": 15
+    }
+  },
+  "vendor_totals": {
+    "CEI": 342,
+    "Wachter": 176,
+    "Techwise": 78,
+    "Everon": 154,
+    "SAS": 8
+  }
+}

@@ -88,11 +88,11 @@ def main():
     # Get Airtable client and fetch scout records
     airtable = AirtableClient(config)
     try:
-        scout_records = airtable.fetch_all_records(
+        scout_records_objs = airtable.list_all_records(
             config.scout_airtable_base_id,
-            config.scout_airtable_table_name,
-            batch_size=100
+            config.scout_airtable_table_name
         )
+        scout_records = [r.__dict__ for r in scout_records_objs] if scout_records_objs else []
     except Exception as e:
         logger.error(f"Failed to fetch scout records: {e}")
         scout_records = []
@@ -353,7 +353,6 @@ def main():
     wb.save(output_file)
     logger.info(f"✅ Report saved to {output_file}")
     
-    # Print summary
     print("\n" + "="*70)
     print("CEI SURVEY REPORT SUMMARY")
     print("="*70)
@@ -368,7 +367,7 @@ def main():
         if count > 0:
             print(f"  {survey_type:20s} {count:4d}")
     print(f"\nReady to Assign:        {ready_to_assign}")
-    print(f"Urgent (≤165 days):     {urgent}")
+    print(f"Urgent (days<=165):     {urgent}")
     print(f"Already Complete:       {complete}")
     print("="*70)
 

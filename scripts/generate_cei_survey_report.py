@@ -85,14 +85,30 @@ def main():
     schedule_data = load_schedule_data(workbook_path)
     schedule_by_site = {s.site: s for s in schedule_data}
     
-    # Get Airtable client and fetch scout records
-    airtable = AirtableClient(config)
+    # Get Airtable client and fetch scout records (raw from API)
     try:
-        scout_records_objs = airtable.list_all_records(
-            config.scout_airtable_base_id,
-            config.scout_airtable_table_name
-        )
-        scout_records = [r.__dict__ for r in scout_records_objs] if scout_records_objs else []
+        # Fetch raw scout records from the API
+        import requests
+        scout_token = config.scout_airtable_token or config.airtable_token
+        scout_base_id = config.scout_airtable_base_id
+        scout_table_name = config.scout_airtable_table_name
+        
+        if not scout_base_id or not scout_table_name:
+            logger.warning("Scout Airtable not configured - all scout data will be PENDING")
+            scout_records = []
+        else:
+            url = f"https://api.airtable.com/v0/{scout_base_id}/{requests.utils.quote(scout_table_name, safe='')}"
+            headers = {"Authorization": f"Bearer {scout_token}"}
+            params = {"pageSize": 100}
+            scout_records = []
+            while True:
+                resp = requests.get(url, headers=headers, params=params, timeout=30)
+                data = resp.json()
+                scout_records.extend(data.get("records", []))
+                offset = data.get("offset")
+                if not offset:
+                    break
+                params["offset"] = offset
     except Exception as e:
         logger.error(f"Failed to fetch scout records: {e}")
         scout_records = []

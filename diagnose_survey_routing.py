@@ -272,7 +272,6 @@ def main():
                 return 1
     
     if all_records:
-    if all_records:
         field_analysis = analyze_fields(all_records)
         print_field_analysis(field_analysis)
         print_record_summary(all_records)

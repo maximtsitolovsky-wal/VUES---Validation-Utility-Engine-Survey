@@ -4,6 +4,7 @@ Pulls all CEI assignments and applies decision tree logic to determine survey ty
 """
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
@@ -19,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from siteowlqa.vendor_assignment_tracker import VendorAssignmentTracker
 from siteowlqa.survey_routing import evaluate_site, ScoutAnswers, ScheduleData, load_schedule_data
 from siteowlqa.airtable_client import AirtableClient
-from siteowlqa.config import get_config
+from siteowlqa.config import load_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,13 +65,17 @@ def get_upgrade_triggers(scout: ScoutAnswers) -> Dict[str, bool]:
 
 
 def main():
-    config = get_config()
+    config = load_config()
     
     # Load assignment tracker
-    assignment_file = Path(config.vendor_assignment_file)
+    assignment_file = Path(os.getenv("VENDOR_ASSIGNMENT_FILE", "Vendor ASSIGN. 4.2.26.xlsx"))
     if not assignment_file.exists():
         logger.error(f"Assignment file not found: {assignment_file}")
-        return
+        # Try alternative path
+        assignment_file = Path(os.path.expanduser("~/OneDrive - Walmart Inc/Documents/BaselinePrinter")) / "Vendor ASSIGN. 4.2.26.xlsx"
+        if not assignment_file.exists():
+            logger.error(f"Assignment file also not found at: {assignment_file}")
+            return
     
     tracker = VendorAssignmentTracker(str(assignment_file))
     tracker.load_assignments()
@@ -80,15 +85,17 @@ def main():
     logger.info(f"Found {len(cei_assignments)} CEI assignments")
     
     # Load schedule data (for Excel tracking info)
-    schedule_data = load_schedule_data(config.workbook_path)
+    workbook_path = os.getenv("SCHEDULE_WORKBOOK_PATH", 
+        os.path.expanduser(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\2027 Survey Lab.xlsm"))
+    schedule_data = load_schedule_data(workbook_path)
     schedule_by_site = {s.site: s for s in schedule_data}
     
     # Get Airtable client and fetch scout records
     airtable = AirtableClient(config)
     try:
         scout_records = airtable.fetch_all_records(
-            config.scout_base_id,
-            config.scout_table_id,
+            config.scout_airtable_base_id,
+            config.scout_airtable_table_name,
             batch_size=100
         )
     except Exception as e:

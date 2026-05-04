@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VUES · Neural Architecture Globe</title>
+
+  <style>
+    :root {
+      --bg: #030814;
+      --panel: rgba(8, 15, 28, 0.78);
+      --line: rgba(138, 182, 255, 0.14);
+      --line-strong: rgba(138, 182, 255, 0.3);
+      --text: #eef5ff;
+      --soft: #c5d2e6;
+      --muted: #7f91ab;
+      --cyan: #2ed7ff;
+      --mint: #28f0b5;
+      --purple: #ab79ff;
+      --pink: #ff61d5;
+      --yellow: #ffc95a;
+      --orange: #ff9b5a;
+      --red: #ff5b7e;
+      --blue: #0053e2;
+      --spark: #ffc220;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow-xl: 0 30px 90px rgba(0, 0, 0, 0.48);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+    body {
+      background:
+        radial-gradient(circle at 12% 0%, rgba(0, 83, 226, 0.14), transparent 28%),
+        radial-gradient(circle at 88% 4%, rgba(255, 194, 32, 0.12), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(40, 240, 181, 0.08), transparent 30%),
+        linear-gradient(180deg, #030814 0%, #060d1b 48%, #030611 100%);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.25) 1px, transparent 1px);
+      background-size: 72px 72px, 72px 72px, 160px 160px;
+      opacity: 0.25;
+      mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+    }
+    .app { position: relative; width: 100%; height: 100%; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .topbar {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      z-index: 30;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      pointer-events: none;
+    }
+    .brand, .toolbar, .panel, .legend, .breadcrumb, .prezi-controls { pointer-events: auto; }
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(7, 14, 27, 0.76);
+      backdrop-filter: blur(22px);
+      box-shadow: var(--shadow-xl);
+    }
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+      font-size: 24px;
+      font-weight: 900;
+      border: 1px solid rgba(0, 83, 226, 0.34);
+      background: linear-gradient(145deg, rgba(0,83,226,0.22), rgba(255,194,32,0.08)), rgba(255,255,255,0.03);
+      box-shadow: 0 0 28px rgba(0,83,226,0.2);
+    }
+    .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+    .brand h1 { margin: 0; font-size: clamp(22px, 2vw, 34px); line-height: 1; letter-spacing: -0.05em; }
+    .brand p:last-child { margin: 6px 0 0; color: var(--soft); font-size: 12px; line-height: 1.45; max-width: 590px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .pill, .search-wrap, .action-btn {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(7, 14, 27, 0.76);
+      backdrop-filter: blur(20px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .pill { height: 42px; display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; color: var(--soft); font-size: 12px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pill.good { border-color: rgba(42, 135, 3, 0.24); background: linear-gradient(180deg, rgba(42, 135, 3, 0.1), rgba(42, 135, 3, 0.03)), rgba(7, 14, 27, 0.76); color: #cffff0; }
+    .pill-dot { width: 9px; height: 9px; border-radius: 50%; background: #2a8703; box-shadow: 0 0 18px #2a8703; }
+    .search-wrap { height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 14px; min-width: 260px; }
+    .search-wrap input { width: 100%; height: 100%; border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 13px; }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .action-btn { height: 42px; padding: 0 16px; color: var(--text); font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; transition: 160ms ease; }
+    .action-btn:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+    .action-btn.primary { border: 0; background: linear-gradient(135deg, #0053e2 0%, #6f71ff 52%, #ffc220 100%); box-shadow: 0 16px 36px rgba(0, 83, 226, 0.18), 0 0 28px rgba(255, 194, 32, 0.16); }
+    .breadcrumb { position: absolute; top: 104px; left: 18px; right: 18px; z-index: 24; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; pointer-events: auto; }
+    .crumb { height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 999px; color: var(--soft); background: rgba(7, 14, 27, 0.68); border: 1px solid rgba(138, 182, 255, 0.14); backdrop-filter: blur(16px); font-size: 11px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+    .crumb.active { color: white; border-color: rgba(0, 83, 226, 0.34); background: rgba(0, 83, 226, 0.12); box-shadow: 0 0 20px rgba(0, 83, 226, 0.12); }
+    .prezi-controls { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 35; display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 999px; background: linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.018)), rgba(7, 14, 27, 0.76); border: 1px solid var(--line); backdrop-filter: blur(22px); box-shadow: var(--shadow-xl); }
+    .prezi-btn { width: 42px; height: 42px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.045); color: var(--text); font-size: 18px; font-weight: 900; cursor: pointer; transition: 160ms ease; }
+    .prezi-btn:hover { transform: translateY(-1px); border-color: var(--line-strong); background: rgba(255,255,255,0.075); }
+    .prezi-label { min-width: 220px; text-align: center; color: var(--soft); font-size: 12px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+    .hud { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 25; display: grid; grid-template-columns: 1fr 400px; gap: 18px; align-items: end; pointer-events: none; }
+    .legend { pointer-events: auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 16px; border-radius: 22px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(7, 14, 27, 0.76); backdrop-filter: blur(22px); box-shadow: var(--shadow-xl); width: fit-content; max-width: calc(100% - 460px); }
+    .legend-title { color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-right: 6px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 8px; color: var(--soft); font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 12px currentColor; }
+    .panel { pointer-events: auto; justify-self: end; width: 400px; border-radius: 26px; border: 1px solid var(--line); background: radial-gradient(circle at 16% 0%, rgba(0,83,226,0.12), transparent 30%), radial-gradient(circle at 84% 0%, rgba(255,194,32,0.14), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016)), rgba(7, 14, 27, 0.82); backdrop-filter: blur(24px); box-shadow: var(--shadow-xl); overflow: hidden; min-height: 320px; }
+    .panel-head { padding: 16px 18px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .panel-head h2 { margin: 0; font-size: 18px; letter-spacing: -0.04em; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .node-type-chip { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.035); color: var(--soft); font-size: 10px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; align-self: flex-start; }
+    .panel-body { padding: 16px 18px 18px; display: grid; gap: 14px; }
+    .info-card { border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 13px 14px; }
+    .info-label { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 7px; }
+    .info-value { color: var(--text); font-size: 14px; font-weight: 800; line-height: 1.55; }
+    .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mini-chip { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--soft); font-size: 11px; font-weight: 800; cursor: pointer; }
+    .helper { color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .toast { position: absolute; top: 156px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(0, 83, 226, 0.26); background: rgba(7, 14, 27, 0.72); color: var(--soft); font-size: 12px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; backdrop-filter: blur(18px); opacity: 0; pointer-events: none; transition: opacity 220ms ease, transform 220ms ease; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    @media (max-width: 1200px) { .hud { grid-template-columns: 1fr; } .panel { width: min(100%, 460px); } .legend { max-width: 100%; } .prezi-controls { bottom: 356px; } }
+    @media (max-width: 900px) { .topbar { flex-direction: column; } .toolbar { justify-content: flex-start; } .brand p:last-child { max-width: none; } .search-wrap { min-width: 200px; } .breadcrumb { top: 230px; } }
+    @media (max-width: 680px) { .topbar { left: 12px; right: 12px; top: 12px; } .hud { left: 12px; right: 12px; bottom: 12px; } .brand, .legend, .panel { border-radius: 18px; } .toolbar { width: 100%; } .search-wrap, .action-btn, .pill { width: 100%; justify-content: center; } .search-wrap input { text-align: center; } .prezi-controls { left: 12px; right: 12px; bottom: 348px; transform: none; justify-content: center; } .prezi-label { min-width: 120px; } }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">V</div>
+        <div>
+          <p class="eyebrow">VUES Architecture</p>
+          <h1>Neural Pipeline Globe</h1>
+          <p>Click to inspect. Double-click to dive into a node. Navigate the breadcrumb trail to explore the system architecture.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="pill good"><span class="pill-dot"></span>System Live</div>
+        <div class="pill">Double-click to Dive</div>
+        <div class="pill">Esc to Back</div>
+        <label class="search-wrap">
+          <span>🔎</span>
+          <input id="searchInput" type="text" placeholder="Search nodes..." />
+        </label>
+        <button class="action-btn" id="resetBtn">Reset</button>
+        <button class="action-btn" id="autoFireBtn">Auto Fire On</button>
+        <button class="action-btn primary" id="diveBtn">Dive In</button>
+      </div>
+    </div>
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <canvas id="networkCanvas"></canvas>
+    <div class="prezi-controls">
+      <button class="prezi-btn" id="backBtn" title="Step out">←</button>
+      <div class="prezi-label" id="preziLabel">Global View</div>
+      <button class="prezi-btn" id="forwardBtn" title="Dive into selected">↗</button>
+    </div>
+    <div class="hud">
+      <div class="legend">
+        <span class="legend-title">Legend</span>
+        <span class="legend-item" style="color: var(--cyan);"><span class="legend-swatch" style="background: var(--cyan);"></span>Intake</span>
+        <span class="legend-item" style="color: var(--mint);"><span class="legend-swatch" style="background: var(--mint);"></span>Workers</span>
+        <span class="legend-item" style="color: var(--purple);"><span class="legend-swatch" style="background: var(--purple);"></span>Grading</span>
+        <span class="legend-item" style="color: var(--pink);"><span class="legend-swatch" style="background: var(--pink);"></span>Analytics</span>
+        <span class="legend-item" style="color: var(--yellow);"><span class="legend-swatch" style="background: var(--yellow);"></span>Outputs</span>
+        <span class="legend-item" style="color: var(--orange);"><span class="legend-swatch" style="background: var(--orange);"></span>Storage</span>
+      </div>
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 id="detailTitle">VUES Core</h2>
+            <p id="detailSubtitle">Select a node to inspect its role.</p>
+          </div>
+          <span class="node-type-chip" id="detailType">Core</span>
+        </div>
+        <div class="panel-body">
+          <div class="info-card">
+            <div class="info-label">Description</div>
+            <div class="info-value" id="detailDescription">Central orchestration hub for the VUES pipeline system.</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Connected To</div>
+            <div class="chip-list" id="detailConnections"></div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Technical Details</div>
+            <div class="helper" id="detailNotes">Double-click a node to step inside and reveal its internal architecture.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="toast" id="toast">Diving into node</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("networkCanvas");
+    const ctx = canvas.getContext("2d");
+    const searchInput = document.getElementById("searchInput");
+    const resetBtn = document.getElementById("resetBtn");
+    const autoFireBtn = document.getElementById("autoFireBtn");
+    const diveBtn = document.getElementById("diveBtn");
+    const backBtn = document.getElementById("backBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const breadcrumb = document.getElementById("breadcrumb");
+    const preziLabel = document.getElementById("preziLabel");
+    const toast = document.getElementById("toast");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailSubtitle = document.getElementById("detailSubtitle");
+    const detailType = document.getElementById("detailType");
+    const detailDescription = document.getElementById("detailDescription");
+    const detailConnections = document.getElementById("detailConnections");
+    const detailNotes = document.getElementById("detailNotes");
+
+    // Walmart brand colors
+    const COLORS = {
+      core: "#ffffff",
+      intake: "#2ed7ff",
+      workers: "#28f0b5",
+      grading: "#ab79ff",
+      analytics: "#ff61d5",
+      outputs: "#ffc95a",
+      storage: "#ff9b5a",
+      neutral: "#9fb3cb"
+    };
+
+    const GROUP_META = {
+      core: { color: COLORS.core, label: "Core" },
+      intake: { color: COLORS.intake, label: "Intake" },
+      workers: { color: COLORS.workers, label: "Workers" },
+      grading: { color: COLORS.grading, label: "Grading" },
+      analytics: { color: COLORS.analytics, label: "Analytics" },
+      outputs: { color: COLORS.outputs, label: "Outputs" },
+      storage: { color: COLORS.storage, label: "Storage" }
+    };
+
+    // VUES Architecture Data
+    const pipelineData = {
+      nodes: [
+        // Level 0: Core
+        { id: "core", label: "VUES Core", group: "core", type: "Core", level: 0, size: 15,
+          description: "Central orchestration hub. Wakes every N seconds, polls Airtable for new submissions, dispatches to workers, manages crash recovery, and auto-opens the live dashboard.",
+          notes: "main.py · Poll loop · SubmissionQueue · Worker lifecycle · Dashboard auto-open · Graceful shutdown" },
+
+        // Level 1: Hubs
+        { id: "intakeHub", label: "Data Intake", group: "intake", type: "Hub", level: 1, size: 10,
+          description: "Source systems feeding the pipeline - Airtable forms, Scout completions, Survey submissions.",
+          notes: "All external data enters through this layer. Single gateway pattern prevents data fragmentation." },
+        { id: "workersHub", label: "Workers", group: "workers", type: "Hub", level: 1, size: 10,
+          description: "Parallel processing layer. QA workers, background refresh, and auto-correction daemons.",
+          notes: "Thread-safe execution with independent failure domains. One bad record never crashes others." },
+        { id: "gradingHub", label: "Grading Engine", group: "grading", type: "Hub", level: 1, size: 10,
+          description: "Scoring and validation logic. Compares vendor submissions against reference data.",
+          notes: "PASS_THRESHOLD = 95.0. Single source of truth for status decisions." },
+        { id: "analyticsHub", label: "Analytics", group: "analytics", type: "Hub", level: 1, size: 10,
+          description: "Metrics computation, dashboards, and executive reporting.",
+          notes: "Generates all visual output and trend analysis." },
+        { id: "outputsHub", label: "Outputs", group: "outputs", type: "Hub", level: 1, size: 10,
+          description: "Airtable writeback, notifications, and report delivery.",
+          notes: "Email is Airtable automation - zero SMTP code in pipeline." },
+        { id: "storageHub", label: "Storage", group: "storage", type: "Hub", level: 1, size: 10,
+          description: "Archive, memory, and audit trail. Append-only structured storage.",
+          notes: "Nothing deleted. Full audit trail for every run including errors." },
+
+        // Level 2: Intake components
+        { id: "airtable", label: "Airtable Gateway", group: "intake", type: "Source", level: 2, size: 6,
+          description: "The ONLY module that talks to Airtable. Fetches forms, downloads attachments, updates statuses.",
+          notes: "airtable_client.py · Rate limiting · Exponential backoff · CDN expiry mitigation" },
+        { id: "scoutSync", label: "Scout Sync", group: "intake", type: "Source", level: 2, size: 6,
+          description: "Syncs Scout completion data from Airtable Scout table to routing decisions.",
+          notes: "scout_completion_sync.py · Maps scout answers to survey requirements" },
+        { id: "surveyRouting", label: "Survey Routing", group: "intake", type: "Source", level: 2, size: 6,
+          description: "Determines survey requirements per site based on Scout answers and Excel workbook data.",
+          notes: "survey_routing.py · CCTV/FA/INTRUSION/BOTH/NONE decisions · Vendor assignment" },
+        { id: "refData", label: "Reference Data", group: "intake", type: "Source", level: 2, size: 6,
+          description: "BigQuery-backed site equipment reference. Read-only fetch per submission.",
+          notes: "reference_data.py · Site-scoped dataset · Prewarm cache" },
+
+        // Level 2: Workers
+        { id: "qaWorker", label: "QA Workers", group: "workers", type: "Worker", level: 2, size: 6,
+          description: "Parallel workers pulling submissions from queue and running 14-step QA process.",
+          notes: "queue_worker.py · Per-record exception fence · Parallel throughput" },
+        { id: "metricsWorker", label: "Metrics Refresh", group: "workers", type: "Worker", level: 2, size: 6,
+          description: "Background thread updating all dashboard stats. Dirty-flag pattern batches rapid completions.",
+          notes: "metrics_worker.py · 60s backstop · Single-writer guarantee" },
+        { id: "correctionWorker", label: "Auto-Corrector", group: "workers", type: "Worker", level: 2, size: 6,
+          description: "Daemon finding PASS submissions (score ≥95) and generating corrected output files.",
+          notes: "correction_worker.py · CorrectionStateDB dedup · Never re-grades" },
+        { id: "dashboardServer", label: "Dashboard Server", group: "workers", type: "Worker", level: 2, size: 6,
+          description: "Localhost HTTP server. Port 8765 preferred, OS assigns free port if taken.",
+          notes: "local_dashboard_server.py · No-cache headers · output/dashboard.port" },
+
+        // Level 2: Grading
+        { id: "fileProcessor", label: "File Processor", group: "grading", type: "Validation", level: 2, size: 6,
+          description: "Downloads vendor file, normalizes headers to canonical format. Site Number from Airtable always wins.",
+          notes: "file_processor.py · Header normalization · ProjectID authority override" },
+        { id: "pythonGrader", label: "Scoring Engine", group: "grading", type: "Validation", level: 2, size: 6,
+          description: "Compares submission against reference. One function decides PASS/FAIL. Never called elsewhere.",
+          notes: "python_grader.py · 0-100 scoring · Decimal comparison for float stability" },
+        { id: "siteValidation", label: "Site Validation", group: "grading", type: "Validation", level: 2, size: 6,
+          description: "Checks site number and required fields. Stops immediately with ERROR if missing.",
+          notes: "site_validation.py · Required field check · ERROR halt" },
+        { id: "memory", label: "Memory Recall", group: "grading", type: "Validation", level: 2, size: 6,
+          description: "Searches past lessons by tag+keyword before grading. Each run benefits from historical knowledge.",
+          notes: "memory.py · Lesson ranking · Context injection · Failure patterns" },
+
+        // Level 2: Analytics
+        { id: "metrics", label: "Metrics Generator", group: "analytics", type: "Analytics", level: 2, size: 6,
+          description: "Computes submission_history.csv, vendor_metrics.csv, processing_summary.csv from archive.",
+          notes: "metrics.py · Pure computation from archived data · No live DB calls" },
+        { id: "weeklyHighlights", label: "Weekly Report", group: "analytics", type: "Analytics", level: 2, size: 6,
+          description: "27KB executive summary generator. Detects pass/fail trends, top vendors, site patterns.",
+          notes: "weekly_highlights.py · Trend detection · Executive narrative" },
+        { id: "dashboardExec", label: "Dashboard Builder", group: "analytics", type: "Analytics", level: 2, size: 6,
+          description: "106KB module injecting all metric data into HTML templates for executive dashboard.",
+          notes: "dashboard_exec.py · Template injection · output/executive_dashboard.html" },
+        { id: "teamData", label: "Team Data Feed", group: "analytics", type: "Analytics", level: 2, size: 6,
+          description: "Aggregates team-scoped metrics. Produces team_dashboard_data.json for Scout/Performance views.",
+          notes: "team_dashboard_data.py · Team aggregation · Scout data" },
+
+        // Level 2: Outputs
+        { id: "passEmail", label: "PASS Notification", group: "outputs", type: "Output", level: 2, size: 6,
+          description: "Airtable automation watches for PASS status and sends vendor confirmation. Zero Python.",
+          notes: "Airtable automation rule · Triggered by status field change" },
+        { id: "failEmail", label: "FAIL Notification", group: "outputs", type: "Output", level: 2, size: 6,
+          description: "Airtable automation sends FAIL email with Fail Summary column-level feedback.",
+          notes: "Airtable automation rule · Corrective feedback included" },
+        { id: "patchResults", label: "Results Writeback", group: "outputs", type: "Output", level: 2, size: 6,
+          description: "PATCH all result fields in one call. HARD RULE: all fields always written, never blank.",
+          notes: "airtable_client.patch_results() · Ghost data prevention · Atomic write" },
+        { id: "auditTrail", label: "Audit Trail", group: "outputs", type: "Output", level: 2, size: 6,
+          description: "Historical record of what happened, when, and why. Full traceability.",
+          notes: "ExecutionRecord · Timing · Score history · Error audit" },
+
+        // Level 2: Storage
+        { id: "archive", label: "Audit Archive", group: "storage", type: "Storage", level: 2, size: 6,
+          description: "Append-only structured archive. 6 subdirectories. Nothing deleted or overwritten.",
+          notes: "archive.py · ExecutionRecord · SubmissionArchiveRecord · Lesson" },
+        { id: "lessons", label: "Lessons Learned", group: "storage", type: "Storage", level: 2, size: 6,
+          description: "Extracted lessons from failures. Each has confidence 0-1, tags, generalized rules.",
+          notes: "Lesson model · extract_lesson_from_failure() · Failure knowledge base" },
+        { id: "submissions", label: "Submission Files", group: "storage", type: "Storage", level: 2, size: 6,
+          description: "Raw vendor files + metadata JSON partitioned by date. Preserves originals after cleanup.",
+          notes: "SubmissionArchiveRecord · Date-partitioned · Correction lookup" },
+        { id: "reviewer", label: "Quality Auditor", group: "storage", type: "Storage", level: 2, size: 6,
+          description: "Internal static audit after every run. Classifies issues CRITICAL/HIGH/LOW. Pure observer.",
+          notes: "reviewer.py · review_pipeline_run() · Never mutates state" }
+      ],
+
+      links: [
+        // Core to Hubs
+        ["core", "intakeHub"], ["core", "workersHub"], ["core", "gradingHub"],
+        ["core", "analyticsHub"], ["core", "outputsHub"], ["core", "storageHub"],
+
+        // Intake Hub to children
+        ["intakeHub", "airtable"], ["intakeHub", "scoutSync"], ["intakeHub", "surveyRouting"], ["intakeHub", "refData"],
+
+        // Workers Hub to children
+        ["workersHub", "qaWorker"], ["workersHub", "metricsWorker"], ["workersHub", "correctionWorker"], ["workersHub", "dashboardServer"],
+
+        // Grading Hub to children
+        ["gradingHub", "fileProcessor"], ["gradingHub", "pythonGrader"], ["gradingHub", "siteValidation"], ["gradingHub", "memory"],
+
+        // Analytics Hub to children
+        ["analyticsHub", "metrics"], ["analyticsHub", "weeklyHighlights"], ["analyticsHub", "dashboardExec"], ["analyticsHub", "teamData"],
+
+        // Outputs Hub to children
+        ["outputsHub", "passEmail"], ["outputsHub", "failEmail"], ["outputsHub", "patchResults"], ["outputsHub", "auditTrail"],
+
+        // Storage Hub to children
+        ["storageHub", "archive"], ["storageHub", "lessons"], ["storageHub", "submissions"], ["storageHub", "reviewer"],
+
+        // Cross-group connections (data flow)
+        ["airtable", "qaWorker"],
+        ["qaWorker", "fileProcessor"],
+        ["fileProcessor", "pythonGrader"],
+        ["refData", "pythonGrader"],
+        ["memory", "pythonGrader"],
+        ["pythonGrader", "patchResults"],
+        ["patchResults", "passEmail"],
+        ["patchResults", "failEmail"],
+        ["pythonGrader", "archive"],
+        ["archive", "lessons"],
+        ["lessons", "memory"],
+        ["metricsWorker", "metrics"],
+        ["metrics", "dashboardExec"],
+        ["teamData", "dashboardExec"],
+        ["weeklyHighlights", "dashboardExec"],
+        ["dashboardExec", "dashboardServer"],
+        ["correctionWorker", "submissions"],
+        ["scoutSync", "surveyRouting"],
+        ["surveyRouting", "airtable"],
+        ["reviewer", "archive"],
+        ["auditTrail", "archive"]
+      ]
+    };
+
+    // State management
+    const state = {
+      width: 0, height: 0, dpr: window.devicePixelRatio || 1,
+      rotationX: -0.14, rotationY: 0.6, zoom: 1, panX: 0, panY: 0,
+      targetRotationX: -0.14, targetRotationY: 0.6, targetZoom: 1, targetPanX: 0, targetPanY: 0,
+      dragging: false, movedDuringDrag: false, lastX: 0, lastY: 0,
+      hoverNodeId: null, selectedNodeId: "core", focusNodeId: null, focusPath: [],
+      searchTerm: "", flowPulseMode: true, autoFire: true,
+      time: 0, lastFrameTime: 0, autoFireTimer: 0
+    };
+
+    const nodes = [];
+    const nodeMap = new Map();
+    const edges = [];
+    const particles = [];
+    const pulses = [];
+
+    // Helper functions
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    function quadraticPoint(a, c, b, t) {
+      return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * c + t * t * b;
+    }
+
+    function findEdge(sourceId, targetId) {
+      return edges.find(e => (e.source === sourceId && e.target === targetId) || (e.source === targetId && e.target === sourceId));
+    }
+
+    function initGraph() {
+      pipelineData.nodes.forEach((node) => {
+        const clone = {
+          ...node,
+          connections: [],
+          projected: { x: 0, y: 0, scale: 1, z: 0 },
+          base: { x: 0, y: 0, z: 0 },
+          floatPhase: Math.random() * Math.PI * 2,
+          floatSpeed: 0.4 + Math.random() * 0.8,
+          searchMatch: true,
+          fire: 0,
+          branchSeed: Math.random() * Math.PI * 2
+        };
+        nodes.push(clone);
+        nodeMap.set(clone.id, clone);
+      });
+
+      pipelineData.links.forEach(([a, b], index) => {
+        const source = nodeMap.get(a);
+        const target = nodeMap.get(b);
+        if (!source || !target) return;
+        source.connections.push(target.id);
+        target.connections.push(source.id);
+        edges.push({ id: index, source: a, target: b, pulseOffset: Math.random(), curveSeed: Math.random() * Math.PI * 2 });
+      });
+
+      positionNodes();
+      createParticles();
+    }
+
+    function positionNodes() {
+      nodeMap.get("core").base = { x: 0, y: 0, z: 0 };
+      const hubs = nodes.filter((n) => n.level === 1);
+      const childrenByGroup = {};
+      nodes.filter((n) => n.level === 2).forEach((node) => {
+        if (!childrenByGroup[node.group]) childrenByGroup[node.group] = [];
+        childrenByGroup[node.group].push(node);
+      });
+
+      const innerRadius = 170;
+      const outerRadius = 330;
+
+      hubs.forEach((node, index) => {
+        const angle = (Math.PI * 2 * index) / hubs.length;
+        const tilt = (index % 2 === 0 ? 1 : -1) * 0.34;
+        node.base = { x: Math.cos(angle) * innerRadius, y: Math.sin(tilt) * 72, z: Math.sin(angle) * innerRadius };
+      });
+
+      hubs.forEach((hub, hubIndex) => {
+        const groupNodes = childrenByGroup[hub.group] || [];
+        const groupAngle = (Math.PI * 2 * hubIndex) / hubs.length;
+        groupNodes.forEach((node, index) => {
+          const count = Math.max(1, groupNodes.length - 1);
+          const spread = 0.94;
+          const localAngle = ((index / count) - 0.5) * spread;
+          const azimuth = groupAngle + localAngle;
+          const elevation = (index % 2 === 0 ? 1 : -1) * (0.16 + (index / Math.max(1, groupNodes.length)) * 0.17);
+          const radius = outerRadius + (index % 3) * 17;
+          node.base = { x: Math.cos(azimuth) * radius, y: Math.sin(elevation) * (135 + index * 5), z: Math.sin(azimuth) * radius };
+        });
+      });
+    }
+
+    function createParticles() {
+      particles.length = 0;
+      for (let i = 0; i < 120; i++) {
+        particles.push({ x: Math.random(), y: Math.random(), size: 0.6 + Math.random() * 2.1, alpha: 0.05 + Math.random() * 0.14, speed: 0.2 + Math.random() * 0.7, phase: Math.random() * Math.PI * 2 });
+      }
+    }
+
+    function resize() {
+      state.width = window.innerWidth;
+      state.height = window.innerHeight;
+      canvas.width = Math.floor(state.width * state.dpr);
+      canvas.height = Math.floor(state.height * state.dpr);
+      canvas.style.width = state.width + "px";
+      canvas.style.height = state.height + "px";
+      ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+    }
+
+    function getNodeColor(node) { return GROUP_META[node.group]?.color || COLORS.neutral; }
+
+    function rotatePoint(point, rx, ry) {
+      let { x, y, z } = point;
+      const cosY = Math.cos(ry), sinY = Math.sin(ry);
+      const x1 = x * cosY - z * sinY, z1 = x * sinY + z * cosY;
+      const cosX = Math.cos(rx), sinX = Math.sin(rx);
+      const y2 = y * cosX - z1 * sinX, z2 = y * sinX + z1 * cosX;
+      return { x: x1, y: y2, z: z2 };
+    }
+
+    function project(point) {
+      const fov = 820, cameraZ = 780;
+      const z = point.z + cameraZ;
+      const scale = (fov / z) * state.zoom;
+      return { x: state.width / 2 + state.panX + point.x * scale, y: state.height / 2 + state.panY + point.y * scale, scale, z: point.z };
+    }
+
+    function updateProjection() {
+      const time = state.time;
+      nodes.forEach((node) => {
+        let targetBase = { ...node.base };
+        if (state.focusNodeId) {
+          const focused = nodeMap.get(state.focusNodeId);
+          const distance = getGraphDistance(state.focusNodeId, node.id);
+          if (focused && distance !== Infinity) {
+            const focusPull = distance <= 1 ? 0.35 : distance === 2 ? 0.18 : 0.04;
+            targetBase.x = node.base.x - focused.base.x * focusPull;
+            targetBase.y = node.base.y - focused.base.y * focusPull;
+            targetBase.z = node.base.z - focused.base.z * focusPull;
+            if (distance === 1) {
+              const angle = focused.connections.indexOf(node.id) / Math.max(1, focused.connections.length) * Math.PI * 2;
+              targetBase.x = Math.cos(angle) * 180;
+              targetBase.y = Math.sin(angle * 1.7) * 70;
+              targetBase.z = Math.sin(angle) * 180;
+            }
+            if (distance === 0) targetBase = { x: 0, y: 0, z: 0 };
+          }
+        }
+        const wobbleStrength = node.level === 0 ? 0 : 5.5;
+        const wobbleX = Math.sin(time * 0.0012 * node.floatSpeed + node.floatPhase) * wobbleStrength;
+        const wobbleY = Math.cos(time * 0.0010 * node.floatSpeed + node.floatPhase * 0.8) * wobbleStrength * 1.3;
+        const wobbleZ = Math.sin(time * 0.0014 * node.floatSpeed + node.floatPhase * 1.3) * wobbleStrength;
+        const rotated = rotatePoint({ x: targetBase.x + wobbleX, y: targetBase.y + wobbleY, z: targetBase.z + wobbleZ }, state.rotationX, state.rotationY);
+        node.projected = project(rotated);
+        node.fire = Math.max(0, node.fire - 0.012);
+      });
+    }
+
+    function getGraphDistance(fromId, toId) {
+      if (fromId === toId) return 0;
+      const visited = new Set([fromId]);
+      const queue = [{ id: fromId, distance: 0 }];
+      while (queue.length) {
+        const current = queue.shift();
+        const node = nodeMap.get(current.id);
+        if (!node) continue;
+        for (const nextId of node.connections) {
+          if (nextId === toId) return current.distance + 1;
+          if (!visited.has(nextId)) { visited.add(nextId); queue.push({ id: nextId, distance: current.distance + 1 }); }
+        }
+      }
+      return Infinity;
+    }
+
+    function getVisibleRelevance(nodeId) {
+      if (!state.focusNodeId) return 1;
+      const distance = getGraphDistance(state.focusNodeId, nodeId);
+      if (distance === 0) return 1;
+      if (distance === 1) return 0.92;
+      if (distance === 2) return 0.34;
+      return 0.06;
+    }
+
+    function updateSearchMatches() {
+      const term = state.searchTerm.trim().toLowerCase();
+      nodes.forEach((node) => {
+        if (!term) { node.searchMatch = true; return; }
+        const haystack = [node.id, node.label, node.group, node.type, node.description, node.notes].join(" ").toLowerCase();
+        node.searchMatch = haystack.includes(term);
+      });
+    }
+
+    function getHighlightSet() {
+      if (state.hoverNodeId) { const node = nodeMap.get(state.hoverNodeId); return new Set([node.id, ...node.connections]); }
+      if (state.selectedNodeId) { const node = nodeMap.get(state.selectedNodeId); return new Set([node.id, ...node.connections]); }
+      return null;
+    }
+
+    function smoothCamera() {
+      const lerp = 0.075;
+      state.rotationX += (state.targetRotationX - state.rotationX) * lerp;
+      state.rotationY += (state.targetRotationY - state.rotationY) * lerp;
+      state.zoom += (state.targetZoom - state.zoom) * lerp;
+      state.panX += (state.targetPanX - state.panX) * lerp;
+      state.panY += (state.targetPanY - state.panY) * lerp;
+    }
+
+    function focusNode(nodeId, shouldPushPath = true) {
+      const node = nodeMap.get(nodeId);
+      if (!node) return;
+      state.focusNodeId = nodeId;
+      state.selectedNodeId = nodeId;
+      if (shouldPushPath) { const last = state.focusPath[state.focusPath.length - 1]; if (last !== nodeId) state.focusPath.push(nodeId); }
+      const angle = Math.atan2(node.base.z, node.base.x);
+      const vertical = Math.atan2(node.base.y, Math.hypot(node.base.x, node.base.z));
+      state.targetRotationY = -angle;
+      state.targetRotationX = vertical * 0.55;
+      state.targetZoom = node.level === 0 ? 1.12 : node.level === 1 ? 1.46 : 1.74;
+      state.targetPanX = 0;
+      state.targetPanY = 12;
+      updatePanel(nodeId);
+      updateBreadcrumb();
+      fireNode(nodeId);
+      showToast(`Diving into ${node.label}`);
+    }
+
+    function stepBack() {
+      if (!state.focusPath.length) { resetView(); return; }
+      state.focusPath.pop();
+      const previous = state.focusPath[state.focusPath.length - 1];
+      if (previous) {
+        state.focusNodeId = previous;
+        state.selectedNodeId = previous;
+        const node = nodeMap.get(previous);
+        const angle = Math.atan2(node.base.z, node.base.x);
+        const vertical = Math.atan2(node.base.y, Math.hypot(node.base.x, node.base.z));
+        state.targetRotationY = -angle;
+        state.targetRotationX = vertical * 0.55;
+        state.targetZoom = node.level === 0 ? 1.12 : node.level === 1 ? 1.46 : 1.74;
+        updatePanel(previous);
+      } else {
+        state.focusNodeId = null;
+        state.targetRotationX = -0.14;
+        state.targetRotationY = 0.6;
+        state.targetZoom = 1;
+        state.targetPanX = 0;
+        state.targetPanY = 0;
+      }
+      updateBreadcrumb();
+    }
+
+    function resetView() {
+      state.focusNodeId = null;
+      state.focusPath = [];
+      state.selectedNodeId = "core";
+      state.hoverNodeId = null;
+      state.targetRotationX = -0.14;
+      state.targetRotationY = 0.6;
+      state.targetZoom = 1;
+      state.targetPanX = 0;
+      state.targetPanY = 0;
+      state.rotationX = -0.14;
+      state.rotationY = 0.6;
+      state.zoom = 1;
+      state.panX = 0;
+      state.panY = 0;
+      state.searchTerm = "";
+      searchInput.value = "";
+      updateSearchMatches();
+      updatePanel("core");
+      updateBreadcrumb();
+      showToast("Returned to global view");
+    }
+
+    function updateBreadcrumb() {
+      breadcrumb.innerHTML = "";
+      const root = document.createElement("button");
+      root.className = `crumb ${state.focusPath.length === 0 ? "active" : ""}`;
+      root.textContent = "Global View";
+      root.addEventListener("click", resetView);
+      breadcrumb.appendChild(root);
+      state.focusPath.forEach((nodeId, index) => {
+        const node = nodeMap.get(nodeId);
+        if (!node) return;
+        const crumb = document.createElement("button");
+        crumb.className = `crumb ${index === state.focusPath.length - 1 ? "active" : ""}`;
+        crumb.textContent = `› ${node.label}`;
+        crumb.addEventListener("click", () => { state.focusPath = state.focusPath.slice(0, index + 1); focusNode(nodeId, false); });
+        breadcrumb.appendChild(crumb);
+      });
+      const current = state.focusNodeId ? nodeMap.get(state.focusNodeId) : null;
+      preziLabel.textContent = current ? current.label : "Global View";
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => { toast.classList.remove("show"); }, 1100);
+    }
+
+    function fireNode(nodeId) {
+      const node = nodeMap.get(nodeId);
+      if (!node) return;
+      node.fire = 1;
+      node.connections.forEach((targetId) => { pulses.push({ source: nodeId, target: targetId, progress: 0, speed: 0.3 + Math.random() * 0.24 }); });
+    }
+
+    function updatePulses(dt) {
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const pulse = pulses[i];
+        pulse.progress += pulse.speed * dt;
+        if (pulse.progress >= 1) { const target = nodeMap.get(pulse.target); if (target) target.fire = Math.max(target.fire, 0.8); pulses.splice(i, 1); }
+      }
+    }
+
+    function maybeAutoFire(dt) {
+      if (!state.autoFire) return;
+      state.autoFireTimer -= dt;
+      if (state.autoFireTimer > 0) return;
+      state.autoFireTimer = 1.15 + Math.random() * 1.25;
+      const pool = state.focusNodeId ? [state.focusNodeId, ...nodeMap.get(state.focusNodeId).connections] : nodes.filter((n) => n.level >= 1).map((n) => n.id);
+      const id = pool[Math.floor(Math.random() * pool.length)];
+      fireNode(id);
+    }
+
+    function drawBackground() {
+      const cx = state.width / 2, cy = state.height / 2;
+      const radius = Math.min(state.width, state.height) * 0.42 * state.zoom;
+      const grd = ctx.createRadialGradient(cx, cy, 40, cx, cy, radius);
+      grd.addColorStop(0, "rgba(255,255,255,0.03)");
+      grd.addColorStop(0.18, "rgba(0,83,226,0.05)");
+      grd.addColorStop(0.45, "rgba(255,194,32,0.045)");
+      grd.addColorStop(0.75, "rgba(40,240,181,0.025)");
+      grd.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      particles.forEach((p) => {
+        const px = p.x * state.width + Math.sin(state.time * 0.00025 * p.speed + p.phase) * 14;
+        const py = p.y * state.height + Math.cos(state.time * 0.00028 * p.speed + p.phase * 0.7) * 12;
+        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawNeuralShell() {
+      const cx = state.width / 2 + state.panX, cy = state.height / 2 + state.panY;
+      const radius = Math.min(state.width, state.height) * 0.26 * state.zoom;
+      ctx.save();
+      ctx.translate(cx, cy);
+      for (let i = 0; i < 5; i++) {
+        const r = radius * (1 - i * 0.115);
+        ctx.strokeStyle = `rgba(255,255,255,${0.08 - i * 0.012})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r, r * (0.76 + i * 0.03), Math.sin(state.time * 0.00015 + i) * 0.12, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function getEdgePoints(edge) {
+      const a = nodeMap.get(edge.source), b = nodeMap.get(edge.target);
+      if (!a || !b) return null;
+      const pa = a.projected, pb = b.projected;
+      const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+      const dx = pb.x - pa.x, dy = pb.y - pa.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const nx = -dy / length, ny = dx / length;
+      const curve = Math.min(55, length * 0.16) + Math.sin(state.time * 0.0006 + edge.curveSeed) * 7;
+      return { pa, pb, cx: mx + nx * curve, cy: my + ny * curve };
+    }
+
+    function drawEdge(edge, highlightSet) {
+      const source = nodeMap.get(edge.source), target = nodeMap.get(edge.target);
+      const edgePoints = getEdgePoints(edge);
+      if (!source || !target || !edgePoints) return;
+      const relevance = Math.max(getVisibleRelevance(source.id), getVisibleRelevance(target.id));
+      const isHighlighted = highlightSet && highlightSet.has(source.id) && highlightSet.has(target.id);
+      const filtered = state.searchTerm && !(source.searchMatch || target.searchMatch);
+      let alpha = 0.16 * relevance, width = 1.05;
+      if (filtered) alpha = 0.025;
+      if (isHighlighted) { alpha = 0.85; width = 2; } else if (highlightSet) { alpha *= 0.5; }
+      const { pa, pb, cx, cy } = edgePoints;
+      const gradient = ctx.createLinearGradient(pa.x, pa.y, pb.x, pb.y);
+      gradient.addColorStop(0, hexToRgba(getNodeColor(source), alpha));
+      gradient.addColorStop(1, hexToRgba(getNodeColor(target), alpha));
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.quadraticCurveTo(cx, cy, pb.x, pb.y);
+      ctx.stroke();
+      if (state.flowPulseMode || isHighlighted) {
+        const t = (state.time * 0.00022 + edge.pulseOffset) % 1;
+        const x = quadraticPoint(pa.x, cx, pb.x, t);
+        const y = quadraticPoint(pa.y, cy, pb.y, t);
+        drawSpark(x, y, isHighlighted ? 3.2 : 2.2, isHighlighted ? "#ffffff" : getNodeColor(source));
+      }
+    }
+
+    function drawPulseObjects() {
+      pulses.forEach((pulse) => {
+        const edge = findEdge(pulse.source, pulse.target);
+        const edgePoints = edge ? getEdgePoints(edge) : null;
+        if (!edgePoints) return;
+        const { pa, pb, cx, cy } = edgePoints;
+        const x = quadraticPoint(pa.x, cx, pb.x, pulse.progress);
+        const y = quadraticPoint(pa.y, cy, pb.y, pulse.progress);
+        drawSpark(x, y, 3.8, "#ffffff");
+      });
+    }
+
+    function drawSpark(x, y, radius, color) {
+      ctx.save();
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = hexToRgba(color, 0.22);
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawNodeBranches(node, alpha) {
+      if (node.level <= 1) return;
+      const p = node.projected, color = getNodeColor(node);
+      const angleSeed = node.branchSeed + state.time * 0.00012;
+      const count = 4, outLen = Math.min(32, 18 + p.scale * 28);
+      const awayX = p.x - state.width / 2, awayY = p.y - state.height / 2;
+      const awayAngle = Math.atan2(awayY, awayX);
+      ctx.save();
+      ctx.strokeStyle = hexToRgba(color, alpha * 0.24);
+      ctx.lineWidth = 0.7;
+      for (let i = 0; i < count; i++) {
+        const local = awayAngle + ((i - (count - 1) / 2) * 0.28) + Math.sin(angleSeed + i) * 0.12;
+        const x1 = p.x + Math.cos(local) * outLen * 0.28;
+        const y1 = p.y + Math.sin(local) * outLen * 0.28;
+        const x2 = p.x + Math.cos(local) * outLen;
+        const y2 = p.y + Math.sin(local) * outLen;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.quadraticCurveTo(x1, y1, x2, y2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 + Math.cos(local - 0.4) * outLen * 0.22, y2 + Math.sin(local - 0.4) * outLen * 0.22);
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 + Math.cos(local + 0.4) * outLen * 0.22, y2 + Math.sin(local + 0.4) * outLen * 0.22);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawNode(node, highlightSet) {
+      const p = node.projected, color = getNodeColor(node);
+      const isHovered = state.hoverNodeId === node.id;
+      const isSelected = state.selectedNodeId === node.id;
+      const isHighlighted = highlightSet ? highlightSet.has(node.id) : false;
+      const dimmedBySearch = state.searchTerm && !node.searchMatch;
+      const relevance = getVisibleRelevance(node.id);
+      let alpha = 0.94 * relevance;
+      if (dimmedBySearch) alpha = 0.14;
+      if (highlightSet && !isHighlighted && !isSelected && !isHovered) alpha *= 0.38;
+      const baseRadius = Math.max(3, node.size * p.scale * 0.9 + (node.level === 0 ? 2.8 : 0));
+      const firingBoost = node.fire;
+      const outerGlow = baseRadius * (2.5 + firingBoost * 1.35);
+      drawNodeBranches(node, alpha);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerGlow);
+      halo.addColorStop(0, hexToRgba(color, 0.28 + firingBoost * 0.18));
+      halo.addColorStop(0.45, hexToRgba(color, 0.09 + firingBoost * 0.08));
+      halo.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, outerGlow, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = isSelected ? 34 : isHovered ? 26 : 18 + firingBoost * 10;
+      ctx.shadowColor = color;
+      ctx.fillStyle = hexToRgba(color, 0.24 + firingBoost * 0.12);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseRadius * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseRadius, 0, Math.PI * 2);
+      ctx.fill();
+      const inner = ctx.createRadialGradient(p.x - baseRadius * 0.35, p.y - baseRadius * 0.35, 0, p.x, p.y, baseRadius);
+      inner.addColorStop(0, "rgba(255,255,255,0.95)");
+      inner.addColorStop(0.28, "rgba(255,255,255,0.28)");
+      inner.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = inner;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseRadius * 0.92, 0, Math.PI * 2);
+      ctx.fill();
+      if (isSelected || isHovered || firingBoost > 0.55) {
+        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, baseRadius + 5.5 + firingBoost * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      const shouldLabel = isSelected || isHovered || node.level <= 1 || state.focusNodeId === node.id || getGraphDistance(state.focusNodeId || "core", node.id) <= 1 || node.searchMatch;
+      if (shouldLabel && alpha > 0.11) {
+        ctx.fillStyle = "rgba(238,245,255,0.96)";
+        ctx.font = `${Math.max(11, 12 + p.scale * 2.2)}px Inter, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(node.label, p.x, p.y - baseRadius - 15);
+      }
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, state.width, state.height);
+      drawBackground();
+      drawNeuralShell();
+      updateProjection();
+      const highlightSet = getHighlightSet();
+      [...edges].sort((a, b) => {
+        const az = (nodeMap.get(a.source).projected.z + nodeMap.get(a.target).projected.z) / 2;
+        const bz = (nodeMap.get(b.source).projected.z + nodeMap.get(b.target).projected.z) / 2;
+        return az - bz;
+      }).forEach((edge) => drawEdge(edge, highlightSet));
+      drawPulseObjects();
+      [...nodes].sort((a, b) => a.projected.z - b.projected.z).forEach((node) => drawNode(node, highlightSet));
+    }
+
+    function animate(timestamp) {
+      if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+      const dt = Math.min(0.045, (timestamp - state.lastFrameTime) / 1000);
+      state.lastFrameTime = timestamp;
+      state.time = timestamp;
+      if (!state.dragging) { state.targetRotationY += 0.00072; state.targetRotationX += Math.sin(timestamp * 0.00028) * 0.00006; }
+      smoothCamera();
+      maybeAutoFire(dt);
+      updatePulses(dt);
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    function hitTest(x, y) {
+      let nearest = null, nearestDist = Infinity;
+      nodes.forEach((node) => {
+        const p = node.projected;
+        const radius = Math.max(10, node.size * p.scale * 0.95 + 9);
+        const dx = x - p.x, dy = y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < radius && dist < nearestDist && getVisibleRelevance(node.id) > 0.09) { nearest = node; nearestDist = dist; }
+      });
+      return nearest;
+    }
+
+    function updatePanel(nodeId) {
+      const node = nodeMap.get(nodeId);
+      if (!node) return;
+      detailTitle.textContent = node.label;
+      detailSubtitle.textContent = `${GROUP_META[node.group]?.label || node.group} • ${node.type}`;
+      detailType.textContent = node.type;
+      detailDescription.textContent = node.description || "No description available.";
+      detailNotes.textContent = node.notes || "No additional details.";
+      detailConnections.innerHTML = "";
+      node.connections.forEach((connId) => {
+        const conn = nodeMap.get(connId);
+        if (!conn) return;
+        const chip = document.createElement("div");
+        chip.className = "mini-chip";
+        chip.textContent = conn.label;
+        chip.addEventListener("click", () => { state.selectedNodeId = connId; updatePanel(connId); });
+        detailConnections.appendChild(chip);
+      });
+    }
+
+    // Event handlers
+    canvas.addEventListener("mousedown", (e) => { state.dragging = true; state.movedDuringDrag = false; state.lastX = e.clientX; state.lastY = e.clientY; });
+    canvas.addEventListener("mousemove", (e) => {
+      if (state.dragging) {
+        const dx = e.clientX - state.lastX, dy = e.clientY - state.lastY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.movedDuringDrag = true;
+        state.targetRotationY += dx * 0.004;
+        state.targetRotationX += dy * 0.003;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+      } else {
+        const node = hitTest(e.clientX, e.clientY);
+        state.hoverNodeId = node ? node.id : null;
+        canvas.style.cursor = node ? "pointer" : "grab";
+      }
+    });
+    canvas.addEventListener("mouseup", () => { state.dragging = false; canvas.style.cursor = "grab"; });
+    canvas.addEventListener("mouseleave", () => { state.dragging = false; state.hoverNodeId = null; });
+    canvas.addEventListener("click", (e) => {
+      if (state.movedDuringDrag) return;
+      const node = hitTest(e.clientX, e.clientY);
+      if (node) { state.selectedNodeId = node.id; updatePanel(node.id); }
+    });
+    canvas.addEventListener("dblclick", (e) => {
+      const node = hitTest(e.clientX, e.clientY);
+      if (node) focusNode(node.id);
+    });
+    canvas.addEventListener("wheel", (e) => { e.preventDefault(); state.targetZoom = Math.max(0.5, Math.min(3, state.targetZoom - e.deltaY * 0.0012)); }, { passive: false });
+    searchInput.addEventListener("input", () => { state.searchTerm = searchInput.value; updateSearchMatches(); });
+    resetBtn.addEventListener("click", resetView);
+    autoFireBtn.addEventListener("click", () => { state.autoFire = !state.autoFire; autoFireBtn.textContent = state.autoFire ? "Auto Fire On" : "Auto Fire Off"; });
+    diveBtn.addEventListener("click", () => { if (state.selectedNodeId) focusNode(state.selectedNodeId); });
+    backBtn.addEventListener("click", stepBack);
+    forwardBtn.addEventListener("click", () => { if (state.selectedNodeId) focusNode(state.selectedNodeId); });
+    window.addEventListener("keydown", (e) => { if (e.key === "Escape") stepBack(); if (e.key === "Enter" && state.selectedNodeId) focusNode(state.selectedNodeId); });
+    window.addEventListener("resize", resize);
+
+    // Init
+    resize();
+    initGraph();
+    updatePanel("core");
+    updateBreadcrumb();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

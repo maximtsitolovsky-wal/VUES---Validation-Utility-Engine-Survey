@@ -233,6 +233,56 @@ def fetch_scout_data(token: str) -> list[ScoutAnswers]:
     return parsed
 
 
+def fetch_survey_submissions(token: str) -> set[str]:
+    """Fetch completed survey submissions from Airtable Submissions table.
+    
+    Returns set of site numbers that have PASS status surveys.
+    """
+    url = f"https://api.airtable.com/v0/{SURVEY_SUBMISSIONS_BASE_ID}/{SURVEY_SUBMISSIONS_TABLE_ID}"
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    completed_sites = set()
+    offset = None
+    
+    while True:
+        params = {
+            "pageSize": 100,
+            # Only fetch PASS records to reduce data transfer
+            "filterByFormula": "{Processing Status} = 'PASS'",
+        }
+        if offset:
+            params["offset"] = offset
+            
+        try:
+            resp = requests.get(url, headers=headers, params=params, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            log.error(f"Failed to fetch survey submissions from Airtable: {e}")
+            break
+            
+        records = data.get("records", [])
+        for rec in records:
+            fields = rec.get("fields", {})
+            # Try multiple field names for site number
+            site = _normalize_site(
+                fields.get("Site Number") or 
+                fields.get("Site") or 
+                fields.get("site") or
+                fields.get("Site #") or
+                fields.get("Store Number")
+            )
+            if site:
+                completed_sites.add(site)
+        
+        offset = data.get("offset")
+        if not offset:
+            break
+    
+    log.info(f"Fetched {len(completed_sites)} completed survey sites from Airtable Submissions")
+    return completed_sites
+
+
 def _normalize_vendor(vendor: str | None) -> str:
     """Normalize vendor name - case insensitive, trim whitespace.
     

@@ -152,7 +152,7 @@ def watch_loop():
         changed = check_for_changes()
         if changed:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            print(f"\n[{timestamp}] 🔄 Changes detected: {', '.join(changed)}")
+            print(f"\n[{timestamp}] CHANGE DETECTED: {', '.join(changed)}")
             
             # Sync and rebake
             synced = sync_data_files()
@@ -215,10 +215,10 @@ def full_sync():
 
 def main():
     print("""
-╔══════════════════════════════════════════════════════════════╗
-║                    VUES ORCHESTRATOR                         ║
-║         Keeping all your dashboards in sync!                 ║
-╚══════════════════════════════════════════════════════════════╝
+============================================================
+                    VUES ORCHESTRATOR                       
+         Keeping all your dashboards in sync!               
+============================================================
     """)
     
     # Initial full sync

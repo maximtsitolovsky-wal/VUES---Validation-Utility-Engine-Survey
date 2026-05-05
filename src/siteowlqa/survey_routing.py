@@ -44,6 +44,13 @@ CONSTRUCTION_DEADLINE_DAYS = 165
 # Valid survey vendors (only these should appear in output)
 VALID_SURVEY_VENDORS = {"Wachter", "CEI", "Everon"}
 
+# Vendor reassignment mapping: these vendors' sites are surveyed by CEI
+# (Techwise and SAS assignments transferred to CEI per 2026-05-04 decision)
+VENDOR_REASSIGNMENT = {
+    "techwise": "CEI",
+    "sas": "CEI",
+}
+
 # Invalid values to filter out
 INVALID_VALUES = {"#REF!", "#N/A", "#VALUE!", "#ERROR!", "MAXIM"}
 

@@ -120,10 +120,10 @@ def main():
         success, message = process_csv_file(filepath)
         if success:
             success_count += 1
-            print(f"✓ {filepath.name}: {message}")
+            print(f"[OK] {filepath.name}: {message}")
         else:
             error_count += 1
-            print(f"✗ {filepath.name}: {message}")
+            print(f"[ERR] {filepath.name}: {message}")
     
     print("-" * 60)
     print(f"Done! Processed: {success_count} | Errors: {error_count}")

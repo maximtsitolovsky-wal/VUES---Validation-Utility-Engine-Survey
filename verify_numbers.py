@@ -1,8 +1,24 @@
 import json
+from collections import Counter
+
 with open('ui/survey_routing_data.json', 'r') as f:
     data = json.load(f)
 
 rows = data['rows']
+print(f'Total rows in file: {len(rows)}')
+print()
+
+# Count all vendors
+all_vendors = Counter(r.get('vendor') for r in rows)
+print('All vendors:', dict(all_vendors))
+print()
+
+# Check our 5 special sites
+print('Checking PTSI and alarmhawaii sites:')
+for r in rows:
+    if r.get('vendor') in ['PTSI', 'alarmhawaii.com']:
+        print(f"  Site {r.get('site')}: vendor={r.get('vendor')}")
+print()
 
 vendors = {}
 for r in rows:

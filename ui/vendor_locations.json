@@ -100,17 +100,6 @@
       "color": "#a778ff"
     },
     {
-      "id": "WV-SAS",
-      "vendor": "SAS",
-      "state": "WV",
-      "location": [
-        38.991226,
-        -80.654453
-      ],
-      "count": 7,
-      "color": "#ffc857"
-    },
-    {
       "id": "MI-Wachter",
       "vendor": "Wachter",
       "state": "MI",
@@ -230,72 +219,6 @@
       ],
       "count": 6,
       "color": "#a778ff"
-    },
-    {
-      "id": "NC-Techwise",
-      "vendor": "Techwise",
-      "state": "NC",
-      "location": [
-        35.630066,
-        -79.806419
-      ],
-      "count": 33,
-      "color": "#ff5fd2"
-    },
-    {
-      "id": "SC-Techwise",
-      "vendor": "Techwise",
-      "state": "SC",
-      "location": [
-        33.856892,
-        -80.945007
-      ],
-      "count": 14,
-      "color": "#ff5fd2"
-    },
-    {
-      "id": "VA-Techwise",
-      "vendor": "Techwise",
-      "state": "VA",
-      "location": [
-        37.769337,
-        -78.169968
-      ],
-      "count": 17,
-      "color": "#ff5fd2"
-    },
-    {
-      "id": "VA-SAS",
-      "vendor": "SAS",
-      "state": "VA",
-      "location": [
-        38.269337,
-        -77.869968
-      ],
-      "count": 1,
-      "color": "#ffc857"
-    },
-    {
-      "id": "MD-Techwise",
-      "vendor": "Techwise",
-      "state": "MD",
-      "location": [
-        39.063946,
-        -76.802101
-      ],
-      "count": 13,
-      "color": "#ff5fd2"
-    },
-    {
-      "id": "DC-Techwise",
-      "vendor": "Techwise",
-      "state": "DC",
-      "location": [
-        38.897438,
-        -77.026817
-      ],
-      "count": 1,
-      "color": "#ff5fd2"
     },
     {
       "id": "ID-Everon",
@@ -626,6 +549,72 @@
       ],
       "count": 15,
       "color": "#2ed7ff"
+    },
+    {
+      "id": "WV-CEI",
+      "vendor": "CEI",
+      "state": "WV",
+      "location": [
+        38.991226,
+        -80.654453
+      ],
+      "count": 7,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "NC-CEI",
+      "vendor": "CEI",
+      "state": "NC",
+      "location": [
+        35.630066,
+        -79.806419
+      ],
+      "count": 33,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "SC-CEI",
+      "vendor": "CEI",
+      "state": "SC",
+      "location": [
+        33.856892,
+        -80.945007
+      ],
+      "count": 14,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "VA-CEI",
+      "vendor": "CEI",
+      "state": "VA",
+      "location": [
+        37.769337,
+        -78.169968
+      ],
+      "count": 18,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "MD-CEI",
+      "vendor": "CEI",
+      "state": "MD",
+      "location": [
+        39.063946,
+        -76.802101
+      ],
+      "count": 13,
+      "color": "#2ed7ff"
+    },
+    {
+      "id": "DC-CEI",
+      "vendor": "CEI",
+      "state": "DC",
+      "location": [
+        38.897438,
+        -77.026817
+      ],
+      "count": 1,
+      "color": "#2ed7ff"
     }
   ],
   "state_totals": {
@@ -653,7 +642,7 @@
     },
     "WV": {
       "Wachter": 1,
-      "SAS": 7
+      "CEI": 7
     },
     "MI": {
       "Wachter": 5
@@ -683,20 +672,19 @@
       "Wachter": 6
     },
     "NC": {
-      "Techwise": 33
+      "CEI": 33
     },
     "SC": {
-      "Techwise": 14
+      "CEI": 14
     },
     "VA": {
-      "Techwise": 17,
-      "SAS": 1
+      "CEI": 18
     },
     "MD": {
-      "Techwise": 13
+      "CEI": 13
     },
     "DC": {
-      "Techwise": 1
+      "CEI": 1
     },
     "ID": {
       "Everon": 4
@@ -786,10 +774,8 @@
     }
   },
   "vendor_totals": {
-    "CEI": 342,
+    "CEI": 428,
     "Wachter": 176,
-    "Techwise": 78,
-    "Everon": 154,
-    "SAS": 8
+    "Everon": 154
   }
 }

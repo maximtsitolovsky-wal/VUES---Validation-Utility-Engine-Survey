@@ -110,7 +110,7 @@ const scoutData = {
     { vendor: 'Wachter', state: 'OH', location: [40.39, -82.76], count: 31 },
     { vendor: 'Wachter', state: 'NY', location: [42.17, -74.95], count: 24 },
     { vendor: 'Wachter', state: 'WV', location: [38.49, -80.95], count: 1 },
-    { vendor: 'SAS', state: 'WV', location: [38.99, -80.65], count: 7 },
+    { vendor: 'CEI', state: 'WV', location: [38.99, -80.65], count: 7 },
     { vendor: 'Wachter', state: 'MI', location: [43.33, -84.54], count: 5 },
     { vendor: 'Wachter', state: 'RI', location: [41.68, -71.51], count: 3 },
     { vendor: 'Wachter', state: 'IL', location: [40.35, -88.99], count: 1 },
@@ -122,12 +122,12 @@ const scoutData = {
     { vendor: 'Wachter', state: 'MA', location: [42.23, -71.53], count: 7 },
     { vendor: 'Wachter', state: 'VT', location: [44.05, -72.71], count: 1 },
     { vendor: 'Wachter', state: 'ME', location: [44.69, -69.38], count: 6 },
-    { vendor: 'Techwise', state: 'NC', location: [35.63, -79.81], count: 33 },
-    { vendor: 'Techwise', state: 'SC', location: [33.86, -80.95], count: 14 },
-    { vendor: 'Techwise', state: 'VA', location: [37.77, -78.17], count: 17 },
-    { vendor: 'SAS', state: 'VA', location: [38.27, -77.87], count: 1 },
-    { vendor: 'Techwise', state: 'MD', location: [39.06, -76.80], count: 13 },
-    { vendor: 'Techwise', state: 'DC', location: [38.90, -77.03], count: 1 },
+    { vendor: 'CEI', state: 'NC', location: [35.63, -79.81], count: 33 },
+    { vendor: 'CEI', state: 'SC', location: [33.86, -80.95], count: 14 },
+    { vendor: 'CEI', state: 'VA', location: [37.77, -78.17], count: 17 },
+    { vendor: 'CEI', state: 'VA', location: [38.27, -77.87], count: 1 },
+    { vendor: 'CEI', state: 'MD', location: [39.06, -76.80], count: 13 },
+    { vendor: 'CEI', state: 'DC', location: [38.90, -77.03], count: 1 },
     { vendor: 'Everon', state: 'ID', location: [44.24, -114.48], count: 4 },
     { vendor: 'Everon', state: 'CA', location: [36.12, -119.68], count: 18 },
     { vendor: 'CEI', state: 'CA', location: [36.62, -119.38], count: 21 },
@@ -159,31 +159,27 @@ const scoutData = {
     { vendor: 'CEI', state: 'MO', location: [38.46, -92.29], count: 15 },
     { vendor: 'CEI', state: 'LA', location: [31.17, -91.87], count: 15 }
   ],
-  vendor_totals: { 'CEI': 342, 'Wachter': 176, 'Techwise': 78, 'Everon': 154, 'SAS': 8 },
+  vendor_totals: { 'CEI': 428, 'Wachter': 176, 'Everon': 154 },
   state_totals: { TX: 69, FL: 52, PA: 38, NC: 33, OH: 31, NY: 24, GA: 23, IL: 30, TN: 22, AL: 22, AR: 21, CA: 39, IN: 21, NJ: 20, OK: 20, KS: 19, AZ: 18, VA: 18, SC: 14, NE: 13, MD: 13, MS: 12, WA: 11, WI: 11, IA: 11, CO: 10, OR: 9, MN: 9, CT: 9, WV: 8, MA: 7, NV: 7, KY: 7, ME: 6, UT: 6, NM: 7, NE: 5, NH: 5, SD: 5, WY: 5, ID: 4, ND: 4, RI: 3, DE: 3, MT: 2, VT: 1, DC: 1 }
 };
 
 const surveyData = {
   summary: {
-    total_sites: 768, surveys_required: 529, surveys_complete: 63,
+    total_sites: 769, surveys_required: 654, surveys_complete: 63,
     vendor_breakdown: {
-      'CEI': { total: 425, survey_required: 409, complete: 20 },
-      'Wachter': { total: 188, survey_required: 142, complete: 18 },
-      'Everon': { total: 150, survey_required: 86, complete: 10 },
-      'Techwise': { total: 78, survey_required: 65, complete: 12 },
-      'SAS': { total: 8, survey_required: 8, complete: 3 }
+      'CEI': { total: 425, survey_required: 414, complete: 21 },
+      'Wachter': { total: 188, survey_required: 144, complete: 18 },
+      'Everon': { total: 150, survey_required: 94, complete: 11 }
     }
   }
 };
 
 // === CONFIG ===
-const VENDOR_HEX = { 'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Techwise': '#FF5FD2', 'Everon': '#45E6A5', 'SAS': '#FFC857' };
+const VENDOR_HEX = { 'CEI': '#5AE4FF', 'Wachter': '#9B7CFF', 'Everon': '#45E6A5' };
 const VENDOR_RGB = { 
   'CEI': [0.35, 0.89, 1], 
   'Wachter': [0.61, 0.49, 1], 
-  'Techwise': [1, 0.37, 0.82], 
-  'Everon': [0.27, 0.9, 0.65], 
-  'SAS': [1, 0.78, 0.34] 
+  'Everon': [0.27, 0.9, 0.65]
 };
 
 let activeMode = 'scout', activeFilter = null;

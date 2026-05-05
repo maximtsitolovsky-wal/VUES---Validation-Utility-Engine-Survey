@@ -3,237 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VUES · Vendor Map</title>
+  <title>VUES · Site Map</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0f172a; --panel: #1e293b; --border: #334155;
-      --text: #f1f5f9; --text-soft: #94a3b8;
-      --cyan: #22d3ee; --purple: #a78bfa; --green: #4ade80; --amber: #fbbf24; --pink: #f472b6;
-    }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f1f5f9; height: 100vh; overflow: hidden; }
     
-    .layout { display: grid; grid-template-columns: 1fr 320px; height: 100vh; }
-    
+    .layout { display: grid; grid-template-columns: 1fr 300px; height: 100vh; }
     #map { width: 100%; height: 100%; }
     
     .controls { position: absolute; top: 16px; left: 16px; z-index: 1000; display: flex; gap: 8px; }
-    .btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
-    .btn:hover { border-color: var(--cyan); background: #263445; }
+    .btn { padding: 10px 16px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn:hover { border-color: #22d3ee; }
     
-    .tile-toggle { position: absolute; bottom: 24px; left: 16px; z-index: 1000; display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
-    .tile-btn { padding: 8px 12px; border-radius: 6px; border: none; background: transparent; color: var(--text-soft); font-size: 12px; font-weight: 600; cursor: pointer; }
-    .tile-btn:hover { color: var(--text); }
-    .tile-btn.active { background: var(--cyan); color: #000; }
+    .tiles { position: absolute; bottom: 80px; left: 16px; z-index: 1000; display: flex; gap: 4px; background: #1e293b; padding: 4px; border-radius: 8px; }
+    .tile-btn { padding: 8px 12px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .tile-btn.active { background: #22d3ee; color: #000; }
     
-    .sidebar { background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
-    .sidebar-header h1 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-    .sidebar-header p { font-size: 12px; color: var(--text-soft); }
+    .sidebar { background: #1e293b; border-left: 1px solid #334155; padding: 20px; overflow-y: auto; }
+    .sidebar h1 { font-size: 18px; margin-bottom: 4px; }
+    .sidebar p { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
     
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 16px; border-bottom: 1px solid var(--border); }
-    .stat { padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center; }
-    .stat-value { font-size: 24px; font-weight: 800; }
-    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); margin-top: 2px; }
+    .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+    .stat { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-val { font-size: 24px; font-weight: 800; }
+    .stat-lbl { font-size: 10px; text-transform: uppercase; color: #94a3b8; }
     
-    .section { padding: 16px; border-bottom: 1px solid var(--border); }
-    .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-soft); margin-bottom: 12px; }
+    .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 16px 0 10px; }
     
-    .vendor-list { display: flex; flex-direction: column; gap: 6px; }
-    .vendor-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; }
-    .vendor-row:hover { background: rgba(255,255,255,0.05); }
-    .vendor-row.active { border-color: var(--color); background: rgba(255,255,255,0.05); }
-    .vendor-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--color); }
-    .vendor-name { flex: 1; font-weight: 600; font-size: 13px; }
-    .vendor-count { font-size: 18px; font-weight: 800; color: var(--color); }
+    .vendor-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; margin-bottom: 6px; border-radius: 8px; border: 2px solid transparent; background: rgba(255,255,255,0.03); cursor: pointer; text-align: left; color: #f1f5f9; font-size: 13px; }
+    .vendor-btn:hover { background: rgba(255,255,255,0.06); }
+    .vendor-btn.active { border-color: var(--c); background: rgba(255,255,255,0.08); }
+    .vendor-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+    .vendor-btn span { flex: 1; font-weight: 600; }
+    .vendor-btn strong { font-size: 18px; font-weight: 800; color: var(--c); }
     
-    .state-list { max-height: 200px; overflow-y: auto; }
-    .state-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .state-row:last-child { border-bottom: none; }
+    /* Cluster styles */
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(34,211,238,0.4); }
+    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: rgba(34,211,238,0.8); color: #000; font-weight: 700; }
     
-    /* Leaflet overrides */
-    .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); border-radius: 8px; }
-    .leaflet-popup-tip { background: var(--panel); }
-    .leaflet-popup-content { margin: 12px; }
-    .popup-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-    .popup-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .popup-stats { font-size: 12px; }
-    .popup-stats div { padding: 4px 0; display: flex; justify-content: space-between; }
+    .leaflet-popup-content-wrapper { background: #1e293b; color: #f1f5f9; border-radius: 8px; }
+    .leaflet-popup-tip { background: #1e293b; }
   </style>
 </head>
 <body>
   <div class="layout">
-    <div style="position: relative;">
+    <div style="position:relative">
       <div id="map"></div>
       <div class="controls">
         <a href="routing.html" class="btn">← Routing</a>
+        <a href="survey_summary.html" class="btn">📊 Summary</a>
       </div>
-      <div class="tile-toggle">
-        <button class="tile-btn" data-tile="street">Street</button>
-        <button class="tile-btn active" data-tile="satellite">Satellite</button>
-        <button class="tile-btn" data-tile="dark">Dark</button>
+      <div class="tiles">
+        <button class="tile-btn" data-t="street">Street</button>
+        <button class="tile-btn active" data-t="satellite">Satellite</button>
+        <button class="tile-btn" data-t="dark">Dark</button>
       </div>
     </div>
     <div class="sidebar">
-      <div class="sidebar-header">
-        <h1>🗺️ Vendor Coverage</h1>
-        <p>Site assignments across the US</p>
-      </div>
-      <div class="stats" id="stats"></div>
-      <div class="section">
-        <div class="section-title">Filter by Vendor</div>
-        <div class="vendor-list" id="vendors"></div>
-      </div>
-      <div class="section" style="flex:1; overflow: hidden;">
-        <div class="section-title">States</div>
-        <div class="state-list" id="states"></div>
-      </div>
+      <h1>🗺️ Site Locations</h1>
+      <p>758 sites across the US</p>
+      <div class="stat-row" id="stats"></div>
+      <div class="section-title">Filter Vendor</div>
+      <div id="vendors"></div>
     </div>
   </div>
 
 <script>
-const VENDOR_COLORS = {
-  'CEI': '#22d3ee',
-  'Wachter': '#a78bfa', 
-  'Everon': '#4ade80',
-  'Techwise': '#f472b6',
-  'SAS': '#fbbf24',
-  'PTSI': '#fb923c',
-  'alarmhawaii.com': '#f87171'
-};
-
+const COLORS = { 'CEI': '#22d3ee', 'Wachter': '#a78bfa', 'Everon': '#4ade80' };
 const TILES = {
   street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
   dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 })
 };
 
-let map, markers = [], data = null, activeVendor = null, currentTile = 'satellite';
+let map, clusterGroup, data, activeVendor = null, currentTile = 'satellite';
 
 async function init() {
-  // Load data
-  const res = await fetch('vendor_locations.json');
-  data = await res.json();
+  data = await (await fetch('site_markers.json')).json();
   
-  // Init map
   map = L.map('map', { zoomControl: false }).setView([39, -96], 4);
   TILES.satellite.addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    iconCreateFunction: cluster => {
+      const count = cluster.getChildCount();
+      const size = count < 10 ? 30 : count < 50 ? 40 : 50;
+      return L.divIcon({
+        html: `<div style="width:${size}px;height:${size}px;background:rgba(34,211,238,0.8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:${size/3}px;border:2px solid #fff">${count}</div>`,
+        className: '',
+        iconSize: [size, size]
+      });
+    }
+  });
+  map.addLayer(clusterGroup);
+  
   render();
   
   // Tile toggle
-  document.querySelectorAll('.tile-btn').forEach(btn => {
-    btn.onclick = () => {
-      const tile = btn.dataset.tile;
-      if (tile === currentTile) return;
+  document.querySelectorAll('.tile-btn').forEach(b => {
+    b.onclick = () => {
+      const t = b.dataset.t;
+      if (t === currentTile) return;
       map.removeLayer(TILES[currentTile]);
-      TILES[tile].addTo(map);
-      currentTile = tile;
-      document.querySelectorAll('.tile-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      TILES[t].addTo(map);
+      currentTile = t;
+      document.querySelectorAll('.tile-btn').forEach(x => x.classList.toggle('active', x.dataset.t === t));
     };
   });
 }
 
 function render() {
-  // Clear markers
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
+  clusterGroup.clearLayers();
   
-  // Filter
   let filtered = data.markers;
-  if (activeVendor) {
-    filtered = filtered.filter(m => m.vendor === activeVendor);
-  }
+  if (activeVendor) filtered = filtered.filter(m => m.vendor === activeVendor);
   
-  // Add markers
   filtered.forEach(m => {
-    const color = VENDOR_COLORS[m.vendor] || '#ffffff';
-    const size = Math.max(6, Math.min(25, 6 + Math.sqrt(m.count) * 3));
-    
-    const marker = L.circleMarker(m.location, {
-      radius: size,
+    const color = COLORS[m.vendor] || '#fff';
+    const marker = L.circleMarker([m.lat, m.lng], {
+      radius: 6,
       fillColor: color,
-      fillOpacity: 0.8,
+      fillOpacity: 0.9,
       color: '#fff',
-      weight: 1,
-      opacity: 0.9
+      weight: 1
     });
-    
-    marker.bindPopup(`
-      <div class="popup-title">
-        <span class="popup-dot" style="background:${color}"></span>
-        ${m.state}
-      </div>
-      <div class="popup-stats">
-        <div><span>Vendor</span><strong>${m.vendor}</strong></div>
-        <div><span>Sites</span><strong>${m.count}</strong></div>
-      </div>
-    `);
-    
-    marker.addTo(map);
-    markers.push(marker);
+    marker.bindPopup(`<strong>${m.vendor}</strong><br>${m.state}`);
+    clusterGroup.addLayer(marker);
   });
   
   // Stats
-  const totalSites = filtered.reduce((a, m) => a + m.count, 0);
+  const vendors = {};
+  filtered.forEach(m => vendors[m.vendor] = (vendors[m.vendor] || 0) + 1);
   const states = new Set(filtered.map(m => m.state)).size;
-  const vendors = new Set(filtered.map(m => m.vendor)).size;
   
   document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="stat-value" style="color:var(--cyan)">${totalSites}</div><div class="stat-label">Sites</div></div>
-    <div class="stat"><div class="stat-value" style="color:var(--green)">${states}</div><div class="stat-label">States</div></div>
-    <div class="stat"><div class="stat-value" style="color:var(--purple)">${vendors}</div><div class="stat-label">Vendors</div></div>
-    <div class="stat"><div class="stat-value">${filtered.length}</div><div class="stat-label">Markers</div></div>
+    <div class="stat"><div class="stat-val" style="color:#22d3ee">${filtered.length}</div><div class="stat-lbl">Sites</div></div>
+    <div class="stat"><div class="stat-val" style="color:#4ade80">${states}</div><div class="stat-lbl">States</div></div>
   `;
   
-  // Vendor list
-  const vendorTotals = {};
-  data.markers.forEach(m => {
-    vendorTotals[m.vendor] = (vendorTotals[m.vendor] || 0) + m.count;
-  });
+  // Vendors
+  const totals = {};
+  data.markers.forEach(m => totals[m.vendor] = (totals[m.vendor] || 0) + 1);
   
-  document.getElementById('vendors').innerHTML = Object.entries(vendorTotals)
-    .sort((a, b) => b[1] - a[1])
-    .map(([v, count]) => {
-      const color = VENDOR_COLORS[v] || '#fff';
-      const isActive = activeVendor === v;
-      return `<div class="vendor-row ${isActive ? 'active' : ''}" data-vendor="${v}" style="--color:${color}">
+  document.getElementById('vendors').innerHTML = Object.entries(totals)
+    .sort((a,b) => b[1] - a[1])
+    .map(([v, c]) => `
+      <button class="vendor-btn ${activeVendor === v ? 'active' : ''}" data-v="${v}" style="--c:${COLORS[v]}">
         <div class="vendor-dot"></div>
-        <div class="vendor-name">${v}</div>
-        <div class="vendor-count">${count}</div>
-      </div>`;
-    }).join('');
+        <span>${v}</span>
+        <strong>${c}</strong>
+      </button>
+    `).join('');
   
-  document.querySelectorAll('.vendor-row').forEach(el => {
-    el.onclick = () => {
-      const v = el.dataset.vendor;
-      activeVendor = activeVendor === v ? null : v;
+  document.querySelectorAll('.vendor-btn').forEach(b => {
+    b.onclick = () => {
+      activeVendor = activeVendor === b.dataset.v ? null : b.dataset.v;
       render();
-      
       if (activeVendor) {
-        const bounds = filtered.map(m => m.location);
-        if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
+        const bounds = filtered.map(m => [m.lat, m.lng]);
+        if (bounds.length) map.fitBounds(bounds, { padding: [50, 50] });
       } else {
         map.setView([39, -96], 4);
       }
     };
   });
-  
-  // State list
-  const stateTotals = {};
-  filtered.forEach(m => {
-    stateTotals[m.state] = (stateTotals[m.state] || 0) + m.count;
-  });
-  
-  document.getElementById('states').innerHTML = Object.entries(stateTotals)
-    .sort((a, b) => b[1] - a[1])
-    .map(([state, count]) => `<div class="state-row"><span>${state}</span><strong>${count}</strong></div>`)
-    .join('');
 }
 
 init();

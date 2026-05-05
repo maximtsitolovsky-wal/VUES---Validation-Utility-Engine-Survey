@@ -230,14 +230,22 @@ def fetch_scout_data(token: str) -> list[ScoutAnswers]:
 
 
 def _normalize_vendor(vendor: str | None) -> str:
-    """Normalize vendor name - case insensitive, trim whitespace."""
+    """Normalize vendor name - case insensitive, trim whitespace.
+    
+    Also applies vendor reassignment (Techwise/SAS -> CEI).
+    """
     if not vendor:
         return ""
     v = str(vendor).strip()
     if v in INVALID_VALUES or v.startswith("#"):
         return ""
-    # Case-insensitive match against valid vendors
     v_lower = v.lower()
+    
+    # Check if vendor should be reassigned (e.g., Techwise/SAS -> CEI)
+    if v_lower in VENDOR_REASSIGNMENT:
+        return VENDOR_REASSIGNMENT[v_lower]
+    
+    # Case-insensitive match against valid vendors
     for valid in VALID_SURVEY_VENDORS:
         if v_lower == valid.lower():
             return valid  # Return canonical casing

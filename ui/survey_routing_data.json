@@ -8920,7 +8920,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "CEI - BOTH surveys required",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -8936,7 +8936,7 @@
       "in_siteowl_live": false,
       "percentage_complete": 0.1111111111111111,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -19632,7 +19632,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "CEI - BOTH surveys required",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -19648,7 +19648,7 @@
       "in_siteowl_live": false,
       "percentage_complete": 0.1111111111111111,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -19710,7 +19710,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "CEI - BOTH surveys required",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -19726,7 +19726,7 @@
       "in_siteowl_live": false,
       "percentage_complete": 0.1111111111111111,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {

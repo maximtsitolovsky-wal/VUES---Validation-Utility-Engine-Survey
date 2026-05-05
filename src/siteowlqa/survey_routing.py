@@ -771,6 +771,15 @@ def build_survey_routing_data(
         row = evaluate_site(scout, schedule)
         row_dict = asdict(row)
         
+        # Apply manual scout overrides (sites marked as scout complete with specific survey type)
+        if site in MANUAL_SCOUT_COMPLETE:
+            row_dict["survey_required"] = "YES"
+            row_dict["survey_type"] = MANUAL_SCOUT_COMPLETE[site]
+            row_dict["ready_to_assign"] = "YES"
+            row_dict["reason_for_decision"] = f"Manual override: Scout complete, {MANUAL_SCOUT_COMPLETE[site]} survey required"
+            if row_dict["schedule_status"] == "PENDING":
+                row_dict["schedule_status"] = "ON TRACK"
+        
         # Override survey_complete if site has PASS in Airtable Submissions
         if site in airtable_completed_sites:
             row_dict["survey_complete"] = True

@@ -115,7 +115,8 @@
   <div class="grid grid-5" id="keyMetrics">
     <div class="card">
       <div class="stat-big" id="totalSites">-</div>
-      <div class="stat-label">Total Sites</div>
+      <div class="stat-label">Survey Target</div>
+      <div class="stat-change" id="totalSitesPct">-</div>
     </div>
     <div class="card">
       <div class="stat-big" style="color: var(--cyan)" id="noSurveyCount">-</div>
@@ -162,7 +163,7 @@
       <thead>
         <tr>
           <th>Vendor</th>
-          <th>Total Sites</th>
+          <th>Survey Target</th>
           <th>No Survey</th>
           <th>Awaiting Scout</th>
           <th>CCTV</th>
@@ -222,18 +223,19 @@ function renderSummary(data) {
   const both = hasScout.filter(r => r.survey_type === 'BOTH');
   
   const pending = cctv.length + fa.length + both.length;
-  const totalNeedingSurvey = pending + complete.length;
+  const surveyTarget = rows.length - noSurvey.length;  // Sites that need surveys
   
   // Key metrics
-  document.getElementById('totalSites').textContent = rows.length;
+  document.getElementById('totalSites').textContent = surveyTarget;
+  document.getElementById('totalSitesPct').textContent = `${rows.length} total sites`;
   document.getElementById('noSurveyCount').textContent = noSurvey.length;
   document.getElementById('noSurveyPct').textContent = `${((noSurvey.length / rows.length) * 100).toFixed(1)}% of total`;
   document.getElementById('completedCount').textContent = complete.length;
-  document.getElementById('completedPct').textContent = `${((complete.length / totalNeedingSurvey) * 100).toFixed(1)}% of surveys`;
-  document.getElementById('pendingCount').textContent = pending;
-  document.getElementById('pendingPct').textContent = `${((pending / rows.length) * 100).toFixed(1)}% of total`;
+  document.getElementById('completedPct').textContent = `${((complete.length / surveyTarget) * 100).toFixed(1)}% complete`;
+  document.getElementById('pendingCount').textContent = pending + awaitingScout.length;
+  document.getElementById('pendingPct').textContent = `${(((pending + awaitingScout.length) / surveyTarget) * 100).toFixed(1)}% remaining`;
   document.getElementById('awaitingScout').textContent = awaitingScout.length;
-  document.getElementById('scoutPct').textContent = `${((awaitingScout.length / rows.length) * 100).toFixed(1)}% blocked`;
+  document.getElementById('scoutPct').textContent = `${((awaitingScout.length / surveyTarget) * 100).toFixed(1)}% blocked`;
   
   // Survey Type Percentages
   const typePctDiv = document.getElementById('typePercentages');
@@ -296,14 +298,14 @@ function renderSummary(data) {
   const tbody = document.getElementById('vendorTable');
   tbody.innerHTML = vendorOrder.map(v => {
     const s = vendors[v] || { total: 0, no_survey: 0, awaiting_scout: 0, cctv: 0, fa: 0, both: 0, complete: 0 };
-    const pending = s.cctv + s.fa + s.both;
-    const surveyNeeded = pending + s.complete;
-    const pct = surveyNeeded > 0 ? ((s.complete / surveyNeeded) * 100).toFixed(1) : 0;
+    const surveyTarget = s.total - s.no_survey;  // Sites that need surveys
+    const pending = s.cctv + s.fa + s.both + s.awaiting_scout;  // All pending (including awaiting scout)
+    const pct = surveyTarget > 0 ? ((s.complete / surveyTarget) * 100).toFixed(1) : 0;
     return `
       <tr>
         <td class="vendor-name">${v}</td>
-        <td class="num">${s.total}</td>
-        <td class="num">${s.no_survey}</td>
+        <td class="num" style="font-weight: 600;">${surveyTarget}</td>
+        <td class="num" style="color: var(--text-soft);">${s.no_survey}</td>
         <td class="num">${s.awaiting_scout}</td>
         <td class="num">${s.cctv}</td>
         <td class="num">${s.fa}</td>
@@ -318,14 +320,13 @@ function renderSummary(data) {
   }).join('');
   
   // Totals row
-  const totalPending = totals.cctv + totals.fa + totals.both;
-  const totalSurveyNeeded = totalPending + totals.complete;
-  const totalPct = totalSurveyNeeded > 0 ? ((totals.complete / totalSurveyNeeded) * 100).toFixed(1) : 0;
+  const totalSurveyTarget = totals.total - totals.no_survey;  // Sites that need surveys
+  const totalPct = totalSurveyTarget > 0 ? ((totals.complete / totalSurveyTarget) * 100).toFixed(1) : 0;
   document.getElementById('vendorTotals').innerHTML = `
     <tr style="font-weight: 700; background: rgba(255,255,255,0.03);">
       <td>TOTAL</td>
-      <td class="num">${totals.total}</td>
-      <td class="num">${totals.no_survey}</td>
+      <td class="num">${totalSurveyTarget}</td>
+      <td class="num" style="color: var(--text-soft);">${totals.no_survey}</td>
       <td class="num">${totals.awaiting_scout}</td>
       <td class="num">${totals.cctv}</td>
       <td class="num">${totals.fa}</td>

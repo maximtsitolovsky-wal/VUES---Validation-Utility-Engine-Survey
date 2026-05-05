@@ -23,7 +23,9 @@
 - `CEI_Survey_Report.xlsx` — 342 CEI sites with survey types determined by decision tree
 - `scripts/generate_cei_survey_report.py` — Tool to generate vendor-specific reports
 
-**Status:** OPEN — awaiting decision on Techwise/SAS survey scope.
+**Resolution (2026-05-05):** Techwise and SAS assignments are being surveyed by CEI. Added `VENDOR_REASSIGNMENT` mapping in `survey_routing.py` that converts Techwise → CEI and SAS → CEI. Sites now flow through decision tree and output with vendor = "CEI".
+
+**Status:** CLOSED.
 
 
 - **Problem:** Dashboard was loading 8 MB baked HTML snapshots from `ui/` instead of live data. `unbake_html.py` was built 2026-04-27 but never applied. User reported stale counts (696 vs actual 702).

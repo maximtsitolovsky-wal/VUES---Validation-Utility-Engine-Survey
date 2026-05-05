@@ -1,0 +1,8 @@
+Sheets in Vendor ASSIGN file:
+  Wachter: ~176 rows
+  Techwise: ~78 rows
+  SAS: ~8 rows
+  Everon: ~154 rows
+  CEI: ~342 rows
+
+Total sheets: 5

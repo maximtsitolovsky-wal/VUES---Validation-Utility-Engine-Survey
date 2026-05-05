@@ -68,9 +68,8 @@
     .popup-stat:last-child { border-bottom: none; }
     .popup-vendor { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-top: 8px; }
     
-    /* Dark map tiles override */
-    .leaflet-tile-pane { filter: brightness(0.85) saturate(1.1); }
-    .leaflet-container { background: var(--bg); }
+    /* Clean map display */
+    .leaflet-container { background: #1a1a2e; }
   </style>
 </head>
 <body>
@@ -79,8 +78,8 @@
     <div class="map-overlay">
       <a href="routing.html" class="back-link">← Back to Routing</a>
       <div class="map-style-toggle">
-        <button class="style-btn active" data-style="dark">🌙 Dark</button>
-        <button class="style-btn" data-style="satellite">🛰️ Satellite</button>
+        <button class="style-btn" data-style="dark">🌙 Dark</button>
+        <button class="style-btn active" data-style="satellite">🛰️ Satellite</button>
         <button class="style-btn" data-style="street">🗺️ Street</button>
       </div>
     </div>
@@ -229,7 +228,7 @@ const tileLayers = {
 };
 
 // === STATE ===
-let map, currentLayer = 'dark', activeVendor = null, viewMode = 'all';
+let map, currentLayer = 'satellite', activeVendor = null, viewMode = 'all';
 let markers = [];
 
 // === INIT MAP ===
@@ -241,7 +240,7 @@ function initMap() {
     attributionControl: false
   });
   
-  tileLayers.dark.addTo(map);
+  tileLayers.satellite.addTo(map);
   
   // Add zoom control to bottom right
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -414,16 +413,6 @@ document.querySelectorAll('.style-btn').forEach(btn => {
     // Update buttons
     document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
-    // Adjust tile filter based on style
-    const tilePane = document.querySelector('.leaflet-tile-pane');
-    if (style === 'dark') {
-      tilePane.style.filter = 'brightness(0.85) saturate(1.1)';
-    } else if (style === 'satellite') {
-      tilePane.style.filter = 'brightness(0.9) saturate(1.2)';
-    } else {
-      tilePane.style.filter = 'none';
-    }
   };
 });
 

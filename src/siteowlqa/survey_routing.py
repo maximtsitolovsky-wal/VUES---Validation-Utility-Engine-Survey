@@ -58,6 +58,13 @@ VENDOR_REASSIGNMENT = {
 # Invalid values to filter out
 INVALID_VALUES = {"#REF!", "#N/A", "#VALUE!", "#ERROR!", "MAXIM"}
 
+# Manual scout overrides: sites where scout is complete and needs BOTH surveys
+# Format: site -> survey_type
+MANUAL_SCOUT_COMPLETE = {
+    "864": "BOTH",
+    "9": "BOTH",
+}
+
 
 @dataclass
 class SurveyRoutingRow:

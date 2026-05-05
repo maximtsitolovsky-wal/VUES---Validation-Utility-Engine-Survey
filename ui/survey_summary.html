@@ -407,13 +407,14 @@ function renderSummary(data) {
   // Executive insights
   const topVendor = vendorOrder.reduce((a, b) => ((vendors[a]?.complete || 0) > (vendors[b]?.complete || 0) ? a : b));
   const topVendorStats = vendors[topVendor] || {};
-  const topVendorPending = topVendorStats.cctv + topVendorStats.fa + topVendorStats.both;
-  const topVendorPct = (topVendorPending + topVendorStats.complete) > 0 
-    ? ((topVendorStats.complete / (topVendorPending + topVendorStats.complete)) * 100).toFixed(1) 
+  const topVendorTarget = topVendorStats.total - topVendorStats.no_survey;
+  const topVendorPct = topVendorTarget > 0 
+    ? ((topVendorStats.complete / topVendorTarget) * 100).toFixed(1) 
     : 0;
+  const completionRate = surveyTarget > 0 ? ((complete.length / surveyTarget) * 100).toFixed(1) : 0;
   
   document.getElementById('insightText').innerHTML = `
-    <strong>${complete.length} surveys completed</strong> out of ${totalNeedingSurvey} required (<strong>${totalPct}% completion rate</strong>).
+    <strong>${complete.length} surveys completed</strong> out of ${surveyTarget} required (<strong>${completionRate}% completion rate</strong>).
     <strong>${awaitingScout.length} sites</strong> are blocked awaiting Scout submission.
     <strong>${both.length} sites</strong> require BOTH CCTV and FA surveys - the most complex category.
     <strong>${noSurvey.length} sites</strong> are full upgrades with no survey needed.

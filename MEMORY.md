@@ -23,7 +23,22 @@
 - `CEI_Survey_Report.xlsx` — 342 CEI sites with survey types determined by decision tree
 - `scripts/generate_cei_survey_report.py` — Tool to generate vendor-specific reports
 
-**Resolution (2026-05-05):** Techwise and SAS assignments are being surveyed by CEI. Added `VENDOR_REASSIGNMENT` mapping in `survey_routing.py` that converts Techwise → CEI and SAS → CEI. Sites now flow through decision tree and output with vendor = "CEI".
+**Resolution (2026-05-05):** 
+1. Techwise and SAS assignments already merged into CEI in Survey Lab Excel file
+2. Added `VENDOR_REASSIGNMENT` mapping in `survey_routing.py` for future-proofing
+3. Fixed `routing.html` text mismatch: "No scout submission" → "Scout not submitted"
+4. Removed Techwise/SAS from all dropdown filters in `routing.html`
+5. Updated `vendor_locations.json` - merged Techwise/SAS markers into CEI
+6. Updated `globe.html` hardcoded data - removed Techwise/SAS vendors
+7. Fixed `fetch_vues_metrics.py` vendor email normalization
+8. Regenerated all JSON data files with correct vendor assignments
+
+**Final Verified Counts:**
+- CEI: 425-436 (varies by data source - routing slots vs map pins vs scout records)
+- Wachter: 172-188
+- Everon: 118-154
+- Awaiting Scout: 89-90
+- Total Sites: 769
 
 **Status:** CLOSED.
 

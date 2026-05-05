@@ -1,0 +1,63 @@
+{
+  "vendors": {
+    "CEI": {
+      "total": 425,
+      "no_survey": 6,
+      "awaiting_scout": 0,
+      "pending": 396,
+      "cctv": 11,
+      "fa": 156,
+      "both": 229,
+      "complete": 23
+    },
+    "Wachter": {
+      "total": 188,
+      "no_survey": 2,
+      "awaiting_scout": 35,
+      "pending": 127,
+      "cctv": 1,
+      "fa": 70,
+      "both": 56,
+      "complete": 24
+    },
+    "Everon": {
+      "total": 150,
+      "no_survey": 15,
+      "awaiting_scout": 36,
+      "pending": 83,
+      "cctv": 31,
+      "fa": 18,
+      "both": 34,
+      "complete": 16
+    },
+    "PTSI": {
+      "total": 3,
+      "no_survey": 0,
+      "awaiting_scout": 0,
+      "pending": 3,
+      "cctv": 0,
+      "fa": 0,
+      "both": 3,
+      "complete": 0
+    },
+    "alarmhawaii.com": {
+      "total": 2,
+      "no_survey": 0,
+      "awaiting_scout": 0,
+      "pending": 2,
+      "cctv": 0,
+      "fa": 0,
+      "both": 2,
+      "complete": 0
+    }
+  },
+  "totals": {
+    "total": 768,
+    "no_survey": 26,
+    "awaiting_scout": 79,
+    "cctv": 43,
+    "fa": 244,
+    "both": 324,
+    "complete": 63
+  }
+}

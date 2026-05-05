@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey Summary · VUES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="chart.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090b; --card: #18181b; --card-border: rgba(255,255,255,0.08);
+      --text: #fafafa; --text-soft: #a1a1aa;
+      --blue: #0053e2; --spark: #ffc220; --green: #2a8703; --red: #ea1100;
+      --purple: #a855f7; --cyan: #06b6d4; --orange: #f97316;
+    }
+    html, body { min-height: 100vh; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.5; padding: 24px;
+    }
+    
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-soft); text-decoration: none; transition: all 0.2s;
+    }
+    .back-btn:hover { background: #27272a; color: var(--text); }
+    .back-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header-meta { color: var(--text-soft); font-size: 14px; margin-left: auto; }
+
+    .grid { display: grid; gap: 24px; margin-bottom: 24px; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-5 { grid-template-columns: repeat(5, 1fr); }
+    @media (max-width: 1200px) { .grid-4, .grid-5 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 24px;
+    }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--text-soft); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .stat-big { font-size: 48px; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: 14px; color: var(--text-soft); margin-top: 8px; }
+    .stat-change { font-size: 13px; margin-top: 4px; }
+    .stat-change.up { color: var(--green); }
+    .stat-change.down { color: var(--red); }
+
+    .insight-box {
+      background: linear-gradient(135deg, rgba(0,83,226,0.15), rgba(168,85,247,0.15));
+      border: 1px solid rgba(0,83,226,0.3);
+      border-radius: 12px; padding: 20px; margin-bottom: 24px;
+    }
+    .insight-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .insight-text { font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+    .insight-text strong { color: var(--text); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--card-border); }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); }
+    td { font-size: 14px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    
+    .vendor-name { font-weight: 600; }
+    .num { font-variant-numeric: tabular-nums; }
+    .pct { color: var(--text-soft); font-size: 12px; }
+    
+    .progress-bar { height: 8px; background: #27272a; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .progress-fill.green { background: var(--green); }
+    .progress-fill.blue { background: var(--blue); }
+    .progress-fill.orange { background: var(--orange); }
+    .progress-fill.purple { background: var(--purple); }
+
+    .chart-container { height: 280px; position: relative; }
+    
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .badge-green { background: rgba(42,135,3,0.15); color: var(--green); }
+    .badge-blue { background: rgba(0,83,226,0.15); color: var(--blue); }
+    .badge-orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+    .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+    .badge-red { background: rgba(234,68,68,0.15); color: var(--red); }
+
+    .velocity-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--card-border); }
+    .velocity-row:last-child { border-bottom: none; }
+    .velocity-vendor { width: 140px; font-weight: 600; }
+    .velocity-bar { flex: 1; }
+    .velocity-stats { width: 120px; text-align: right; font-size: 13px; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="routing.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <h1>📊 Survey Summary</h1>
+    <span class="header-meta" id="lastUpdated">Loading...</span>
+  </div>
+
+  <!-- Executive Insights -->
+  <div class="insight-box">
+    <div class="insight-title">💡 Executive Insights</div>
+    <div class="insight-text" id="insightText">Loading insights...</div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="grid grid-5" id="keyMetrics">
+    <div class="card">
+      <div class="stat-big" id="totalSites">-</div>
+      <div class="stat-label">Total Sites</div>
+    </div>
+    <div class="card">
+      <div class="stat-big" style="color: var(--cyan)" id="noSurveyCount">-</div>
+      <div class="stat-label">No Survey Needed</div>
+      <div class="stat-change" id="noSurveyPct">-</div>
+    </div>
+    <div class="card">
+      <div class="stat-big" style="color: var(--purple)" id="awaitingScout">-</div>
+      <div class="stat-label">Awaiting Scout</div>
+      <div class="stat-change" id="scoutPct">-</div>
+    </div>
+    <div class="card">
+      <div class="stat-big" style="color: var(--orange)" id="pendingCount">-</div>
+      <div class="stat-label">Surveys Pending</div>
+      <div class="stat-change" id="pendingPct">-</div>
+    </div>
+    <div class="card">
+      <div class="stat-big" style="color: var(--green)" id="completedCount">-</div>
+      <div class="stat-label">Completed</div>
+      <div class="stat-change up" id="completedPct">-</div>
+    </div>
+  </div>
+
+  <!-- Survey Type Breakdown -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-title">📹 Survey Type Distribution</div>
+      <div class="chart-container">
+        <canvas id="typeChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏢 Vendor Workload</div>
+      <div class="chart-container">
+        <canvas id="vendorChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Table -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-title">📋 Vendor Survey Breakdown</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Vendor</th>
+          <th>Total Sites</th>
+          <th>No Survey</th>
+          <th>Awaiting Scout</th>
+          <th>CCTV</th>
+          <th>FA/Intrusion</th>
+          <th>Both</th>
+          <th>Completed</th>
+          <th>Completion %</th>
+        </tr>
+      </thead>
+      <tbody id="vendorTable"></tbody>
+      <tfoot id="vendorTotals"></tfoot>
+    </table>
+  </div>
+
+  <!-- Vendor Velocity -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-title">🚀 Vendor Velocity (Completion Rate)</div>
+    <div id="velocityBars"></div>
+  </div>
+
+  <!-- Survey Type Percentages -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-title">📊 Survey Type Percentages (of Pending)</div>
+    <div class="grid grid-3" id="typePercentages" style="margin-top: 16px;"></div>
+  </div>
+
+  <!-- Bottom Insights -->
+  <div class="insight-box" style="margin-top: 24px;">
+    <div class="insight-title">📈 Key Observations</div>
+    <div class="insight-text" id="bottomInsights">Loading...</div>
+  </div>
+
+<script>
+async function loadData() {
+  try {
+    const response = await fetch(`survey_routing_data.json?t=${Date.now()}`, { cache: 'no-store' });
+    const data = await response.json();
+    renderSummary(data);
+  } catch (err) {
+    console.error('Failed to load data:', err);
+    document.getElementById('insightText').textContent = 'Error loading data: ' + err.message;
+  }
+}
+
+function renderSummary(data) {
+  const rows = data.rows || [];
+  
+  // Calculate stats exactly like routing.html
+  const complete = rows.filter(r => r.survey_complete === true);
+  const notComplete = rows.filter(r => r.survey_complete !== true);
+  const noSurvey = notComplete.filter(r => r.survey_required === 'NO');
+  const needsSurvey = notComplete.filter(r => r.survey_required !== 'NO');
+  const awaitingScout = needsSurvey.filter(r => (r.reason_for_decision || '').includes('Scout not submitted'));
+  const hasScout = needsSurvey.filter(r => !(r.reason_for_decision || '').includes('Scout not submitted'));
+  const cctv = hasScout.filter(r => r.survey_type === 'CCTV');
+  const fa = hasScout.filter(r => r.survey_type === 'FA/INTRUSION');
+  const both = hasScout.filter(r => r.survey_type === 'BOTH');
+  
+  const pending = cctv.length + fa.length + both.length;
+  const totalNeedingSurvey = pending + complete.length;
+  
+  // Key metrics
+  document.getElementById('totalSites').textContent = rows.length;
+  document.getElementById('noSurveyCount').textContent = noSurvey.length;
+  document.getElementById('noSurveyPct').textContent = `${((noSurvey.length / rows.length) * 100).toFixed(1)}% of total`;
+  document.getElementById('completedCount').textContent = complete.length;
+  document.getElementById('completedPct').textContent = `${((complete.length / totalNeedingSurvey) * 100).toFixed(1)}% of surveys`;
+  document.getElementById('pendingCount').textContent = pending;
+  document.getElementById('pendingPct').textContent = `${((pending / rows.length) * 100).toFixed(1)}% of total`;
+  document.getElementById('awaitingScout').textContent = awaitingScout.length;
+  document.getElementById('scoutPct').textContent = `${((awaitingScout.length / rows.length) * 100).toFixed(1)}% blocked`;
+  
+  // Survey Type Percentages
+  const typePctDiv = document.getElementById('typePercentages');
+  typePctDiv.innerHTML = `
+    <div style="text-align: center; padding: 20px; background: rgba(6,182,212,0.1); border-radius: 12px;">
+      <div style="font-size: 36px; font-weight: 700; color: var(--cyan);">${pending > 0 ? ((cctv.length/pending)*100).toFixed(1) : 0}%</div>
+      <div style="font-size: 14px; color: var(--text-soft); margin-top: 8px;">CCTV Only</div>
+      <div style="font-size: 20px; font-weight: 600; margin-top: 4px;">${cctv.length} sites</div>
+    </div>
+    <div style="text-align: center; padding: 20px; background: rgba(249,115,22,0.1); border-radius: 12px;">
+      <div style="font-size: 36px; font-weight: 700; color: var(--orange);">${pending > 0 ? ((fa.length/pending)*100).toFixed(1) : 0}%</div>
+      <div style="font-size: 14px; color: var(--text-soft); margin-top: 8px;">FA/Intrusion Only</div>
+      <div style="font-size: 20px; font-weight: 600; margin-top: 4px;">${fa.length} sites</div>
+    </div>
+    <div style="text-align: center; padding: 20px; background: rgba(168,85,247,0.1); border-radius: 12px;">
+      <div style="font-size: 36px; font-weight: 700; color: var(--purple);">${pending > 0 ? ((both.length/pending)*100).toFixed(1) : 0}%</div>
+      <div style="font-size: 14px; color: var(--text-soft); margin-top: 8px;">Both Surveys</div>
+      <div style="font-size: 20px; font-weight: 600; margin-top: 4px;">${both.length} sites</div>
+    </div>
+  `;
+  
+  // Vendor stats
+  const vendors = {};
+  const vendorOrder = ['CEI', 'Wachter', 'Everon', 'PTSI', 'alarmhawaii.com'];
+  
+  rows.forEach(r => {
+    const v = r.vendor || 'unassigned';
+    if (!vendors[v]) {
+      vendors[v] = { total: 0, no_survey: 0, awaiting_scout: 0, cctv: 0, fa: 0, both: 0, complete: 0 };
+    }
+    vendors[v].total++;
+    
+    if (r.survey_complete === true) {
+      vendors[v].complete++;
+    } else if (r.survey_required === 'NO') {
+      vendors[v].no_survey++;
+    } else if ((r.reason_for_decision || '').includes('Scout not submitted')) {
+      vendors[v].awaiting_scout++;
+    } else {
+      if (r.survey_type === 'CCTV') vendors[v].cctv++;
+      else if (r.survey_type === 'FA/INTRUSION') vendors[v].fa++;
+      else if (r.survey_type === 'BOTH') vendors[v].both++;
+    }
+  });
+  
+  // Calculate totals
+  const totals = { total: 0, no_survey: 0, awaiting_scout: 0, cctv: 0, fa: 0, both: 0, complete: 0 };
+  vendorOrder.forEach(v => {
+    const s = vendors[v] || {};
+    totals.total += s.total || 0;
+    totals.no_survey += s.no_survey || 0;
+    totals.awaiting_scout += s.awaiting_scout || 0;
+    totals.cctv += s.cctv || 0;
+    totals.fa += s.fa || 0;
+    totals.both += s.both || 0;
+    totals.complete += s.complete || 0;
+  });
+  
+  // Render vendor table
+  const tbody = document.getElementById('vendorTable');
+  tbody.innerHTML = vendorOrder.map(v => {
+    const s = vendors[v] || { total: 0, no_survey: 0, awaiting_scout: 0, cctv: 0, fa: 0, both: 0, complete: 0 };
+    const pending = s.cctv + s.fa + s.both;
+    const surveyNeeded = pending + s.complete;
+    const pct = surveyNeeded > 0 ? ((s.complete / surveyNeeded) * 100).toFixed(1) : 0;
+    return `
+      <tr>
+        <td class="vendor-name">${v}</td>
+        <td class="num">${s.total}</td>
+        <td class="num">${s.no_survey}</td>
+        <td class="num">${s.awaiting_scout}</td>
+        <td class="num">${s.cctv}</td>
+        <td class="num">${s.fa}</td>
+        <td class="num">${s.both}</td>
+        <td class="num" style="color: var(--green); font-weight: 600;">${s.complete}</td>
+        <td>
+          <span class="badge ${pct >= 10 ? 'badge-green' : pct >= 5 ? 'badge-orange' : 'badge-red'}">${pct}%</span>
+          <div class="progress-bar"><div class="progress-fill green" style="width: ${pct}%"></div></div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Totals row
+  const totalPending = totals.cctv + totals.fa + totals.both;
+  const totalSurveyNeeded = totalPending + totals.complete;
+  const totalPct = totalSurveyNeeded > 0 ? ((totals.complete / totalSurveyNeeded) * 100).toFixed(1) : 0;
+  document.getElementById('vendorTotals').innerHTML = `
+    <tr style="font-weight: 700; background: rgba(255,255,255,0.03);">
+      <td>TOTAL</td>
+      <td class="num">${totals.total}</td>
+      <td class="num">${totals.no_survey}</td>
+      <td class="num">${totals.awaiting_scout}</td>
+      <td class="num">${totals.cctv}</td>
+      <td class="num">${totals.fa}</td>
+      <td class="num">${totals.both}</td>
+      <td class="num" style="color: var(--green);">${totals.complete}</td>
+      <td><span class="badge badge-blue">${totalPct}%</span></td>
+    </tr>
+  `;
+  
+  // Velocity bars
+  const velocityDiv = document.getElementById('velocityBars');
+  const maxPending = Math.max(...vendorOrder.map(v => {
+    const s = vendors[v] || {};
+    return (s.cctv || 0) + (s.fa || 0) + (s.both || 0);
+  }));
+  
+  velocityDiv.innerHTML = vendorOrder.map(v => {
+    const s = vendors[v] || { cctv: 0, fa: 0, both: 0, complete: 0 };
+    const pending = s.cctv + s.fa + s.both;
+    const pct = maxPending > 0 ? (pending / maxPending) * 100 : 0;
+    const surveyNeeded = pending + s.complete;
+    const completePct = surveyNeeded > 0 ? ((s.complete / surveyNeeded) * 100).toFixed(1) : 0;
+    return `
+      <div class="velocity-row">
+        <div class="velocity-vendor">${v}</div>
+        <div class="velocity-bar">
+          <div class="progress-bar" style="height: 12px;">
+            <div class="progress-fill blue" style="width: ${pct}%"></div>
+          </div>
+        </div>
+        <div class="velocity-stats">${pending} pending · ${completePct}% done</div>
+      </div>
+    `;
+  }).join('');
+  
+  // Charts
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['CCTV', 'FA/Intrusion', 'Both', 'Completed', 'No Survey', 'Awaiting Scout'],
+      datasets: [{
+        data: [cctv.length, fa.length, both.length, complete.length, noSurvey.length, awaitingScout.length],
+        backgroundColor: ['#06b6d4', '#f97316', '#a855f7', '#2a8703', '#3f3f46', '#6366f1']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#a1a1aa', padding: 12 } }
+      }
+    }
+  });
+  
+  new Chart(document.getElementById('vendorChart'), {
+    type: 'bar',
+    data: {
+      labels: vendorOrder,
+      datasets: [
+        { label: 'Pending', data: vendorOrder.map(v => (vendors[v]?.cctv || 0) + (vendors[v]?.fa || 0) + (vendors[v]?.both || 0)), backgroundColor: '#0053e2' },
+        { label: 'Completed', data: vendorOrder.map(v => vendors[v]?.complete || 0), backgroundColor: '#2a8703' },
+        { label: 'Awaiting Scout', data: vendorOrder.map(v => vendors[v]?.awaiting_scout || 0), backgroundColor: '#6366f1' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { stacked: true, ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      },
+      plugins: {
+        legend: { labels: { color: '#a1a1aa' } }
+      }
+    }
+  });
+  
+  // Executive insights
+  const topVendor = vendorOrder.reduce((a, b) => ((vendors[a]?.complete || 0) > (vendors[b]?.complete || 0) ? a : b));
+  const topVendorStats = vendors[topVendor] || {};
+  const topVendorPending = topVendorStats.cctv + topVendorStats.fa + topVendorStats.both;
+  const topVendorPct = (topVendorPending + topVendorStats.complete) > 0 
+    ? ((topVendorStats.complete / (topVendorPending + topVendorStats.complete)) * 100).toFixed(1) 
+    : 0;
+  
+  document.getElementById('insightText').innerHTML = `
+    <strong>${complete.length} surveys completed</strong> out of ${totalNeedingSurvey} required (<strong>${totalPct}% completion rate</strong>).
+    <strong>${awaitingScout.length} sites</strong> are blocked awaiting Scout submission.
+    <strong>${both.length} sites</strong> require BOTH CCTV and FA surveys - the most complex category.
+    <strong>${noSurvey.length} sites</strong> are full upgrades with no survey needed.
+  `;
+  
+  document.getElementById('bottomInsights').innerHTML = `
+    <strong>${topVendor}</strong> leads with ${topVendorStats.complete || 0} completed surveys (${topVendorPct}% of their workload).<br>
+    <strong>FA/Intrusion</strong> surveys are the largest category with ${fa.length} pending (${pending > 0 ? ((fa.length/pending)*100).toFixed(1) : 0}%).<br>
+    <strong>CCTV</strong> surveys: ${cctv.length} pending (${pending > 0 ? ((cctv.length/pending)*100).toFixed(1) : 0}%). 
+    <strong>Both surveys</strong>: ${both.length} pending (${pending > 0 ? ((both.length/pending)*100).toFixed(1) : 0}%).<br>
+    <strong>Wachter</strong> has ${vendors['Wachter']?.awaiting_scout || 0} sites awaiting scout. 
+    <strong>Everon</strong> has ${vendors['Everon']?.awaiting_scout || 0} sites awaiting scout.
+  `;
+  
+  document.getElementById('lastUpdated').textContent = 'Live · ' + new Date().toLocaleTimeString();
+}
+
+loadData();
+</script>
+</body>
+</html>

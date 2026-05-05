@@ -1,0 +1,13 @@
+CEI Sites Awaiting Scout Investigation
+==================================================
+
+CEI sites in Excel: 425
+CEI sites with scout: 429
+Missing scouts: 5
+
+Sites missing scout data:
+  1590
+  2646
+  3072
+  864
+  9

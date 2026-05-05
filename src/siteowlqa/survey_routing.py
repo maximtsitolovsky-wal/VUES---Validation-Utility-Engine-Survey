@@ -734,9 +734,13 @@ def build_survey_routing_data(
 ) -> dict[str, Any]:
     """Build complete survey routing dataset."""
     
-    # Fetch data from both sources
+    # Fetch data from all sources
     scout_records = fetch_scout_data(token)
     schedule_records = load_schedule_data(workbook_path)
+    
+    # Fetch completed surveys from Airtable Submissions table
+    # This catches surveys submitted via Airtable that aren't yet in Excel
+    airtable_completed_sites = fetch_survey_submissions(token)
     
     # Index by site
     scout_by_site = {s.site: s for s in scout_records}
@@ -751,7 +755,15 @@ def build_survey_routing_data(
         scout = scout_by_site.get(site)
         schedule = schedule_by_site.get(site)
         row = evaluate_site(scout, schedule)
-        rows.append(asdict(row))
+        row_dict = asdict(row)
+        
+        # Override survey_complete if site has PASS in Airtable Submissions
+        if site in airtable_completed_sites:
+            row_dict["survey_complete"] = True
+            if row_dict["schedule_status"] != "NOT REQUIRED":
+                row_dict["schedule_status"] = "COMPLETE"
+        
+        rows.append(row_dict)
     
     # Calculate summary stats
     total = len(rows)

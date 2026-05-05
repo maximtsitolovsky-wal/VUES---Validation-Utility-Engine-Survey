@@ -91,7 +91,8 @@ def refresh_team_dashboard_data(*, airtable: AirtableClient, cfg: AppConfig, out
     # Refresh survey routing data (separate JSON for vendor output sheet)
     try:
         refresh_survey_routing(
-            token=cfg.scout_airtable_token or cfg.airtable_token,
+            scout_token=cfg.scout_airtable_token or cfg.airtable_token,
+            survey_token=cfg.airtable_token,
             output_dir=output_dir,
         )
     except Exception as e:

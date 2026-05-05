@@ -1,0 +1,7 @@
+CEI sites awaiting scout: 5
+
+Site 1590: PENDING
+Site 2646: PENDING
+Site 3072: PENDING
+Site 864: PENDING
+Site 9: PENDING

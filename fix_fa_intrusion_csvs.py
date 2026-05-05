@@ -23,10 +23,10 @@ def update_coordinates(system_type: str, current_coords: str) -> str:
     
     # Fire Alarm or Intrusion Detection → (10.00, 50.00)
     if "fire" in system_type_lower or "intrusion" in system_type_lower:
-        return '"(10.00, 50.00)"'
+        return '(10.00, 50.00)'
     # Plain Alarm (not Fire Alarm) → (10.00, 20.00)
     elif "alarm" in system_type_lower:
-        return '"(10.00, 20.00)"'
+        return '(10.00, 20.00)'
     
     # Return unchanged if no match
     return current_coords

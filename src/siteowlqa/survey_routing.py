@@ -729,18 +729,25 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
 
 
 def build_survey_routing_data(
-    token: str,
+    scout_token: str,
+    survey_token: str,
     workbook_path: str | Path = DEFAULT_WORKBOOK_PATH,
 ) -> dict[str, Any]:
-    """Build complete survey routing dataset."""
+    """Build complete survey routing dataset.
     
-    # Fetch data from all sources
-    scout_records = fetch_scout_data(token)
+    Args:
+        scout_token: Airtable token for Scout table (appAwgaX89x0JxG3Z)
+        survey_token: Airtable token for Survey Submissions (apptK6zNN0Hf3OuoJ)
+        workbook_path: Path to Excel workbook with schedule data
+    """
+    
+    # Fetch data from all sources - using appropriate tokens
+    scout_records = fetch_scout_data(scout_token)
     schedule_records = load_schedule_data(workbook_path)
     
     # Fetch completed surveys from Airtable Submissions table
     # This catches surveys submitted via Airtable that aren't yet in Excel
-    airtable_completed_sites = fetch_survey_submissions(token)
+    airtable_completed_sites = fetch_survey_submissions(survey_token)
     
     # Index by site
     scout_by_site = {s.site: s for s in scout_records}

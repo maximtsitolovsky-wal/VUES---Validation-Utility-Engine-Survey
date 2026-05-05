@@ -7,7 +7,7 @@
     "cctv_surveys": 49,
     "fa_surveys": 262,
     "both_surveys": 346,
-    "pending_scout": 78,
+    "pending_scout": 68,
     "pending_type": 78,
     "full_upgrades": 337,
     "full_cctv": 288,
@@ -3460,7 +3460,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "CEI - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -3476,7 +3476,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -3720,7 +3720,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Everon - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -3736,7 +3736,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -6450,7 +6450,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -6466,7 +6466,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -6840,7 +6840,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -6856,7 +6856,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -7542,7 +7542,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -7558,7 +7558,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -9102,7 +9102,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -9118,7 +9118,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -10558,7 +10558,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "CEI - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -10574,7 +10574,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 0.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -15472,7 +15472,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -15488,7 +15488,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -15940,7 +15940,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Everon - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -15956,7 +15956,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {
@@ -17318,7 +17318,7 @@
       "survey_required": "PENDING",
       "survey_type": "PENDING",
       "upgrade_decision": "AWAITING SCOUT",
-      "reason_for_decision": "Scout not submitted. Cannot determine survey requirement.",
+      "reason_for_decision": "Wachter - Survey completed",
       "schedule_status": "PENDING",
       "ready_to_assign": "NO",
       "supplemental_flags": "",
@@ -17334,7 +17334,7 @@
       "in_siteowl_live": true,
       "percentage_complete": 1.0,
       "on_project_tracking": true,
-      "scout_submitted": false,
+      "scout_submitted": true,
       "notes": ""
     },
     {

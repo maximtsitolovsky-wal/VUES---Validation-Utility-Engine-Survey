@@ -878,10 +878,10 @@ def refresh_survey_routing(
         f"{data['summary']['full_upgrades']} full upgrades"
     )
     
-    # Sync to Airtable Survey Routing table
+    # Sync to Airtable Survey Routing table (uses scout token - same base)
     if sync_to_airtable:
         try:
-            updated, errors = sync_routing_to_airtable(token, data["rows"])
+            updated, errors = sync_routing_to_airtable(scout_token, data["rows"])
             log.info(f"Airtable Survey Routing sync: {updated} updated, {errors} errors")
         except Exception as e:
             log.error(f"Failed to sync to Airtable Survey Routing: {e}")

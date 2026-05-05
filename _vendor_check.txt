@@ -1,7 +1,0 @@
-Total records: 768
-
-Vendors in Excel:
-  CEI                 : 425
-  Wachter             : 188
-  Everon              : 150
-  EMPTY               : 5

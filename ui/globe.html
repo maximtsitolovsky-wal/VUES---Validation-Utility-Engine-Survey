@@ -7,32 +7,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f1f5f9; height: 100vh; overflow: hidden; }
     
-    .layout { display: grid; grid-template-columns: 1fr 300px; height: 100vh; }
+    .layout { display: grid; grid-template-columns: 1fr 320px; height: 100vh; }
     #map { width: 100%; height: 100%; }
     
-    .controls { position: absolute; top: 16px; left: 16px; z-index: 1000; display: flex; gap: 8px; }
+    .controls { position: absolute; top: 16px; left: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
     .btn { padding: 10px 16px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
     .btn:hover { border-color: #22d3ee; }
     
-    .tiles { position: absolute; bottom: 80px; left: 16px; z-index: 1000; display: flex; gap: 4px; background: #1e293b; padding: 4px; border-radius: 8px; }
+    .mode-toggle { display: flex; gap: 4px; background: #1e293b; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
+    .mode-btn { padding: 10px 20px; border-radius: 8px; border: none; background: transparent; color: #94a3b8; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .mode-btn:hover { color: #f1f5f9; }
+    .mode-btn.active.scout { background: #a78bfa; color: #000; }
+    .mode-btn.active.survey { background: #22d3ee; color: #000; }
+    
+    .tiles { position: absolute; bottom: 80px; left: 16px; z-index: 1000; display: flex; gap: 4px; background: #1e293b; padding: 4px; border-radius: 8px; border: 1px solid #334155; }
     .tile-btn { padding: 8px 12px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; }
     .tile-btn.active { background: #22d3ee; color: #000; }
     
     .sidebar { background: #1e293b; border-left: 1px solid #334155; padding: 20px; overflow-y: auto; }
-    .sidebar h1 { font-size: 18px; margin-bottom: 4px; }
-    .sidebar p { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
+    .sidebar h1 { font-size: 18px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .sidebar p { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
     
-    .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+    .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
     .stat { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; }
-    .stat-val { font-size: 24px; font-weight: 800; }
-    .stat-lbl { font-size: 10px; text-transform: uppercase; color: #94a3b8; }
+    .stat-val { font-size: 22px; font-weight: 800; }
+    .stat-lbl { font-size: 9px; text-transform: uppercase; color: #94a3b8; margin-top: 2px; }
     
     .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 16px 0 10px; }
     
@@ -41,14 +46,17 @@
     .vendor-btn.active { border-color: var(--c); background: rgba(255,255,255,0.08); }
     .vendor-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
     .vendor-btn span { flex: 1; font-weight: 600; }
-    .vendor-btn strong { font-size: 18px; font-weight: 800; color: var(--c); }
+    .vendor-btn strong { font-size: 16px; font-weight: 800; color: var(--c); }
     
-    /* Cluster styles */
-    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(34,211,238,0.4); }
-    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: rgba(34,211,238,0.8); color: #000; font-weight: 700; }
+    .legend { margin-top: 20px; padding-top: 16px; border-top: 1px solid #334155; }
+    .legend-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 12px; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; }
     
     .leaflet-popup-content-wrapper { background: #1e293b; color: #f1f5f9; border-radius: 8px; }
     .leaflet-popup-tip { background: #1e293b; }
+    .popup-header { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .popup-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+    .popup-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -57,7 +65,10 @@
       <div id="map"></div>
       <div class="controls">
         <a href="routing.html" class="btn">← Routing</a>
-        <a href="survey_summary.html" class="btn">📊 Summary</a>
+        <div class="mode-toggle">
+          <button class="mode-btn scout active" data-mode="scout">🔭 Scout</button>
+          <button class="mode-btn survey" data-mode="survey">📋 Survey</button>
+        </div>
       </div>
       <div class="tiles">
         <button class="tile-btn" data-t="street">Street</button>
@@ -66,40 +77,62 @@
       </div>
     </div>
     <div class="sidebar">
-      <h1>🗺️ Site Locations</h1>
-      <p>758 sites across the US</p>
+      <h1 id="sidebarTitle">🔭 Scout Status</h1>
+      <p id="sidebarSub">Site scout submission status</p>
       <div class="stat-row" id="stats"></div>
       <div class="section-title">Filter Vendor</div>
       <div id="vendors"></div>
+      <div class="legend" id="legend"></div>
     </div>
   </div>
 
 <script>
-const COLORS = { 'CEI': '#22d3ee', 'Wachter': '#a78bfa', 'Everon': '#4ade80' };
+const VENDOR_COLORS = { 
+  'CEI': '#22d3ee', 'Wachter': '#a78bfa', 'Everon': '#4ade80', 
+  'TechWise': '#f472b6', 'SAS': '#fbbf24' 
+};
 const TILES = {
   street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
   dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 })
 };
 
-let map, clusterGroup, data, activeVendor = null, currentTile = 'satellite';
+let map, clusterGroup, siteData, routingData;
+let activeVendor = null, currentTile = 'satellite', mode = 'scout';
 
 async function init() {
-  data = await (await fetch('site_markers.json')).json();
+  // Load both data sources
+  const [sitesRes, routingRes] = await Promise.all([
+    fetch('site_markers.json'),
+    fetch('survey_routing_data.json')
+  ]);
+  siteData = await sitesRes.json();
+  routingData = await routingRes.json();
   
+  // Create lookup by site number
+  window.routingLookup = {};
+  routingData.rows.forEach(r => {
+    routingLookup[String(r.site)] = r;
+  });
+  
+  // Init map
   map = L.map('map', { zoomControl: false }).setView([39, -96], 4);
   TILES.satellite.addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   
   clusterGroup = L.markerClusterGroup({
-    maxClusterRadius: 50,
+    maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     iconCreateFunction: cluster => {
-      const count = cluster.getChildCount();
-      const size = count < 10 ? 30 : count < 50 ? 40 : 50;
+      const markers = cluster.getAllChildMarkers();
+      const submitted = markers.filter(m => m.options.submitted).length;
+      const total = markers.length;
+      const pct = total > 0 ? submitted / total : 0;
+      const size = total < 10 ? 30 : total < 50 ? 40 : 50;
+      const color = pct > 0.7 ? '#ef4444' : pct > 0.3 ? '#f59e0b' : '#22d3ee';
       return L.divIcon({
-        html: `<div style="width:${size}px;height:${size}px;background:rgba(34,211,238,0.8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:${size/3}px;border:2px solid #fff">${count}</div>`,
+        html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:${size/3}px;border:2px solid #fff">${total}</div>`,
         className: '',
         iconSize: [size, size]
       });
@@ -108,6 +141,16 @@ async function init() {
   map.addLayer(clusterGroup);
   
   render();
+  
+  // Mode toggle
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.onclick = () => {
+      mode = b.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    };
+  });
   
   // Tile toggle
   document.querySelectorAll('.tile-btn').forEach(b => {
@@ -125,58 +168,146 @@ async function init() {
 function render() {
   clusterGroup.clearLayers();
   
-  let filtered = data.markers;
+  // Update sidebar title
+  if (mode === 'scout') {
+    document.getElementById('sidebarTitle').textContent = '🔭 Scout Status';
+    document.getElementById('sidebarSub').textContent = 'Red = Submitted, Blue = Pending';
+  } else {
+    document.getElementById('sidebarTitle').textContent = '📋 Survey Status';
+    document.getElementById('sidebarSub').textContent = 'Green = Complete, Orange = Pending';
+  }
+  
+  let filtered = siteData.markers;
   if (activeVendor) filtered = filtered.filter(m => m.vendor === activeVendor);
   
+  let stats = { total: 0, submitted: 0, complete: 0, pending: 0 };
+  
   filtered.forEach(m => {
-    const color = COLORS[m.vendor] || '#fff';
+    const routing = routingLookup[String(m.site)] || {};
+    const scoutSubmitted = routing.scout_submitted === true;
+    const surveyComplete = routing.survey_complete === true;
+    const surveyRequired = routing.survey_required !== 'NO';
+    
+    stats.total++;
+    if (scoutSubmitted) stats.submitted++;
+    if (surveyComplete) stats.complete++;
+    if (surveyRequired && !surveyComplete) stats.pending++;
+    
+    // Determine color based on mode
+    let color, status;
+    if (mode === 'scout') {
+      color = scoutSubmitted ? '#ef4444' : '#22d3ee';  // Red = submitted, Cyan = pending
+      status = scoutSubmitted ? 'Submitted' : 'Pending';
+    } else {
+      if (surveyComplete) {
+        color = '#22c55e';  // Green = complete
+        status = 'Complete';
+      } else if (!surveyRequired) {
+        color = '#64748b';  // Gray = not required
+        status = 'Not Required';
+      } else {
+        color = '#f59e0b';  // Orange = pending
+        status = 'Pending';
+      }
+    }
+    
     const marker = L.circleMarker([m.lat, m.lng], {
-      radius: 6,
+      radius: 7,
       fillColor: color,
       fillOpacity: 0.9,
       color: '#fff',
-      weight: 1
+      weight: 1.5,
+      submitted: scoutSubmitted  // For cluster coloring
     });
-    marker.bindPopup(`<strong>${m.vendor}</strong><br>${m.state}`);
+    
+    const surveyType = routing.survey_type || 'N/A';
+    marker.bindPopup(`
+      <div class="popup-header">Site ${m.site}</div>
+      <div class="popup-row"><span>Vendor</span><strong>${m.vendor}</strong></div>
+      <div class="popup-row"><span>City</span><strong>${m.city || 'N/A'}</strong></div>
+      <div class="popup-row"><span>State</span><strong>${m.state}</strong></div>
+      <div class="popup-row"><span>Scout</span><strong>${scoutSubmitted ? '✅ Submitted' : '⏳ Pending'}</strong></div>
+      <div class="popup-row"><span>Survey</span><strong>${surveyComplete ? '✅ Complete' : surveyRequired ? '⏳ ' + surveyType : '—'}</strong></div>
+      <div class="popup-badge" style="background:${color};color:#fff">${status}</div>
+    `);
+    
     clusterGroup.addLayer(marker);
   });
   
   // Stats
-  const vendors = {};
-  filtered.forEach(m => vendors[m.vendor] = (vendors[m.vendor] || 0) + 1);
-  const states = new Set(filtered.map(m => m.state)).size;
+  if (mode === 'scout') {
+    const pct = stats.total > 0 ? Math.round((stats.submitted / stats.total) * 100) : 0;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="stat-val" style="color:#22d3ee">${stats.total}</div><div class="stat-lbl">Total Sites</div></div>
+      <div class="stat"><div class="stat-val" style="color:#ef4444">${stats.submitted}</div><div class="stat-lbl">Submitted</div></div>
+      <div class="stat"><div class="stat-val" style="color:#64748b">${stats.total - stats.submitted}</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat"><div class="stat-val" style="color:#22c55e">${pct}%</div><div class="stat-lbl">Complete</div></div>
+    `;
+  } else {
+    const pct = (stats.complete + stats.pending) > 0 ? Math.round((stats.complete / (stats.complete + stats.pending)) * 100) : 0;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="stat-val" style="color:#22d3ee">${stats.total}</div><div class="stat-lbl">Total Sites</div></div>
+      <div class="stat"><div class="stat-val" style="color:#22c55e">${stats.complete}</div><div class="stat-lbl">Complete</div></div>
+      <div class="stat"><div class="stat-val" style="color:#f59e0b">${stats.pending}</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat"><div class="stat-val" style="color:#22c55e">${pct}%</div><div class="stat-lbl">Rate</div></div>
+    `;
+  }
   
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="stat-val" style="color:#22d3ee">${filtered.length}</div><div class="stat-lbl">Sites</div></div>
-    <div class="stat"><div class="stat-val" style="color:#4ade80">${states}</div><div class="stat-lbl">States</div></div>
-  `;
+  // Vendor list
+  const vendorStats = {};
+  siteData.markers.forEach(m => {
+    if (!vendorStats[m.vendor]) vendorStats[m.vendor] = { total: 0, submitted: 0, complete: 0 };
+    vendorStats[m.vendor].total++;
+    const r = routingLookup[String(m.site)] || {};
+    if (r.scout_submitted === true) vendorStats[m.vendor].submitted++;
+    if (r.survey_complete === true) vendorStats[m.vendor].complete++;
+  });
   
-  // Vendors
-  const totals = {};
-  data.markers.forEach(m => totals[m.vendor] = (totals[m.vendor] || 0) + 1);
-  
-  document.getElementById('vendors').innerHTML = Object.entries(totals)
-    .sort((a,b) => b[1] - a[1])
-    .map(([v, c]) => `
-      <button class="vendor-btn ${activeVendor === v ? 'active' : ''}" data-v="${v}" style="--c:${COLORS[v]}">
-        <div class="vendor-dot"></div>
-        <span>${v}</span>
-        <strong>${c}</strong>
-      </button>
-    `).join('');
+  document.getElementById('vendors').innerHTML = Object.entries(vendorStats)
+    .sort((a,b) => b[1].total - a[1].total)
+    .map(([v, s]) => {
+      const color = VENDOR_COLORS[v] || '#94a3b8';
+      const sub = mode === 'scout' 
+        ? `${s.submitted}/${s.total} submitted`
+        : `${s.complete}/${s.total} complete`;
+      return `
+        <button class="vendor-btn ${activeVendor === v ? 'active' : ''}" data-v="${v}" style="--c:${color}">
+          <div class="vendor-dot"></div>
+          <span>${v}</span>
+          <strong>${s.total}</strong>
+        </button>
+        <div style="font-size:10px;color:#64748b;margin:-4px 0 8px 34px;">${sub}</div>
+      `;
+    }).join('');
   
   document.querySelectorAll('.vendor-btn').forEach(b => {
     b.onclick = () => {
       activeVendor = activeVendor === b.dataset.v ? null : b.dataset.v;
       render();
       if (activeVendor) {
-        const bounds = filtered.map(m => [m.lat, m.lng]);
+        const bounds = filtered.filter(m => m.vendor === activeVendor).map(m => [m.lat, m.lng]);
         if (bounds.length) map.fitBounds(bounds, { padding: [50, 50] });
       } else {
         map.setView([39, -96], 4);
       }
     };
   });
+  
+  // Legend
+  if (mode === 'scout') {
+    document.getElementById('legend').innerHTML = `
+      <div class="section-title">Legend</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Scout Submitted</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22d3ee"></div>Awaiting Scout</div>
+    `;
+  } else {
+    document.getElementById('legend').innerHTML = `
+      <div class="section-title">Legend</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Survey Complete</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Survey Pending</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div>No Survey Required</div>
+    `;
+  }
 }
 
 init();

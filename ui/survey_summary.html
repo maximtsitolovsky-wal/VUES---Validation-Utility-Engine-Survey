@@ -94,6 +94,13 @@
     .velocity-vendor { width: 140px; font-weight: 600; }
     .velocity-bar { flex: 1; }
     .velocity-stats { width: 120px; text-align: right; font-size: 13px; color: var(--text-soft); }
+
+    .export-btn {
+      padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      background: var(--card); border: 1px solid var(--card-border); color: var(--text);
+      cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+    }
+    .export-btn:hover { background: #27272a; border-color: var(--blue); }
   </style>
 </head>
 <body>
@@ -158,19 +165,28 @@
 
   <!-- Vendor Table -->
   <div class="card" style="margin-top: 24px;">
-    <div class="card-title">📋 Vendor Survey Breakdown</div>
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>📋 Vendor Survey Breakdown</span>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="exportVendorCSV('CEI')" class="export-btn">Export CEI</button>
+        <button onclick="exportVendorCSV('Wachter')" class="export-btn">Export Wachter</button>
+        <button onclick="exportVendorCSV('Everon')" class="export-btn">Export Everon</button>
+        <button onclick="exportVendorCSV('PTSI')" class="export-btn">Export PTSI</button>
+        <button onclick="exportVendorCSV('alarmhawaii.com')" class="export-btn">Export Hawaii</button>
+        <button onclick="exportAllCSV()" class="export-btn" style="background: var(--blue);">Export All</button>
+      </div>
+    </div>
     <table>
       <thead>
         <tr>
           <th>Vendor</th>
-          <th>Survey Target</th>
-          <th>No Survey</th>
+          <th>Pending Total</th>
           <th>Awaiting Scout</th>
           <th>CCTV</th>
           <th>FA/Intrusion</th>
           <th>Both</th>
+          <th>No Survey</th>
           <th>Completed</th>
-          <th>Completion %</th>
         </tr>
       </thead>
       <tbody id="vendorTable"></tbody>
@@ -294,45 +310,37 @@ function renderSummary(data) {
     totals.complete += s.complete || 0;
   });
   
-  // Render vendor table
+  // Render vendor table - Pending = Scout + CCTV + FA + Both (excludes completed)
   const tbody = document.getElementById('vendorTable');
   tbody.innerHTML = vendorOrder.map(v => {
     const s = vendors[v] || { total: 0, no_survey: 0, awaiting_scout: 0, cctv: 0, fa: 0, both: 0, complete: 0 };
-    const surveyTarget = s.total - s.no_survey;  // Sites that need surveys
-    const pending = s.cctv + s.fa + s.both + s.awaiting_scout;  // All pending (including awaiting scout)
-    const pct = surveyTarget > 0 ? ((s.complete / surveyTarget) * 100).toFixed(1) : 0;
+    const pending = s.awaiting_scout + s.cctv + s.fa + s.both;  // Only pending, NOT completed
     return `
       <tr>
         <td class="vendor-name">${v}</td>
-        <td class="num" style="font-weight: 600;">${surveyTarget}</td>
-        <td class="num" style="color: var(--text-soft);">${s.no_survey}</td>
-        <td class="num">${s.awaiting_scout}</td>
+        <td class="num" style="font-weight: 700; color: var(--orange);">${pending}</td>
+        <td class="num" style="color: var(--purple);">${s.awaiting_scout}</td>
         <td class="num">${s.cctv}</td>
         <td class="num">${s.fa}</td>
         <td class="num">${s.both}</td>
-        <td class="num" style="color: var(--green); font-weight: 600;">${s.complete}</td>
-        <td>
-          <span class="badge ${pct >= 10 ? 'badge-green' : pct >= 5 ? 'badge-orange' : 'badge-red'}">${pct}%</span>
-          <div class="progress-bar"><div class="progress-fill green" style="width: ${pct}%"></div></div>
-        </td>
+        <td class="num" style="color: var(--text-soft);">${s.no_survey}</td>
+        <td class="num" style="color: var(--green);">${s.complete}</td>
       </tr>
     `;
   }).join('');
   
   // Totals row
-  const totalSurveyTarget = totals.total - totals.no_survey;  // Sites that need surveys
-  const totalPct = totalSurveyTarget > 0 ? ((totals.complete / totalSurveyTarget) * 100).toFixed(1) : 0;
+  const totalPending = totals.awaiting_scout + totals.cctv + totals.fa + totals.both;
   document.getElementById('vendorTotals').innerHTML = `
     <tr style="font-weight: 700; background: rgba(255,255,255,0.03);">
       <td>TOTAL</td>
-      <td class="num">${totalSurveyTarget}</td>
-      <td class="num" style="color: var(--text-soft);">${totals.no_survey}</td>
-      <td class="num">${totals.awaiting_scout}</td>
+      <td class="num" style="color: var(--orange);">${totalPending}</td>
+      <td class="num" style="color: var(--purple);">${totals.awaiting_scout}</td>
       <td class="num">${totals.cctv}</td>
       <td class="num">${totals.fa}</td>
       <td class="num">${totals.both}</td>
+      <td class="num" style="color: var(--text-soft);">${totals.no_survey}</td>
       <td class="num" style="color: var(--green);">${totals.complete}</td>
-      <td><span class="badge badge-blue">${totalPct}%</span></td>
     </tr>
   `;
   
@@ -430,6 +438,62 @@ function renderSummary(data) {
   `;
   
   document.getElementById('lastUpdated').textContent = 'Live · ' + new Date().toLocaleTimeString();
+  
+  // Store data globally for export
+  window.surveyData = rows;
+}
+
+// Export functions
+function exportVendorCSV(vendorName) {
+  const rows = window.surveyData || [];
+  const vendorRows = rows.filter(r => r.vendor === vendorName && r.survey_required !== 'NO' && r.survey_complete !== true);
+  
+  if (vendorRows.length === 0) {
+    alert(`No pending surveys for ${vendorName}`);
+    return;
+  }
+  
+  const csv = [
+    ['Site', 'Vendor', 'Survey Type', 'Status', 'Days to Construction', 'Reason'].join(','),
+    ...vendorRows.map(r => [
+      r.site,
+      r.vendor,
+      r.survey_type || 'PENDING',
+      (r.reason_for_decision || '').includes('Scout not submitted') ? 'Awaiting Scout' : 'Ready for Survey',
+      r.days_to_construction || '',
+      `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`
+    ].join(','))
+  ].join('\n');
+  
+  downloadCSV(csv, `${vendorName}_survey_assignments.csv`);
+}
+
+function exportAllCSV() {
+  const rows = window.surveyData || [];
+  const pendingRows = rows.filter(r => r.survey_required !== 'NO' && r.survey_complete !== true);
+  
+  const csv = [
+    ['Site', 'Vendor', 'Survey Type', 'Status', 'Days to Construction', 'Reason'].join(','),
+    ...pendingRows.map(r => [
+      r.site,
+      r.vendor || 'UNASSIGNED',
+      r.survey_type || 'PENDING',
+      (r.reason_for_decision || '').includes('Scout not submitted') ? 'Awaiting Scout' : 'Ready for Survey',
+      r.days_to_construction || '',
+      `"${(r.reason_for_decision || '').replace(/"/g, '""')}"`
+    ].join(','))
+  ].join('\n');
+  
+  downloadCSV(csv, 'all_vendor_survey_assignments.csv');
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 loadData();

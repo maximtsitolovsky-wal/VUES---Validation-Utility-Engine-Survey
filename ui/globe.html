@@ -100,6 +100,37 @@ const TILES = {
 let map, clusterGroup, siteData, routingData;
 let activeVendor = null, currentTile = 'satellite', mode = 'scout';
 
+function initClusterGroup() {
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 40,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    iconCreateFunction: cluster => {
+      const markers = cluster.getAllChildMarkers();
+      const total = markers.length;
+      const size = total < 10 ? 30 : total < 50 ? 40 : 50;
+      
+      // Color based on current mode
+      let color;
+      if (mode === 'scout') {
+        const submitted = markers.filter(m => m.options.scoutSubmitted).length;
+        const pct = total > 0 ? submitted / total : 0;
+        color = pct > 0.7 ? '#ef4444' : pct > 0.3 ? '#f59e0b' : '#22d3ee';
+      } else {
+        const complete = markers.filter(m => m.options.surveyComplete).length;
+        const pct = total > 0 ? complete / total : 0;
+        color = pct > 0.7 ? '#22c55e' : pct > 0.3 ? '#f59e0b' : '#64748b';
+      }
+      
+      return L.divIcon({
+        html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:${size/3}px;border:2px solid #fff">${total}</div>`,
+        className: '',
+        iconSize: [size, size]
+      });
+    }
+  });
+}
+
 async function init() {
   // Load both data sources
   const [sitesRes, routingRes] = await Promise.all([
@@ -120,24 +151,7 @@ async function init() {
   TILES.satellite.addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   
-  clusterGroup = L.markerClusterGroup({
-    maxClusterRadius: 40,
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    iconCreateFunction: cluster => {
-      const markers = cluster.getAllChildMarkers();
-      const submitted = markers.filter(m => m.options.submitted).length;
-      const total = markers.length;
-      const pct = total > 0 ? submitted / total : 0;
-      const size = total < 10 ? 30 : total < 50 ? 40 : 50;
-      const color = pct > 0.7 ? '#ef4444' : pct > 0.3 ? '#f59e0b' : '#22d3ee';
-      return L.divIcon({
-        html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:${size/3}px;border:2px solid #fff">${total}</div>`,
-        className: '',
-        iconSize: [size, size]
-      });
-    }
-  });
+  initClusterGroup();
   map.addLayer(clusterGroup);
   
   render();
@@ -148,6 +162,10 @@ async function init() {
       mode = b.dataset.mode;
       document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
+      // Recreate cluster group with new color logic
+      map.removeLayer(clusterGroup);
+      initClusterGroup();
+      map.addLayer(clusterGroup);
       render();
     };
   });
@@ -217,7 +235,8 @@ function render() {
       fillOpacity: 0.9,
       color: '#fff',
       weight: 1.5,
-      submitted: scoutSubmitted  // For cluster coloring
+      scoutSubmitted: scoutSubmitted,
+      surveyComplete: surveyComplete
     });
     
     const surveyType = routing.survey_type || 'N/A';

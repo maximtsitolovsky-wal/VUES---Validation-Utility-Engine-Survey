@@ -847,11 +847,18 @@ def build_survey_routing_data(
     }
 
 
-def refresh_survey_routing(token: str, output_dir: Path | str, workbook_path: str | Path = DEFAULT_WORKBOOK_PATH, sync_to_airtable: bool = True) -> None:
+def refresh_survey_routing(
+    scout_token: str,
+    survey_token: str,
+    output_dir: Path | str,
+    workbook_path: str | Path = DEFAULT_WORKBOOK_PATH,
+    sync_to_airtable: bool = True
+) -> None:
     """Refresh survey routing data and write to JSON.
     
     Args:
-        token: Airtable API token
+        scout_token: Airtable token for Scout table
+        survey_token: Airtable token for Survey Submissions
         output_dir: Directory to write JSON output
         workbook_path: Path to Excel workbook with MAP DATA
         sync_to_airtable: If True, also sync updates to Airtable Survey Routing table
@@ -859,7 +866,7 @@ def refresh_survey_routing(token: str, output_dir: Path | str, workbook_path: st
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    data = build_survey_routing_data(token, workbook_path)
+    data = build_survey_routing_data(scout_token, survey_token, workbook_path)
     
     output_file = output_dir / "survey_routing_data.json"
     with open(output_file, "w", encoding="utf-8") as f:

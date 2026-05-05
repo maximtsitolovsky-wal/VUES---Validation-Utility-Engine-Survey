@@ -81,17 +81,29 @@ def parse_date(date_str: str) -> datetime | None:
 
 
 def extract_vendor_from_email(email: str) -> str:
-    """Extract vendor name from email domain."""
+    """Extract vendor name from email domain.
+    
+    NOTE: Techwise and SAS are reassigned to CEI per 2026-05-04 decision.
+    """
     if not email:
         return "Unknown"
     
     email = email.lower().strip()
     
-    # Known vendor patterns
+    # Known vendor patterns - order matters for substring matching
     if "wachter" in email:
         return "Wachter"
     elif "everon" in email:
         return "Everon"
+    # CEI patterns (including reassigned vendors)
+    elif "customelectronics" in email or "cei" in email:
+        return "CEI"
+    # Techwise -> CEI (reassigned)
+    elif "techwise" in email:
+        return "CEI"  # Reassigned to CEI
+    # SAS -> CEI (reassigned)
+    elif "safeandsound" in email or "sas" in email:
+        return "CEI"  # Reassigned to CEI
     elif "convergint" in email:
         return "Convergint"
     elif "walmart" in email:
@@ -100,10 +112,24 @@ def extract_vendor_from_email(email: str) -> str:
         return "JCI"
     elif "securitas" in email:
         return "Securitas"
+    # Filter out garbage like gmail.com
+    elif "gmail" in email or "yahoo" in email or "hotmail" in email:
+        return "Unknown"
     else:
-        # Extract domain
+        # Extract domain - but try to normalize known patterns
         if "@" in email:
-            domain = email.split("@")[1].split(".")[0]
+            domain = email.split("@")[1].split(".")[0].lower()
+            # Check if domain contains any known vendor
+            if "wachter" in domain:
+                return "Wachter"
+            elif "everon" in domain:
+                return "Everon"
+            elif "custom" in domain or "cei" in domain:
+                return "CEI"
+            elif "techwise" in domain:
+                return "CEI"  # Reassigned
+            elif "sas" in domain or "safeandsound" in domain:
+                return "CEI"  # Reassigned
             return domain.title()
         return "Unknown"
 

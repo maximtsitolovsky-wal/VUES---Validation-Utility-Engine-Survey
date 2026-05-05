@@ -33,6 +33,10 @@ SCOUT_TABLE_ID = "tblC4o9AvVulyxFMk"
 # Airtable Survey Routing Table (same base, different table)
 ROUTING_TABLE_ID = "tbl4LbgPUluSrbG2K"
 
+# Airtable Survey Submissions Table (different base - for tracking completed surveys)
+SURVEY_SUBMISSIONS_BASE_ID = "apptK6zNN0Hf3OuoJ"
+SURVEY_SUBMISSIONS_TABLE_ID = "tblo5JLmY0XhigcMO"
+
 # Excel workbook path
 DEFAULT_WORKBOOK_PATH = (
     r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\2027 Survey Lab.xlsm"

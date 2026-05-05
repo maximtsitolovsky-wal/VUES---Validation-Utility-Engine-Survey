@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, 'src')
 
 from siteowlqa.config import load_config
-from siteowlqa.survey_routing import build_survey_routing_data, fetch_scout_data, load_schedule_data
+from siteowlqa.survey_routing import build_survey_routing_data, fetch_scout_data, load_schedule_data, DEFAULT_WORKBOOK_PATH
 
 cfg = load_config()
 token = cfg.scout_airtable_token or cfg.airtable_token
@@ -13,7 +13,8 @@ print("=== FETCHING DATA ===")
 scout_records = fetch_scout_data(token)
 print(f"Scout records fetched: {len(scout_records)}")
 
-schedule_records = load_schedule_data()
+from siteowlqa.survey_routing import DEFAULT_WORKBOOK_PATH
+schedule_records = load_schedule_data(DEFAULT_WORKBOOK_PATH)
 print(f"Schedule records loaded: {len(schedule_records)}")
 
 print("\n=== BUILDING ROUTING DATA ===")

@@ -98,8 +98,8 @@ def extract_vendor_from_email(email: str) -> str:
     # CEI patterns (including reassigned vendors)
     elif "customelectronics" in email or "cei" in email:
         return "CEI"
-    # Techwise -> CEI (reassigned)
-    elif "techwise" in email:
+    # Techwise -> CEI (reassigned) - handle typos too
+    elif "techwise" in email or "techwis" in email:
         return "CEI"  # Reassigned to CEI
     # SAS -> CEI (reassigned)
     elif "safeandsound" in email or "sas" in email:
@@ -126,7 +126,7 @@ def extract_vendor_from_email(email: str) -> str:
                 return "Everon"
             elif "custom" in domain or "cei" in domain:
                 return "CEI"
-            elif "techwise" in domain:
+            elif "techwise" in domain or "techwis" in domain:
                 return "CEI"  # Reassigned
             elif "sas" in domain or "safeandsound" in domain:
                 return "CEI"  # Reassigned

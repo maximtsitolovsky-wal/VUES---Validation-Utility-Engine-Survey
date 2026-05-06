@@ -22,8 +22,8 @@ from siteowlqa.user_config import load_user_config
 
 # Airtable configuration
 AIRTABLE_API_BASE = "https://api.airtable.com/v0"
-BASE_ID = "appxLzMgjnHKDmrWi"
-TABLE_ID = "tblV4M2dRFtjIyxJH"
+BASE_ID = "appAwgaX89x0JxG3Z"
+TABLE_ID = "Submissions"  # Will use table name instead of ID
 
 # Rate limiting (5 requests per second per base)
 RATE_LIMIT_DELAY = 0.2

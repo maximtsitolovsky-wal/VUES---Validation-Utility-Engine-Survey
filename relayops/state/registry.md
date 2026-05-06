@@ -1,6 +1,6 @@
 # RelayOps Registry
 
-last_updated: 2026-05-04T11:40:23Z
+last_updated: 2026-05-06T11:44:17Z
 freshness: current
 
 ## Known Actors
@@ -13,6 +13,8 @@ freshness: current
 | agent:relayops | agent | RelayOps Coordinator | routing, task_control, conflict_detection, verification_enforcement | active | 2026-04-27T15:20:00Z |
 | agent:code-puppy-a89dc6 | agent | Code Puppy (Terminal 1) | read_files, write_files, run_commands, edit_code, review_code, generate_docs | active | 2026-04-28T11:22:00Z |
 | terminal:3 | terminal | Terminal 3 | shell_execution, file_ops, code_puppy_session | awaiting | 2026-04-28T11:22:00Z |
+| agent:code-puppy-565db1 | agent | Code Puppy (Cleanup) | read_files, write_files, run_commands, delete_files | active | 2026-05-06T11:44:17Z |
+| agent:relayops-coordinator-eddf21 | agent | RelayOps Coordinator | routing, task_control, conflict_detection | active | 2026-05-06T11:44:17Z |
 
 ## Capability Labels
 

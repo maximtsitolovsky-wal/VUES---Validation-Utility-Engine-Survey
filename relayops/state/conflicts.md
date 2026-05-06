@@ -35,11 +35,14 @@
 - severity: HIGH
 - impact: analytics.html may display outdated vendor assignment metrics
 - proposed_resolution: Run `python tools/fetch_vues_metrics.py` to regenerate
-- status: 🔴 ACTIVE - Awaiting remediation
+- status: 🟡 IN REMEDIATION - Cleanup task in progress
+- remediation_task: TASK-20260506-cleanup-deprecate-old-systems
+- remediation_owner: code-puppy-565db1
 - evidence:
   - grep ui/vues_metrics_current.json shows generated_at: 2026-05-01T12:38:53
-  - Current system time: 2026-05-04T11:40:23
-  - Delta: 3 days, 0 hours stale
+  - Current system time: 2026-05-06T11:44:17
+  - Delta: 5 days stale
+  - Action: File scheduled for deletion as part of cache cleanup
 
 ## CONFLICT-20260427-002 ✅ RESOLVED
 

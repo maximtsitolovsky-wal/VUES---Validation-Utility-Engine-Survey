@@ -8,14 +8,17 @@ This script:
 """
 
 import os
+import sys
 import time
 from collections import Counter
+from pathlib import Path
 from typing import Any
-from dotenv import load_dotenv
 import requests
 
-# Load environment variables
-load_dotenv()
+# Add the project's src directory to the path to import user_config
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from siteowlqa.user_config import load_user_config
 
 # Airtable configuration
 AIRTABLE_API_BASE = "https://api.airtable.com/v0"
@@ -142,18 +145,26 @@ def analyze_site_numbers(records: list[dict[str, Any]]) -> None:
 
 def main():
     """Main function to run the analysis."""
-    # Get Airtable token from environment (try multiple variable names)
-    token = (
-        os.getenv("AIRTABLE_TOKEN") or 
-        os.getenv("SCOUT_AIRTABLE_API_KEY") or
-        # Fallback to the token from scout_downloader.py if no env var is set
-        "patPR0WWxXCE0loRO.d18126548ad25b8aaf9fd43e2ac69479b1378e46d7f8c6efbdd88f7197a4d495"
-    )
+    # Load user config from ~/.siteowlqa/config.json
+    user_config = load_user_config()
+    
+    if not user_config:
+        print("[ERROR] Failed to load user config from ~/.siteowlqa/config.json")
+        print("Please run: python -m siteowlqa.setup_config")
+        return
+    
+    # Try both tokens (scout token first, then main token as fallback)
+    token = user_config.scout_airtable_token or user_config.airtable_token
     
     if not token:
-        print("[ERROR] AIRTABLE_TOKEN not found in environment variables.")
-        print("Please set AIRTABLE_TOKEN or SCOUT_AIRTABLE_API_KEY in your .env file.")
+        print("[ERROR] No Airtable token found in user config.")
+        print("Please run: python -m siteowlqa.setup_config")
         return
+    
+    print(f"Using Scout token: {bool(user_config.scout_airtable_token)}")
+    print(f"Config Scout Base ID: {user_config.scout_airtable_base_id}")
+    print(f"Requested Base ID: {BASE_ID}")
+    print()
     
     try:
         # Fetch all records

@@ -12,6 +12,12 @@ from pathlib import Path
 
 import requests
 
+from siteowlqa.config import (
+    SURVEY_TYPE_CCTV,
+    SURVEY_TYPE_FA_INTRUSION,
+    SURVEY_TYPE_BOTH,
+)
+
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 log = logging.getLogger(__name__)
 
@@ -149,11 +155,11 @@ def generate_survey_summary(token: str, routing_path: Path, output_path: Path):
             
         # Survey type breakdown (only for required surveys)
         if survey_required == "YES":
-            if survey_type == "CCTV":
+            if survey_type == SURVEY_TYPE_CCTV:
                 stats["cctv"] += 1
-            elif survey_type == "FA/INTRUSION":
+            elif survey_type == SURVEY_TYPE_FA_INTRUSION:
                 stats["fa"] += 1
-            elif survey_type == "BOTH":
+            elif survey_type == SURVEY_TYPE_BOTH:
                 stats["both"] += 1
     
     # Calculate totals

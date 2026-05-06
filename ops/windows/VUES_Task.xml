@@ -5,12 +5,7 @@
     <Author>VUES</Author>
   </RegistrationInfo>
   <Triggers>
-    <!-- LogonTrigger: starts when THIS user logs on, with a 90s delay so
-         OneDrive has time to sync the reference workbook before grading begins. -->
-    <LogonTrigger>
-      <Enabled>true</Enabled>
-      <Delay>PT1M30S</Delay>
-    </LogonTrigger>
+    <!-- Manual start - use start_pipeline.bat or run from Task Scheduler -->
   </Triggers>
   <Principals>
     <Principal id="Author">

@@ -817,9 +817,9 @@ def build_survey_routing_data(
     completed_not_listed = sum(1 for r in rows if r["survey_complete"] and not r["on_project_tracking"])
     
     # Survey type breakdown (only for sites that need surveys)
-    cctv_surveys = sum(1 for r in rows if r["survey_type"] == "CCTV")
-    fa_surveys = sum(1 for r in rows if r["survey_type"] == "FA/INTRUSION")
-    both_surveys = sum(1 for r in rows if r["survey_type"] == "BOTH")
+    cctv_surveys = sum(1 for r in rows if r["survey_type"] == SURVEY_TYPE_CCTV)
+    fa_surveys = sum(1 for r in rows if r["survey_type"] == SURVEY_TYPE_FA_INTRUSION)
+    both_surveys = sum(1 for r in rows if r["survey_type"] == SURVEY_TYPE_BOTH)
     pending_type = sum(1 for r in rows if r["survey_type"] == "PENDING")
     
     # Full upgrade breakdown

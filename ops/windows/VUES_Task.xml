@@ -9,15 +9,13 @@
          OneDrive has time to sync the reference workbook before grading begins. -->
     <LogonTrigger>
       <Enabled>true</Enabled>
-      <UserId>homeoffice\vn59j7j</UserId>
       <Delay>PT1M30S</Delay>
     </LogonTrigger>
   </Triggers>
   <Principals>
     <Principal id="Author">
-      <UserId>homeoffice\vn59j7j</UserId>
       <LogonType>InteractiveToken</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
+      <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
   </Principals>
   <Settings>

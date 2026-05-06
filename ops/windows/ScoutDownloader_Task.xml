@@ -43,9 +43,8 @@ Addresses RISK-003: Airtable CDN URLs expire; local copies prevent data loss.</D
 
   <Principals>
     <Principal id="Author">
-      <UserId>homeoffice\vn59j7j</UserId>
       <LogonType>InteractiveToken</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
+      <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
   </Principals>
 

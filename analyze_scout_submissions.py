@@ -142,12 +142,17 @@ def analyze_site_numbers(records: list[dict[str, Any]]) -> None:
 
 def main():
     """Main function to run the analysis."""
-    # Get Airtable token from environment
-    token = os.getenv("AIRTABLE_TOKEN")
+    # Get Airtable token from environment (try multiple variable names)
+    token = (
+        os.getenv("AIRTABLE_TOKEN") or 
+        os.getenv("SCOUT_AIRTABLE_API_KEY") or
+        # Fallback to the token from scout_downloader.py if no env var is set
+        "patPR0WWxXCE0loRO.d18126548ad25b8aaf9fd43e2ac69479b1378e46d7f8c6efbdd88f7197a4d495"
+    )
     
     if not token:
         print("[ERROR] AIRTABLE_TOKEN not found in environment variables.")
-        print("Please set AIRTABLE_TOKEN in your .env file.")
+        print("Please set AIRTABLE_TOKEN or SCOUT_AIRTABLE_API_KEY in your .env file.")
         return
     
     try:

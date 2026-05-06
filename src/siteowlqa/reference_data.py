@@ -20,7 +20,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from siteowlqa.config import AppConfig, VENDOR_GRADE_COLUMNS, VENDOR_HEADER_ALIASES
+from siteowlqa.config import (
+    AppConfig,
+    VENDOR_GRADE_COLUMNS,
+    VENDOR_HEADER_ALIASES,
+    SURVEY_TYPE_CCTV,
+    SURVEY_TYPE_FA_INTRUSION,
+    SURVEY_TYPE_BOTH,
+)
 from siteowlqa.bigquery_provider import fetch_reference_rows_from_bigquery
 from siteowlqa.utils import canon_site_id
 
@@ -41,6 +48,9 @@ class SiteReferenceProfile:
     reference_row_count: int
     has_reference_rows: bool
     optional_fields_populated: dict[str, bool]
+    # Survey-type-specific row counts
+    cctv_row_count: int = 0
+    fa_intrusion_row_count: int = 0
 
 
 
@@ -99,19 +109,52 @@ def _fetch_with_bq_fallback(cfg: AppConfig, site_number: str) -> pd.DataFrame:
 
 
 
-def fetch_site_reference_profile(cfg: AppConfig, site_number: str) -> SiteReferenceProfile:
-    """Return row-count/profile metadata from the active reference source."""
+def fetch_site_reference_profile(
+    cfg: AppConfig,
+    site_number: str,
+    survey_type: str | None = None,
+) -> SiteReferenceProfile:
+    """Return row-count/profile metadata from the active reference source.
+    
+    Args:
+        cfg: Application config.
+        site_number: Site number to look up.
+        survey_type: If provided, the reference_row_count will be filtered
+                     to only rows relevant to this survey type.
+    """
     df = fetch_reference_rows(cfg, site_number)
     optional_fields = {
         col: bool(df[col].astype(str).str.strip().replace("0", "").ne("").any())
         for col in OPTIONAL_PROFILE_COLUMNS
     }
-    reference_row_count = len(df)
+    total_row_count = len(df)
+    
+    # Calculate survey-type-specific row counts
+    # FA/Intrusion rows = rows with Abbreviated Name OR Description
+    # CCTV rows = rows WITHOUT Abbreviated Name AND WITHOUT Description
+    has_abbrev = df['Abbreviated Name'].astype(str).str.strip().ne('') & (df['Abbreviated Name'].astype(str) != '0') if 'Abbreviated Name' in df.columns else pd.Series(False, index=df.index)
+    has_desc = df['Description'].astype(str).str.strip().ne('') & (df['Description'].astype(str) != '0') if 'Description' in df.columns else pd.Series(False, index=df.index)
+    is_fa_row = has_abbrev | has_desc
+    
+    fa_intrusion_row_count = int(is_fa_row.sum())
+    cctv_row_count = int((~is_fa_row).sum())
+    
+    # Determine which row count to use based on survey type
+    if survey_type == SURVEY_TYPE_FA_INTRUSION:
+        reference_row_count = fa_intrusion_row_count
+    elif survey_type == SURVEY_TYPE_CCTV:
+        reference_row_count = cctv_row_count
+    else:
+        # BOTH or None - use total
+        reference_row_count = total_row_count
+    
     return SiteReferenceProfile(
         site_number=site_number,
         reference_row_count=reference_row_count,
-        has_reference_rows=reference_row_count > 0,
+        has_reference_rows=total_row_count > 0,
         optional_fields_populated=optional_fields,
+        cctv_row_count=cctv_row_count,
+        fa_intrusion_row_count=fa_intrusion_row_count,
     )
 
 

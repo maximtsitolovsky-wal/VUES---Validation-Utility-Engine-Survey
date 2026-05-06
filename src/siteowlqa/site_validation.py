@@ -121,7 +121,7 @@ def validate_submission_for_site(
         survey_type: One of 'CCTV', 'FA/Intrusion', 'BOTH', or None.
                      Determines which columns are critical vs optional.
     """
-    profile = fetch_site_reference_profile(cfg, site_number)
+    profile = fetch_site_reference_profile(cfg, site_number, survey_type=survey_type)
     
     # Get critical/optional columns based on survey type
     critical_columns = _get_critical_columns_for_survey_type(survey_type)

@@ -29,7 +29,30 @@ TABLE_ID = "tblV4M2dRFtjIyxJH"
 RATE_LIMIT_DELAY = 0.2
 
 
-def fetch_all_records(token: str) -> list[dict[str, Any]]:
+def try_fetch_with_token(token: str, token_name: str) -> list[dict[str, Any]] | None:
+    """Try to fetch records with a specific token."""
+    url = f"{AIRTABLE_API_BASE}/{BASE_ID}/{TABLE_ID}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    params = {"pageSize": 1}  # Just test access with 1 record
+    
+    try:
+        print(f"Trying {token_name}...")
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        print(f"[SUCCESS] {token_name} has access!\n")
+        return fetch_all_records_with_token(token)
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 403:
+            print(f"[DENIED] {token_name} does not have access to this base.\n")
+            return None
+        raise
+
+
+def fetch_all_records_with_token(token: str) -> list[dict[str, Any]]:
     """Fetch all records from the Scout submissions table with pagination."""
     url = f"{AIRTABLE_API_BASE}/{BASE_ID}/{TABLE_ID}"
     headers = {
@@ -153,26 +176,40 @@ def main():
         print("Please run: python -m siteowlqa.setup_config")
         return
     
-    # Try both tokens (scout token first, then main token as fallback)
-    token = user_config.scout_airtable_token or user_config.airtable_token
-    
-    if not token:
-        print("[ERROR] No Airtable token found in user config.")
-        print("Please run: python -m siteowlqa.setup_config")
-        return
-    
-    print(f"Using Scout token: {bool(user_config.scout_airtable_token)}")
     print(f"Config Scout Base ID: {user_config.scout_airtable_base_id}")
     print(f"Requested Base ID: {BASE_ID}")
     print()
     
+    # Try Scout token first, then main token
+    tokens_to_try = []
+    if user_config.scout_airtable_token:
+        tokens_to_try.append((user_config.scout_airtable_token, "Scout token"))
+    if user_config.airtable_token:
+        tokens_to_try.append((user_config.airtable_token, "Main Airtable token"))
+    
+    if not tokens_to_try:
+        print("[ERROR] No Airtable tokens found in user config.")
+        print("Please run: python -m siteowlqa.setup_config")
+        return
+    
+    records = None
+    for token, token_name in tokens_to_try:
+        records = try_fetch_with_token(token, token_name)
+        if records is not None:
+            break
+    
+    if records is None:
+        print("[ERROR] Neither token has access to the specified base.")
+        print(f"\nRequested: Base ID = {BASE_ID}, Table ID = {TABLE_ID}")
+        if user_config.scout_airtable_base_id:
+            print(f"\nDid you mean to use the configured Scout base instead?")
+            print(f"  Configured Scout Base ID: {user_config.scout_airtable_base_id}")
+            print(f"  Configured Scout Table: {user_config.scout_airtable_table_name}")
+        return
+    
+    # Analyze site numbers
     try:
-        # Fetch all records
-        records = fetch_all_records(token)
-        
-        # Analyze site numbers
         analyze_site_numbers(records)
-        
     except Exception as e:
         print(f"\n[ERROR] Analysis failed: {e}")
         return

@@ -101,6 +101,15 @@
       cursor: pointer; transition: all 0.15s; text-transform: uppercase;
     }
     .export-btn:hover { background: #27272a; border-color: var(--blue); }
+
+    .export-btn-big {
+      padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      background: #27272a; border: 1px solid var(--card-border); color: var(--text);
+      cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+    }
+    .export-btn-big:hover { background: #3f3f46; border-color: var(--blue); }
+    .export-btn-primary { background: var(--blue) !important; border-color: var(--blue) !important; }
+    .export-btn-primary:hover { background: #0066ff !important; }
   </style>
 </head>
 <body>
@@ -110,6 +119,21 @@
     </a>
     <h1>📊 Survey Summary</h1>
     <span class="header-meta" id="lastUpdated">Loading...</span>
+  </div>
+
+  <!-- Export Buttons - Top Level -->
+  <div class="card" style="margin-bottom: 24px; padding: 16px 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div style="font-weight: 600; font-size: 14px;">📥 Export Survey Assignments</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button onclick="exportVendorCSV('CEI')" class="export-btn-big">Export CEI</button>
+        <button onclick="exportVendorCSV('Wachter')" class="export-btn-big">Export Wachter</button>
+        <button onclick="exportVendorCSV('Everon')" class="export-btn-big">Export Everon</button>
+        <button onclick="exportVendorCSV('PTSI')" class="export-btn-big">Export PTSI</button>
+        <button onclick="exportVendorCSV('alarmhawaii.com')" class="export-btn-big">Export Hawaii</button>
+        <button onclick="exportAllCSV()" class="export-btn-big export-btn-primary">Export All</button>
+      </div>
+    </div>
   </div>
 
   <!-- Executive Insights -->

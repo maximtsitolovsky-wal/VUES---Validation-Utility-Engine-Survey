@@ -24,6 +24,12 @@ from typing import Any
 
 import requests
 
+from siteowlqa.config import (
+    SURVEY_TYPE_CCTV,
+    SURVEY_TYPE_FA_INTRUSION,
+    SURVEY_TYPE_BOTH,
+)
+
 log = logging.getLogger(__name__)
 
 # Airtable Scout Table

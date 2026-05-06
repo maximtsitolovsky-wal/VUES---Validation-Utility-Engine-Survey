@@ -21,7 +21,7 @@ airtable_sites = set(
 print(f"Unique Airtable sites: {len(airtable_sites)}")
 
 # Load Excel reference
-reference_path = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\Excel\ScoutSurveyLab.xlsx")
+reference_path = Path(r"C:\Users\vn59j7j\OneDrive - Walmart Inc\Documents\BaselinePrinter\ScoutSurveyLab.xlsm")
 if not reference_path.exists():
     print(f"Excel not found: {reference_path}")
     sys.exit(1)

@@ -64,14 +64,14 @@ def fetch_all_records(token: str) -> list[dict[str, Any]]:
             time.sleep(RATE_LIMIT_DELAY)
             
         except requests.exceptions.HTTPError as e:
-            print(f"\n❌ HTTP Error: {e}")
+            print(f"\n[ERROR] HTTP Error: {e}")
             print(f"Response: {e.response.text}")
             raise
         except Exception as e:
-            print(f"\n❌ Error fetching records: {e}")
+            print(f"\n[ERROR] Error fetching records: {e}")
             raise
     
-    print(f"\n✅ Successfully fetched {len(all_records)} total records\n")
+    print(f"\n[SUCCESS] Successfully fetched {len(all_records)} total records\n")
     return all_records
 
 
@@ -112,10 +112,10 @@ def analyze_site_numbers(records: list[dict[str, Any]]) -> None:
     print("=" * 70)
     print()
     
-    print(f"📊 Total Records: {total_records}")
-    print(f"📍 Records with Site Numbers: {total_with_site_numbers}")
-    print(f"🏪 Unique Site Numbers: {unique_sites}")
-    print(f"🔄 Duplicate Sites (more than 1 submission): {len(duplicates)}")
+    print(f"Total Records: {total_records}")
+    print(f"Records with Site Numbers: {total_with_site_numbers}")
+    print(f"Unique Site Numbers: {unique_sites}")
+    print(f"Duplicate Sites (more than 1 submission): {len(duplicates)}")
     print()
     
     if duplicates:
@@ -134,7 +134,7 @@ def analyze_site_numbers(records: list[dict[str, Any]]) -> None:
         print(f"Total duplicate sites: {len(duplicates)}")
         print(f"Total duplicate submissions: {sum(duplicates.values()) - len(duplicates)}")
     else:
-        print("✅ No duplicate site numbers found!")
+        print("[OK] No duplicate site numbers found!")
     
     print()
     print("=" * 70)
@@ -146,7 +146,7 @@ def main():
     token = os.getenv("AIRTABLE_TOKEN")
     
     if not token:
-        print("❌ Error: AIRTABLE_TOKEN not found in environment variables.")
+        print("[ERROR] AIRTABLE_TOKEN not found in environment variables.")
         print("Please set AIRTABLE_TOKEN in your .env file.")
         return
     
@@ -158,7 +158,7 @@ def main():
         analyze_site_numbers(records)
         
     except Exception as e:
-        print(f"\n❌ Analysis failed: {e}")
+        print(f"\n[ERROR] Analysis failed: {e}")
         return
 
 

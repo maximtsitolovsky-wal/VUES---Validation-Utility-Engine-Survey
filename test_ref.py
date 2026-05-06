@@ -23,3 +23,11 @@ if len(df) > 0:
     cctv_rows = len(df[~(has_abbrev | has_desc)])
     print(f"FA/Intrusion rows: {fa_rows}")
     print(f"CCTV rows: {cctv_rows}")
+    
+    # Check FA breakdown
+    only_abbrev = has_abbrev & ~has_desc
+    only_desc = has_desc & ~has_abbrev
+    both_cols = has_abbrev & has_desc
+    print(f"FA rows with ONLY Abbreviated Name: {only_abbrev.sum()}")
+    print(f"FA rows with ONLY Description: {only_desc.sum()}")
+    print(f"FA rows with BOTH columns: {both_cols.sum()}")

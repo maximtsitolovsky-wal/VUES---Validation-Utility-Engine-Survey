@@ -620,7 +620,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     elif fa_full_upgrade and not cctv_full_upgrade:
         if cctv_survey_needed:
             survey_required = "YES"
-            survey_type = "CCTV"
+            survey_type = SURVEY_TYPE_CCTV
             upgrade_decision = "FULL FA/INTRUSION UPGRADE + CCTV SURVEY"
             reason = "FA/Intrusion full upgrade (one notification device). CCTV survey still required."
         else:
@@ -633,7 +633,7 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     elif cctv_full_upgrade and not fa_full_upgrade:
         if fa_survey_needed:
             survey_required = "YES"
-            survey_type = "FA/INTRUSION"
+            survey_type = SURVEY_TYPE_FA_INTRUSION
             upgrade_decision = "FULL CCTV UPGRADE + FA/INTRUSION SURVEY"
             reason = "CCTV full upgrade (coax/siamese cable). FA/Intrusion survey still required."
         else:
@@ -645,17 +645,17 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
     # No full upgrades - check survey triggers
     elif fa_survey_needed and cctv_survey_needed:
         survey_required = "YES"
-        survey_type = "BOTH"
+        survey_type = SURVEY_TYPE_BOTH
         upgrade_decision = "SURVEY REQUIRED"
         reason = "Both FA/Intrusion and CCTV survey triggers present."
     elif fa_survey_needed:
         survey_required = "YES"
-        survey_type = "FA/INTRUSION"
+        survey_type = SURVEY_TYPE_FA_INTRUSION
         upgrade_decision = "SURVEY REQUIRED"
         reason = "FA/Intrusion survey triggers present."
     elif cctv_survey_needed:
         survey_required = "YES"
-        survey_type = "CCTV"
+        survey_type = SURVEY_TYPE_CCTV
         upgrade_decision = "SURVEY REQUIRED"
         reason = "CCTV survey triggers present."
     else:
@@ -702,11 +702,11 @@ def evaluate_site(scout: ScoutAnswers | None, schedule: ScheduleData | None) -> 
         schedule_status = "REVIEW"
     
     # === STEP 6: Vendor Instructions ===
-    if survey_type == "CCTV":
+    if survey_type == SURVEY_TYPE_CCTV:
         vendor_instructions = "Complete CCTV mapped survey with GPS. Review supplemental CCTV flags before submission."
-    elif survey_type == "FA/INTRUSION":
+    elif survey_type == SURVEY_TYPE_FA_INTRUSION:
         vendor_instructions = "Complete FA/Intrusion mapped survey without GPS. Review supplemental fire alarm flags before submission."
-    elif survey_type == "BOTH":
+    elif survey_type == SURVEY_TYPE_BOTH:
         vendor_instructions = "Complete CCTV mapped survey with GPS and FA/Intrusion mapped survey without GPS. Review all supplemental flags before submission."
     elif survey_required == "NO":
         vendor_instructions = "No survey required. Site is routed to full upgrade based on scout trigger."

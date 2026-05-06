@@ -64,7 +64,7 @@ def download_csv(url: str, filename: str):
         with open(temp_path, 'wb') as f:
             f.write(response.content)
         
-        print(f"✓ Downloaded to: {temp_path}")
+        print(f"Downloaded to: {temp_path}")
         return temp_path
     except Exception as e:
         print(f"❌ ERROR downloading file: {e}")
@@ -80,7 +80,7 @@ def read_csv_headers(file_path: Path):
             reader = csv.reader(f)
             headers = next(reader)
             
-            print(f"\n✓ Found {len(headers)} columns in the submitted CSV file:\n")
+            print(f"\nFound {len(headers)} columns in the submitted CSV file:\n")
             for i, header in enumerate(headers, 1):
                 print(f"  {i:2d}. {header}")
             
@@ -122,7 +122,7 @@ def main():
     file_url = file_info.get("url")
     file_name = file_info.get("filename")
     
-    print(f"✓ Found uploaded file: {file_name}")
+    print(f"Found uploaded file: {file_name}")
     
     # Download the CSV
     csv_path = download_csv(file_url, file_name)
